@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Travel2</string>
+    <string name="hello_world">Hello World</string>
+    <string name="main_subtitle">Travel App using Litho</string>
+</resources>
