@@ -1,38 +1,27 @@
 package com.combah.travel2.ui
 
-import android.graphics.Color
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-import com.combah.travel2.R
-import com.combah.travel2.extensions.children
-import com.facebook.litho.Column
+import com.combah.travel2.ui.component.FlightEventItem
+import com.combah.travel2.ui.data.Event
 import com.facebook.litho.ComponentContext
 import com.facebook.litho.LithoView
-import com.facebook.litho.widget.Text
-import com.facebook.yoga.YogaEdge
+import dagger.android.support.DaggerAppCompatActivity
+import java.util.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : DaggerAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val componentContext = ComponentContext(this)
 
-        val component = Column.create(componentContext).apply {
-            paddingDip(YogaEdge.ALL, 16f)
-            backgroundColor(Color.WHITE)
-            children(
-                    Text.create(componentContext).apply {
-                        textRes(R.string.hello_world)
-                        textSizeSp(40f)
-                    },
-                    Text.create(componentContext).apply {
-                        textRes(R.string.main_subtitle)
-                        textSizeSp(20f)
-                    }
-            )
-        }.build()
-
+        val component = FlightEventItem.create(componentContext)
+            .event(Event(
+                "Paris",
+                "John F Kennedy International Airport",
+                Date()
+            ))
+            .build()
         setContentView(LithoView.create(componentContext, component))
 
     }

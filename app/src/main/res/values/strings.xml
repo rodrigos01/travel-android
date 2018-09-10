@@ -2,4 +2,6 @@
     <string name="app_name">Travel2</string>
     <string name="hello_world">Hello World</string>
     <string name="main_subtitle">Travel App using Litho</string>
+
+    <string name="flight_event_tile">Flight to %1$s</string>
 </resources>
