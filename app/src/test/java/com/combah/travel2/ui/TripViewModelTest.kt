@@ -4,7 +4,9 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.combah.travel2.extensions.dateFromString
 import com.combah.travel2.model.data.*
 import com.combah.travel2.model.repository.TripRepository
+import com.combah.travel2.ui.data.ArrivalEvent
 import com.combah.travel2.ui.data.Event
+import com.combah.travel2.ui.data.FlightEvent
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
@@ -20,7 +22,7 @@ import org.junit.runner.RunWith
 import org.mockito.junit.MockitoJUnitRunner
 
 @RunWith(MockitoJUnitRunner::class)
-class TripListViewModelTest {
+class TripViewModelTest {
 
     @Rule
     @JvmField
@@ -92,10 +94,10 @@ class TripListViewModelTest {
         if (events == null) fail()
         else {
             events?.let {
-                assertEquals(Event(paris.name, jfk.name, flightToParisDepartureDate), it[0])
-                assertEquals(Event("Arrival", cdg.name, flightToParisArrivalDate), it[1])
-                assertEquals(Event(bruxels.name, cdg.name, flightToBruxelsDepartureDate), it[2])
-                assertEquals(Event("Arrival", bru.name, flightToBruxelsArrivalDate), it[3])
+                assertEquals(FlightEvent(paris, jfk, flightToParisDepartureDate), it[0])
+                assertEquals(ArrivalEvent(cdg, flightToParisArrivalDate), it[1])
+                assertEquals(FlightEvent(bruxels, cdg, flightToBruxelsDepartureDate), it[2])
+                assertEquals(ArrivalEvent(bru, flightToBruxelsArrivalDate), it[3])
             }
         }
     }

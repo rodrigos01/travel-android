@@ -5,7 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import com.combah.travel2.extensions.asLiveData
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
-import com.combah.travel2.ui.data.Event
+import com.combah.travel2.ui.data.ArrivalEvent
+import com.combah.travel2.ui.data.FlightEvent
 import javax.inject.Inject
 
 class TripViewModel constructor(repository: TripRepository, tripId: String) : ViewModel() {
@@ -20,14 +21,13 @@ class TripViewModel constructor(repository: TripRepository, tripId: String) : Vi
         ?.flatMap { it.segments }
         ?.flatMap {
             listOf(
-                Event(
-                    it.cityTo.name,
-                    it.airportFrom.name,
+                FlightEvent(
+                    it.cityTo,
+                    it.airportFrom,
                     it.departure
                 ),
-                Event(
-                    "Arrival",
-                    it.airportTo.name,
+                ArrivalEvent(
+                    it.airportTo,
                     it.arrival
                 )
             )
