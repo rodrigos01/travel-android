@@ -2,7 +2,7 @@ package com.combah.travel2.ui.component
 
 import com.combah.travel2.R
 import com.combah.travel2.extensions.*
-import com.combah.travel2.ui.data.Event
+import com.combah.travel2.ui.data.FlightEvent
 import com.facebook.litho.Column
 import com.facebook.litho.Component
 import com.facebook.litho.ComponentContext
@@ -23,7 +23,7 @@ class FlightEventItemSpec {
         @JvmStatic
         fun onCreateLayout(
             context: ComponentContext,
-            @Prop event: Event
+            @Prop event: FlightEvent
         ): Component = Row.create(context)
             .children(
                 Column.create(context)
@@ -53,10 +53,10 @@ class FlightEventItemSpec {
                                     .marginDip(YogaEdge.START, 16f)
                                     .children(
                                         Text.create(context)
-                                            .textRes(R.string.flight_event_tile, event.name)
+                                            .textRes(R.string.flight_event_tile, event.destination.name)
                                             .textSizeSp(18f),
                                         Text.create(context)
-                                            .text(event.location)
+                                            .text(event.airport.name)
                                             .textSizeSp(14f)
 
                                     )

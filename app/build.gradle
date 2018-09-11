@@ -5,6 +5,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 apply plugin: 'kotlin-kapt'
+apply plugin: 'com.google.gms.google-services'
 
 android {
     compileSdkVersion 28
@@ -26,7 +27,7 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.0.0-rc02'
 
     // Lifecycle
@@ -44,14 +45,14 @@ dependencies {
     implementation 'com.facebook.soloader:soloader:0.5.1'
 
     // For integration with Fresco
-    implementation 'com.facebook.litho:litho-fresco:0.18.0'
+    implementation 'com.facebook.litho:litho-fresco:0.19.0'
 
     // Sections
-    implementation 'com.facebook.litho:litho-sections-core:0.18.0'
-    implementation 'com.facebook.litho:litho-sections-widget:0.18.0'
-    compileOnly 'com.facebook.litho:litho-sections-annotations:0.18.0'
+    implementation 'com.facebook.litho:litho-sections-core:0.19.0'
+    implementation 'com.facebook.litho:litho-sections-widget:0.19.0'
+    compileOnly 'com.facebook.litho:litho-sections-annotations:0.19.0'
 
-    kapt 'com.facebook.litho:litho-sections-processor:0.18.0'
+    kapt 'com.facebook.litho:litho-sections-processor:0.19.0'
 
     // Dagger
     implementation 'com.google.dagger:dagger:2.16'
