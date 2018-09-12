@@ -1,6 +1,7 @@
 package com.combah.travel2.ui
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.lifecycle.ViewModelProviders
 import com.combah.travel2.di.ViewModelFactory
 import com.combah.travel2.ui.component.TripListSection
@@ -27,6 +28,10 @@ class MainActivity : DaggerAppCompatActivity() {
             .section(TripListSection.create(SectionContext(componentContext))
                 .tripsLiveData(viewModel.trips)
                 .lifecycleOwner(this)
+                .itemClickListener {
+                    Toast.makeText(this, "${it.name}", Toast.LENGTH_SHORT)
+                        .show()
+                }
                 .build())
             .build()
         setContentView(LithoView.create(componentContext, component))

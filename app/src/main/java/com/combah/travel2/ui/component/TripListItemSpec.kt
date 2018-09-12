@@ -14,28 +14,25 @@ import com.facebook.litho.fresco.FrescoImage
 import com.facebook.litho.widget.Text
 
 @LayoutSpec
-class TripListItemSpec {
-    companion object {
-        @JvmStatic
-        @OnCreateLayout
-        fun onCreateLayout(
-            context: ComponentContext,
-            @Prop imageUrl: String,
-            @Prop name: String
-        ): Component = Column.create(context)
-            .children(
-                FrescoImage.create(context)
-                    .controller(Fresco.newDraweeControllerBuilder()
-                        .setUri(imageUrl)
-                        .build())
-                    .actualImageScaleType(ScalingUtils.ScaleType.CENTER_CROP)
-                    .placeholderImageScaleType(ScalingUtils.ScaleType.CENTER_CROP)
-                    .imageAspectRatio(1.778f)
-                    .placeholderImageRes(R.drawable.ic_launcher_background),
-                Text.create(context)
-                    .textSizeDip(24f)
-                    .text(name)
-            )
-            .build()
-    }
+object TripListItemSpec {
+    @OnCreateLayout
+    fun onCreateLayout(
+        context: ComponentContext,
+        @Prop imageUrl: String,
+        @Prop name: String
+    ): Component = Column.create(context)
+        .children(
+            FrescoImage.create(context)
+                .controller(Fresco.newDraweeControllerBuilder()
+                    .setUri(imageUrl)
+                    .build())
+                .actualImageScaleType(ScalingUtils.ScaleType.CENTER_CROP)
+                .placeholderImageScaleType(ScalingUtils.ScaleType.CENTER_CROP)
+                .imageAspectRatio(1.778f)
+                .placeholderImageRes(R.drawable.ic_launcher_background),
+            Text.create(context)
+                .textSizeDip(24f)
+                .text(name)
+        )
+        .build()
 }
