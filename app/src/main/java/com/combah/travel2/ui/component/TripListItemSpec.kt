@@ -1,6 +1,5 @@
 package com.combah.travel2.ui.component
 
-import com.combah.travel2.R
 import com.combah.travel2.extensions.children
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.facebook.drawee.drawable.ScalingUtils
@@ -27,9 +26,7 @@ object TripListItemSpec {
                     .setUri(imageUrl)
                     .build())
                 .actualImageScaleType(ScalingUtils.ScaleType.CENTER_CROP)
-                .placeholderImageScaleType(ScalingUtils.ScaleType.CENTER_CROP)
-                .imageAspectRatio(1.778f)
-                .placeholderImageRes(R.drawable.ic_launcher_background),
+                .imageAspectRatio(1.778f),
             Text.create(context)
                 .textSizeDip(24f)
                 .text(name)
