@@ -1,40 +1,17 @@
 package com.combah.travel2.ui
 
 import android.os.Bundle
-import android.widget.Toast
-import androidx.lifecycle.ViewModelProviders
-import com.combah.travel2.di.ViewModelFactory
-import com.combah.travel2.ui.component.TripListSection
-import com.facebook.litho.ComponentContext
-import com.facebook.litho.LithoView
-import com.facebook.litho.sections.SectionContext
-import com.facebook.litho.sections.widget.RecyclerCollectionComponent
+import androidx.navigation.findNavController
+import com.combah.travel2.R
 import dagger.android.support.DaggerAppCompatActivity
-import javax.inject.Inject
 
 class MainActivity : DaggerAppCompatActivity() {
-
-    @Inject
-    lateinit var factory: ViewModelFactory
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val viewModel = ViewModelProviders.of(this, factory)
-            .get(TripListViewModel::class.java)
-
-        val componentContext = ComponentContext(this)
-        val component = RecyclerCollectionComponent.create(componentContext)
-            .section(TripListSection.create(SectionContext(componentContext))
-                .tripsLiveData(viewModel.trips)
-                .lifecycleOwner(this)
-                .itemClickListener {
-                    Toast.makeText(this, "${it.name}", Toast.LENGTH_SHORT)
-                        .show()
-                }
-                .build())
-            .build()
-        setContentView(LithoView.create(componentContext, component))
-
+        setContentView(R.layout.activity_main)
     }
+
+    override fun onSupportNavigateUp() = findNavController(R.id.nav_host_fragment).navigateUp()
 }
