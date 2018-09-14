@@ -1,4 +1,4 @@
-package com.combah.travel2.ui
+package com.combah.travel2.ui.trip
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -9,7 +9,7 @@ import com.combah.travel2.ui.data.ArrivalEvent
 import com.combah.travel2.ui.data.FlightEvent
 import javax.inject.Inject
 
-class TripViewModel constructor(repository: TripRepository, tripId: String) : ViewModel() {
+class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
 
     private val trip = repository.findTripById(tripId)
 
@@ -36,7 +36,7 @@ class TripViewModel constructor(repository: TripRepository, tripId: String) : Vi
     @Suppress("UNCHECKED_CAST")
     class Factory @Inject constructor(private val repository: TripRepository) : ViewModelProvider.Factory {
 
-        private lateinit var tripId: String
+        lateinit var tripId: String
 
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
             return TripViewModel(repository, tripId) as T

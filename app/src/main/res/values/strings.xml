@@ -4,4 +4,5 @@
     <string name="main_subtitle">Travel App using Litho</string>
 
     <string name="flight_event_tile">Flight to %1$s</string>
+    <string name="flight_arrival_tile">Arrival</string>
 </resources>

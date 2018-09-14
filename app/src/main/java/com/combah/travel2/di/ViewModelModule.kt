@@ -2,7 +2,7 @@ package com.combah.travel2.di
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.combah.travel2.ui.TripListViewModel
+import com.combah.travel2.ui.triplist.TripListViewModel
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap

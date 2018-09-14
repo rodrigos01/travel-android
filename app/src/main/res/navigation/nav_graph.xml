@@ -3,11 +3,11 @@
             xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/nav_graph" app:startDestination="@id/tripListFragment">
 
-    <fragment android:id="@+id/tripListFragment" android:name="com.combah.travel2.ui.TripListFragment"
+    <fragment android:id="@+id/tripListFragment" android:name="com.combah.travel2.ui.triplist.TripListFragment"
               android:label="TripListFragment">
         <action android:id="@+id/action_tripListFragment_to_tripFragment" app:destination="@id/tripFragment"/>
     </fragment>
-    <fragment android:id="@+id/tripFragment" android:name="com.combah.travel2.ui.TripFragment"
+    <fragment android:id="@+id/tripFragment" android:name="com.combah.travel2.ui.trip.TripFragment"
               android:label="TripFragment">
         <argument android:name="tripId" app:argType="string"/>
     </fragment>

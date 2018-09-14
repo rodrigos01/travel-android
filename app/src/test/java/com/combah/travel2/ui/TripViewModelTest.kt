@@ -5,8 +5,9 @@ import com.combah.travel2.extensions.dateFromString
 import com.combah.travel2.model.data.*
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.ui.data.ArrivalEvent
-import com.combah.travel2.ui.data.Event
 import com.combah.travel2.ui.data.FlightEvent
+import com.combah.travel2.ui.data.TripEvent
+import com.combah.travel2.ui.trip.TripViewModel
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
@@ -87,7 +88,7 @@ class TripViewModelTest {
     @Test
     fun eventsShouldBeListOfFlightEventsFromSegment() {
         val viewModel = TripViewModel(repository, "minhaTrip")
-        var events: List<Event>? = null
+        var events: List<TripEvent>? = null
         viewModel.events.observeForever {
             events = it
         }

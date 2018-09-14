@@ -16,9 +16,6 @@ class FirebaseTripRepository(private val firestore: FirebaseFirestore) : TripRep
             .asObservable(this::tripConverter)
     }
 
-    private fun tripConverter(snapshot: DocumentSnapshot) = Trip(
-        snapshot.id,
-        snapshot["name"] as String?,
-        snapshot["coverImage"] as String?
-    )
+    private fun tripConverter(snapshot: DocumentSnapshot) = snapshot.toObject(Trip::class.java)?.copy(id = snapshot.id)
+        ?: Trip(snapshot.id)
 }

@@ -1,4 +1,4 @@
-package com.combah.travel2.ui
+package com.combah.travel2.ui.triplist
 
 import androidx.lifecycle.ViewModel
 import com.combah.travel2.extensions.asLiveData
