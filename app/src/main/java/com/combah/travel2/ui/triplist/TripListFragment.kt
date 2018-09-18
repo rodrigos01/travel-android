@@ -5,7 +5,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.fragment.findNavController
 import com.combah.travel2.databinding.FragmentTripListBinding
 import com.combah.travel2.di.ViewModelFactory
 import dagger.android.support.DaggerFragment
@@ -26,6 +28,11 @@ class TripListFragment : DaggerFragment() {
 
         val adapter = TripListAdapter(this, viewModel.trips)
         binding.tripList.adapter = adapter
+
+        adapter.onItemClicked.observe(this, Observer {
+            val action = TripListFragmentDirections.actionTripListFragmentToTripFragment(it.id)
+            findNavController().navigate(action)
+        })
 
         return binding.root
     }

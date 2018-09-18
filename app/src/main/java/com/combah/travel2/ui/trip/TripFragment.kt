@@ -6,11 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProviders
-import com.combah.travel2.ui.component.TripEventsListSection
-import com.facebook.litho.ComponentContext
-import com.facebook.litho.LithoView
-import com.facebook.litho.sections.SectionContext
-import com.facebook.litho.sections.widget.RecyclerCollectionComponent
+import com.combah.travel2.databinding.FragmentTripBinding
+import com.combah.travel2.ui.trip.eventlist.TripEventsAdapter
 import dagger.android.support.DaggerFragment
 import javax.inject.Inject
 
@@ -27,14 +24,12 @@ class TripFragment : DaggerFragment() {
         val viewModel = ViewModelProviders.of(this, factory)
             .get(TripViewModel::class.java)
 
-        val componentContext = ComponentContext(context)
-        val component = RecyclerCollectionComponent.create(componentContext)
-            .section(TripEventsListSection.create(SectionContext(componentContext))
-                .eventsLiveData(viewModel.events)
-                .lifecycleOwner(this)
-                .build())
-            .build()
-        return LithoView.create(componentContext, component)
+        val binding = FragmentTripBinding.inflate(inflater, container, false)
+
+        val adapter = TripEventsAdapter(this, viewModel.events)
+        binding.eventList.adapter = adapter
+
+        return binding.root
     }
 
 

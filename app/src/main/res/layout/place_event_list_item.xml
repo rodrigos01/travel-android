@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable name="place" type="com.combah.travel2.model.data.Place"/>
+    </data>
+    <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent"
+                                                       android:layout_height="wrap_content">
+
+        <ImageView
+                android:layout_width="0dp"
+                android:layout_height="0dp" tools:srcCompat="@tools:sample/backgrounds/scenic"
+                imageUrl="@{place.coverImage}"
+                android:id="@+id/cover" app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent" app:layout_constraintDimensionRatio="21:9"
+                android:scaleType="centerCrop"/>
+        <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content" android:id="@+id/title"
+                android:text="@{place.name}"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" tools:text="Place"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+                app:layout_constraintEnd_toEndOf="@+id/cover"
+                android:background="@drawable/text_protection" android:paddingBottom="8dp" android:paddingTop="8dp"
+                android:paddingLeft="16dp" android:paddingRight="16dp" android:textColor="#FFF"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

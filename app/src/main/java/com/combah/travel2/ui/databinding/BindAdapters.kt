@@ -1,8 +1,12 @@
 package com.combah.travel2.ui.databinding
 
+import android.content.res.Resources
 import android.widget.ImageView
+import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.databinding.BindingAdapter
 import com.bumptech.glide.Glide
+import com.combah.travel2.ui.widget.ResolvingString
 
 @BindingAdapter("imageUrl")
 fun loadImage(view: ImageView, url: String?) {
@@ -10,5 +14,27 @@ fun loadImage(view: ImageView, url: String?) {
         Glide.with(view.context)
             .load(url)
             .into(view)
+    }
+}
+
+@BindingAdapter("android:text")
+fun setText(view: TextView, resolvingString: ResolvingString?) {
+    val context = view.context
+
+    resolvingString?.let {
+        val string = it.resolve(context)
+        view.text = string
+    }
+}
+
+@BindingAdapter("resourceId")
+fun setImage(view: ImageView, resourceId: Int?) {
+    if (resourceId != null) {
+        try {
+            val drawable = ContextCompat.getDrawable(view.context, resourceId)
+            drawable?.let(view::setImageDrawable)
+        } catch (ignored: Resources.NotFoundException) {
+
+        }
     }
 }

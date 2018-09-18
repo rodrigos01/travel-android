@@ -5,13 +5,15 @@ import android.view.ViewGroup
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.subjects.PublishSubject
 
 abstract class ReactiveAdapter<T, R : ViewDataBinding>(private val owner: LifecycleOwner, liveData: LiveData<List<T>>) : RecyclerView.Adapter<ReactiveAdapter<T, R>.ViewHolder>() {
 
-    val onItemClicked = PublishSubject.create<T>()
+    private val _onItemClicked = MutableLiveData<T>()
+    val onItemClicked: LiveData<T>
+        get() = _onItemClicked
 
     private var items: List<T>? = null
 
@@ -37,8 +39,16 @@ abstract class ReactiveAdapter<T, R : ViewDataBinding>(private val owner: Lifecy
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         items?.get(position)?.let { feature ->
             bind(holder.binding, feature)
-            holder.binding.root.setOnClickListener { onItemClicked.onNext(feature) }
+            holder.binding.root.setOnClickListener { _onItemClicked.postValue(feature) }
         }
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        return items?.get(position)?.let(this::getItemViewType) ?: 0
+    }
+
+    open fun getItemViewType(item: T): Int {
+        return 0
     }
 
     abstract fun bind(binding: R, item: T)

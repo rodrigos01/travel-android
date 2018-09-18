@@ -23,6 +23,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
         ?.let { it.plus(getPlaceEventsFromEvents(it.asIterable())) }
         ?.sortedWith(eventComparator)
         ?.toList()
+        ?: emptyList()
 
     private fun getFlightEventsFromTrip(trip: Trip) = trip.flights
         ?.flatMap { it.segments.flatMap(this::getFlightEventsFromSegment) }

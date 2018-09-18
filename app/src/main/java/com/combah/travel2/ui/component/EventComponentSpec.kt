@@ -1,7 +1,10 @@
 package com.combah.travel2.ui.component
 
 import android.graphics.drawable.Drawable
-import com.combah.travel2.extensions.*
+import com.combah.travel2.extensions.children
+import com.combah.travel2.extensions.dayOfMonthString
+import com.combah.travel2.extensions.dayOfWeekString
+import com.combah.travel2.extensions.timeString
 import com.facebook.litho.Component
 import com.facebook.litho.ComponentContext
 import com.facebook.litho.annotations.LayoutSpec
@@ -26,7 +29,7 @@ object EventComponentSpec {
                 .marginDip(YogaEdge.ALL, 16f)
                 .child(
                     com.facebook.litho.widget.Text.create(context)
-                        .text(timestamp.asCalendar().get(Calendar.DAY_OF_MONTH).asString())
+                        .text(timestamp.dayOfMonthString())
                         .textSizeSp(24f)
                 )
                 .child(
