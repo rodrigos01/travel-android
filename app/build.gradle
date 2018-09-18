@@ -26,12 +26,18 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    dataBinding {
+        enabled true
+    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.0.0-rc02'
+    implementation 'androidx.cardview:cardview:1.0.0-rc02'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha2'
+    implementation 'com.google.android.material:material:1.0.0-rc02'
 
     // Lifecycle
     implementation 'android.arch.lifecycle:extensions:1.1.1'
@@ -41,6 +47,9 @@ dependencies {
     // Navigation
     implementation "android.arch.navigation:navigation-fragment-ktx:1.0.0-alpha05" // use -ktx for Kotlin
     implementation "android.arch.navigation:navigation-ui-ktx:1.0.0-alpha05" // use -ktx for Kotlin
+
+    // Glide
+    implementation 'com.github.bumptech.glide:glide:4.7.1'
 
     // Litho
     implementation 'com.facebook.litho:litho-core:0.19.0'

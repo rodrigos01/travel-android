@@ -6,13 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProviders
-import androidx.navigation.fragment.findNavController
+import com.combah.travel2.databinding.FragmentTripListBinding
 import com.combah.travel2.di.ViewModelFactory
-import com.combah.travel2.ui.component.TripListSection
-import com.facebook.litho.ComponentContext
-import com.facebook.litho.LithoView
-import com.facebook.litho.sections.SectionContext
-import com.facebook.litho.sections.widget.RecyclerCollectionComponent
 import dagger.android.support.DaggerFragment
 import javax.inject.Inject
 
@@ -23,21 +18,16 @@ class TripListFragment : DaggerFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
+        val binding = FragmentTripListBinding.inflate(inflater, container, false)
+        binding.setLifecycleOwner(this)
+
         val viewModel = ViewModelProviders.of(this, factory)
             .get(TripListViewModel::class.java)
 
-        val componentContext = ComponentContext(context)
-        val component = RecyclerCollectionComponent.create(componentContext)
-            .section(TripListSection.create(SectionContext(componentContext))
-                .tripsLiveData(viewModel.trips)
-                .lifecycleOwner(this)
-                .itemClickListener {
-                    val action = TripListFragmentDirections.actionTripListFragmentToTripFragment(it.id)
-                    findNavController().navigate(action)
-                }
-                .build())
-            .build()
-        return LithoView.create(componentContext, component)
+        val adapter = TripListAdapter(this, viewModel.trips)
+        binding.tripList.adapter = adapter
+
+        return binding.root
     }
 
 
