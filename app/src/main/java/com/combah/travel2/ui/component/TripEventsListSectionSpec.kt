@@ -3,9 +3,8 @@ package com.combah.travel2.ui.component
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import com.combah.travel2.ui.data.ArrivalEvent
-import com.combah.travel2.ui.data.FlightEvent
-import com.combah.travel2.ui.data.TripEvent
+import com.combah.travel2.ui.data.*
+import com.facebook.litho.Component
 import com.facebook.litho.StateValue
 import com.facebook.litho.annotations.*
 import com.facebook.litho.sections.Children
@@ -32,11 +31,9 @@ object TripEventsListSectionSpec {
         .build()
 
     @OnEvent(RenderEvent::class)
-    fun onRender(sectionContext: SectionContext, @FromEvent model: TripEvent) = when (model) {
-        is FlightEvent -> renderFlightEvent(sectionContext, model)
-        is ArrivalEvent -> renderArrivalEvent(sectionContext, model)
-        else -> ComponentRenderInfo.createEmpty()
-    }
+    fun onRender(sectionContext: SectionContext, @FromEvent model: TripEvent): RenderInfo = ComponentRenderInfo.create()
+        .component(getComponentForEvent(sectionContext, model))
+        .build()
 
     @OnCreateInitialState
     fun createInitialEventList(
@@ -58,15 +55,27 @@ object TripEventsListSectionSpec {
         events.set(newEvents)
     }
 
-    private fun renderFlightEvent(sectionContext: SectionContext, event: FlightEvent): RenderInfo = ComponentRenderInfo.create()
-        .component(FlightEventComponent.create(sectionContext)
-            .event(event)
-            .build())
+    private fun getComponentForEvent(sectionContext: SectionContext, event: TripEvent) = when (event) {
+        is FlightEvent -> getFlightEventComponent(sectionContext, event)
+        is ArrivalEvent -> getArrivalEvent(sectionContext, event)
+        is CheckinEvent -> getCheckinEvent(sectionContext, event)
+        is CheckoutEvent -> getCheckoutEvent(sectionContext, event)
+        else -> EventComponent.create(sectionContext).build()
+    }
+
+    private fun getFlightEventComponent(sectionContext: SectionContext, event: FlightEvent): Component = FlightEventComponent.create(sectionContext)
+        .event(event)
         .build()
 
-    private fun renderArrivalEvent(sectionContext: SectionContext, event: ArrivalEvent): RenderInfo = ComponentRenderInfo.create()
-        .component(ArrivalEventComponent.create(sectionContext)
-            .event(event)
-            .build())
+    private fun getArrivalEvent(sectionContext: SectionContext, event: ArrivalEvent): Component = ArrivalEventComponent.create(sectionContext)
+        .event(event)
+        .build()
+
+    private fun getCheckinEvent(sectionContext: SectionContext, event: CheckinEvent): Component = CheckinEventComponent.create(sectionContext)
+        .event(event)
+        .build()
+
+    private fun getCheckoutEvent(sectionContext: SectionContext, event: CheckoutEvent): Component = CheckoutEventComponent.create(sectionContext)
+        .event(event)
         .build()
 }

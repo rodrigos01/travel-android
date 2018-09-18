@@ -1,5 +1,6 @@
 package com.combah.travel2.ui.component
 
+import android.graphics.drawable.Drawable
 import com.combah.travel2.extensions.*
 import com.facebook.litho.Component
 import com.facebook.litho.ComponentContext
@@ -15,7 +16,7 @@ object EventComponentSpec {
     @OnCreateLayout
     fun onCreateLayout(
         context: ComponentContext,
-        @Prop iconResId: Int,
+        @Prop(resType = ResType.DRAWABLE) icon: Drawable,
         @Prop(resType = ResType.STRING) title: CharSequence,
         @Prop(resType = ResType.STRING) subtitle: CharSequence,
         @Prop timestamp: Date
@@ -43,7 +44,7 @@ object EventComponentSpec {
                         .marginDip(YogaEdge.TOP, 8f)
                         .children(
                             com.facebook.litho.widget.Image.create(context)
-                                .drawableRes(iconResId),
+                                .drawable(icon),
                             com.facebook.litho.Column.create(context)
                                 .marginDip(YogaEdge.START, 16f)
                                 .children(

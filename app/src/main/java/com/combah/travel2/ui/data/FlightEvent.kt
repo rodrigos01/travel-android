@@ -4,4 +4,4 @@ import com.combah.travel2.model.data.Airport
 import com.combah.travel2.model.data.Place
 import java.util.*
 
-class FlightEvent(val destination: Place, val airport: Airport, timestamp: Date) : TripEvent(destination.name, airport.name, timestamp)
+data class FlightEvent(val destination: Place, val airport: Airport, val departure: Date) : TripEvent(destination.name, airport.name, departure)

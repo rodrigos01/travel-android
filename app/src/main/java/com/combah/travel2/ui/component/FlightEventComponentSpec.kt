@@ -15,9 +15,9 @@ object FlightEventComponentSpec {
         context: ComponentContext,
         @Prop event: FlightEvent
     ): Component = EventComponent.create(context)
-        .iconResId(R.drawable.ic_flight_takeoff_black_24dp)
+        .iconRes(R.drawable.ic_flight_takeoff_black_24dp)
         .titleRes(R.string.flight_event_tile, event.destination.name)
         .subtitle(event.airport.name)
-        .timestamp(event.timestamp)
+        .timestamp(event.departure)
         .build()
 }
