@@ -6,10 +6,7 @@ import com.combah.travel2.extensions.asLiveData
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
-import com.combah.travel2.ui.data.ArrivalEvent
-import com.combah.travel2.ui.data.CheckinEvent
-import com.combah.travel2.ui.data.CheckoutEvent
-import com.combah.travel2.ui.data.FlightEvent
+import com.combah.travel2.ui.data.*
 import javax.inject.Inject
 
 class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
@@ -23,7 +20,8 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
     private fun getEventsFromTrip(trip: Trip) = getFlightEventsFromTrip(trip)
         ?.asSequence()
         ?.plus(getHotelEventsFromTrip(trip) ?: emptyList())
-        ?.sortedBy { it.timestamp }
+        ?.let { it.plus(getPlaceEventsFromEvents(it.asIterable())) }
+        ?.sortedWith(eventComparator)
         ?.toList()
 
     private fun getFlightEventsFromTrip(trip: Trip) = trip.flights
@@ -31,27 +29,42 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
 
     private fun getFlightEventsFromSegment(segment: FlightSegment) = listOf(
         FlightEvent(
+            segment.cityFrom,
             segment.cityTo,
             segment.airportFrom,
             segment.departure
         ),
         ArrivalEvent(
             segment.airportTo,
-            segment.arrival
+            segment.arrival,
+            segment.cityTo
         )
     )
 
     private fun getHotelEventsFromTrip(trip: Trip) = trip.hotels?.flatMap {
         listOf(
-            CheckinEvent(
-                it.name,
-                it.checkin
-            ),
-            CheckoutEvent(
-                it.name,
-                it.checkout
-            )
+            CheckinEvent(it),
+            CheckoutEvent(it)
         )
+    }
+
+    private fun getPlaceEventsFromEvents(events: Iterable<TripEvent>) = events
+        .sortedBy { it.timestamp }
+        .distinctBy { it.place }
+        .map {
+            PlaceEvent(
+                it.place,
+                it.timestamp
+            )
+        }.let { it.takeLast(it.size - 1) }
+
+    private val eventComparator = Comparator<TripEvent> { event1, event2 ->
+        val timeComparison = event1.timestamp.compareTo(event2.timestamp)
+        if (timeComparison == 0 && event1 is PlaceEvent) {
+            -1
+        } else {
+            timeComparison
+        }
     }
 
     @Suppress("UNCHECKED_CAST")

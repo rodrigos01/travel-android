@@ -1,5 +1,5 @@
 package com.combah.travel2.ui.data
 
-import java.util.*
+import com.combah.travel2.model.data.Hotel
 
-data class CheckoutEvent(val hotelName: String, val checkout: Date) : TripEvent("", hotelName, checkout)
+data class CheckoutEvent(val hotel: Hotel) : TripEvent("", hotel.name, hotel.checkout, hotel.place)

@@ -17,7 +17,7 @@ object CheckoutEventComponentSpec {
     ): Component = EventComponent.create(context)
         .iconRes(R.drawable.ic_hotel_black_24dp)
         .titleRes(R.string.hotel_checkout_title)
-        .subtitle(event.hotelName)
+        .subtitle(event.hotel.name)
         .timestamp(event.timestamp)
         .build()
 }

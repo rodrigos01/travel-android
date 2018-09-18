@@ -56,12 +56,17 @@ object TripEventsListSectionSpec {
     }
 
     private fun getComponentForEvent(sectionContext: SectionContext, event: TripEvent) = when (event) {
+        is PlaceEvent -> getPlaceEventComponent(sectionContext, event)
         is FlightEvent -> getFlightEventComponent(sectionContext, event)
         is ArrivalEvent -> getArrivalEvent(sectionContext, event)
         is CheckinEvent -> getCheckinEvent(sectionContext, event)
         is CheckoutEvent -> getCheckoutEvent(sectionContext, event)
         else -> EventComponent.create(sectionContext).build()
     }
+
+    private fun getPlaceEventComponent(sectionContext: SectionContext, event: PlaceEvent): Component = PlaceEventComponent.create(sectionContext)
+        .event(event)
+        .build()
 
     private fun getFlightEventComponent(sectionContext: SectionContext, event: FlightEvent): Component = FlightEventComponent.create(sectionContext)
         .event(event)

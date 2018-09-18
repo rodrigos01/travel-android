@@ -36,8 +36,14 @@ class TripViewModelTest {
     val parisHotelName = "Hôtel Europe Saint-Séverin"
     val parisHotelCheckinDate = dateFromString("2018-10-25T13:00")
     val parisHotelCheckoutDate = dateFromString("2018-10-29T12:00")
+    val parisHotel = Hotel(
+        name = parisHotelName,
+        place = paris,
+        checkin = parisHotelCheckinDate,
+        checkout = parisHotelCheckoutDate
+    )
     val bru = Airport("BRU", "Brussels Airport (BRU)")
-    val bruxels = Place(name = "Bruxels")
+    val brussels = Place(name = "Bruxels")
     val flightToBruxelsDepartureDate = dateFromString("2018-10-29T15:00")
     val flightToBruxelsArrivalDate = dateFromString("2018-10-29T19:10")
     val trip = Trip(
@@ -61,21 +67,14 @@ class TripViewModelTest {
                         airportFrom = cdg,
                         cityFrom = paris,
                         airportTo = bru,
-                        cityTo = bruxels,
+                        cityTo = brussels,
                         departure = flightToBruxelsDepartureDate,
                         arrival = flightToBruxelsArrivalDate
                     )
                 )
             )
         ),
-        hotels = listOf(
-            Hotel(
-                name = parisHotelName,
-                place = paris,
-                checkin = parisHotelCheckinDate,
-                checkout = parisHotelCheckoutDate
-            )
-        )
+        hotels = listOf(parisHotel)
     )
 
     private val tripObservable = Observable.just(trip)
@@ -84,7 +83,6 @@ class TripViewModelTest {
 
     @Before
     fun setup() {
-        whenever(repository.trips).thenReturn(tripListObservable)
         whenever(repository.findTripById(any())).thenReturn(tripObservable)
     }
 
@@ -104,12 +102,14 @@ class TripViewModelTest {
         if (events == null) fail()
         else {
             events?.let {
-                assertEquals(FlightEvent(paris, jfk, flightToParisDepartureDate), it[0])
-                assertEquals(ArrivalEvent(cdg, flightToParisArrivalDate), it[1])
-                assertEquals(CheckinEvent(parisHotelName, parisHotelCheckinDate), it[2])
-                assertEquals(CheckoutEvent(parisHotelName, parisHotelCheckoutDate), it[3])
-                assertEquals(FlightEvent(bruxels, cdg, flightToBruxelsDepartureDate), it[4])
-                assertEquals(ArrivalEvent(bru, flightToBruxelsArrivalDate), it[5])
+                assertEquals(FlightEvent(nyc, paris, jfk, flightToParisDepartureDate), it[0])
+                assertEquals(PlaceEvent(paris, flightToParisArrivalDate), it[1])
+                assertEquals(ArrivalEvent(cdg, flightToParisArrivalDate, paris), it[2])
+                assertEquals(CheckinEvent(parisHotel), it[3])
+                assertEquals(CheckoutEvent(parisHotel), it[4])
+                assertEquals(FlightEvent(paris, brussels, cdg, flightToBruxelsDepartureDate), it[5])
+                assertEquals(PlaceEvent(brussels, flightToBruxelsArrivalDate), it[6])
+                assertEquals(ArrivalEvent(bru, flightToBruxelsArrivalDate, brussels), it[7])
             }
         }
     }
