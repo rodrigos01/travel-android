@@ -1,0 +1,63 @@
+{
+  "project_info": {
+    "project_number": "898859757403",
+    "firebase_url": "https://travel-164715.firebaseio.com",
+    "project_id": "travel-164715",
+    "storage_bucket": "travel-164715.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:898859757403:android:a51ffc59d1a2a811",
+        "android_client_info": {
+          "package_name": "com.combah.travel2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "898859757403-gn3be8tcfgomj0sj6bmbnilp1elsp7ho.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.combah.travel2",
+            "certificate_hash": "0d33cf6972a9d2c0e36d786fed998e90eb050afb"
+          }
+        },
+        {
+          "client_id": "898859757403-r8p81e5vabaescdfe15djek82cufcca6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.combah.travel2",
+            "certificate_hash": "d10fa6a35b2985506bf059082bd92df06c466521"
+          }
+        },
+        {
+          "client_id": "898859757403-nkopqu5a189mjmlnqh1gtd9a1d4a9hmv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrQExxJAk6lwTNLqJ8rkO2MXmIOGPB47U"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "898859757403-nkopqu5a189mjmlnqh1gtd9a1d4a9hmv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
