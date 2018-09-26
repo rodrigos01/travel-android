@@ -8,8 +8,6 @@ apply plugin: 'kotlin-kapt'
 
 apply plugin: "androidx.navigation.safeargs"
 
-apply plugin: 'com.google.gms.google-services'
-
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -31,7 +29,7 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.0.0-rc02'
+    implementation 'androidx.appcompat:appcompat:1.0.0'
 
     // Lifecycle
     implementation 'android.arch.lifecycle:extensions:1.1.1'
@@ -39,8 +37,8 @@ dependencies {
     kapt 'android.arch.lifecycle:compiler:1.1.1'
 
     // Navigation
-    implementation "android.arch.navigation:navigation-fragment-ktx:1.0.0-alpha05" // use -ktx for Kotlin
-    implementation "android.arch.navigation:navigation-ui-ktx:1.0.0-alpha05" // use -ktx for Kotlin
+    implementation "android.arch.navigation:navigation-fragment-ktx:1.0.0-alpha06" // use -ktx for Kotlin
+    implementation "android.arch.navigation:navigation-ui-ktx:1.0.0-alpha06" // use -ktx for Kotlin
 
     // Litho
     implementation 'com.facebook.litho:litho-core:0.19.0'
@@ -64,7 +62,7 @@ dependencies {
     // Dagger
     implementation 'com.google.dagger:dagger:2.16'
     implementation 'com.google.dagger:dagger-android-support:2.16'
-    kapt 'com.google.dagger:dagger-compiler:2.15'
+    kapt 'com.google.dagger:dagger-compiler:2.16'
     kapt 'com.google.dagger:dagger-android-processor:2.16'
     compileOnly 'org.glassfish:javax.annotation:10.0-b28'
 
@@ -74,12 +72,12 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore:17.1.0'
 
     // Rx
-    implementation 'io.reactivex.rxjava2:rxjava:2.1.12'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.0'
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
-    implementation 'io.reactivex.rxjava2:rxkotlin:2.2.0'
+    implementation 'io.reactivex.rxjava2:rxkotlin:2.3.0'
 
     testImplementation 'junit:junit:4.12'
-    testImplementation 'org.mockito:mockito-core:2.19.0'
+    testImplementation 'org.mockito:mockito-core:2.21.0'
     testImplementation 'com.nhaarman:mockito-kotlin:1.5.0'
     testImplementation 'android.arch.core:core-testing:1.1.1'
     androidTestImplementation 'androidx.test:runner:1.1.0-alpha4'
@@ -88,3 +86,5 @@ dependencies {
 
     testImplementation 'com.facebook.litho:litho-testing:0.18.0'
 }
+
+apply plugin: 'com.google.gms.google-services'
