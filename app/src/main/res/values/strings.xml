@@ -9,4 +9,5 @@
     <string name="flight_arrival_tile">Arrival</string>
     <string name="hotel_checkin_title">Check-in</string>
     <string name="hotel_checkout_title">Check-out</string>
+    <string name="month_event_title">%1$s, %2$s</string>
 </resources>
