@@ -1,6 +1,7 @@
 package com.combah.travel2.ui.databinding
 
 import android.content.res.Resources
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -14,6 +15,20 @@ fun loadImage(view: ImageView, url: String?) {
         Glide.with(view.context)
             .load(url)
             .into(view)
+    }
+}
+
+@BindingAdapter("visibleOrGone")
+fun visibleOrGone(view: View, visible: Boolean?) {
+    if (visible == false) {
+        view.visibility = View.GONE
+    }
+}
+
+@BindingAdapter("visible")
+fun setVisible(view: View, visible: Boolean?) {
+    if (visible == false) {
+        view.visibility = View.INVISIBLE
     }
 }
 

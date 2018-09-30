@@ -4,7 +4,7 @@ import com.combah.travel2.R
 import com.combah.travel2.ui.data.ArrivalEvent
 import com.combah.travel2.ui.widget.ResolvingString
 
-class ArrivalEventViewModel(private val event: ArrivalEvent) : EventListItemViewModel(event) {
+class ArrivalEventViewModel(event: ArrivalEvent, first: Boolean = false) : EventListItemViewModel(event, first) {
     override val icon: Int
         get() = R.drawable.ic_flight_land_black_24dp
     override val title: ResolvingString

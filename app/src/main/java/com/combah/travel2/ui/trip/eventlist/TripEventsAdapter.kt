@@ -5,23 +5,33 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import com.combah.travel2.databinding.EventListItemBinding
 import com.combah.travel2.databinding.MontEventListItemBinding
 import com.combah.travel2.databinding.PlaceEventListItemBinding
 import com.combah.travel2.ui.data.*
+import com.combah.travel2.ui.trip.TripViewModel
 import com.combah.travel2.ui.trip.eventlist.viewmodel.*
 import com.combah.travel2.ui.widget.ReactiveAdapter
 
 class TripEventsAdapter(
         lifecycleOwner: LifecycleOwner,
-        liveData: LiveData<List<TripEvent>>
-) : ReactiveAdapter<TripEvent, ViewDataBinding>(lifecycleOwner, liveData) {
+        viewModel: TripViewModel
+) : ReactiveAdapter<TripEvent, ViewDataBinding>(lifecycleOwner, viewModel.events) {
 
     companion object {
         private const val VIEW_TYPE_MONTH_EVENT = 0
         private const val VIEW_TYPE_PLACE_EVENT = 1
         private const val VIEW_TYPE_REGULAR_EVENT = 2
+    }
+
+    private var firstEvents: Set<TripEvent>? = null
+
+    init {
+        viewModel.firstEvents.observe(lifecycleOwner, Observer {
+            firstEvents = it
+            notifyDataSetChanged()
+        })
     }
 
     override fun getBinding(context: Context, parent: ViewGroup, viewType: Int) = when (viewType) {
@@ -61,12 +71,14 @@ class TripEventsAdapter(
     }
 
     private fun getViewModelForEvent(event: TripEvent) = when (event) {
-        is FlightEvent -> FlightEventViewModel(event)
-        is ArrivalEvent -> ArrivalEventViewModel(event)
-        is CheckinEvent -> CheckinEventViewModel(event)
-        is CheckoutEvent -> CheckoutEventViewModel(event)
+        is FlightEvent -> FlightEventViewModel(event, event.isFirst())
+        is ArrivalEvent -> ArrivalEventViewModel(event, event.isFirst())
+        is CheckinEvent -> CheckinEventViewModel(event, event.isFirst())
+        is CheckoutEvent -> CheckoutEventViewModel(event, event.isFirst())
         else -> EventListItemViewModel(event)
     }
+
+    private fun TripEvent.isFirst() = firstEvents?.contains(this) ?: true
 
     override fun getItemViewType(item: TripEvent): Int {
         return when (item) {
