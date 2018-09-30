@@ -26,7 +26,7 @@ class TripFragment : DaggerFragment() {
 
         val binding = FragmentTripBinding.inflate(inflater, container, false)
 
-        val adapter = TripEventsAdapter(this, viewModel.events)
+        val adapter = TripEventsAdapter(this, viewModel)
         binding.eventList.adapter = adapter
 
         return binding.root

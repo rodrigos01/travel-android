@@ -4,7 +4,7 @@ import com.combah.travel2.R
 import com.combah.travel2.ui.data.CheckoutEvent
 import com.combah.travel2.ui.widget.ResolvingString
 
-class CheckoutEventViewModel(private val event: CheckoutEvent) : EventListItemViewModel(event) {
+class CheckoutEventViewModel(event: CheckoutEvent, first: Boolean = false) : EventListItemViewModel(event, first) {
     override val icon: Int
         get() = R.drawable.ic_hotel_black_24dp
     override val title: ResolvingString

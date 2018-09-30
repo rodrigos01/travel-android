@@ -7,7 +7,7 @@ import com.combah.travel2.extensions.timeString
 import com.combah.travel2.ui.data.TripEvent
 import com.combah.travel2.ui.widget.ResolvingString
 
-open class EventListItemViewModel(private val event: TripEvent) {
+open class EventListItemViewModel(private val event: TripEvent, firstInDate: Boolean = false) {
     open val date: String
         get() = event.timestamp.dayOfMonthString()
     open val dayOfWeek: String
@@ -17,4 +17,5 @@ open class EventListItemViewModel(private val event: TripEvent) {
     open val icon = R.drawable.ic_flight_takeoff_black_24dp
     open val title = ResolvingString(event.name)
     open val subtitle = event.location
+    val showDate = firstInDate
 }

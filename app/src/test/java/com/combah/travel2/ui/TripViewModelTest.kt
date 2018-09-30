@@ -11,9 +11,7 @@ import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
 import io.reactivex.Observable
-import io.reactivex.subjects.PublishSubject
-import org.junit.Assert.assertEquals
-import org.junit.Assert.fail
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -78,7 +76,6 @@ class TripViewModelTest {
     )
 
     private val tripObservable = Observable.just(trip)
-    private val tripListObservable = PublishSubject.create<List<Trip>>()
     private val repository = mock<TripRepository>()
 
     @Before
@@ -112,6 +109,24 @@ class TripViewModelTest {
                 assertEquals(FlightEvent(paris, brussels, cdg, flightToBruxelsDepartureDate), it[7])
                 assertEquals(PlaceEvent(brussels, flightToBruxelsArrivalDate), it[8])
                 assertEquals(ArrivalEvent(bru, flightToBruxelsArrivalDate, brussels), it[9])
+            }
+        }
+    }
+
+    @Test
+    fun firstEventsShouldBeFirstOfEachDay() {
+        val viewModel = TripViewModel(repository, "minhaTrip")
+        var events: Set<TripEvent>? = null
+        viewModel.firstEvents.observeForever {
+            events = it
+        }
+        if (events == null) fail()
+        else {
+            events?.let {
+                assertEquals(3, it.size)
+                assertTrue(it.contains(FlightEvent(nyc, paris, jfk, flightToParisDepartureDate)))
+                assertTrue(it.contains(ArrivalEvent(cdg, flightToParisArrivalDate, paris)))
+                assertTrue(it.contains(CheckoutEvent(parisHotel)))
             }
         }
     }
