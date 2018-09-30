@@ -9,6 +9,15 @@ apply plugin: 'kotlin-kapt'
 apply plugin: "androidx.navigation.safeargs"
 
 android {
+    signingConfigs {
+        release {
+            keyAlias 'combahkey'
+            keyPassword 'Un1*R00t'
+            storeFile file('release.keystore')
+            storePassword 'Un1*R00t'
+        }
+    }
+
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.combah.travel2"
@@ -22,6 +31,7 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     dataBinding {
@@ -30,42 +40,35 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.0.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha2'
     implementation 'com.google.android.material:material:1.0.0'
-
     // Lifecycle
     implementation 'android.arch.lifecycle:extensions:1.1.1'
     implementation 'android.arch.lifecycle:reactivestreams:1.1.1'
     kapt 'android.arch.lifecycle:compiler:1.1.1'
-
     // Navigation
-    implementation "android.arch.navigation:navigation-fragment-ktx:1.0.0-alpha06"
-    implementation "android.arch.navigation:navigation-ui-ktx:1.0.0-alpha06"
-
+    implementation 'android.arch.navigation:navigation-fragment-ktx:1.0.0-alpha06'
+    implementation 'android.arch.navigation:navigation-ui-ktx:1.0.0-alpha06'
     // Glide
     implementation 'com.github.bumptech.glide:glide:4.7.1'
-
     // Dagger
     implementation 'com.google.dagger:dagger:2.16'
     implementation 'com.google.dagger:dagger-android-support:2.16'
     kapt 'com.google.dagger:dagger-compiler:2.16'
     kapt 'com.google.dagger:dagger-android-processor:2.16'
     compileOnly 'org.glassfish:javax.annotation:10.0-b28'
-
     // Firebase
     implementation 'com.google.android.gms:play-services-auth:16.0.0'
     implementation 'com.google.firebase:firebase-core:16.0.3'
     implementation 'com.google.firebase:firebase-firestore:17.1.0'
-
     // Rx
     implementation 'io.reactivex.rxjava2:rxjava:2.2.0'
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
     implementation 'io.reactivex.rxjava2:rxkotlin:2.3.0'
-
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.mockito:mockito-core:2.21.0'
     testImplementation 'com.nhaarman:mockito-kotlin:1.5.0'
