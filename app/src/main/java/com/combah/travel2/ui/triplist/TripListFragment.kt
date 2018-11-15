@@ -9,7 +9,10 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.findNavController
 import com.combah.travel2.databinding.FragmentTripListBinding
+import com.combah.travel2.databinding.TripListItemBinding
 import com.combah.travel2.di.ViewModelFactory
+import com.combah.travel2.model.data.Trip
+import com.combah.travel2.ui.widget.createAdapter
 import dagger.android.support.DaggerFragment
 import javax.inject.Inject
 
@@ -26,13 +29,17 @@ class TripListFragment : DaggerFragment() {
         val viewModel = ViewModelProviders.of(this, factory)
             .get(TripListViewModel::class.java)
 
-        val adapter = TripListAdapter(this, viewModel.trips)
-        binding.tripList.adapter = adapter
+        binding.viewModel = viewModel
 
+        val adapter = createAdapter<Trip, TripListItemBinding> { itemBinding, trip ->
+            itemBinding.trip = trip
+        }
         adapter.onItemClicked.observe(this, Observer {
             val action = TripListFragmentDirections.actionTripListFragmentToTripFragment(it.id)
             findNavController().navigate(action)
         })
+
+        binding.tripList.adapter = adapter
 
         return binding.root
     }

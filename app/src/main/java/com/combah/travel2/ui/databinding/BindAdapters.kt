@@ -6,7 +6,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.databinding.BindingAdapter
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.combah.travel2.ui.widget.ReactiveAdapter
 import com.combah.travel2.ui.widget.ResolvingString
 
 @BindingAdapter("imageUrl")
@@ -52,4 +54,13 @@ fun setImage(view: ImageView, resourceId: Int?) {
 
         }
     }
+}
+
+@Suppress("UNCHECKED_CAST")
+@BindingAdapter("items")
+fun <T> setItems(view: RecyclerView, items: List<T>?) {
+    items ?: return
+    val adapter = (view.adapter as? ReactiveAdapter<T, *>) ?: return
+
+    adapter.setItems(items)
 }
