@@ -1,14 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:app="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/nav_graph" app:startDestination="@id/tripListFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/tripListFragment">
 
-    <fragment android:id="@+id/tripListFragment" android:name="com.combah.travel2.ui.triplist.TripListFragment"
-              android:label="TripListFragment">
-        <action android:id="@+id/action_tripListFragment_to_tripFragment" app:destination="@id/tripFragment"/>
+    <fragment
+        android:id="@+id/tripListFragment"
+        android:name="com.combah.travel2.ui.triplist.TripListFragment"
+        android:label="TripListFragment"
+        tools:layout="@layout/fragment_trip_list">
+        <action
+            android:id="@+id/action_tripListFragment_to_tripFragment"
+            app:destination="@id/tripFragment" />
     </fragment>
-    <fragment android:id="@+id/tripFragment" android:name="com.combah.travel2.ui.trip.TripFragment"
-              android:label="TripFragment">
-        <argument android:name="tripId" app:argType="string"/>
+    <fragment
+        android:id="@+id/tripFragment"
+        android:name="com.combah.travel2.ui.trip.TripFragment"
+        android:label="TripFragment"
+        tools:layout="@layout/fragment_trip">
+        <argument
+            android:name="tripId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_tripFragment_to_transportationSetupFragment"
+            app:destination="@id/transportationSetupFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/transportationSetupFragment"
+        android:name="com.combah.travel2.TransportationSetupFragment"
+        android:label="fragment_transportation_setup"
+        tools:layout="@layout/fragment_transportation_setup" />
 </navigation>

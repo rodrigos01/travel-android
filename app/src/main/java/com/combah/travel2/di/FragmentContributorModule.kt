@@ -1,5 +1,6 @@
 package com.combah.travel2.di
 
+import com.combah.travel2.TransportationSetupFragment
 import com.combah.travel2.ui.MainActivity
 import com.combah.travel2.ui.trip.TripFragment
 import com.combah.travel2.ui.triplist.TripListFragment
@@ -17,4 +18,7 @@ abstract class FragmentContributorModule {
 
     @ContributesAndroidInjector
     abstract fun contributeTripFragment(): TripFragment
+
+    @ContributesAndroidInjector
+    abstract fun contributeTransportationSetupFragment(): TransportationSetupFragment
 }

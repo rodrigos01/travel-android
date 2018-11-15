@@ -4,20 +4,14 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.databinding.ViewDataBinding
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.Observer
 import com.combah.travel2.databinding.EventListItemBinding
 import com.combah.travel2.databinding.MontEventListItemBinding
 import com.combah.travel2.databinding.PlaceEventListItemBinding
 import com.combah.travel2.ui.data.*
-import com.combah.travel2.ui.trip.TripViewModel
 import com.combah.travel2.ui.trip.eventlist.viewmodel.*
 import com.combah.travel2.ui.widget.ReactiveAdapter
 
-class TripEventsAdapter(
-        lifecycleOwner: LifecycleOwner,
-        viewModel: TripViewModel
-) : ReactiveAdapter<TripEvent, ViewDataBinding>(lifecycleOwner, viewModel.events) {
+class TripEventsAdapter : ReactiveAdapter<TripEvent, ViewDataBinding>() {
 
     companion object {
         private const val VIEW_TYPE_MONTH_EVENT = 0
@@ -27,11 +21,9 @@ class TripEventsAdapter(
 
     private var firstEvents: Set<TripEvent>? = null
 
-    init {
-        viewModel.firstEvents.observe(lifecycleOwner, Observer {
-            firstEvents = it
-            notifyDataSetChanged()
-        })
+    fun setFirstEvents(newFirstEvents: Set<TripEvent>) {
+        firstEvents = newFirstEvents
+        notifyDataSetChanged()
     }
 
     override fun getBinding(context: Context, parent: ViewGroup, viewType: Int) = when (viewType) {
