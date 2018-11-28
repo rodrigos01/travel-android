@@ -2,39 +2,34 @@ package com.combah.travel2.ui.trip
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.combah.travel2.extensions.asCalendar
-import com.combah.travel2.extensions.asLiveData
-import com.combah.travel2.extensions.map
+import com.combah.travel2.extensions.*
+import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
-import com.combah.travel2.model.data.Trip
+import com.combah.travel2.model.data.Hotel
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.ui.data.*
 import java.util.*
 import javax.inject.Inject
 
-class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
+class TripViewModel(private val repository: TripRepository, tripId: String) : ViewModel() {
 
-    private val trip = repository.findTripById(tripId)
-
-
-    val events = trip.filter { it.flights != null }
-            .map(this::getEventsFromTrip)
+    val events = getEventsFromTrip(tripId)
             .asLiveData()
 
     val firstEvents = events.map(this::getFirstEvents)
 
-    private fun getEventsFromTrip(trip: Trip) = getFlightEventsFromTrip(trip)
-            ?.asSequence()
-            ?.plus(getHotelEventsFromTrip(trip) ?: emptyList())
-            ?.sortedBy { it.timestamp }
-            ?.let { it.plus(getPlaceEventsFromEvents(it.asIterable())) }
-            ?.let { it.plus(getMonthEventsFromEvents(it.asIterable())) }
-            ?.sortedWith(eventComparator)
-            ?.toList()
-            ?: emptyList()
+    private fun getEventsFromTrip(tripId: String) = getFlightEventForTrip(tripId)
+            .plusConcat(getHotelEventsForTrip(tripId))
+            .plusMap { getPlaceEventsFromEvents(it) }
+            .plusMap { getMonthEventsFromEvents(it) }
+            .sortedWith(getEventComparator())
 
-    private fun getFlightEventsFromTrip(trip: Trip) = trip.flights
-            ?.flatMap { it.segments.flatMap(this::getFlightEventsFromSegment) }
+    private fun getFlightEventForTrip(tripId: String) = repository.getTripFlights(tripId)
+            .map(this::getFlightEventsFromFlights)
+
+    private fun getFlightEventsFromFlights(flights: List<Flight>) = flights.flatMap {
+        it.segments.flatMap(this::getFlightEventsFromSegment)
+    }
 
     private fun getFlightEventsFromSegment(segment: FlightSegment) = listOf(
             FlightEvent(
@@ -50,7 +45,10 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
             )
     )
 
-    private fun getHotelEventsFromTrip(trip: Trip) = trip.hotels?.flatMap {
+    private fun getHotelEventsForTrip(tripId: String) = repository.getTripHotels(tripId)
+            .map(this::getHotelEventsFromHotels)
+
+    private fun getHotelEventsFromHotels(hotels: List<Hotel>) = hotels.flatMap {
         listOf(
                 CheckinEvent(it),
                 CheckoutEvent(it)
@@ -69,6 +67,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
             }
 
     private fun getPlaceEventsFromEvents(events: Iterable<TripEvent>) = events
+            .sortedBy { it.timestamp }
             .distinctBy { it.place }
             .map {
                 PlaceEvent(
@@ -91,7 +90,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
         return calendar.time
     }
 
-    private val eventComparator = Comparator<TripEvent> { event1, event2 ->
+    private fun getEventComparator() = Comparator<TripEvent> { event1, event2 ->
         val timeComparison = event1.timestamp.compareTo(event2.timestamp)
         if (timeComparison == 0 && event1 is PlaceEvent) {
             -1
