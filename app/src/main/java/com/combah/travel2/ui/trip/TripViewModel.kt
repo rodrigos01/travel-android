@@ -11,11 +11,8 @@ import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.ui.data.*
 import java.util.*
 import javax.inject.Inject
-import kotlin.collections.HashMap
 
 class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
-
-    private val earlierEventTimes = HashMap<Date, Date>()
 
     private val trip = repository.findTripById(tripId)
 
