@@ -1,6 +1,8 @@
 package com.combah.travel2.model.repository.firebase
 
 import com.combah.travel2.extensions.asObservable
+import com.combah.travel2.model.data.Flight
+import com.combah.travel2.model.data.Hotel
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
 import com.google.firebase.firestore.DocumentSnapshot
@@ -9,13 +11,23 @@ import io.reactivex.Observable
 
 class FirebaseTripRepository(private val firestore: FirebaseFirestore) : TripRepository {
     override val trips: Observable<List<Trip>> = firestore.collection("/trips")
-        .asObservable(this::tripConverter)
+            .asObservable(this::tripConverter)
 
     override fun findTripById(tripId: String): Observable<Trip> {
         return firestore.document("/trips/$tripId")
-            .asObservable(this::tripConverter)
+                .asObservable(this::tripConverter)
+    }
+
+    override fun getTripFlights(tripId: String): Observable<List<Flight>> {
+        return findTripById(tripId)
+                .map { it.flights ?: emptyList() }
+    }
+
+    override fun getTripHotels(tripId: String): Observable<List<Hotel>> {
+        return findTripById(tripId)
+                .map { it.hotels ?: emptyList() }
     }
 
     private fun tripConverter(snapshot: DocumentSnapshot) = snapshot.toObject(Trip::class.java)?.copy(id = snapshot.id)
-        ?: Trip(snapshot.id)
+            ?: Trip(snapshot.id)
 }
