@@ -1,6 +1,6 @@
 package com.combah.travel2.di
 
-import com.combah.travel2.TransportationSetupFragment
+import com.combah.travel2.ui.trip.creation.TransportationSetupFragment
 import com.combah.travel2.ui.MainActivity
 import com.combah.travel2.ui.trip.TripFragment
 import com.combah.travel2.ui.triplist.TripListFragment

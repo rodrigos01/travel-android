@@ -24,9 +24,8 @@ class TripFragment : DaggerFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val tripId = TripFragmentArgs.fromBundle(arguments).tripId
+        arguments?.let { factory.tripId = TripFragmentArgs.fromBundle(it).tripId }
 
-        factory.tripId = tripId
         val viewModel = ViewModelProviders.of(this, factory)
                 .get(TripViewModel::class.java)
 

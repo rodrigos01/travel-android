@@ -2,7 +2,13 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".TransportationSetupFragment">
+    tools:context=".ui.trip.creation.TransportationSetupFragment">
+
+    <data>
+        <variable
+            name="viewModel"
+            type="com.combah.travel2.ui.trip.creation.TransportationSetupViewModel" />
+    </data>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
@@ -80,9 +86,10 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/input_from">
 
-                    <com.google.android.material.textfield.TextInputEditText
+                    <com.combah.travel2.ui.widget.DatePickerEditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        date="@{viewModel.departureDate}"
                         android:hint="departure" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -102,9 +109,10 @@
                     app:layout_constraintStart_toEndOf="@+id/input_departure_date"
                     app:layout_constraintTop_toBottomOf="@id/input_to">
 
-                    <com.google.android.material.textfield.TextInputEditText
+                    <com.combah.travel2.ui.widget.DatePickerEditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        date="@{viewModel.returnDate}"
                         android:hint="Return" />
                 </com.google.android.material.textfield.TextInputLayout>
             </androidx.constraintlayout.widget.ConstraintLayout>
