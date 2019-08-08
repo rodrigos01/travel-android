@@ -28,7 +28,7 @@
     </fragment>
     <fragment
         android:id="@+id/transportationSetupFragment"
-        android:name="com.combah.travel2.TransportationSetupFragment"
+        android:name="com.combah.travel2.ui.trip.creation.TransportationSetupFragment"
         android:label="fragment_transportation_setup"
         tools:layout="@layout/fragment_transportation_setup" />
 </navigation>
