@@ -5,26 +5,21 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.findNavController
 import com.combah.travel2.databinding.FragmentTripListBinding
-import com.combah.travel2.di.ViewModelFactory
-import dagger.android.support.DaggerFragment
-import javax.inject.Inject
+import org.koin.android.viewmodel.ext.android.viewModel
 
-class TripListFragment : DaggerFragment() {
+class TripListFragment : Fragment() {
 
-    @Inject
-    lateinit var factory: ViewModelFactory
+    private val viewModel: TripListViewModel by viewModel()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val binding = FragmentTripListBinding.inflate(inflater, container, false)
-        binding.setLifecycleOwner(this)
 
-        val viewModel = ViewModelProviders.of(this, factory)
-            .get(TripListViewModel::class.java)
+        val binding = FragmentTripListBinding.inflate(inflater, container, false)
+        binding.lifecycleOwner = this
 
         val adapter = TripListAdapter(this, viewModel.trips)
         binding.tripList.adapter = adapter
