@@ -10,7 +10,6 @@ import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.ui.data.*
 import java.util.*
-import javax.inject.Inject
 import kotlin.collections.HashMap
 
 class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
@@ -104,7 +103,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
     }
 
     @Suppress("UNCHECKED_CAST")
-    class Factory @Inject constructor(private val repository: TripRepository) : ViewModelProvider.Factory {
+    class Factory(private val repository: TripRepository) : ViewModelProvider.Factory {
 
         lateinit var tripId: String
 

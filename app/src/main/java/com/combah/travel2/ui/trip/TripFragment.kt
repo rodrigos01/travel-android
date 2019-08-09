@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.core.view.ViewCompat
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.FragmentNavigator
@@ -14,23 +15,22 @@ import com.combah.travel2.databinding.FragmentTripBinding
 import com.combah.travel2.extensions.observe
 import com.combah.travel2.ui.trip.eventlist.TripEventsAdapter
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import dagger.android.support.DaggerFragment
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
-class TripFragment : DaggerFragment() {
+class TripFragment : Fragment() {
 
-    @Inject
-    lateinit var factory: TripViewModel.Factory
+    private val factory: TripViewModel.Factory by inject()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         arguments?.let { factory.tripId = TripFragmentArgs.fromBundle(it).tripId }
 
+
         val viewModel = ViewModelProviders.of(this, factory)
                 .get(TripViewModel::class.java)
 
         val binding = FragmentTripBinding.inflate(inflater, container, false)
-        binding.setLifecycleOwner(this)
+        binding.lifecycleOwner = this
         binding.viewModel = viewModel
 
         val adapter = TripEventsAdapter()

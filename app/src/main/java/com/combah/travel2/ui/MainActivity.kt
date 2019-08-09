@@ -1,11 +1,11 @@
 package com.combah.travel2.ui
 
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import com.combah.travel2.R
-import dagger.android.support.DaggerAppCompatActivity
 
-class MainActivity : DaggerAppCompatActivity() {
+class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
