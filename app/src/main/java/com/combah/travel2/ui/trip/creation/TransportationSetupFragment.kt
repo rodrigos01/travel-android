@@ -5,15 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.transition.AutoTransition
 import com.combah.travel2.databinding.FragmentTransportationSetupBinding
-import com.combah.travel2.extensions.observe
-import com.combah.travel2.ui.widget.makeDatePickerDialog
-import dagger.android.support.DaggerFragment
 
 
-class TransportationSetupFragment : DaggerFragment() {
+class TransportationSetupFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
