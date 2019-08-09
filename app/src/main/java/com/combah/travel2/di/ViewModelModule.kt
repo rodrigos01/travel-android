@@ -1,19 +1,11 @@
 package com.combah.travel2.di
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import com.combah.travel2.ui.trip.TripViewModel
 import com.combah.travel2.ui.triplist.TripListViewModel
-import dagger.Binds
-import dagger.Module
-import dagger.multibindings.IntoMap
+import org.koin.android.viewmodel.dsl.viewModel
+import org.koin.dsl.module
 
-@Module
-abstract class ViewModelModule {
-    @Binds
-    @IntoMap
-    @ViewModelKey(TripListViewModel::class)
-    abstract fun bindTripListViewModel(tripListViewModel: TripListViewModel): ViewModel
-
-    @Binds
-    abstract fun bindViewModelFactory(factory: ViewModelFactory): ViewModelProvider.Factory
+val viewModelModule = module {
+    viewModel { TripListViewModel(get()) }
+    factory { TripViewModel.Factory(get()) }
 }
