@@ -19,9 +19,13 @@ class DatePickerEditText @JvmOverloads constructor(
         setText(field?.format())
     }
 
+    init {
+
+    }
+
 }
 
-@BindingAdapter("app:dateAttrChanged")
+@BindingAdapter("dateAttrChanged")
 fun setListeners(view: DatePickerEditText, listener: InverseBindingListener) {
     view.setOnClickListener {
         makeDatePickerDialog(view.context, view.date) { newDate ->
