@@ -26,6 +26,7 @@ class TransportationSetupFragment : Fragment() {
                 .get(TransportationSetupViewModel::class.java)
 
         val binding = FragmentTransportationSetupBinding.inflate(inflater, container, false)
+        binding.lifecycleOwner = this
         binding.viewModel = viewModel
 
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
