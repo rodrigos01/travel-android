@@ -6,30 +6,22 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProviders
 import com.combah.travel2.databinding.FragmentTripBinding
 import com.combah.travel2.ui.trip.eventlist.TripEventsAdapter
-import org.koin.android.ext.android.inject
+import org.koin.android.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
 
 class TripFragment : Fragment() {
 
-    private val factory: TripViewModel.Factory by inject()
+    private val tripId: String? by lazy { arguments?.let { TripFragmentArgs.fromBundle(it).tripId } }
+    private val viewModel: TripViewModel by viewModel { parametersOf(tripId) }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         val binding = FragmentTripBinding.inflate(inflater, container, false)
 
-        arguments?.let {
-            val tripId = TripFragmentArgs.fromBundle(it).tripId
-
-            factory.tripId = tripId
-            val viewModel = ViewModelProviders.of(this, factory)
-                    .get(TripViewModel::class.java)
-
-
-            val adapter = TripEventsAdapter(this, viewModel)
-            binding.eventList.adapter = adapter
-        }
+        val adapter = TripEventsAdapter(this, viewModel)
+        binding.eventList.adapter = adapter
 
         return binding.root
     }
