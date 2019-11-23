@@ -7,5 +7,5 @@ import org.koin.dsl.module
 
 val viewModelModule = module {
     viewModel { TripListViewModel(get()) }
-    factory { TripViewModel.Factory(get()) }
+    viewModel { (tripId: String) -> TripViewModel(get(), tripId) }
 }
