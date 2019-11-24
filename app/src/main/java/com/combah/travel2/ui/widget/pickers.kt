@@ -3,10 +3,9 @@ package com.combah.travel2.ui.widget
 import android.app.DatePickerDialog
 import android.content.Context
 import android.widget.DatePicker
-import com.combah.travel2.extensions.createLiveData
 import java.util.*
 
-fun makeDatePickerDialog(context: Context, initialDate: Date? = Date(), dateSet: (Date) -> Unit) {
+fun makeDatePickerDialog(context: Context, initialDate: Date? = Date(), minDate: Date? = null, dateSet: (Date) -> Unit) {
     val initialCalendar = Calendar.getInstance()
     initialDate?.let { initialCalendar.time = it }
 
@@ -18,9 +17,10 @@ fun makeDatePickerDialog(context: Context, initialDate: Date? = Date(), dateSet:
         dateSet(resultCalendar.time)
     }
 
-    DatePickerDialog(context, dateSetListener,
+    val dialog = DatePickerDialog(context, dateSetListener,
             initialCalendar[Calendar.YEAR],
             initialCalendar[Calendar.MONTH],
             initialCalendar[Calendar.DAY_OF_MONTH])
-            .show()
+    minDate?.let { dialog.datePicker.minDate = it.time }
+    dialog.show()
 }

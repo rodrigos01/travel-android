@@ -40,6 +40,14 @@ android {
     dataBinding {
         enabled true
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }
 
 dependencies {
@@ -50,10 +58,10 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.0-beta3'
     implementation 'com.google.android.material:material:1.0.0'
     // Lifecycle
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
-    implementation 'androidx.lifecycle:lifecycle-reactivestreams:2.0.0'
-    implementation 'androidx.concurrent:concurrent-futures:1.0.0-rc01'
-    kapt 'androidx.lifecycle:lifecycle-compiler:2.0.0'
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0'
+    implementation 'androidx.lifecycle:lifecycle-reactivestreams:2.1.0'
+    implementation 'androidx.concurrent:concurrent-futures:1.0.0'
+    implementation 'androidx.lifecycle:lifecycle-common-java8:2.1.0'
     // Navigation
     implementation 'androidx.navigation:navigation-fragment-ktx:2.1.0'
     implementation 'androidx.navigation:navigation-ui-ktx:2.1.0'

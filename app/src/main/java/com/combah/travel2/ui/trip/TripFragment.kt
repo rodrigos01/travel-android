@@ -11,6 +11,7 @@ import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.findNavController
 import com.combah.travel2.R
 import com.combah.travel2.databinding.FragmentTripBinding
+import com.combah.travel2.extensions.observe
 import com.combah.travel2.ui.trip.eventlist.TripEventsAdapter
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import org.koin.android.viewmodel.ext.android.viewModel
@@ -24,9 +25,15 @@ class TripFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         val binding = FragmentTripBinding.inflate(inflater, container, false)
+        binding.lifecycleOwner = this
+        binding.viewModel = viewModel
 
-        val adapter = TripEventsAdapter(this, viewModel)
+        val adapter = TripEventsAdapter()
         binding.eventList.adapter = adapter
+
+        viewModel.firstEvents.observe(this) { items ->
+            items?.let { adapter.setFirstEvents(it) }
+        }
 
         val bottomSheetBehavior = BottomSheetBehavior.from(binding.addPlanModal)
         bottomSheetBehavior.isHideable = true
