@@ -14,24 +14,29 @@ class DatePickerEditText @JvmOverloads constructor(
 ) : EditText(context, attrs, defStyleAttr) {
 
     var date: Date? = null
-    set(value) {
-        field = value
-        setText(field?.format())
-    }
+        set(value) {
+            field = value
+            setText(field?.format())
+        }
 
-    init {
-
-    }
+    var minDate: Date? = null
 
 }
 
 @BindingAdapter("dateAttrChanged")
 fun setListeners(view: DatePickerEditText, listener: InverseBindingListener) {
     view.setOnClickListener {
-        makeDatePickerDialog(view.context, view.date) { newDate ->
+        makeDatePickerDialog(view.context, view.date, minDate = view.minDate) { newDate ->
             view.date = newDate
             listener.onChange()
         }
+    }
+}
+
+@BindingAdapter("minDate")
+fun setMinDate(view: DatePickerEditText, minDate: Date?) {
+    if (minDate != view.minDate) {
+        view.minDate = minDate
     }
 }
 
