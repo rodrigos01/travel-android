@@ -23,16 +23,18 @@ class TripFragment : Fragment() {
     private val viewModel: TripViewModel by viewModel { parametersOf(tripId) }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+                              savedInstanceState: Bundle?): View {
         val binding = FragmentTripBinding.inflate(inflater, container, false)
-        binding.lifecycleOwner = this
-        binding.viewModel = viewModel
 
         val adapter = TripEventsAdapter()
         binding.eventList.adapter = adapter
 
         viewModel.firstEvents.observe(this) { items ->
             items?.let { adapter.setFirstEvents(it) }
+        }
+
+        viewModel.events.observe(viewLifecycleOwner) {
+            it?.let { it1 -> adapter.setItems(it1) }
         }
 
         val bottomSheetBehavior = BottomSheetBehavior.from(binding.addPlanModal)

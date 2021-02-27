@@ -9,9 +9,9 @@ import com.combah.travel2.databinding.MontEventListItemBinding
 import com.combah.travel2.databinding.PlaceEventListItemBinding
 import com.combah.travel2.ui.data.*
 import com.combah.travel2.ui.trip.eventlist.viewmodel.*
-import com.combah.travel2.ui.widget.ReactiveAdapter
+import com.combah.travel2.ui.widget.DataBindingAdapter
 
-class TripEventsAdapter : ReactiveAdapter<TripEvent, ViewDataBinding>() {
+class TripEventsAdapter : DataBindingAdapter<TripEvent, ViewDataBinding>() {
 
     companion object {
         private const val VIEW_TYPE_MONTH_EVENT = 0
@@ -38,11 +38,17 @@ class TripEventsAdapter : ReactiveAdapter<TripEvent, ViewDataBinding>() {
         else -> bindRegularEvent(binding as EventListItemBinding, item)
     }
 
-    private fun getMonthEventBinding(context: Context, parent: ViewGroup): MontEventListItemBinding {
+    private fun getMonthEventBinding(
+        context: Context,
+        parent: ViewGroup
+    ): MontEventListItemBinding {
         return MontEventListItemBinding.inflate(LayoutInflater.from(context), parent, false)
     }
 
-    private fun getPlaceEventBinding(context: Context, parent: ViewGroup): PlaceEventListItemBinding {
+    private fun getPlaceEventBinding(
+        context: Context,
+        parent: ViewGroup
+    ): PlaceEventListItemBinding {
         return PlaceEventListItemBinding.inflate(LayoutInflater.from(context), parent, false)
     }
 
