@@ -17,13 +17,10 @@
         android:focusable="true"
         app:srcCompat="@drawable/ic_add_white_24dp" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/event_list"
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/compose_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:listitem="@layout/event_list_item" />
+        android:layout_height="match_parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/add_plan_modal"
