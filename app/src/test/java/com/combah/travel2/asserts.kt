@@ -1,15 +1,33 @@
 package com.combah.travel2
 
 import androidx.lifecycle.LiveData
-import io.reactivex.Observable
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestCoroutineScope
 import org.junit.Assert.assertEquals
 
-fun <T> assertObservableEquals(expected: T?, actual: Observable<T>) {
+@ExperimentalCoroutinesApi
+fun <T> TestCoroutineScope.assertFlowEquals(expected: T?, actual: Flow<T>) {
     var value: T? = null
-    actual.subscribe {
+    val job = launch {
+        actual.collect {
+            value = it
+        }
+    }
+    advanceUntilIdle()
+    assertEquals(expected, value)
+    job.cancel()
+}
+
+fun <T> TestCoroutineScope.getObservedValue(liveData: LiveData<T>): T? {
+    var value: T? = null
+    liveData.observeForever {
         value = it
     }
-    assertEquals(expected, value)
+    advanceUntilIdle()
+    return value
 }
 
 val <T> LiveData<T>.observedValue: T?
