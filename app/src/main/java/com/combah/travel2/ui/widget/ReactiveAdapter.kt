@@ -1,15 +1,14 @@
 package com.combah.travel2.ui.widget
 
 import android.content.Context
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 
-abstract class ReactiveAdapter<T, R, S : ReactiveAdapter.ViewHolder<R>> : RecyclerView.Adapter<S>() {
+abstract class ReactiveAdapter<T, R, S : ReactiveAdapter.ViewHolder<R>> :
+    RecyclerView.Adapter<S>() {
 
     private val _onItemClicked = MutableLiveData<T>()
     val onItemClicked: LiveData<T>
