@@ -7,12 +7,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.bumptech.glide.Glide
+import coil.load
 import com.combah.travel2.databinding.FragmentTripListBinding
 import com.combah.travel2.databinding.TripListItemBinding
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.ui.widget.createAdapter
-import org.koin.android.viewmodel.ext.android.viewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class TripListFragment : Fragment() {
 
@@ -27,9 +27,7 @@ class TripListFragment : Fragment() {
 
         val adapter = createAdapter<Trip, TripListItemBinding> { itemBinding, trip ->
             itemBinding.title.text = trip.name
-            Glide.with(itemBinding.root.context)
-                .load(trip.coverImage)
-                .into(itemBinding.cover)
+            itemBinding.cover.load(trip.coverImage)
         }
         adapter.onItemClicked.observe(viewLifecycleOwner) {
             val action = TripListFragmentDirections.actionTripListFragmentToTripFragment(it.id)

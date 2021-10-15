@@ -16,7 +16,7 @@ import com.combah.travel2.R
 import com.combah.travel2.databinding.FragmentTripBinding
 import com.combah.travel2.ui.trip.eventlist.composable.EventList
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import org.koin.android.viewmodel.ext.android.viewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
 class TripFragment : Fragment() {
