@@ -8,17 +8,16 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.combah.travel2.ui.trip.creation.TransportationSetupViewModel
 import java.util.*
 
 @Composable
 fun TransportationSetup(
-    departureDate: Date?,
-    arrivalDate: Date?,
-    onDepartureDateChanged: (Date) -> Unit,
-    onArrivalDateChanged: (Date) -> Unit
+    viewModel: TransportationSetupViewModel
 ) {
     Scaffold(topBar = {
         TopAppBar(
@@ -34,6 +33,8 @@ fun TransportationSetup(
     }) {
         var from by remember { mutableStateOf("") }
         var to by remember { mutableStateOf("") }
+        val departureDate by viewModel.departureDate.observeAsState()
+        val arrivalDate by viewModel.departureDate.observeAsState()
         Column(modifier = Modifier.padding(all = 16.dp)) {
             Row(
                 modifier = Modifier
@@ -62,14 +63,18 @@ fun TransportationSetup(
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 16.dp),
-                    onDateSelected = onDepartureDateChanged
+                    onDateSelected = {
+                        viewModel.departureDate.value = it
+                    }
                 )
                 DatePickerTextField(
                     label = "arrival",
                     date = arrivalDate,
                     minDate = departureDate,
                     modifier = Modifier.weight(1f),
-                    onDateSelected = onArrivalDateChanged
+                    onDateSelected = {
+                        viewModel.arrivalDate.value = it
+                    }
                 )
             }
         }
@@ -80,6 +85,6 @@ fun TransportationSetup(
 @Preview
 fun TransportationSetupPreview() {
     MaterialTheme {
-        TransportationSetup(Date(), Date(), {}, {})
+        TransportationSetup(TransportationSetupViewModel())
     }
 }
