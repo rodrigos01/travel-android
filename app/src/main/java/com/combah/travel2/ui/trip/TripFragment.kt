@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -13,12 +15,13 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.findNavController
 import com.combah.travel2.R
-import com.combah.travel2.databinding.FragmentTripBinding
+import com.combah.travel2.ui.extensions.setContent
 import com.combah.travel2.ui.trip.eventlist.composable.EventList
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
+@ExperimentalAnimationApi
+@ExperimentalMaterialApi
 class TripFragment : Fragment() {
 
     private val tripId: String? by lazy { arguments?.let { TripFragmentArgs.fromBundle(it).tripId } }
@@ -28,35 +31,19 @@ class TripFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val binding = FragmentTripBinding.inflate(inflater, container, false)
-
-        val bottomSheetBehavior = BottomSheetBehavior.from(binding.addPlanModal)
-        bottomSheetBehavior.isHideable = true
-
-        binding.addPlanButton.setOnClickListener {
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-        }
-
-        binding.addTransportationTitle.setOnClickListener {
-            navigateToAddPlan(
-                binding.addPlanModal,
-                R.id.action_tripFragment_to_transportationSetupFragment
-            )
-        }
-
-        binding.addPlanClose.setOnClickListener {
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
-        }
-
-        binding.composeContainer.setContent {
+        return setContent {
             MaterialTheme {
                 val events by viewModel.events.observeAsState(emptyList())
                 val firstEvents by viewModel.firstEvents.observeAsState()
-                EventList(events = events, firstEvents = firstEvents ?: emptySet())
+                EventList(
+                    events = events,
+                    firstEvents = firstEvents ?: emptySet(),
+                    addTransportationClickListener = {
+                        findNavController()
+                            .navigate(R.id.action_tripFragment_to_transportationSetupFragment)
+                    })
             }
         }
-
-        return binding.root
     }
 
     private fun navigateToAddPlan(modal: View, actionId: Int) {
