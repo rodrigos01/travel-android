@@ -8,8 +8,7 @@
     <fragment
         android:id="@+id/tripListFragment"
         android:name="com.combah.travel2.ui.triplist.TripListFragment"
-        android:label="TripListFragment"
-        tools:layout="@layout/fragment_trip_list">
+        android:label="TripListFragment">
         <action
             android:id="@+id/action_tripListFragment_to_tripFragment"
             app:destination="@id/tripFragment" />
@@ -17,8 +16,7 @@
     <fragment
         android:id="@+id/tripFragment"
         android:name="com.combah.travel2.ui.trip.TripFragment"
-        android:label="TripFragment"
-        tools:layout="@layout/fragment_trip">
+        android:label="TripFragment">
         <argument
             android:name="tripId"
             app:argType="string" />
@@ -29,6 +27,5 @@
     <fragment
         android:id="@+id/transportationSetupFragment"
         android:name="com.combah.travel2.ui.trip.creation.TransportationSetupFragment"
-        android:label="fragment_transportation_setup"
-        tools:layout="@layout/fragment_transportation_setup" />
+        android:label="fragment_transportation_setup" />
 </navigation>

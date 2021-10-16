@@ -5,16 +5,16 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.combah.travel2.databinding.FragmentTripListBinding
-import com.combah.travel2.ui.triplist.composable.TripListItem
+import com.combah.travel2.ui.extensions.setContent
+import com.combah.travel2.ui.triplist.composable.TripList
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+@ExperimentalMaterialApi
 class TripListFragment : Fragment() {
 
     private val viewModel: TripListViewModel by viewModel()
@@ -23,23 +23,14 @@ class TripListFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
-        val binding = FragmentTripListBinding.inflate(inflater, container, false)
-
-        binding.composeContainer.setContent {
+        return setContent {
             val trips by viewModel.trips.observeAsState(emptyList())
-            LazyColumn {
-                items(trips) { trip ->
-                    TripListItem(name = trip.name, coverImageUrl = trip.coverImage, onClick = {
-                        val action =
-                            TripListFragmentDirections.actionTripListFragmentToTripFragment(trip.id)
-                        findNavController().navigate(action)
-                    })
-                }
-            }
+            TripList(trips = trips, onItemClick = {
+                val action =
+                    TripListFragmentDirections.actionTripListFragmentToTripFragment(it.id)
+                findNavController().navigate(action)
+            })
         }
-
-        return binding.root
     }
 
 
