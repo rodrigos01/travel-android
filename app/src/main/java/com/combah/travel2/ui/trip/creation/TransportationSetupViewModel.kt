@@ -6,5 +6,5 @@ import java.util.*
 
 class TransportationSetupViewModel : ViewModel() {
     val departureDate = MutableLiveData<Date>()
-    val returnDate = MutableLiveData<Date>()
+    val arrivalDate = MutableLiveData<Date>()
 }
