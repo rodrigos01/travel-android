@@ -10,7 +10,12 @@ import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
-import io.reactivex.Observable
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.setMain
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
@@ -25,19 +30,13 @@ class TripViewModelTest {
     @JvmField
     val rule = InstantTaskExecutorRule()
 
+    private val dispatcher = TestCoroutineDispatcher()
     private val repository = mock<TripRepository>()
 
     @Before
     fun setup() {
-        whenever(repository.getTripFlights(any())).thenReturn(Observable.just(trip.flights))
-        whenever(repository.getTripHotels(any())).thenReturn(Observable.just(trip.hotels))
-    }
-
-    @Test
-    fun shouldGetTripWithIdProvided() {
-        TripViewModel(repository, "minhaTrip")
-        verify(repository).getTripFlights("minhaTrip")
-        verify(repository).getTripHotels("minhaTrip")
+        Dispatchers.setMain(dispatcher)
+        whenever(repository.findTripById(any())).thenReturn(flowOf(trip))
     }
 
     @Test
