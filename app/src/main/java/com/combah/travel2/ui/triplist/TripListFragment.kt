@@ -6,8 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.combah.travel2.ui.extensions.setContent
@@ -24,8 +22,7 @@ class TripListFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         return setContent {
-            val trips by viewModel.trips.observeAsState(emptyList())
-            TripList(trips = trips, onItemClick = {
+            TripList(viewModel = viewModel, onItemClick = {
                 val action =
                     TripListFragmentDirections.actionTripListFragmentToTripFragment(it.id)
                 findNavController().navigate(action)

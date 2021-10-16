@@ -4,8 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.fragment.app.Fragment
 import androidx.transition.AutoTransition
 import com.combah.travel2.ui.extensions.setContent
@@ -29,13 +27,7 @@ class TransportationSetupFragment : Fragment() {
     ): View {
 
         return setContent {
-            val departureDate by viewModel.departureDate.observeAsState()
-            val returnDate by viewModel.arrivalDate.observeAsState()
-            TransportationSetup(departureDate, returnDate, onDepartureDateChanged = {
-                viewModel.departureDate.value = it
-            }, onArrivalDateChanged = {
-                viewModel.arrivalDate.value = it
-            })
+            TransportationSetup(viewModel)
         }
     }
 }

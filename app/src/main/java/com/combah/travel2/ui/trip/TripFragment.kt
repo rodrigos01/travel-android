@@ -8,8 +8,6 @@ import android.view.ViewGroup
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.FragmentNavigator
@@ -33,11 +31,8 @@ class TripFragment : Fragment() {
     ): View {
         return setContent {
             MaterialTheme {
-                val events by viewModel.events.observeAsState(emptyList())
-                val firstEvents by viewModel.firstEvents.observeAsState()
                 EventList(
-                    events = events,
-                    firstEvents = firstEvents ?: emptySet(),
+                    viewModel = viewModel,
                     addTransportationClickListener = {
                         findNavController()
                             .navigate(R.id.action_tripFragment_to_transportationSetupFragment)
