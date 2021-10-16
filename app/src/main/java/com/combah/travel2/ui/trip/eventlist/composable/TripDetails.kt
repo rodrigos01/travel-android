@@ -9,15 +9,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.navigation.NavController
 import com.combah.travel2.ui.data.*
 import com.combah.travel2.ui.trip.TripViewModel
+import com.combah.travel2.ui.trip.creation.composable.TransportationSetupDestination
 import kotlinx.coroutines.launch
 
 @ExperimentalMaterialApi
 @Composable
-fun EventList(
+fun TripDetails(
     viewModel: TripViewModel,
-    addTransportationClickListener: () -> Unit
+    navController: NavController,
 ) {
     val events by viewModel.events.observeAsState(emptyList())
     val firstEvents by viewModel.firstEvents.observeAsState()
@@ -26,7 +28,11 @@ fun EventList(
         rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     ModalBottomSheetLayout(sheetContent = {
         AddPlan(
-            addTransportationClickListener = addTransportationClickListener,
+            addTransportationClickListener = {
+                navController.navigate(
+                    TransportationSetupDestination.KEY
+                )
+            },
             onClickClose = {
                 scope.launch {
                     bottomSheetState.hide()
@@ -62,4 +68,12 @@ fun EventList(
             }
         }
     }
+}
+
+object TripDetailsDestination {
+    const val ARG_TRIP_ID = "tripId"
+    private const val ROUTE_NAME = "trip_details"
+    const val ROUTE = "$ROUTE_NAME/{$ARG_TRIP_ID}"
+
+    fun getRoute(tripId: String) = "$ROUTE_NAME/$tripId"
 }

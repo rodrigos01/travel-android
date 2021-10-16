@@ -88,3 +88,7 @@ fun TransportationSetupPreview() {
         TransportationSetup(TransportationSetupViewModel())
     }
 }
+
+object TransportationSetupDestination {
+    const val KEY = "transportation_setup"
+}
