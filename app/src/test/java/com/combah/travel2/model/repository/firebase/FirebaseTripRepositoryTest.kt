@@ -1,6 +1,6 @@
 package com.combah.travel2.model.repository.firebase
 
-import com.combah.travel2.assertObservableEquals
+import com.combah.travel2.assertFlowEquals
 import com.combah.travel2.mock.trip
 import com.combah.travel2.model.data.Trip
 import com.google.firebase.firestore.*
@@ -8,6 +8,8 @@ import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
+import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,12 +29,12 @@ class FirebaseTripRepositoryTest {
         val mockQuerySnapshot = mock<QuerySnapshot>()
 
         whenever(firestore.collection(any()))
-                .thenReturn(mockCollectionReference)
+            .thenReturn(mockCollectionReference)
         whenever(firestore.document(any()))
-                .thenReturn(mockDocumentReference)
+            .thenReturn(mockDocumentReference)
 
         whenever(mockDocumentSnapshot.toObject(Trip::class.java))
-                .thenReturn(trip)
+            .thenReturn(trip)
         whenever(mockDocumentSnapshot.id).thenReturn(trip.id)
 
         whenever(mockDocumentReference.addSnapshotListener(any())).then {
@@ -53,40 +55,40 @@ class FirebaseTripRepositoryTest {
     }
 
     @Test
-    fun shouldGetTripsFromFirestore() {
+    fun shouldGetTripsFromFirestore() = runBlockingTest {
         val repository = FirebaseTripRepository(firestore)
 
-        assertObservableEquals(listOf(trip), repository.trips)
+        assertFlowEquals(listOf(trip), repository.trips)
         verify(firestore).collection("/trips")
     }
 
     @Test
-    fun shouldGetTripFromFirestore() {
+    fun shouldGetTripFromFirestore() = runBlockingTest {
         val repository = FirebaseTripRepository(firestore)
 
         val tripObservable = repository.findTripById("myTrip")
 
-        assertObservableEquals(trip, tripObservable)
+        assertFlowEquals(trip, tripObservable)
         verify(firestore).document("/trips/myTrip")
     }
 
     @Test
-    fun shouldGetTripFlights() {
+    fun shouldGetTripFlights() = runBlockingTest {
         val repository = FirebaseTripRepository(firestore)
 
         val flightsObservable = repository.getTripFlights("myTrip")
 
-        assertObservableEquals(trip.flights, flightsObservable)
+        assertFlowEquals(trip.flights, flightsObservable)
         verify(firestore).document("/trips/myTrip")
     }
 
     @Test
-    fun shouldGetTripHotels() {
+    fun shouldGetTripHotels() = runBlockingTest {
         val repository = FirebaseTripRepository(firestore)
 
         val hotelsObservable = repository.getTripHotels("myTrip")
 
-        assertObservableEquals(trip.hotels, hotelsObservable)
+        assertFlowEquals(trip.hotels, hotelsObservable)
         verify(firestore).document("/trips/myTrip")
     }
 }
