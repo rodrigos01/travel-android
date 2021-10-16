@@ -34,7 +34,7 @@ fun TransportationSetup(
         var from by remember { mutableStateOf("") }
         var to by remember { mutableStateOf("") }
         val departureDate by viewModel.departureDate.observeAsState()
-        val arrivalDate by viewModel.departureDate.observeAsState()
+        val arrivalDate by viewModel.arrivalDate.observeAsState()
         Column(modifier = Modifier.padding(all = 16.dp)) {
             Row(
                 modifier = Modifier
