@@ -19,7 +19,8 @@ import java.util.*
 fun TransportationSetup(
     viewModel: TransportationSetupViewModel
 ) {
-    Scaffold(topBar = {
+    Scaffold(
+        topBar = {
         TopAppBar(
             navigationIcon = {
                 IconButton(onClick = {}) {
@@ -35,10 +36,10 @@ fun TransportationSetup(
         var to by remember { mutableStateOf("") }
         val departureDate by viewModel.departureDate.observeAsState()
         val arrivalDate by viewModel.arrivalDate.observeAsState()
-        Column(modifier = Modifier.padding(all = 16.dp)) {
+        Column(modifier = Modifier.padding(it)) {
             Row(
                 modifier = Modifier
-                    .padding(top = 8.dp)
+                    .padding(top = 8.dp, start = 16.dp, end = 16.dp)
                     .fillMaxWidth()
             ) {
                 OutlinedTextField(
@@ -56,7 +57,7 @@ fun TransportationSetup(
                     modifier = Modifier.weight(1f)
                 )
             }
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Row(modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth()) {
                 DatePickerTextField(
                     label = "departure",
                     date = departureDate,

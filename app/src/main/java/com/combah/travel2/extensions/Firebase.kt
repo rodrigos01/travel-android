@@ -6,6 +6,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.sendBlocking
+import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
@@ -15,7 +16,7 @@ inline fun <reified T : Any> CollectionReference.asFlow(noinline converter: ((Do
         val registration = addSnapshotListener { snapshot, exception ->
             val values = snapshot?.documents?.let { snapshotListToObject(it, converter) }
             when {
-                values != null -> sendBlocking(values)
+                values != null -> trySendBlocking(values)
                 exception != null -> throw exception
                 else -> throw Throwable()
             }
@@ -30,7 +31,7 @@ inline fun <reified T : Any> DocumentReference.asFlow(noinline converter: ((Docu
         val registration = addSnapshotListener { snapshot, exception ->
             val value = snapshot?.let { snapshotToObject(it, converter) }
             when {
-                value != null -> sendBlocking(value)
+                value != null -> trySendBlocking(value)
                 exception != null -> throw exception
                 else -> throw Throwable()
             }

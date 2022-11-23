@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.ui.data.PlaceEvent
@@ -24,12 +26,12 @@ import java.util.*
 @Composable
 fun PlaceEventListItem(event: PlaceEvent) {
     BoxWithConstraints {
-        Image(
-            painter = rememberImagePainter(data = event.currentPlace.coverImage ?: ""),
+        AsyncImage(
+            model = event.currentPlace.coverImage,
+            contentDescription = "Place Description",
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(2.33f),
-            contentDescription = "Place Description",
             contentScale = ContentScale.FillWidth
         )
         Text(

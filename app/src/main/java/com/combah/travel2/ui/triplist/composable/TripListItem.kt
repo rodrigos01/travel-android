@@ -1,6 +1,5 @@
 package com.combah.travel2.ui.triplist.composable
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
@@ -14,13 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberImagePainter
+import coil.compose.AsyncImage
 
 @Composable
 fun TripListItem(name: String?, coverImageUrl: String?, onClick: () -> Unit) {
     Column(modifier = Modifier.clickable(onClick = onClick)) {
-        Image(
-            painter = rememberImagePainter(data = coverImageUrl),
+        AsyncImage(
+            model = coverImageUrl,
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1.77f),
