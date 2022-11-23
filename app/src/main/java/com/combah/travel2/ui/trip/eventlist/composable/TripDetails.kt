@@ -50,7 +50,7 @@ fun TripDetails(
                 }
             },
         ) {
-            LazyColumn {
+            LazyColumn(contentPadding = it) {
                 items(events) { event ->
                     val isFirst = firstEvents?.contains(event) ?: true
                     when (event) {

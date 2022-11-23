@@ -106,7 +106,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
 
         lateinit var tripId: String
 
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
             return TripViewModel(repository, tripId) as T
         }
 
