@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -35,26 +36,28 @@ class MainActivity : AppCompatActivity() {
     @Composable
     fun MainScreen() {
         val navController = rememberNavController()
-        NavHost(navController = navController, startDestination = TripListDestination.ROUTE) {
-            composable(TripListDestination.ROUTE) {
-                val viewModel: TripListViewModel by viewModel()
-                TripList(viewModel = viewModel, navController = navController)
-            }
-            composable(
-                TripDetailsDestination.ROUTE,
-                arguments = listOf(navArgument(
-                    TripDetailsDestination.ARG_TRIP_ID
-                ) { type = NavType.StringType })
-            ) { navBackStackEntry ->
-                val tripId = navBackStackEntry.arguments?.getString(
-                    TripDetailsDestination.ARG_TRIP_ID
-                )
-                val viewModel: TripViewModel by viewModel { parametersOf(tripId) }
-                TripDetails(viewModel = viewModel, navController = navController)
-            }
-            composable(TransportationSetupDestination.KEY) {
-                val viewModel: TransportationSetupViewModel by viewModel()
-                TransportationSetup(viewModel = viewModel)
+        MaterialTheme {
+            NavHost(navController = navController, startDestination = TripListDestination.ROUTE) {
+                composable(TripListDestination.ROUTE) {
+                    val viewModel: TripListViewModel by viewModel()
+                    TripList(viewModel = viewModel, navController = navController)
+                }
+                composable(
+                    TripDetailsDestination.ROUTE,
+                    arguments = listOf(navArgument(
+                        TripDetailsDestination.ARG_TRIP_ID
+                    ) { type = NavType.StringType })
+                ) { navBackStackEntry ->
+                    val tripId = navBackStackEntry.arguments?.getString(
+                        TripDetailsDestination.ARG_TRIP_ID
+                    )
+                    val viewModel: TripViewModel by viewModel { parametersOf(tripId) }
+                    TripDetails(viewModel = viewModel, navController = navController)
+                }
+                composable(TransportationSetupDestination.KEY) {
+                    val viewModel: TransportationSetupViewModel by viewModel()
+                    TransportationSetup(viewModel = viewModel, navController)
+                }
             }
         }
     }

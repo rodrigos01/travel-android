@@ -2,20 +2,27 @@ package com.combah.travel2.ui.trip.eventlist.composable
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.combah.travel2.model.repository.mock.MockTripRepository
 import com.combah.travel2.ui.data.*
 import com.combah.travel2.ui.trip.TripViewModel
 import com.combah.travel2.ui.trip.creation.composable.TransportationSetupDestination
 import kotlinx.coroutines.launch
 
-@ExperimentalMaterialApi
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun TripDetails(
     viewModel: TripViewModel,
@@ -67,6 +74,14 @@ fun TripDetails(
                 }
             }
         }
+    }
+}
+
+@Composable
+@Preview
+fun TripDetailsPreview() {
+    MaterialTheme {
+        TripDetails(TripViewModel(MockTripRepository(), "minhaTrip"), rememberNavController())
     }
 }
 

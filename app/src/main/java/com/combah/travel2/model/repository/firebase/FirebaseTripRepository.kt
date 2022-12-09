@@ -7,9 +7,11 @@ import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class FirebaseTripRepository(private val firestore: FirebaseFirestore) : TripRepository {
     override val trips: Flow<List<Trip>> = firestore.collection("/trips")
         .asFlow(this::tripConverter)

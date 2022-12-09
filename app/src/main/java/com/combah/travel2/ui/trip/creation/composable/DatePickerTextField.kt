@@ -3,8 +3,9 @@ package com.combah.travel2.ui.trip.creation.composable
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -16,6 +17,7 @@ import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerTextField(
     onDateSelected: (Date) -> Unit,
@@ -24,7 +26,7 @@ fun DatePickerTextField(
     minDate: Date? = null,
     label: String? = null,
 ) {
-    val context = LocalContext.current as AppCompatActivity
+    val context = LocalContext.current
     Box(modifier = modifier) {
         OutlinedTextField(
             value = date?.format() ?: "",
@@ -55,7 +57,7 @@ fun DatePickerTextField(
                     picker.addOnPositiveButtonClickListener { timestamp ->
                         onDateSelected(dateFrom(timestamp, TimeZone.getTimeZone("UTC")))
                     }
-                    picker.show(context.supportFragmentManager, picker.toString())
+                    picker.show((context as AppCompatActivity).supportFragmentManager, picker.toString())
                 }),
         )
     }

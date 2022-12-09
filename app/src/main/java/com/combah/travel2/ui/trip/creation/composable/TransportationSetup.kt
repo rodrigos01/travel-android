@@ -4,27 +4,32 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.combah.travel2.extensions.moveFocus
 import com.combah.travel2.ui.trip.creation.TransportationSetupViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransportationSetup(
-    viewModel: TransportationSetupViewModel
+    viewModel: TransportationSetupViewModel,
+    navController: NavController,
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "")
                     }
                 },
@@ -85,6 +90,13 @@ fun TransportationSetup(
                     }
                 )
             }
+            Row(modifier = Modifier
+                .align(Alignment.End)
+                .padding(all = 16.dp)) {
+                TextButton(onClick = {  }) {
+                    Text("next".uppercase())
+                }
+            }
         }
     }
 }
@@ -93,7 +105,7 @@ fun TransportationSetup(
 @Preview
 fun TransportationSetupPreview() {
     MaterialTheme {
-        TransportationSetup(TransportationSetupViewModel())
+        TransportationSetup(TransportationSetupViewModel(), rememberNavController())
     }
 }
 

@@ -3,18 +3,28 @@ package com.combah.travel2.ui
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.combah.travel2.mock.*
 import com.combah.travel2.model.repository.TripRepository
+import com.combah.travel2.model.repository.mock.MockData.bru
+import com.combah.travel2.model.repository.mock.MockData.brussels
+import com.combah.travel2.model.repository.mock.MockData.cdg
+import com.combah.travel2.model.repository.mock.MockData.flightToBruxelsArrivalDate
+import com.combah.travel2.model.repository.mock.MockData.flightToBruxelsDepartureDate
+import com.combah.travel2.model.repository.mock.MockData.flightToParisArrivalDate
+import com.combah.travel2.model.repository.mock.MockData.flightToParisDepartureDate
+import com.combah.travel2.model.repository.mock.MockData.jfk
+import com.combah.travel2.model.repository.mock.MockData.nyc
+import com.combah.travel2.model.repository.mock.MockData.paris
+import com.combah.travel2.model.repository.mock.MockData.parisHotel
+import com.combah.travel2.model.repository.mock.MockData.trip
 import com.combah.travel2.observedValue
 import com.combah.travel2.ui.data.*
 import com.combah.travel2.ui.trip.TripViewModel
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.TestCoroutineScope
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.setMain
 import org.junit.Assert.*
 import org.junit.Before
@@ -30,9 +40,11 @@ class TripViewModelTest {
     @JvmField
     val rule = InstantTaskExecutorRule()
 
-    private val dispatcher = TestCoroutineDispatcher()
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val dispatcher = StandardTestDispatcher()
     private val repository = mock<TripRepository>()
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Before
     fun setup() {
         Dispatchers.setMain(dispatcher)

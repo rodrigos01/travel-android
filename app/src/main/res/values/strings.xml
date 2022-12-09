@@ -14,5 +14,8 @@
     <string name="add_transportation_option">Transportation</string>
     <string name="add_accommodation_option">Accommodation</string>
     <string name="add_activity_option">Activity</string>
+    <string name="add_flight_option">Flight</string>
+    <string name="add_train_option">Train</string>
+    <string name="add_bus_option">Bus</string>
 
 </resources>
