@@ -10,8 +10,10 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.combah.travel2.extensions.moveFocus
 import com.combah.travel2.ui.trip.creation.TransportationSetupViewModel
 
 @Composable
@@ -47,18 +49,22 @@ fun TransportationSetup(
                     label = { Text(text = "From") },
                     modifier = Modifier
                         .weight(1f)
-                        .padding(end = 16.dp)
+                        .padding(end = 16.dp),
+                    keyboardActions = moveFocus(FocusDirection.Right),
                 )
                 OutlinedTextField(
                     value = to,
                     onValueChange = { to = it },
                     label = { Text(text = "To") },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    keyboardActions = moveFocus(FocusDirection.Down),
                 )
             }
-            Row(modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth()
+            ) {
                 DatePickerTextField(
                     label = "departure",
                     date = departureDate,
