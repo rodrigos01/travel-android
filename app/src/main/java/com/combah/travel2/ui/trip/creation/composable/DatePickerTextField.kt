@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
+import com.combah.travel2.extensions.dateFrom
 import com.combah.travel2.extensions.format
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointForward
@@ -52,9 +53,7 @@ fun DatePickerTextField(
                             .setSelection(date?.time)
                             .build()
                     picker.addOnPositiveButtonClickListener { timestamp ->
-                        timestamp
-                            ?.let { Date(it) }
-                            ?.let { onDateSelected(it) }
+                        onDateSelected(dateFrom(timestamp, TimeZone.getTimeZone("UTC")))
                     }
                     picker.show(context.supportFragmentManager, picker.toString())
                 }),

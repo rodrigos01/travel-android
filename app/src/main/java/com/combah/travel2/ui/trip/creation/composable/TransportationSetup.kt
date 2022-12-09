@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.combah.travel2.ui.trip.creation.TransportationSetupViewModel
-import java.util.*
 
 @Composable
 fun TransportationSetup(
@@ -21,22 +20,22 @@ fun TransportationSetup(
 ) {
     Scaffold(
         topBar = {
-        TopAppBar(
-            navigationIcon = {
-                IconButton(onClick = {}) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "")
+            TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = {}) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "")
+                    }
+                },
+                title = {
+                    Text(text = "Transportation")
                 }
-            },
-            title = {
-                Text(text = "Transportation")
-            }
-        )
-    }) {
+            )
+        }) { paddingValues ->
         var from by remember { mutableStateOf("") }
         var to by remember { mutableStateOf("") }
         val departureDate by viewModel.departureDate.observeAsState()
         val arrivalDate by viewModel.arrivalDate.observeAsState()
-        Column(modifier = Modifier.padding(it)) {
+        Column(modifier = Modifier.padding(paddingValues)) {
             Row(
                 modifier = Modifier
                     .padding(top = 8.dp, start = 16.dp, end = 16.dp)
@@ -57,7 +56,9 @@ fun TransportationSetup(
                     modifier = Modifier.weight(1f)
                 )
             }
-            Row(modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth()) {
+            Row(modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()) {
                 DatePickerTextField(
                     label = "departure",
                     date = departureDate,
