@@ -1,7 +1,6 @@
 package com.combah.travel2.ui
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.combah.travel2.mock.*
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.model.repository.mock.MockData.bru
 import com.combah.travel2.model.repository.mock.MockData.brussels
@@ -19,12 +18,15 @@ import com.combah.travel2.observedValue
 import com.combah.travel2.ui.data.*
 import com.combah.travel2.ui.trip.TripViewModel
 import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.whenever
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.Assert.*
 import org.junit.Before
@@ -33,22 +35,23 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.junit.MockitoJUnitRunner
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(MockitoJUnitRunner::class)
 class TripViewModelTest {
 
-    @Rule
-    @JvmField
+    @get:Rule
     val rule = InstantTaskExecutorRule()
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val dispatcher = StandardTestDispatcher()
-    private val repository = mock<TripRepository>()
+    private val dispatcher = UnconfinedTestDispatcher()
+    private val repository = mock<TripRepository> {
+        on { findTripById(any()) } doAnswer {
+            flowOf(trip)
+        }
+    }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Before
     fun setup() {
         Dispatchers.setMain(dispatcher)
-        whenever(repository.findTripById(any())).thenReturn(flowOf(trip))
     }
 
     @Test

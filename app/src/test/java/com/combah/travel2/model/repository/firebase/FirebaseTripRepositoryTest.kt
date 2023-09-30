@@ -1,14 +1,13 @@
 package com.combah.travel2.model.repository.firebase
 
 import com.combah.travel2.assertFlowEquals
-import com.combah.travel2.mock.trip
 import com.combah.travel2.model.data.Trip
+import com.combah.travel2.model.repository.mock.MockData.trip
 import com.google.firebase.firestore.*
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
-import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Before
 import org.junit.Test

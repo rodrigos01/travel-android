@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.map
 import com.combah.travel2.extensions.asCalendar
+import com.combah.travel2.extensions.midnightTime
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
@@ -80,17 +81,8 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
 
     private fun getFirstEvents(events: Iterable<TripEvent>?) = events
         ?.filter { it !is PlaceEvent && it !is MonthEvent }
-        ?.distinctBy { getInitialTimeOfDay(it.timestamp) }
+        ?.distinctBy { it.timestamp.midnightTime }
         ?.toSet()
-
-    private fun getInitialTimeOfDay(timestamp: Date): Date {
-        val calendar = timestamp.asCalendar()
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        return calendar.time
-    }
 
     private val eventComparator = Comparator<TripEvent> { event1, event2 ->
         val timeComparison = event1.timestamp.compareTo(event2.timestamp)
