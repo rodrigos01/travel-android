@@ -1,8 +1,8 @@
 package com.combah.travel2.ui.trip
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.combah.travel2.extensions.asCalendar
+import com.combah.travel2.extensions.asStateFlow
 import com.combah.travel2.extensions.midnightTime
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Trip
@@ -14,10 +14,8 @@ import com.combah.travel2.ui.data.FlightEvent
 import com.combah.travel2.ui.data.MonthEvent
 import com.combah.travel2.ui.data.PlaceEvent
 import com.combah.travel2.ui.data.TripEvent
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import java.util.Calendar
 
 class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
@@ -35,11 +33,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
             events = events,
             firstEvents = getFirstEvents(events)
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.Eagerly,
-        ViewState(emptyList(), null)
-    )
+    }.asStateFlow(initialValue = ViewState(emptyList(), null))
 
     private fun getEventsFromTrip(trip: Trip) = getFlightEventsFromTrip(trip)
         ?.asSequence()
