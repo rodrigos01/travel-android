@@ -8,12 +8,14 @@ import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.junit.MockitoJUnitRunner
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(MockitoJUnitRunner::class)
 class FirebaseTripRepositoryTest {
 
@@ -54,7 +56,7 @@ class FirebaseTripRepositoryTest {
     }
 
     @Test
-    fun shouldGetTripsFromFirestore() = runBlockingTest {
+    fun shouldGetTripsFromFirestore() = runTest {
         val repository = FirebaseTripRepository(firestore)
 
         assertFlowEquals(listOf(trip), repository.trips)
@@ -62,7 +64,7 @@ class FirebaseTripRepositoryTest {
     }
 
     @Test
-    fun shouldGetTripFromFirestore() = runBlockingTest {
+    fun shouldGetTripFromFirestore() = runTest {
         val repository = FirebaseTripRepository(firestore)
 
         val tripObservable = repository.findTripById("myTrip")
@@ -72,7 +74,7 @@ class FirebaseTripRepositoryTest {
     }
 
     @Test
-    fun shouldGetTripFlights() = runBlockingTest {
+    fun shouldGetTripFlights() = runTest {
         val repository = FirebaseTripRepository(firestore)
 
         val flightsObservable = repository.getTripFlights("myTrip")
@@ -82,7 +84,7 @@ class FirebaseTripRepositoryTest {
     }
 
     @Test
-    fun shouldGetTripHotels() = runBlockingTest {
+    fun shouldGetTripHotels() = runTest {
         val repository = FirebaseTripRepository(firestore)
 
         val hotelsObservable = repository.getTripHotels("myTrip")
