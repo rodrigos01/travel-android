@@ -11,9 +11,9 @@ import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.combah.travel2.model.repository.mock.MockTripRepository
@@ -22,14 +22,13 @@ import com.combah.travel2.ui.trip.TripViewModel
 import com.combah.travel2.ui.trip.creation.composable.TransportationSetupDestination
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun TripDetails(
     viewModel: TripViewModel,
     navController: NavController,
 ) {
-    val events by viewModel.events.observeAsState(emptyList())
-    val firstEvents by viewModel.firstEvents.observeAsState()
+    val state by viewModel.viewState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val bottomSheetState =
         rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
@@ -58,8 +57,8 @@ fun TripDetails(
             },
         ) {
             LazyColumn(contentPadding = it) {
-                items(events) { event ->
-                    val isFirst = firstEvents?.contains(event) ?: true
+                items(state.events) { event ->
+                    val isFirst = state.firstEvents?.contains(event) ?: true
                     when (event) {
                         is MonthEvent -> MonthEventListItem(event = event)
                         is PlaceEvent -> PlaceEventListItem(event = event)
@@ -68,6 +67,7 @@ fun TripDetails(
                             event = event,
                             firstInDate = isFirst
                         )
+
                         is CheckinEvent -> CheckinListItem(event = event, firstInDate = isFirst)
                         is CheckoutEvent -> CheckoutListItem(event = event, firstInDate = isFirst)
                     }

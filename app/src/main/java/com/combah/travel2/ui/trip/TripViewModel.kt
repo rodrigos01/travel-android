@@ -1,29 +1,45 @@
 package com.combah.travel2.ui.trip
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.asLiveData
-import androidx.lifecycle.map
+import androidx.lifecycle.viewModelScope
 import com.combah.travel2.extensions.asCalendar
 import com.combah.travel2.extensions.midnightTime
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
-import com.combah.travel2.ui.data.*
+import com.combah.travel2.ui.data.ArrivalEvent
+import com.combah.travel2.ui.data.CheckinEvent
+import com.combah.travel2.ui.data.CheckoutEvent
+import com.combah.travel2.ui.data.FlightEvent
+import com.combah.travel2.ui.data.MonthEvent
+import com.combah.travel2.ui.data.PlaceEvent
+import com.combah.travel2.ui.data.TripEvent
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
-import java.util.*
+import kotlinx.coroutines.flow.stateIn
+import java.util.Calendar
 
 class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
 
+    data class ViewState(
+        val events: List<TripEvent>,
+        val firstEvents: Set<TripEvent>?,
+    )
+
     private val trip = repository.findTripById(tripId)
 
-
-    val events = trip.filter { it.flights != null }
-        .map(this::getEventsFromTrip)
-        .asLiveData()
-
-    val firstEvents = events.map(this::getFirstEvents)
+    val viewState = trip.filter { it.flights != null }.map {
+        val events = getEventsFromTrip(it)
+        ViewState(
+            events = events,
+            firstEvents = getFirstEvents(events)
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        ViewState(emptyList(), null)
+    )
 
     private fun getEventsFromTrip(trip: Trip) = getFlightEventsFromTrip(trip)
         ?.asSequence()
@@ -31,7 +47,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
         ?.sortedBy { it.timestamp }
         ?.let { it.plus(getPlaceEventsFromEvents(it.asIterable())) }
         ?.let { it.plus(getMonthEventsFromEvents(it.asIterable())) }
-        ?.sortedWith(eventComparator)
+        ?.sortedWith(::compareEvents)
         ?.toList()
         ?: emptyList()
 
@@ -79,28 +95,17 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
             )
         }.let { it.takeLast(it.size - 1) }
 
-    private fun getFirstEvents(events: Iterable<TripEvent>?) = events
-        ?.filter { it !is PlaceEvent && it !is MonthEvent }
-        ?.distinctBy { it.timestamp.midnightTime }
-        ?.toSet()
+    private fun getFirstEvents(events: Iterable<TripEvent>) = events
+        .filter { it !is PlaceEvent && it !is MonthEvent }
+        .distinctBy { it.timestamp.midnightTime }
+        .toSet()
 
-    private val eventComparator = Comparator<TripEvent> { event1, event2 ->
+    private fun compareEvents(event1: TripEvent, event2: TripEvent): Int {
         val timeComparison = event1.timestamp.compareTo(event2.timestamp)
-        if (timeComparison == 0 && event1 is PlaceEvent) {
+        return if (timeComparison == 0 && event1 is PlaceEvent) {
             -1
         } else {
             timeComparison
         }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    class Factory(private val repository: TripRepository) : ViewModelProvider.Factory {
-
-        lateinit var tripId: String
-
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return TripViewModel(repository, tripId) as T
-        }
-
     }
 }
