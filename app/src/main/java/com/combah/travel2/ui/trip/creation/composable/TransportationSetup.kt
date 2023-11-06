@@ -8,12 +8,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.combah.travel2.extensions.moveFocus
@@ -38,10 +38,7 @@ fun TransportationSetup(
                 }
             )
         }) { paddingValues ->
-        var from by remember { mutableStateOf("") }
-        var to by remember { mutableStateOf("") }
-        val departureDate by viewModel.departureDate.observeAsState()
-        val arrivalDate by viewModel.arrivalDate.observeAsState()
+        val state by viewModel.viewState.collectAsStateWithLifecycle()
         Column(modifier = Modifier.padding(paddingValues)) {
             Row(
                 modifier = Modifier
@@ -49,8 +46,8 @@ fun TransportationSetup(
                     .fillMaxWidth()
             ) {
                 OutlinedTextField(
-                    value = from,
-                    onValueChange = { from = it },
+                    value = state.from ?: "",
+                    onValueChange = viewModel::setFromLocation,
                     label = { Text(text = "From") },
                     modifier = Modifier
                         .weight(1f)
@@ -58,8 +55,8 @@ fun TransportationSetup(
                     keyboardActions = moveFocus(FocusDirection.Right),
                 )
                 OutlinedTextField(
-                    value = to,
-                    onValueChange = { to = it },
+                    value = state.to ?: "",
+                    onValueChange = viewModel::setToLocation,
                     label = { Text(text = "To") },
                     modifier = Modifier.weight(1f),
                     keyboardActions = moveFocus(FocusDirection.Down),
@@ -72,28 +69,26 @@ fun TransportationSetup(
             ) {
                 DatePickerTextField(
                     label = "departure",
-                    date = departureDate,
+                    date = state.departureDate,
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 16.dp),
-                    onDateSelected = {
-                        viewModel.departureDate.value = it
-                    }
+                    onDateSelected = viewModel::setDepartureDate
                 )
                 DatePickerTextField(
                     label = "arrival",
-                    date = arrivalDate,
-                    minDate = departureDate,
+                    date = state.arrivalDate,
+                    minDate = state.departureDate,
                     modifier = Modifier.weight(1f),
-                    onDateSelected = {
-                        viewModel.arrivalDate.value = it
-                    }
+                    onDateSelected = viewModel::setArrivalDate
                 )
             }
-            Row(modifier = Modifier
-                .align(Alignment.End)
-                .padding(all = 16.dp)) {
-                TextButton(onClick = {  }) {
+            Row(
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(all = 16.dp)
+            ) {
+                TextButton(onClick = { }) {
                     Text("next".uppercase())
                 }
             }
