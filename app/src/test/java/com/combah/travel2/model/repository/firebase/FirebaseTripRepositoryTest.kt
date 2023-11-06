@@ -1,65 +1,56 @@
 package com.combah.travel2.model.repository.firebase
 
-import com.combah.travel2.assertFlowEquals
+import com.combah.travel2.extensions.expectItem
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.mock.MockData.trip
-import com.google.firebase.firestore.*
+import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.EventListener
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.QuerySnapshot
 import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doAnswer
+import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
-import com.nhaarman.mockito_kotlin.whenever
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
+import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.junit.MockitoJUnitRunner
 
-@OptIn(ExperimentalCoroutinesApi::class)
-@RunWith(MockitoJUnitRunner::class)
 class FirebaseTripRepositoryTest {
 
-    private val firestore = mock<FirebaseFirestore>()
-
-    @Before
-    fun setup() {
-        val mockDocumentReference = mock<DocumentReference>()
-        val mockDocumentSnapshot = mock<DocumentSnapshot>()
-
-        val mockCollectionReference = mock<CollectionReference>()
-        val mockQuerySnapshot = mock<QuerySnapshot>()
-
-        whenever(firestore.collection(any()))
-            .thenReturn(mockCollectionReference)
-        whenever(firestore.document(any()))
-            .thenReturn(mockDocumentReference)
-
-        whenever(mockDocumentSnapshot.toObject(Trip::class.java))
-            .thenReturn(trip)
-        whenever(mockDocumentSnapshot.id).thenReturn(trip.id)
-
-        whenever(mockDocumentReference.addSnapshotListener(any())).then {
-            val listener = it.arguments[0] as EventListener<DocumentSnapshot>
-
-            listener.onEvent(mockDocumentSnapshot, null)
-            mock<ListenerRegistration>()
+    private val mockDocumentReference = mock<DocumentReference> {
+        on { addSnapshotListener(any()) } doAnswer {
+            it.getArgument<EventListener<DocumentSnapshot>>(0).onEvent(mockDocumentSnapshot, null)
+            ListenerRegistration {}
         }
+    }
+    private val mockDocumentSnapshot = mock<DocumentSnapshot> {
+        on { toObject(Trip::class.java) } doReturn trip
+        on { id } doReturn trip.id
+    }
 
-        whenever(mockQuerySnapshot.documents).thenReturn(listOf(mockDocumentSnapshot))
-
-        whenever(mockCollectionReference.addSnapshotListener(any())).then {
-            val listener = it.arguments[0] as EventListener<QuerySnapshot>
-
-            listener.onEvent(mockQuerySnapshot, null)
-            mock<ListenerRegistration>()
+    private val mockCollectionReference = mock<CollectionReference> {
+        on { addSnapshotListener(any()) } doAnswer {
+            it.getArgument<EventListener<QuerySnapshot>>(0).onEvent(mockQuerySnapshot, null)
+            ListenerRegistration { }
         }
+    }
+    private val mockQuerySnapshot = mock<QuerySnapshot> {
+        on { documents } doReturn listOf(mockDocumentSnapshot)
+    }
+    private val firestore = mock<FirebaseFirestore> {
+        on { collection(any()) } doReturn mockCollectionReference
+        on { document(any()) } doReturn mockDocumentReference
     }
 
     @Test
     fun shouldGetTripsFromFirestore() = runTest {
         val repository = FirebaseTripRepository(firestore)
 
-        assertFlowEquals(listOf(trip), repository.trips)
+        assertEquals(listOf(trip), repository.trips.expectItem())
         verify(firestore).collection("/trips")
     }
 
@@ -69,7 +60,7 @@ class FirebaseTripRepositoryTest {
 
         val tripObservable = repository.findTripById("myTrip")
 
-        assertFlowEquals(trip, tripObservable)
+        assertEquals(trip, tripObservable.expectItem())
         verify(firestore).document("/trips/myTrip")
     }
 
@@ -79,7 +70,7 @@ class FirebaseTripRepositoryTest {
 
         val flightsObservable = repository.getTripFlights("myTrip")
 
-        assertFlowEquals(trip.flights, flightsObservable)
+        assertEquals(trip.flights, flightsObservable.expectItem())
         verify(firestore).document("/trips/myTrip")
     }
 
@@ -89,7 +80,7 @@ class FirebaseTripRepositoryTest {
 
         val hotelsObservable = repository.getTripHotels("myTrip")
 
-        assertFlowEquals(trip.hotels, hotelsObservable)
+        assertEquals(trip.hotels, hotelsObservable.expectItem())
         verify(firestore).document("/trips/myTrip")
     }
 }
