@@ -2,7 +2,6 @@ package com.combah.travel2.ui.triplist.composable
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
@@ -10,6 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.combah.travel2.model.repository.mock.MockTripRepository
+import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.eventlist.composable.TripDetailsDestination
 import com.combah.travel2.ui.triplist.TripListViewModel
 
@@ -29,7 +29,7 @@ fun TripList(viewModel: TripListViewModel, navController: NavController) {
 @Composable
 @Preview
 fun TripListPreview() {
-    MaterialTheme {
+    AppTheme {
         TripList(TripListViewModel(MockTripRepository()), rememberNavController())
     }
 }

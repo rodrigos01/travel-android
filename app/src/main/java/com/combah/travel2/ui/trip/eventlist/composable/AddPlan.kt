@@ -5,11 +5,11 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,7 +29,7 @@ fun AddPlan(addTransportationClickListener: () -> Unit, onClickClose: () -> Unit
                 modifier = Modifier
                     .padding(start = 16.dp, top = 16.dp)
                     .weight(1f),
-                style = MaterialTheme.typography.subtitle1
+                style = MaterialTheme.typography.headlineSmall
             )
             Icon(
                 Icons.Default.Close,
@@ -115,7 +115,7 @@ fun PlanOption(
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
         Image(painter = painterResource(id = imageRes), contentDescription = "")
-        Text(stringResource(titleRes), style = MaterialTheme.typography.caption)
+        Text(stringResource(titleRes), style = MaterialTheme.typography.labelMedium)
     }
 }
 

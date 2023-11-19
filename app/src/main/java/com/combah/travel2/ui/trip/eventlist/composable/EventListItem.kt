@@ -5,8 +5,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -18,7 +18,7 @@ import com.combah.travel2.extensions.dayOfWeekString
 import com.combah.travel2.extensions.timeString
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.ui.data.TripEvent
-import java.util.*
+import java.util.Date
 
 @Composable
 fun EventListItem(
@@ -35,22 +35,22 @@ fun EventListItem(
             ) {
                 Text(
                     text = event.timestamp.dayOfMonthString(),
-                    style = typography.h5
+                    style = typography.headlineSmall
                 )
-                Text(text = event.timestamp.dayOfWeekString(), style = typography.overline)
+                Text(text = event.timestamp.dayOfWeekString(), style = typography.bodyMedium)
             }
         }
         val paddingStart = if (firstInDate) 16.dp else 64.dp
         Column(modifier = Modifier.padding(start = paddingStart, top = 16.dp)) {
             Text(
                 text = event.timestamp.timeString(),
-                style = typography.caption
+                style = typography.bodyMedium
             )
             Row(modifier = Modifier.padding(top = 16.dp)) {
                 Image(painter = painterResource(id = icon), contentDescription = "Event Icon")
                 Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)) {
-                    Text(title, style = typography.subtitle1)
-                    Text(text = event.location, style = typography.caption)
+                    Text(title, style = typography.titleMedium)
+                    Text(text = event.location, style = typography.bodyMedium)
                 }
             }
         }

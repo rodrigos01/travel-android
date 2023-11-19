@@ -3,14 +3,14 @@ package com.combah.travel2.ui
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.TripViewModel
 import com.combah.travel2.ui.trip.creation.TransportationSetupViewModel
 import com.combah.travel2.ui.trip.creation.composable.TransportationSetup
@@ -23,7 +23,7 @@ import com.combah.travel2.ui.triplist.composable.TripListDestination
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
-@ExperimentalMaterialApi
+@ExperimentalMaterial3Api
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,11 +32,11 @@ class MainActivity : AppCompatActivity() {
         setContent { MainScreen() }
     }
 
-    @ExperimentalMaterialApi
+    @ExperimentalMaterial3Api
     @Composable
     fun MainScreen() {
         val navController = rememberNavController()
-        MaterialTheme {
+        AppTheme {
             NavHost(navController = navController, startDestination = TripListDestination.ROUTE) {
                 composable(TripListDestination.ROUTE) {
                     val viewModel: TripListViewModel by viewModel()
