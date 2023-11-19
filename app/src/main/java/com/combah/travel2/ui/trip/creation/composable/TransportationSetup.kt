@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.combah.travel2.extensions.moveFocus
+import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.TransportationSetupViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,7 +100,7 @@ fun TransportationSetup(
 @Composable
 @Preview
 fun TransportationSetupPreview() {
-    MaterialTheme {
+    AppTheme {
         TransportationSetup(TransportationSetupViewModel(), rememberNavController())
     }
 }

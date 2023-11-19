@@ -1,13 +1,12 @@
 package com.combah.travel2.ui.trip.eventlist.composable
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,11 +16,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.ui.data.PlaceEvent
-import java.util.*
+import com.combah.travel2.ui.theme.AppTheme
+import java.util.Date
 
 @Composable
 fun PlaceEventListItem(event: PlaceEvent) {
@@ -37,7 +35,7 @@ fun PlaceEventListItem(event: PlaceEvent) {
         Text(
             text = event.place.name,
             color = Color.White,
-            style = MaterialTheme.typography.h5,
+            style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomStart)
@@ -54,7 +52,7 @@ fun PlaceEventListItem(event: PlaceEvent) {
 @Composable
 @Preview
 fun PlaceEventListItemPreview() {
-    MaterialTheme {
+    AppTheme {
         PlaceEventListItem(event = PlaceEvent(Place(name = "New York City"), arrival = Date()))
     }
 }
