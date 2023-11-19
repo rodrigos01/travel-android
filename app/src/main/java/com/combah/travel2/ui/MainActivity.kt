@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     @Composable
     fun MainScreen() {
         val navController = rememberNavController()
-        AppTheme {
+        AppTheme(dynamicColor = false) {
             NavHost(navController = navController, startDestination = TripListDestination.ROUTE) {
                 composable(TripListDestination.ROUTE) {
                     val viewModel: TripListViewModel by viewModel()

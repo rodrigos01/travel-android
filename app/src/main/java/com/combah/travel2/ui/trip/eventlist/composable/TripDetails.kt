@@ -8,7 +8,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,51 +34,52 @@ fun TripDetails(
     val scope = rememberCoroutineScope()
     val bottomSheetState =
         rememberModalBottomSheetState()
-    val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState)
-    BottomSheetScaffold(
-        sheetContent = {
-            AddPlan(
-                addTransportationClickListener = {
-                    navController.navigate(
-                        TransportationSetupDestination.KEY
-                    )
-                },
-                onClickClose = {
-                    scope.launch {
-                        bottomSheetState.hide()
-                    }
-                })
+    var showBottomSheet by remember { mutableStateOf(false) }
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                showBottomSheet = true
+            }) {
+                Icon(Icons.Default.Add, contentDescription = "add event")
+            }
         },
-        scaffoldState = scaffoldState,
-        modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+        modifier = Modifier.background(MaterialTheme.colorScheme.surface),
     ) {
-        Scaffold(
-            floatingActionButton = {
-                FloatingActionButton(onClick = {
-                    scope.launch {
-                        bottomSheetState.show()
-                    }
-                }) {
-                    Icon(Icons.Default.Add, contentDescription = "add event")
-                }
-            },
-        ) {
-            LazyColumn(contentPadding = it) {
-                items(state.events) { event ->
-                    val isFirst = state.firstEvents?.contains(event) ?: true
-                    when (event) {
-                        is MonthEvent -> MonthEventListItem(event = event)
-                        is PlaceEvent -> PlaceEventListItem(event = event)
-                        is FlightEvent -> FlightEventListItem(event = event, firstInDate = isFirst)
-                        is ArrivalEvent -> ArrivalEventListItem(
-                            event = event,
-                            firstInDate = isFirst
-                        )
+        LazyColumn(contentPadding = it) {
+            items(state.events) { event ->
+                val isFirst = state.firstEvents?.contains(event) ?: true
+                when (event) {
+                    is MonthEvent -> MonthEventListItem(event = event)
+                    is PlaceEvent -> PlaceEventListItem(event = event)
+                    is FlightEvent -> FlightEventListItem(event = event, firstInDate = isFirst)
+                    is ArrivalEvent -> ArrivalEventListItem(
+                        event = event,
+                        firstInDate = isFirst
+                    )
 
-                        is CheckinEvent -> CheckinListItem(event = event, firstInDate = isFirst)
-                        is CheckoutEvent -> CheckoutListItem(event = event, firstInDate = isFirst)
-                    }
+                    is CheckinEvent -> CheckinListItem(event = event, firstInDate = isFirst)
+                    is CheckoutEvent -> CheckoutListItem(event = event, firstInDate = isFirst)
                 }
+            }
+        }
+        if (showBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showBottomSheet = false },
+                sheetState = bottomSheetState
+            ) {
+                AddPlan(
+                    addTransportationClickListener = {
+                        navController.navigate(
+                            TransportationSetupDestination.KEY
+                        )
+                    },
+                    onClickClose = {
+                        scope.launch {
+                            bottomSheetState.hide()
+                        }.invokeOnCompletion {
+                            showBottomSheet = false
+                        }
+                    })
             }
         }
     }
@@ -84,7 +88,7 @@ fun TripDetails(
 @Composable
 @Preview
 fun TripDetailsPreview() {
-    AppTheme {
+    AppTheme(dynamicColor = false) {
         TripDetails(TripViewModel(MockTripRepository(), "minhaTrip"), rememberNavController())
     }
 }

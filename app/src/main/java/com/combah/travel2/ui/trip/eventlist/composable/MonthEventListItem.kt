@@ -1,6 +1,10 @@
 package com.combah.travel2.ui.trip.eventlist.composable
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,14 +18,21 @@ import java.text.DateFormatSymbols
 
 @Composable
 fun MonthEventListItem(event: MonthEvent) {
-    Text(
-        text = stringResource(
-            R.string.month_event_title,
-            DateFormatSymbols.getInstance().months[event.month],
-            event.year
-        ),
-        modifier = Modifier.padding(all = 16.dp)
-    )
+    Box(
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.surface)
+            .fillMaxWidth()
+    ) {
+        Text(
+            text = stringResource(
+                R.string.month_event_title,
+                DateFormatSymbols.getInstance().months[event.month],
+                event.year
+            ),
+            modifier = Modifier
+                .padding(all = 16.dp)
+        )
+    }
 }
 
 @Composable
