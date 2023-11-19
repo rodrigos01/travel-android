@@ -2,8 +2,10 @@ package com.combah.travel2.ui.trip.eventlist.composable
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,7 +30,7 @@ fun EventListItem(
     title: String = event.name
 ) {
     val typography = MaterialTheme.typography
-    Row {
+    Row(modifier = Modifier.background(MaterialTheme.colorScheme.surface).fillMaxWidth()) {
         if (firstInDate) {
             Column(
                 modifier = Modifier.padding(start = 16.dp, top = 16.dp)
