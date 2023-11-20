@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,7 +31,11 @@ fun EventListItem(
     title: String = event.name
 ) {
     val typography = MaterialTheme.typography
-    Row(modifier = Modifier.background(MaterialTheme.colorScheme.surface).fillMaxWidth()) {
+    Row(
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.surface)
+            .fillMaxWidth()
+    ) {
         if (firstInDate) {
             Column(
                 modifier = Modifier.padding(start = 16.dp, top = 16.dp)
@@ -42,20 +47,24 @@ fun EventListItem(
                 Text(text = event.timestamp.dayOfWeekString(), style = typography.bodyMedium)
             }
         }
-        val paddingStart = if (firstInDate) 16.dp else 64.dp
-        Column(modifier = Modifier.padding(start = paddingStart, top = 16.dp)) {
-            Text(
-                text = event.timestamp.timeString(),
-                style = typography.bodyMedium
-            )
-            Row(modifier = Modifier.padding(top = 16.dp)) {
-                Image(painter = painterResource(id = icon), contentDescription = "Event Icon")
-                Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)) {
-                    Text(title, style = typography.titleMedium)
-                    Text(text = event.location, style = typography.bodyMedium)
-                }
-            }
-        }
+        val paddingStart = if (firstInDate) 0.dp else 48.dp
+        ListItem(
+            modifier = Modifier.padding(start = paddingStart),
+            leadingContent = {
+                Image(
+                    painter = painterResource(id = icon),
+                    contentDescription = "Event Icon",
+                )
+            },
+            overlineContent = {
+                Text(
+                    text = event.timestamp.timeString(),
+                    style = typography.bodyMedium,
+                )
+            },
+            headlineContent = { Text(title, style = typography.titleMedium) },
+            supportingContent = { Text(text = event.location, style = typography.bodyMedium) }
+        )
     }
 }
 
