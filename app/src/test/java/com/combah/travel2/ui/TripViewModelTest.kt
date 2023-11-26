@@ -1,5 +1,6 @@
 package com.combah.travel2.ui
 
+import com.combah.travel2.extensions.dateFromString
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.model.repository.mock.MockData.bru
 import com.combah.travel2.model.repository.mock.MockData.brussels
@@ -17,6 +18,7 @@ import com.combah.travel2.test.UnconfinedDispatcherTestRule
 import com.combah.travel2.ui.data.ArrivalEvent
 import com.combah.travel2.ui.data.CheckinEvent
 import com.combah.travel2.ui.data.CheckoutEvent
+import com.combah.travel2.ui.data.EmptyDateRangeEvent
 import com.combah.travel2.ui.data.FlightEvent
 import com.combah.travel2.ui.data.MonthEvent
 import com.combah.travel2.ui.data.PlaceEvent
@@ -25,11 +27,14 @@ import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.mock
 import kotlinx.coroutines.flow.flowOf
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.util.TimeZone
 
 class TripViewModelTest {
 
@@ -42,6 +47,11 @@ class TripViewModelTest {
         }
     }
     private val subject = TripViewModel(repository, "minhaTrip")
+
+    @Before
+    fun setup() {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+    }
 
     @Test
     fun eventsShouldHaveOneDepartureEventPerFlight() {
@@ -113,5 +123,13 @@ class TripViewModelTest {
 
             assertTrue(previous.timestamp < event.timestamp || previous is PlaceEvent)
         }
+    }
+
+    @Test
+    fun eventsShouldHaveEmptyDateRangeForAllDatesWithoutEvents() {
+        val events = subject.viewState.value.events
+        val dateStart = dateFromString("2018-10-26T00:00") ?: error("")
+        val dateEnd = dateFromString("2018-10-31T23:59:59") ?: error("")
+        assertThat(events).containsOnlyOnce(EmptyDateRangeEvent(dateStart, dateEnd))
     }
 }
