@@ -2,10 +2,7 @@ package com.combah.travel2.ui.trip.eventlist.composable
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -31,41 +28,41 @@ fun EventListItem(
     title: String = event.name
 ) {
     val typography = MaterialTheme.typography
-    Row(
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.surface)
-            .fillMaxWidth()
-    ) {
-        if (firstInDate) {
-            Column(
-                modifier = Modifier.padding(start = 16.dp, top = 16.dp)
-            ) {
-                Text(
-                    text = event.timestamp.dayOfMonthString(),
-                    style = typography.headlineSmall
+    ListItem(
+        headlineContent = {
+            Row {
+                if (firstInDate) {
+                    LeadingDate(
+                        dayOfMonth = event.timestamp.dayOfMonthString(),
+                        dayOfWeek = event.timestamp.dayOfWeekString(),
+                        showSmall = false,
+                    )
+                }
+                val paddingStart = if (firstInDate) 0.dp else 48.dp
+                ListItem(
+                    modifier = Modifier.padding(start = paddingStart),
+                    leadingContent = {
+                        Image(
+                            painter = painterResource(id = icon),
+                            contentDescription = "Event Icon",
+                        )
+                    },
+                    overlineContent = {
+                        Text(
+                            text = event.timestamp.timeString(),
+                            style = typography.bodyMedium,
+                        )
+                    },
+                    headlineContent = { Text(title, style = typography.titleMedium) },
+                    supportingContent = {
+                        Text(
+                            text = event.location,
+                            style = typography.bodyMedium
+                        )
+                    }
                 )
-                Text(text = event.timestamp.dayOfWeekString(), style = typography.bodyMedium)
             }
-        }
-        val paddingStart = if (firstInDate) 0.dp else 48.dp
-        ListItem(
-            modifier = Modifier.padding(start = paddingStart),
-            leadingContent = {
-                Image(
-                    painter = painterResource(id = icon),
-                    contentDescription = "Event Icon",
-                )
-            },
-            overlineContent = {
-                Text(
-                    text = event.timestamp.timeString(),
-                    style = typography.bodyMedium,
-                )
-            },
-            headlineContent = { Text(title, style = typography.titleMedium) },
-            supportingContent = { Text(text = event.location, style = typography.bodyMedium) }
-        )
-    }
+        })
 }
 
 @Composable

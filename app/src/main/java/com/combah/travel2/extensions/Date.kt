@@ -40,6 +40,9 @@ fun Date.format(
         .format(this)
 }
 
+operator fun Date.plus(other: Date) = Date(time + other.time)
+operator fun Date.plus(otherTimeMs: Long) = Date(time + otherTimeMs)
+
 val Date.midnightTime: Long
     get() = time - (time % TimeUnit.DAYS.toMillis(1))
 

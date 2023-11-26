@@ -17,6 +17,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.combah.travel2.extensions.dayOfMonthString
+import com.combah.travel2.extensions.dayOfWeekString
 import com.combah.travel2.model.repository.mock.MockTripRepository
 import com.combah.travel2.ui.data.*
 import com.combah.travel2.ui.theme.AppTheme
@@ -50,13 +52,18 @@ fun TripDetails(
                 val isFirst = state.firstEvents?.contains(event) ?: true
                 when (event) {
                     is MonthEvent -> MonthEventListItem(event = event)
+                    is EmptyDateRangeEvent -> DateRangeListItem(
+                        dayOfMonthStart = event.dateStart.dayOfMonthString(),
+                        dayOfWeekStart = event.dateStart.dayOfWeekString(),
+                        dayOfMonthEnd = event.dateEnd.dayOfMonthString(),
+                        dayOfWeekEnd = event.dateEnd.dayOfWeekString(),
+                    )
                     is PlaceEvent -> PlaceEventListItem(event = event)
                     is FlightEvent -> FlightEventListItem(event = event, firstInDate = isFirst)
                     is ArrivalEvent -> ArrivalEventListItem(
                         event = event,
                         firstInDate = isFirst
                     )
-
                     is CheckinEvent -> CheckinListItem(event = event, firstInDate = isFirst)
                     is CheckoutEvent -> CheckoutListItem(event = event, firstInDate = isFirst)
                 }
