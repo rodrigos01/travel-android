@@ -1,41 +1,38 @@
+@file:OptIn(ExperimentalContracts::class)
+
 package com.combah.travel2.ui
 
-import com.combah.travel2.extensions.dateFromString
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.model.repository.mock.MockData.bru
 import com.combah.travel2.model.repository.mock.MockData.brussels
 import com.combah.travel2.model.repository.mock.MockData.cdg
-import com.combah.travel2.model.repository.mock.MockData.flightToBruxelsArrivalDate
-import com.combah.travel2.model.repository.mock.MockData.flightToBruxelsDepartureDate
-import com.combah.travel2.model.repository.mock.MockData.flightToParisArrivalDate
-import com.combah.travel2.model.repository.mock.MockData.flightToParisDepartureDate
 import com.combah.travel2.model.repository.mock.MockData.jfk
-import com.combah.travel2.model.repository.mock.MockData.nyc
 import com.combah.travel2.model.repository.mock.MockData.paris
-import com.combah.travel2.model.repository.mock.MockData.parisHotel
+import com.combah.travel2.model.repository.mock.MockData.parisHotelName
 import com.combah.travel2.model.repository.mock.MockData.trip
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
-import com.combah.travel2.ui.data.ArrivalEvent
-import com.combah.travel2.ui.data.CheckinEvent
-import com.combah.travel2.ui.data.CheckoutEvent
-import com.combah.travel2.ui.data.EmptyDateRangeEvent
-import com.combah.travel2.ui.data.FlightEvent
-import com.combah.travel2.ui.data.MonthEvent
-import com.combah.travel2.ui.data.PlaceEvent
 import com.combah.travel2.ui.trip.TripViewModel
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.DateRangeItem
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.FlightArrivalItem
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.FlightDepartureItem
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.HotelCheckInItem
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.HotelCheckOutItem
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.MonthItem
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.PlaceItem
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.mock
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.util.TimeZone
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
+@OptIn(ExperimentalContracts::class)
 class TripViewModelTest {
 
     @get:Rule
@@ -54,82 +51,122 @@ class TripViewModelTest {
     }
 
     @Test
-    fun eventsShouldHaveOneDepartureEventPerFlight() {
-        val events = subject.viewState.value.events
-
-        assertTrue(events.contains(FlightEvent(nyc, paris, jfk, flightToParisDepartureDate)))
-        assertTrue(events.contains(FlightEvent(paris, brussels, cdg, flightToBruxelsDepartureDate)))
+    fun eventsShouldHaveOneDepartureEventPerFlight() = runTest {
+        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
+            assertType<FlightDepartureItem>(item)
+            assertThat(item.airport).isEqualTo(jfk.name)
+            assertThat(item.destination).isEqualTo(paris.name)
+            assertThat(item.dayOfMonth).isEqualTo("24")
+            assertThat(item.time).isEqualTo("10:25 AM")
+        }
+        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
+            assertType<FlightDepartureItem>(item)
+            assertThat(item.airport).isEqualTo(cdg.name)
+            assertThat(item.destination).isEqualTo(brussels.name)
+            assertThat(item.dayOfMonth).isEqualTo("01")
+            assertThat(item.time).isEqualTo("3:00 PM")
+        }
     }
 
     @Test
     fun eventsShouldHaveOneArrivalEventPerFlight() {
-        val events = subject.viewState.value.events
-
-        assertTrue(events.contains(ArrivalEvent(cdg, flightToParisArrivalDate, paris)))
-        assertTrue(events.contains(ArrivalEvent(bru, flightToBruxelsArrivalDate, brussels)))
+        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
+            assertType<FlightArrivalItem>(item)
+            assertThat(item.airport).isEqualTo(cdg.name)
+            assertThat(item.dayOfMonth).isEqualTo("25")
+            assertThat(item.time).isEqualTo("5:15 AM")
+        }
+        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
+            assertType<FlightArrivalItem>(item)
+            assertThat(item.airport).isEqualTo(bru.name)
+            assertThat(item.dayOfMonth).isEqualTo("01")
+            assertThat(item.time).isEqualTo("7:10 PM")
+        }
     }
 
     @Test
     fun eventsShouldHaveOneCheckinEventPerHotel() {
-        val events = subject.viewState.value.events
-
-        assertTrue(events.contains(CheckinEvent(parisHotel)))
+        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
+            assertType<HotelCheckInItem>(item)
+            assertThat(item.hotelName).isEqualTo(parisHotelName)
+            assertThat(item.dayOfMonth).isEqualTo("25")
+            assertThat(item.time).isEqualTo("1:00 PM")
+        }
     }
 
     @Test
     fun eventsShouldHaveOneCheckoutEventPerHotel() {
-        val events = subject.viewState.value.events
-
-        assertTrue(events.contains(CheckoutEvent(parisHotel)))
+        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
+            assertType<HotelCheckOutItem>(item)
+            assertThat(item.hotelName).isEqualTo(parisHotelName)
+            assertThat(item.dayOfMonth).isEqualTo("01")
+            assertThat(item.time).isEqualTo("12:00 PM")
+        }
     }
 
     @Test
     fun eventsShouldHaveOnePlaceEventForEachPlace() {
-        val events = subject.viewState.value.events
-
-        assertTrue(events.contains(PlaceEvent(paris, flightToParisArrivalDate)))
-        assertTrue(events.contains(PlaceEvent(brussels, flightToBruxelsArrivalDate)))
+        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
+            assertType<PlaceItem>(item)
+            assertThat(item.placeName).isEqualTo(paris.name)
+        }
+        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
+            assertType<PlaceItem>(item)
+            assertThat(item.placeName).isEqualTo(brussels.name)
+        }
     }
 
     @Test
     fun eventsShouldHaveOneMonthEventForEachMonth() {
-        val events = subject.viewState.value.events
-
-        assertTrue(events.contains(MonthEvent(9, 2018)))
-        assertTrue(events.contains(MonthEvent(10, 2018)))
+        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
+            assertType<MonthItem>(item)
+            assertThat(item.month).isEqualTo("October")
+            assertThat(item.year).isEqualTo("2018")
+        }
+        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
+            assertType<MonthItem>(item)
+            assertThat(item.month).isEqualTo("November")
+            assertThat(item.year).isEqualTo("2018")
+        }
     }
 
     @Test
     fun firstEventsShouldBeFirstOfEachDay() {
-        val events = subject.viewState.value.firstEvents
+        val items = subject.viewState.value.items
 
-        if (events == null) {
-            fail()
-            return
-        }
-
-        assertEquals(3, events.size)
-        assertTrue(events.contains(FlightEvent(nyc, paris, jfk, flightToParisDepartureDate)))
-        assertTrue(events.contains(ArrivalEvent(cdg, flightToParisArrivalDate, paris)))
-        assertTrue(events.contains(CheckoutEvent(parisHotel)))
+        val flightDepartureItem = items.first { it is FlightDepartureItem } as FlightDepartureItem
+        assertThat(flightDepartureItem.destination).isEqualTo(paris.name)
+        assertThat(flightDepartureItem.showDate).isTrue
+        val flightArrivalItem = items.first { it is FlightArrivalItem } as FlightArrivalItem
+        assertThat(flightArrivalItem.airport).isEqualTo(cdg.name)
+        assertThat(flightArrivalItem.showDate).isTrue
+        val hotelCheckOutItem = items.first { it is HotelCheckOutItem } as HotelCheckOutItem
+        assertThat(hotelCheckOutItem.hotelName).isEqualTo(parisHotelName)
+        assertThat(hotelCheckOutItem.showDate).isTrue
     }
 
     @Test
     fun eventsShouldBeSortedByTypeAndTimestamp() {
-        val events = subject.viewState.value.events
+        val items = subject.viewState.value.items
 
-        events.forEachIndexed { index, event ->
-            val previous = events.getOrNull(index - 1) ?: return@forEachIndexed
-
-            assertTrue(previous.timestamp < event.timestamp || previous is PlaceEvent)
+        items.forEachIndexed { index, event ->
+            val previous = items.getOrNull(index - 1) ?: return@forEachIndexed
+            assertThat(previous.timestamp.time).isLessThanOrEqualTo(event.timestamp.time)
         }
     }
 
     @Test
     fun eventsShouldHaveEmptyDateRangeForAllDatesWithoutEvents() {
-        val events = subject.viewState.value.events
-        val dateStart = dateFromString("2018-10-26T00:00") ?: error("")
-        val dateEnd = dateFromString("2018-10-31T23:59:59") ?: error("")
-        assertThat(events).containsOnlyOnce(EmptyDateRangeEvent(dateStart, dateEnd))
+        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
+            assertType<DateRangeItem>(item)
+            assertThat(item.dayOfMonthStart).isEqualTo("26")
+            assertThat(item.dayOfMonthEnd).isEqualTo("31")
+        }
     }
+}
+
+@ExperimentalContracts
+private inline fun <reified T> assertType(obj: Any?) {
+    contract { returns() implies (obj is T) }
+    assertThat(obj).isInstanceOf(T::class.java)
 }
