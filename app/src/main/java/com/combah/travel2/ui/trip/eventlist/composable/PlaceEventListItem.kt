@@ -16,16 +16,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.combah.travel2.model.data.Place
-import com.combah.travel2.ui.data.PlaceEvent
 import com.combah.travel2.ui.theme.AppTheme
-import java.util.Date
 
 @Composable
-fun PlaceEventListItem(event: PlaceEvent) {
+fun PlaceEventListItem(imageUrl: String, placeName: String) {
     BoxWithConstraints {
         AsyncImage(
-            model = event.currentPlace.coverImage,
+            model = imageUrl,
             contentDescription = "Place Description",
             modifier = Modifier
                 .fillMaxWidth()
@@ -33,7 +30,7 @@ fun PlaceEventListItem(event: PlaceEvent) {
             contentScale = ContentScale.FillWidth
         )
         Text(
-            text = event.place.name,
+            text = placeName,
             color = Color.White,
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier
@@ -53,6 +50,6 @@ fun PlaceEventListItem(event: PlaceEvent) {
 @Preview
 fun PlaceEventListItemPreview() {
     AppTheme {
-        PlaceEventListItem(event = PlaceEvent(Place(name = "New York City"), arrival = Date()))
+        PlaceEventListItem("","New York City")
     }
 }

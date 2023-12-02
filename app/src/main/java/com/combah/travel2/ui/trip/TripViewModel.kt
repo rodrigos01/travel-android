@@ -40,7 +40,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
         data class PlaceItem(
             override val timestamp: Date,
             val placeName: String,
-            val imageUrl: String?,
+            val imageUrl: String,
         ) : TripItem
 
         sealed interface EventItem : TripItem {
@@ -183,7 +183,13 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
             (trip.hotels.map { it.checkin.midnightTime to it.place } +
                     trip.flights.flatMap { flight -> flight.segments.map { it.arrival.midnightTime to it.cityTo } })
                 .distinct()
-                .map { TripItem.PlaceItem(Date(it.first), it.second.name, it.second.coverImage) }
+                .map {
+                    TripItem.PlaceItem(
+                        Date(it.first),
+                        it.second.name,
+                        it.second.coverImage ?: ""
+                    )
+                }
         val allItems = (events + months + emptyDateRanges + places).sortedBy { it.timestamp }
         return allItems.mapIndexed { index, item ->
             val prev = allItems.getOrNull(index - 1)
