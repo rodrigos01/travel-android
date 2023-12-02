@@ -4,19 +4,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.combah.travel2.R
-import com.combah.travel2.model.data.Airport
-import com.combah.travel2.model.data.Place
-import com.combah.travel2.ui.data.FlightEvent
 import com.combah.travel2.ui.theme.AppTheme
-import java.util.Date
 
 @Composable
-fun FlightEventListItem(event: FlightEvent, firstInDate: Boolean = false) {
+fun FlightEventListItem(
+    showDate: Boolean = false,
+    dayOfMonthString: String?,
+    dayOfWeekString: String?,
+    timeString: String,
+    destination: String,
+    airportName: String,
+) {
     EventListItem(
-        event = event,
-        firstInDate = firstInDate,
+        showDate,
+        dayOfMonthString,
+        dayOfWeekString,
+        timeString,
         icon = R.drawable.ic_flight_takeoff_black_24dp,
-        title = stringResource(R.string.flight_event_tile, event.destination.name)
+        headline = stringResource(R.string.flight_event_tile, destination),
+        supporting = airportName,
     )
 }
 
@@ -25,12 +31,12 @@ fun FlightEventListItem(event: FlightEvent, firstInDate: Boolean = false) {
 fun FlightEventListItemPreview() {
     AppTheme {
         FlightEventListItem(
-            event = FlightEvent(
-                Place(name = "New York"),
-                Place(name = "Paris"),
-                Airport(name = "John F Kennedy"),
-                Date()
-            )
+            showDate = true,
+            dayOfMonthString = "21",
+            dayOfWeekString = "Fri",
+            timeString = "6:15 AM",
+            destination = "Paris",
+            airportName = "John F Kennedy",
         )
     }
 }

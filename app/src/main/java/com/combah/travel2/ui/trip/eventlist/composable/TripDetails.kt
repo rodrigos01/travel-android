@@ -18,9 +18,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.combah.travel2.model.repository.mock.MockTripRepository
-import com.combah.travel2.ui.data.*
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.TripViewModel
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.DateRangeItem
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.FlightArrivalItem
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.FlightDepartureItem
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.HotelCheckInItem
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.HotelCheckOutItem
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.MonthItem
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.PlaceItem
 import com.combah.travel2.ui.trip.creation.composable.TransportationSetupDestination
 import kotlinx.coroutines.launch
 
@@ -47,24 +53,49 @@ fun TripDetails(
     ) {
         LazyColumn(contentPadding = it) {
             items(state.items) { event ->
-//                val isFirst = state.firstEvents?.contains(event) ?: true
-//                when (event) {
-//                    is TripViewModel.TripItem.MonthItem -> MonthEventListItem(event = event)
-//                    is EmptyDateRangeEvent -> DateRangeListItem(
-//                        dayOfMonthStart = event.dateStart.dayOfMonthString(),
-//                        dayOfWeekStart = event.dateStart.dayOfWeekString(),
-//                        dayOfMonthEnd = event.dateEnd.dayOfMonthString(),
-//                        dayOfWeekEnd = event.dateEnd.dayOfWeekString(),
-//                    )
-//                    is PlaceEvent -> PlaceEventListItem(event = event)
-//                    is FlightEvent -> FlightEventListItem(event = event, firstInDate = isFirst)
-//                    is ArrivalEvent -> ArrivalEventListItem(
-//                        event = event,
-//                        firstInDate = isFirst
-//                    )
-//                    is CheckinEvent -> CheckinListItem(event = event, firstInDate = isFirst)
-//                    is CheckoutEvent -> CheckoutListItem(event = event, firstInDate = isFirst)
-//                }
+                when (event) {
+                    is MonthItem -> MonthEventListItem(event.month, event.year)
+                    is DateRangeItem -> DateRangeListItem(
+                        dayOfMonthStart = event.dayOfMonthStart,
+                        dayOfWeekStart = event.dayOfWeekStart,
+                        dayOfMonthEnd = event.dayOfMonthEnd,
+                        dayOfWeekEnd = event.dayOfWeekEnd,
+                    )
+
+                    is PlaceItem -> PlaceEventListItem(event.imageUrl, event.imageUrl)
+                    is FlightDepartureItem -> FlightEventListItem(
+                        event.showDate,
+                        event.dayOfMonth,
+                        event.dayOfWeek,
+                        event.time,
+                        event.destination,
+                        event.airport,
+                    )
+
+                    is FlightArrivalItem -> ArrivalEventListItem(
+                        event.showDate,
+                        event.dayOfMonth,
+                        event.dayOfWeek,
+                        event.time,
+                        event.airport,
+                    )
+
+                    is HotelCheckInItem -> CheckinListItem(
+                        event.showDate,
+                        event.dayOfMonth,
+                        event.dayOfWeek,
+                        event.time,
+                        event.hotelName,
+                    )
+
+                    is HotelCheckOutItem -> CheckoutListItem(
+                        event.showDate,
+                        event.dayOfMonth,
+                        event.dayOfWeek,
+                        event.time,
+                        event.hotelName,
+                    )
+                }
             }
         }
         if (showBottomSheet) {

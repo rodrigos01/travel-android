@@ -13,32 +13,29 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.combah.travel2.R
-import com.combah.travel2.extensions.dayOfMonthString
-import com.combah.travel2.extensions.dayOfWeekString
-import com.combah.travel2.extensions.timeString
-import com.combah.travel2.model.data.Place
-import com.combah.travel2.ui.data.TripEvent
-import java.util.Date
 
 @Composable
 fun EventListItem(
-    event: TripEvent,
-    firstInDate: Boolean = false,
+    showDate: Boolean = false,
+    dayOfMonthString: String?,
+    dayOfWeekString: String?,
+    timeString: String,
     @DrawableRes icon: Int,
-    title: String = event.name
+    headline: String,
+    supporting: String,
 ) {
     val typography = MaterialTheme.typography
     ListItem(
         headlineContent = {
             Row {
-                if (firstInDate) {
+                if (showDate && dayOfMonthString != null && dayOfWeekString != null) {
                     LeadingDate(
-                        dayOfMonth = event.timestamp.dayOfMonthString(),
-                        dayOfWeek = event.timestamp.dayOfWeekString(),
+                        dayOfMonth = dayOfMonthString,
+                        dayOfWeek = dayOfWeekString,
                         showSmall = false,
                     )
                 }
-                val paddingStart = if (firstInDate) 0.dp else 48.dp
+                val paddingStart = if (showDate) 0.dp else 48.dp
                 ListItem(
                     modifier = Modifier.padding(start = paddingStart),
                     leadingContent = {
@@ -49,14 +46,14 @@ fun EventListItem(
                     },
                     overlineContent = {
                         Text(
-                            text = event.timestamp.timeString(),
+                            text = timeString,
                             style = typography.bodyMedium,
                         )
                     },
-                    headlineContent = { Text(title, style = typography.titleMedium) },
+                    headlineContent = { Text(headline, style = typography.titleMedium) },
                     supportingContent = {
                         Text(
-                            text = event.location,
+                            text = supporting,
                             style = typography.bodyMedium
                         )
                     }
@@ -70,9 +67,13 @@ fun EventListItem(
 fun EventListItemPreview() {
     MaterialTheme {
         EventListItem(
-            event = TripEvent("Flight to Paris", "John F Kennedy", Date(), Place()),
-            true,
-            icon = R.drawable.ic_flight_takeoff_black_24dp
+            showDate = true,
+            icon = R.drawable.ic_flight_takeoff_black_24dp,
+            dayOfMonthString = "21",
+            dayOfWeekString = "Fri",
+            timeString = "6:15 AM",
+            headline = "Flight to Paris",
+            supporting = "John F. Kennedy Intl."
         )
     }
 }

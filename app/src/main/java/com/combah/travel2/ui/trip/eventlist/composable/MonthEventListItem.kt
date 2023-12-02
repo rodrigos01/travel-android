@@ -6,18 +6,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.combah.travel2.R
-import com.combah.travel2.ui.data.MonthEvent
 import com.combah.travel2.ui.theme.AppTheme
-import java.text.DateFormatSymbols
 
 @Composable
-fun MonthEventListItem(event: MonthEvent) {
+fun MonthEventListItem(month: String, year: String) {
     ListItem(headlineContent = {
         Text(
             text = stringResource(
                 R.string.month_event_title,
-                DateFormatSymbols.getInstance().months[event.month],
-                event.year
+                month,
+                year,
             )
         )
     })
@@ -27,6 +25,6 @@ fun MonthEventListItem(event: MonthEvent) {
 @Preview
 fun MonthEventListItemPreview() {
     AppTheme {
-        MonthEventListItem(event = MonthEvent(10, 2021))
+        MonthEventListItem("May", "2024")
     }
 }

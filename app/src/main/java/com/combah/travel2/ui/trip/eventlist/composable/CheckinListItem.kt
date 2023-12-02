@@ -4,19 +4,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.combah.travel2.R
-import com.combah.travel2.model.data.Hotel
-import com.combah.travel2.model.data.Place
-import com.combah.travel2.ui.data.CheckinEvent
 import com.combah.travel2.ui.theme.AppTheme
-import java.util.Date
 
 @Composable
-fun CheckinListItem(event: CheckinEvent, firstInDate: Boolean = false) {
+fun CheckinListItem(
+    showDate: Boolean = false,
+    dayOfMonthString: String?,
+    dayOfWeekString: String?,
+    timeString: String,
+    hotelName: String,
+) {
     EventListItem(
-        event = event,
-        firstInDate = firstInDate,
+        showDate,
+        dayOfMonthString,
+        dayOfWeekString,
+        timeString,
         icon = R.drawable.ic_hotel_black_24dp,
-        title = stringResource(id = R.string.hotel_checkin_title)
+        headline = stringResource(id = R.string.hotel_checkin_title),
+        supporting = hotelName,
     )
 }
 
@@ -25,13 +30,11 @@ fun CheckinListItem(event: CheckinEvent, firstInDate: Boolean = false) {
 fun CheckinListItemPreview() {
     AppTheme {
         CheckinListItem(
-            event = CheckinEvent(
-                Hotel(
-                    name = "Hotel des Arms",
-                    checkin = Date(),
-                    place = Place()
-                )
-            )
+            showDate = true,
+            dayOfMonthString = "21",
+            dayOfWeekString = "Fri",
+            timeString = "6:15 AM",
+            hotelName = "Hotel des Arms",
         )
     }
 }
