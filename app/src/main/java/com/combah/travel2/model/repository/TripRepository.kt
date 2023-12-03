@@ -1,7 +1,7 @@
 package com.combah.travel2.model.repository
 
 import com.combah.travel2.model.data.Flight
-import com.combah.travel2.model.data.Hotel
+import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Trip
 import kotlinx.coroutines.flow.Flow
 
@@ -10,5 +10,5 @@ interface TripRepository {
 
     fun findTripById(tripId: String): Flow<Trip>
     fun getTripFlights(tripId: String): Flow<List<Flight>>
-    fun getTripHotels(tripId: String): Flow<List<Hotel>>
+    fun getTripHotels(tripId: String): Flow<List<Lodging>>
 }

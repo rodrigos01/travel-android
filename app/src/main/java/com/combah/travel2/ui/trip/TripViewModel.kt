@@ -1,17 +1,14 @@
 package com.combah.travel2.ui.trip
 
 import androidx.lifecycle.ViewModel
-import com.combah.travel2.extensions.asCalendar
 import com.combah.travel2.extensions.asStateFlow
-import com.combah.travel2.extensions.dayOfMonthString
-import com.combah.travel2.extensions.dayOfWeekString
-import com.combah.travel2.extensions.midnightTime
-import com.combah.travel2.extensions.plus
-import com.combah.travel2.extensions.timeString
+import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
 import kotlinx.coroutines.flow.map
+import java.text.DateFormat
 import java.text.DateFormatSymbols
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.concurrent.TimeUnit
@@ -24,13 +21,13 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
 
     sealed interface TripItem {
 
-        val timestamp: Date
+        val timestamp: Time
 
-        data class MonthItem(override val timestamp: Date, val month: String, val year: String) :
+        data class MonthItem(override val timestamp: Time, val month: String, val year: String) :
             TripItem
 
         data class DateRangeItem(
-            override val timestamp: Date,
+            override val timestamp: Time,
             val dayOfMonthStart: String,
             val dayOfWeekStart: String,
             val dayOfMonthEnd: String,
@@ -38,7 +35,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
         ) : TripItem
 
         data class PlaceItem(
-            override val timestamp: Date,
+            override val timestamp: Time,
             val placeName: String,
             val imageUrl: String,
         ) : TripItem
@@ -53,7 +50,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
         }
 
         data class FlightDepartureItem(
-            override val timestamp: Date,
+            override val timestamp: Time,
             override val showDate: Boolean,
             override val dayOfMonth: String,
             override val dayOfWeek: String,
@@ -66,7 +63,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
         }
 
         data class FlightArrivalItem(
-            override val timestamp: Date,
+            override val timestamp: Time,
             override val showDate: Boolean,
             override val dayOfMonth: String,
             override val dayOfWeek: String,
@@ -78,7 +75,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
         }
 
         data class HotelCheckInItem(
-            override val timestamp: Date,
+            override val timestamp: Time,
             override val showDate: Boolean,
             override val dayOfMonth: String,
             override val dayOfWeek: String,
@@ -91,7 +88,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
         }
 
         data class HotelCheckOutItem(
-            override val timestamp: Date,
+            override val timestamp: Time,
             override val showDate: Boolean,
             override val dayOfMonth: String,
             override val dayOfWeek: String,
@@ -121,7 +118,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
                         dayOfMonth = it.departure.dayOfMonthString(),
                         dayOfWeek = it.departure.dayOfWeekString(),
                         time = it.departure.timeString(),
-                        destination = it.cityTo.name,
+                        destination = it.airportTo.city.name,
                         airport = it.airportFrom.name,
                     ), TripItem.FlightArrivalItem(
                         timestamp = it.arrival,
@@ -134,60 +131,62 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
                 )
             }
         }
-        val hotels = trip.hotels.flatMap {
+        val hotels = trip.lodgings.flatMap {
             listOf(
                 TripItem.HotelCheckInItem(
-                    timestamp = it.checkin,
+                    timestamp = it.checkIn,
                     showDate = false,
-                    dayOfWeek = it.checkin.dayOfWeekString(),
-                    dayOfMonth = it.checkin.dayOfMonthString(),
-                    time = it.checkin.timeString(),
-                    hotelName = it.name,
-                    hotelAddress = it.place.address,
+                    dayOfWeek = it.checkIn.dayOfWeekString(),
+                    dayOfMonth = it.checkIn.dayOfMonthString(),
+                    time = it.checkIn.timeString(),
+                    hotelName = it.name ?: "",
+                    hotelAddress = it.address,
                 ), TripItem.HotelCheckOutItem(
                     timestamp = it.checkout,
                     showDate = false,
                     dayOfWeek = it.checkout.dayOfWeekString(),
                     dayOfMonth = it.checkout.dayOfMonthString(),
                     time = it.checkout.timeString(),
-                    hotelName = it.name,
+                    hotelName = it.name ?: "",
                 )
             )
         }
-        val events = flights + hotels
-        val months = events.distinctBy { it.timestamp.asCalendar()[Calendar.MONTH] }.map {
+        val events = (flights + hotels).sortedBy { it.timestamp }
+        val months = events.distinctBy { it.timestamp.monthString }.map {
             TripItem.MonthItem(
-                timestamp = Date(it.timestamp.midnightTime - TimeUnit.DAYS.toMillis(it.timestamp.asCalendar()[Calendar.DAY_OF_MONTH].toLong())),
-                month = DateFormatSymbols.getInstance().months[it.timestamp.asCalendar()[Calendar.MONTH]],
+                timestamp = it.timestamp.copy(
+                    timeInMillis = it.timestamp.toMidnight().asCalendar().apply {
+                        set(Calendar.DAY_OF_MONTH, 1)
+                    }.timeInMillis
+                ),
+                month = it.timestamp.monthString,
                 year = it.timestamp.asCalendar()[Calendar.YEAR].toString(),
             )
         }
         val emptyDateRanges = events.zipWithNext { previous, next ->
-            val start = (previous.timestamp + TimeUnit.DAYS.toMillis(1)).midnightTime
-            val end = next.timestamp.midnightTime - TimeUnit.MINUTES.toMillis(1)
+            val start = (previous.timestamp + TimeUnit.DAYS.toMillis(1))
+            val end = next.timestamp.toMidnight() - TimeUnit.MINUTES.toMillis(1)
             if (end > start) {
-                val dateStart = Date(start)
-                val dateEnd = Date(end)
                 TripItem.DateRangeItem(
-                    timestamp = dateStart,
-                    dayOfMonthStart = dateStart.dayOfMonthString(),
-                    dayOfWeekStart = dateStart.dayOfWeekString(),
-                    dayOfMonthEnd = dateEnd.dayOfMonthString(),
-                    dayOfWeekEnd = dateEnd.dayOfWeekString(),
+                    timestamp = start,
+                    dayOfMonthStart = start.dayOfMonthString(),
+                    dayOfWeekStart = start.dayOfWeekString(),
+                    dayOfMonthEnd = end.dayOfMonthString(),
+                    dayOfWeekEnd = end.dayOfWeekString(),
                 )
             } else {
                 null
             }
         }.filterNotNull().distinct()
         val places =
-            (trip.hotels.map { it.checkin.midnightTime to it.place } +
-                    trip.flights.flatMap { flight -> flight.segments.map { it.arrival.midnightTime to it.cityTo } })
+            (trip.lodgings.map { it.checkIn.toMidnight() to it.city } +
+                    trip.flights.flatMap { flight -> flight.segments.map { it.arrival.toMidnight() to it.airportTo.city } })
                 .distinct()
-                .map {
+                .map { (time, place) ->
                     TripItem.PlaceItem(
-                        Date(it.first),
-                        it.second.name,
-                        it.second.coverImage ?: ""
+                        time,
+                        place.name,
+                        place.coverImage ?: ""
                     )
                 }
         val allItems = (events + months + emptyDateRanges + places).sortedBy { it.timestamp }
@@ -207,3 +206,34 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
         }
     }
 }
+
+private fun Time.asCalendar(): Calendar = Calendar.getInstance().also {
+    it.timeInMillis = timeInMillis
+    it.timeZone = timeZone
+}
+
+private fun Time.dayOfMonthString(): String = asCalendar().get(Calendar.DAY_OF_MONTH).toString()
+
+private fun Time.dayOfWeekString(): String =
+    DateFormatSymbols.getInstance().weekdays[asCalendar().get(Calendar.DAY_OF_WEEK)]
+
+private fun Time.timeString(): String {
+    val formatter = SimpleDateFormat.getTimeInstance(DateFormat.SHORT).apply {
+        timeZone = this@timeString.timeZone
+    }
+    val date = Date(timeInMillis)
+    return formatter.format(date)
+}
+
+private val Time.monthString: String
+    get() = DateFormatSymbols.getInstance().months[asCalendar().get(Calendar.MONTH)]
+
+private fun Time.toMidnight(): Time = copy(timeInMillis = asCalendar().apply {
+    set(Calendar.HOUR, 0)
+    set(Calendar.MINUTE, 0)
+    set(Calendar.SECOND, 0)
+}.timeInMillis)
+
+private val Time.midnightTime: Long
+    get() = toMidnight().timeInMillis
+
