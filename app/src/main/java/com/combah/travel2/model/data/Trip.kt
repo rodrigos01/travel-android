@@ -8,6 +8,6 @@ data class Trip(
     val name: String? = null,
     val coverImage: String? = null,
     val flights: List<Flight> = emptyList(),
-    val hotels: List<Hotel> = emptyList(),
+    val lodgings: List<Lodging> = emptyList(),
     val places: List<Place> = emptyList(),
 )

@@ -2,7 +2,7 @@ package com.combah.travel2.model.repository.firebase
 
 import com.combah.travel2.extensions.asFlow
 import com.combah.travel2.model.data.Flight
-import com.combah.travel2.model.data.Hotel
+import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
 import com.google.firebase.firestore.DocumentSnapshot
@@ -26,9 +26,9 @@ class FirebaseTripRepository(private val firestore: FirebaseFirestore) : TripRep
             .map { it.flights ?: emptyList() }
     }
 
-    override fun getTripHotels(tripId: String): Flow<List<Hotel>> {
+    override fun getTripHotels(tripId: String): Flow<List<Lodging>> {
         return findTripById(tripId)
-            .map { it.hotels ?: emptyList() }
+            .map { it.lodgings ?: emptyList() }
     }
 
     private fun tripConverter(snapshot: DocumentSnapshot) =

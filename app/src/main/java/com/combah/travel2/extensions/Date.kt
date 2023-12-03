@@ -10,12 +10,6 @@ import java.util.concurrent.TimeUnit
 
 fun Date.asCalendar(): Calendar = Calendar.getInstance().apply { time = this@asCalendar }
 
-fun dateFromString(value: String, format: String? = "yyyy-MM-dd'T'HH:mm"): Date? {
-    return SimpleDateFormat(format, Locale.getDefault()).apply {
-        timeZone = TimeZone.getTimeZone("UTC")
-    }.parse(value)
-}
-
 fun Date.formatTime(
     style: Int = DateFormat.MEDIUM,
     targetTimeZone: TimeZone = TimeZone.getDefault(),

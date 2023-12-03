@@ -80,7 +80,7 @@ class FirebaseTripRepositoryTest {
 
         val hotelsObservable = repository.getTripHotels("myTrip")
 
-        assertEquals(trip.hotels, hotelsObservable.expectItem())
+        assertEquals(trip.lodgings, hotelsObservable.expectItem())
         verify(firestore).document("/trips/myTrip")
     }
 }

@@ -8,5 +8,5 @@ data class Place(
     val longitude: Double = 0.0,
     val coverImage: String? = null,
     val externalId: String = "",
-    val source: String = ""
+    val source: String = "",
 )

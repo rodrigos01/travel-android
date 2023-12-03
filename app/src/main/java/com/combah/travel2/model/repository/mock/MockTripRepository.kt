@@ -1,7 +1,7 @@
 package com.combah.travel2.model.repository.mock
 
 import com.combah.travel2.model.data.Flight
-import com.combah.travel2.model.data.Hotel
+import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +13,9 @@ class MockTripRepository : TripRepository {
 
     override fun findTripById(tripId: String): Flow<Trip> = flowOf(MockData.trip)
 
-    override fun getTripFlights(tripId: String): Flow<List<Flight>> = flowOf(MockData.trip.flights ?: emptyList())
+    override fun getTripFlights(tripId: String): Flow<List<Flight>> =
+        flowOf(MockData.trip.flights ?: emptyList())
 
-    override fun getTripHotels(tripId: String): Flow<List<Hotel>> = flowOf(MockData.trip.hotels ?: emptyList())
+    override fun getTripHotels(tripId: String): Flow<List<Lodging>> =
+        flowOf(MockData.trip.lodgings ?: emptyList())
 }
