@@ -2,6 +2,7 @@ package com.combah.travel2.ui.trip
 
 import androidx.lifecycle.ViewModel
 import com.combah.travel2.extensions.asStateFlow
+import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
@@ -11,6 +12,7 @@ import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
@@ -38,6 +40,8 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
             override val timestamp: Time,
             val placeName: String,
             val imageUrl: String,
+            val dateStart: String,
+            val dateEnd: String,
         ) : TripItem
 
         sealed interface EventItem : TripItem {
@@ -178,17 +182,39 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
                 null
             }
         }.filterNotNull().distinct()
-        val places =
-            (trip.lodgings.map { it.checkIn.toMidnight() to it.city } +
-                    trip.flights.flatMap { flight -> flight.segments.map { it.arrival.toMidnight() to it.airportTo.city } })
-                .distinct()
-                .map { (time, place) ->
-                    TripItem.PlaceItem(
-                        time,
-                        place.name,
-                        place.coverImage ?: ""
-                    )
+        val places = (trip.lodgings.flatMap {
+            listOf(
+                it.city to it.checkIn - 1, it.city to it.checkout - 1
+            )
+        } + trip.flights.flatMap { flight ->
+            flight.segments.flatMap {
+                listOf(
+                    it.airportTo.city to it.arrival - 1,
+                    it.airportFrom.city to it.departure - 1
+                )
+            }
+        }).fold(mutableMapOf<Place, List<Time>>()) { map, (place, time) ->
+            map.also { it[place] = listOf(time) + (it[place] ?: emptyList()) }
+        }.map { (place, times) -> place to (times.min() to times.max()) }
+            .sortedBy { (_, times) -> times.first }
+            .zipWithNextWithLast { (currentPlace, currentTimes), next ->
+                val nextTimes = next?.second
+                if (nextTimes != null && (currentTimes.second >= nextTimes.first || currentTimes.second == currentTimes.first)) {
+                    currentPlace to (currentTimes.first to nextTimes.first)
+                } else {
+                    currentPlace to currentTimes
                 }
+            }
+            .map { (place, times) ->
+                val (checkIn, checkOut) = times
+                TripItem.PlaceItem(
+                    checkIn,
+                    place.name,
+                    place.coverImage ?: "",
+                    checkIn.dayAndMonthString,
+                    checkOut.dayAndMonthString,
+                )
+            }.toList()
         val allItems = (events + months + emptyDateRanges + places).sortedBy { it.timestamp }
         return allItems.mapIndexed { index, item ->
             val prev = allItems.getOrNull(index - 1)
@@ -214,6 +240,11 @@ private fun Time.asCalendar(): Calendar = Calendar.getInstance().also {
 
 private fun Time.dayOfMonthString(): String = asCalendar().get(Calendar.DAY_OF_MONTH).toString()
 
+private val Time.dayAndMonthString: String
+    get() = SimpleDateFormat("MMM d", Locale.getDefault()).apply {
+        timeZone = this@dayAndMonthString.timeZone
+    }.format(Date(timeInMillis))
+
 private fun Time.dayOfWeekString(): String =
     DateFormatSymbols.getInstance().weekdays[asCalendar().get(Calendar.DAY_OF_WEEK)]
 
@@ -236,4 +267,7 @@ private fun Time.toMidnight(): Time = copy(timeInMillis = asCalendar().apply {
 
 private val Time.midnightTime: Long
     get() = toMidnight().timeInMillis
+
+private fun <T, R> List<T>.zipWithNextWithLast(zipper: (current: T, next: T?) -> R) =
+    zip(subList(1, size) + listOf(null)).map { (current, next) -> zipper(current, next) }
 

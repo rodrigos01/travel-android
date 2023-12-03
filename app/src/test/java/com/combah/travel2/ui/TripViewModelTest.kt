@@ -210,30 +210,35 @@ class TripViewModelTest {
 
     @Test
     fun `events should have one place event for each place`() {
-        // TODO: Fix with periods
-//        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-//            assertType<PlaceItem>(item)
-//            assertThat(item.placeName).isEqualTo(lisbon.name)
-//        }
-        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-            assertType<PlaceItem>(item)
-            assertThat(item.placeName).isEqualTo(porto.name)
+        subject.viewState.value.items.find { it is PlaceItem && it.placeName == lisbon.name }.let {
+            val item = it as PlaceItem
+            assertThat(item.dateStart).isEqualTo("May 11")
+            assertThat(item.dateEnd).isEqualTo("May 19")
         }
-        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-            assertType<PlaceItem>(item)
-            assertThat(item.placeName).isEqualTo(paris.name)
+        subject.viewState.value.items.find { it is PlaceItem && it.placeName == porto.name }.let {
+            val item = it as PlaceItem
+            assertThat(item.dateStart).isEqualTo("May 19")
+            assertThat(item.dateEnd).isEqualTo("May 21")
         }
-        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-            assertType<PlaceItem>(item)
-            assertThat(item.placeName).isEqualTo(nice.name)
+        subject.viewState.value.items.find { it is PlaceItem && it.placeName == paris.name }.let {
+            val item = it as PlaceItem
+            assertThat(item.dateStart).isEqualTo("May 21")
+            assertThat(item.dateEnd).isEqualTo("May 29")
         }
-        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-            assertType<PlaceItem>(item)
-            assertThat(item.placeName).isEqualTo(milan.name)
+        subject.viewState.value.items.find { it is PlaceItem && it.placeName == nice.name }.let {
+            val item = it as PlaceItem
+            assertThat(item.dateStart).isEqualTo("May 29")
+            assertThat(item.dateEnd).isEqualTo("Jun 2")
         }
-        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-            assertType<PlaceItem>(item)
-            assertThat(item.placeName).isEqualTo(sorento.name)
+        subject.viewState.value.items.find { it is PlaceItem && it.placeName == milan.name }.let {
+            val item = it as PlaceItem
+            assertThat(item.dateStart).isEqualTo("Jun 2")
+            assertThat(item.dateEnd).isEqualTo("Jun 4")
+        }
+        subject.viewState.value.items.find { it is PlaceItem && it.placeName == sorento.name }.let {
+            val item = it as PlaceItem
+            assertThat(item.dateStart).isEqualTo("Jun 12")
+            assertThat(item.dateEnd).isEqualTo("Jun 14")
         }
     }
 
