@@ -62,7 +62,7 @@ fun TripDetails(
                         dayOfWeekEnd = event.dayOfWeekEnd,
                     )
 
-                    is PlaceItem -> PlaceEventListItem(event.imageUrl, event.imageUrl)
+                    is PlaceItem -> PlaceEventListItem(event.imageUrl, event.placeName, event.dateStart, event.dateEnd)
                     is FlightDepartureItem -> FlightEventListItem(
                         event.showDate,
                         event.dayOfMonth,

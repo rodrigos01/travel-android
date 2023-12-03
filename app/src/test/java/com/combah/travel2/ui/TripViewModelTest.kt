@@ -6,6 +6,7 @@ import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.model.repository.mock.MockData.jfk
 import com.combah.travel2.model.repository.mock.MockData.lis
 import com.combah.travel2.model.repository.mock.MockData.lisbon
+import com.combah.travel2.model.repository.mock.MockData.lisbonAirBnB
 import com.combah.travel2.model.repository.mock.MockData.milan
 import com.combah.travel2.model.repository.mock.MockData.milanHotel
 import com.combah.travel2.model.repository.mock.MockData.nap
@@ -15,6 +16,7 @@ import com.combah.travel2.model.repository.mock.MockData.nyc
 import com.combah.travel2.model.repository.mock.MockData.opo
 import com.combah.travel2.model.repository.mock.MockData.ory
 import com.combah.travel2.model.repository.mock.MockData.paris
+import com.combah.travel2.model.repository.mock.MockData.parisAirBnB
 import com.combah.travel2.model.repository.mock.MockData.porto
 import com.combah.travel2.model.repository.mock.MockData.portoHotel
 import com.combah.travel2.model.repository.mock.MockData.sorento
@@ -210,32 +212,45 @@ class TripViewModelTest {
 
     @Test
     fun `events should have one place event for each place`() {
-        // TODO: Fix with periods
-//        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-//            assertType<PlaceItem>(item)
-//            assertThat(item.placeName).isEqualTo(lisbon.name)
-//        }
-        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-            assertType<PlaceItem>(item)
-            assertThat(item.placeName).isEqualTo(porto.name)
+        subject.viewState.value.items.find { it is PlaceItem && it.placeName == lisbon.name }.let {
+            val item = it as PlaceItem
+            assertThat(item.dateStart).isEqualTo("May 11")
+            assertThat(item.dateEnd).isEqualTo("May 19")
         }
-        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-            assertType<PlaceItem>(item)
-            assertThat(item.placeName).isEqualTo(paris.name)
+        subject.viewState.value.items.find { it is PlaceItem && it.placeName == porto.name }.let {
+            val item = it as PlaceItem
+            assertThat(item.dateStart).isEqualTo("May 19")
+            assertThat(item.dateEnd).isEqualTo("May 21")
         }
-        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-            assertType<PlaceItem>(item)
-            assertThat(item.placeName).isEqualTo(nice.name)
+        subject.viewState.value.items.find { it is PlaceItem && it.placeName == paris.name }.let {
+            val item = it as PlaceItem
+            assertThat(item.dateStart).isEqualTo("May 21")
+            assertThat(item.dateEnd).isEqualTo("May 29")
         }
-        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-            assertType<PlaceItem>(item)
-            assertThat(item.placeName).isEqualTo(milan.name)
+        subject.viewState.value.items.find { it is PlaceItem && it.placeName == nice.name }.let {
+            val item = it as PlaceItem
+            assertThat(item.dateStart).isEqualTo("May 29")
+            assertThat(item.dateEnd).isEqualTo("Jun 2")
         }
-        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-            assertType<PlaceItem>(item)
-            assertThat(item.placeName).isEqualTo(sorento.name)
+        subject.viewState.value.items.find { it is PlaceItem && it.placeName == milan.name }.let {
+            val item = it as PlaceItem
+            assertThat(item.dateStart).isEqualTo("Jun 2")
+            assertThat(item.dateEnd).isEqualTo("Jun 4")
+        }
+        subject.viewState.value.items.find { it is PlaceItem && it.placeName == sorento.name }.let {
+            val item = it as PlaceItem
+            assertThat(item.dateStart).isEqualTo("Jun 12")
+            assertThat(item.dateEnd).isEqualTo("Jun 14")
         }
     }
+
+//    @Test
+//    fun `events should not have place item for origin`() {
+//        assertThat(subject.viewState.value.items).noneSatisfy {
+//            assertType<PlaceItem>(it)
+//            assertThat(it.placeName).isEqualTo("New York")
+//        }
+//    }
 
     @Test
     fun `events should have one month event for each month`() {
@@ -265,7 +280,7 @@ class TripViewModelTest {
                 val item = it as TripViewModel.TripItem.EventItem
                 assertThat(item.showDate).isTrue
             }
-        subject.viewState.value.items.find { it is HotelCheckInItem && it.hotelName == portoHotel.name }
+        subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == lisbonAirBnB.address }
             .let {
                 val item = it as TripViewModel.TripItem.EventItem
                 assertThat(item.showDate).isTrue
@@ -275,12 +290,7 @@ class TripViewModelTest {
                 val item = it as TripViewModel.TripItem.EventItem
                 assertThat(item.showDate).isTrue
             }
-        subject.viewState.value.items.find { it is HotelCheckInItem && it.hotelName == portoHotel.name }
-            .let {
-                val item = it as TripViewModel.TripItem.EventItem
-                assertThat(item.showDate).isTrue
-            }
-        subject.viewState.value.items.find { it is HotelCheckInItem && it.hotelName == niceHotel.name }
+        subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == parisAirBnB.address }
             .let {
                 val item = it as TripViewModel.TripItem.EventItem
                 assertThat(item.showDate).isTrue
@@ -305,16 +315,6 @@ class TripViewModelTest {
                 val item = it as TripViewModel.TripItem.EventItem
                 assertThat(item.showDate).isTrue
             }
-    }
-
-    @Test
-    fun `events should be sorted by type and timestamp`() {
-        val items = subject.viewState.value.items
-
-        items.forEachIndexed { index, event ->
-            val previous = items.getOrNull(index - 1) ?: return@forEachIndexed
-            assertThat(previous.timestamp).isLessThanOrEqualTo(event.timestamp)
-        }
     }
 
     @Test

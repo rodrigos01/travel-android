@@ -28,6 +28,13 @@ object MockData {
             arrival = timestampFromString("2024-05-11T10:00 $WESTERN_EUROPEAN_SUMMER"),
         )
     )
+    val lisbonAirBnB = Lodging(
+        name = null,
+        address = "R. Prof. Branco Rodrigues 2, 1200-422 Lisboa, Portugal",
+        city = lisbon,
+        checkIn = timestampFromString("2024-05-11T13:00 $WESTERN_EUROPEAN_SUMMER"),
+        checkout = timestampFromString("2024-05-19T11:00 $WESTERN_EUROPEAN_SUMMER"),
+    )
     val porto = Place(name = "Porto")
     val opo = Airport("OPO", "Francisco Sá Carneiro Airport", city = porto)
     val portoHotel = Lodging(
@@ -46,6 +53,13 @@ object MockData {
             departure = timestampFromString("2024-05-21T16:50 $WESTERN_EUROPEAN_SUMMER"),
             arrival = timestampFromString("2024-05-21T20:15 $CENTRAL_EUROPEAN_SUMMER"),
         )
+    )
+    val parisAirBnB = Lodging(
+        name = null,
+        address = "155 Rue du Faubourg Saint-Antoine, 75011 Paris, France",
+        city = paris,
+        checkIn = timestampFromString("2024-05-21T13:00 $CENTRAL_EUROPEAN_SUMMER"),
+        checkout = timestampFromString("2024-05-29T11:00 $CENTRAL_EUROPEAN_SUMMER"),
     )
     val nice = Place(name = "Nice")
     val niceHotel = Lodging(
@@ -72,7 +86,7 @@ object MockData {
         checkIn = timestampFromString("2024-06-12T13:00 $CENTRAL_EUROPEAN_SUMMER"),
         checkout = timestampFromString("2024-06-14T11:00 $CENTRAL_EUROPEAN_SUMMER"),
     )
-    val nap = Airport("NAP", "Naples International Airport", city = nice)
+    val nap = Airport("NAP", "Naples International Airport", city = naples)
     val flightToNewYork = Flight(
         FlightSegment(
             airportFrom = nap,
@@ -93,7 +107,9 @@ object MockData {
             flightToParis,
             flightToNewYork,
         ), lodgings = listOf(
+            lisbonAirBnB,
             portoHotel,
+            parisAirBnB,
             niceHotel,
             milanHotel,
             sorentoHotel,
