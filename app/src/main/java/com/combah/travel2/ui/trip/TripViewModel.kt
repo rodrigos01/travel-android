@@ -4,24 +4,31 @@ package com.combah.travel2.ui.trip
 
 import androidx.lifecycle.ViewModel
 import com.combah.travel2.extensions.asStateFlow
+import com.combah.travel2.model.data.Airport
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onEach
 import java.text.DateFormat
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.math.abs
 
+@OptIn(ExperimentalContracts::class)
 class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
 
     data class ViewState(
@@ -30,10 +37,12 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
 
     sealed interface TripItem {
 
-        val timestamp: Time
+        interface Timeable {
+            val timestamp: Time
+        }
 
         data class MonthItem(override val timestamp: Time, val month: String, val year: String) :
-            TripItem
+            TripItem, Timeable
 
         data class DateRangeItem(
             override val timestamp: Time,
@@ -41,7 +50,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
             val dayOfWeekStart: String,
             val dayOfMonthEnd: String,
             val dayOfWeekEnd: String,
-        ) : TripItem
+        ) : TripItem, Timeable
 
         data class PlaceItem(
             override val timestamp: Time,
@@ -49,80 +58,192 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
             val imageUrl: String,
             val dateStart: String,
             val dateEnd: String,
-        ) : TripItem
+        ) : TripItem, Timeable
 
-        sealed interface EventItem : TripItem {
+        interface Identifiable {
+            val id: String
+        }
+
+        sealed interface EventItem : TripItem, Timeable, Identifiable {
             val showDate: Boolean
             val dayOfMonth: String?
             val dayOfWeek: String?
             val time: String
             val title: String?
             val subtitle: String?
+            val showAddButton: Boolean
             val showDivider: Boolean
+            fun withNewValues(
+                showAddButton: Boolean = this.showAddButton,
+                showDivider: Boolean = this.showDivider,
+            ): EventItem
         }
 
         data class FlightDepartureItem(
+            override val id: String,
             override val timestamp: Time,
             override val showDate: Boolean,
             override val dayOfMonth: String,
             override val dayOfWeek: String,
             override val time: String,
+            override val showAddButton: Boolean,
             override val showDivider: Boolean,
             val destination: String,
             val airport: String
         ) : EventItem {
             override val title = destination
             override val subtitle = airport
+            override fun withNewValues(
+                showAddButton: Boolean,
+                showDivider: Boolean
+            ): FlightDepartureItem = copy(showAddButton = showAddButton, showDivider = showDivider)
         }
 
         data class FlightArrivalItem(
+            override val id: String,
             override val timestamp: Time,
             override val showDate: Boolean,
             override val dayOfMonth: String,
             override val dayOfWeek: String,
             override val time: String,
+            override val showAddButton: Boolean,
             override val showDivider: Boolean,
             val airport: String
         ) : EventItem {
             override val title = null
             override val subtitle = airport
+
+            override fun withNewValues(
+                showAddButton: Boolean,
+                showDivider: Boolean
+            ): FlightArrivalItem = copy(showAddButton = showAddButton, showDivider = showDivider)
         }
 
         data class HotelCheckInItem(
+            override val id: String,
             override val timestamp: Time,
             override val showDate: Boolean,
             override val dayOfMonth: String,
             override val dayOfWeek: String,
             override val time: String,
+            override val showAddButton: Boolean,
             override val showDivider: Boolean,
             val hotelName: String,
             val hotelAddress: String,
         ) : EventItem {
             override val title = null
             override val subtitle = hotelAddress
+
+            override fun withNewValues(
+                showAddButton: Boolean,
+                showDivider: Boolean
+            ): HotelCheckInItem = copy(showAddButton = showAddButton, showDivider = showDivider)
         }
 
         data class HotelCheckOutItem(
+            override val id: String,
             override val timestamp: Time,
             override val showDate: Boolean,
             override val dayOfMonth: String,
             override val dayOfWeek: String,
+            override val showAddButton: Boolean,
             override val showDivider: Boolean,
             override val time: String,
             val hotelName: String,
         ) : EventItem {
             override val title = null
             override val subtitle = hotelName
+
+            override fun withNewValues(
+                showAddButton: Boolean,
+                showDivider: Boolean
+            ): HotelCheckOutItem = copy(showAddButton = showAddButton, showDivider = showDivider)
+        }
+
+        sealed class AddPlanItem : TripItem, Identifiable {
+            val types: List<AddPlanType> = AddPlanType.entries
+        }
+
+        data class AddFlightItem(
+            override val id: String,
+            private val departure: Time? = null,
+            private val airportFrom: Airport? = null,
+            private val arrival: Time? = null,
+            private val airportTo: Airport? = null,
+        ) : AddPlanItem() {
+            val departureTime: String?
+                get() = departure?.timeString()
+            val airportFromName: String?
+                get() = airportFrom?.name
+
+            val arrivalTime: String?
+                get() = arrival?.timeString()
+
+            val arrivalDayOfMonth: String?
+                get() = arrival?.dayOfMonthString()
+            val arrivalDayOfWeek: String?
+                get() = arrival?.dayOfWeekString()
+            val airportToName: String?
+                get() = airportTo?.name
+        }
+
+        data class AddLodgingItem(
+            override val id: String,
+            private val lodging: Lodging? = null,
+            private val checkIn: Time? = null,
+            private val checkOut: Time? = null,
+        ) : AddPlanItem() {
+            val checkInTime: String?
+                get() = checkIn?.timeString()
+
+            val checkOutDayOfMonth: String?
+                get() = checkOut?.dayOfMonthString()
+            val checkOutDayOfWeek: String?
+                get() = checkOut?.dayOfWeekString()
+            val checkOutTime: String?
+                get() = checkOut?.timeString()
         }
     }
 
-    private val trip = repository.findTripById(tripId)
+    enum class AddPlanType {
+        Flight,
+        Lodging,
+    }
 
-    val viewState = trip.map {
+    private val eventsFromTrip = repository.findTripById(tripId).map {
         ViewState(
             items = genItems(it),
         )
-    }.asStateFlow(initialValue = ViewState(emptyList()))
+    }.onEach { localState.value = it }
+    private val localState = MutableStateFlow(ViewState(items = emptyList()))
+    val viewState: StateFlow<ViewState> =
+        merge(eventsFromTrip, localState).asStateFlow(initialValue = ViewState(emptyList()))
+
+    fun addButtonTapped(itemId: String) {
+        val index = viewState.value.items.let { items ->
+            items.indexOf(items.find { it is TripItem.Identifiable && it.id == itemId })
+        }
+        val newItems = viewState.value.items.toMutableList()
+        newItems.add(index + 1, TripItem.AddFlightItem(id = UUID.randomUUID().toString()))
+        localState.value = ViewState(items = newItems)
+    }
+
+    fun addPlanTypeChanged(itemId: String, newType: AddPlanType) {
+        val item = viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
+        if (item is TripItem.AddFlightItem && newType == AddPlanType.Flight) {
+            return
+        }
+        if (item is TripItem.AddLodgingItem && newType == AddPlanType.Lodging) {
+            return
+        }
+        val index = viewState.value.items.indexOf(item)
+        val newItems = viewState.value.items.toMutableList()
+        newItems[index] = when (newType) {
+            AddPlanType.Flight -> TripItem.AddFlightItem(id = UUID.randomUUID().toString())
+            AddPlanType.Lodging -> TripItem.AddLodgingItem(id = UUID.randomUUID().toString())
+        }
+        localState.value = ViewState(items = newItems)
+    }
 
     private fun genItems(trip: Trip): List<TripItem> {
         val items = mutableListOf<TripItem>()
@@ -194,12 +315,10 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
                 }
                 if (firstInDay) {
                     previousEventItem?.let {
-                        items[items.indexOf(it)] = when (it) {
-                            is TripItem.FlightDepartureItem -> it.copy(showDivider = true)
-                            is TripItem.FlightArrivalItem -> it.copy(showDivider = true)
-                            is TripItem.HotelCheckInItem -> it.copy(showDivider = true)
-                            is TripItem.HotelCheckOutItem -> it.copy(showDivider = true)
-                        }
+                        items[items.indexOf(it)] = it.withNewValues(
+                            showAddButton = true,
+                            showDivider = true,
+                        )
                     }
                 }
             }
@@ -236,77 +355,85 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
         dayOfMonthEnd = end.dayOfMonthString(),
         dayOfWeekEnd = end.dayOfWeekString(),
     )
-}
 
-private fun genItem(
-    items: List<TripViewModel.TripItem>,
-    event: Any,
-    showDate: Boolean,
-): TripViewModel.TripItem.EventItem {
-    contract { returns() implies (event is FlightSegment || event is Lodging) }
-    val item = if (event is FlightSegment) {
-        if (!items.contains { it is TripViewModel.TripItem.FlightDepartureItem && it.timestamp == event.departure }) {
-            TripViewModel.TripItem.FlightDepartureItem(
-                timestamp = event.departure,
-                showDate = showDate,
-                dayOfMonth = event.departure.dayOfMonthString(),
-                dayOfWeek = event.departure.dayOfWeekString(),
-                time = event.departure.timeString(),
-                destination = event.airportTo.city.name,
-                airport = event.airportFrom.name,
-                showDivider = false,
-            )
+    private fun genItem(
+        items: List<TripItem>,
+        event: Any,
+        showDate: Boolean,
+    ): TripItem.EventItem {
+        contract { returns() implies (event is FlightSegment || event is Lodging) }
+        val item = if (event is FlightSegment) {
+            if (!items.contains { it is TripItem.FlightDepartureItem && it.timestamp == event.departure }) {
+                TripItem.FlightDepartureItem(
+                    id = UUID.randomUUID().toString(),
+                    timestamp = event.departure,
+                    showDate = showDate,
+                    dayOfMonth = event.departure.dayOfMonthString(),
+                    dayOfWeek = event.departure.dayOfWeekString(),
+                    time = event.departure.timeString(),
+                    destination = event.airportTo.city.name,
+                    airport = event.airportFrom.name,
+                    showAddButton = false,
+                    showDivider = false,
+                )
+            } else {
+                TripItem.FlightArrivalItem(
+                    id = "",
+                    timestamp = event.arrival,
+                    showDate = showDate,
+                    dayOfMonth = event.arrival.dayOfMonthString(),
+                    dayOfWeek = event.arrival.dayOfWeekString(),
+                    time = event.arrival.timeString(),
+                    airport = event.airportTo.name,
+                    showAddButton = false,
+                    showDivider = false,
+                )
+            }
+        } else if (event is Lodging) {
+            if (!items.contains { it is TripItem.HotelCheckInItem && it.timestamp == event.checkIn }) {
+                TripItem.HotelCheckInItem(
+                    id = UUID.randomUUID().toString(),
+                    timestamp = event.checkIn,
+                    showDate = showDate,
+                    dayOfWeek = event.checkIn.dayOfWeekString(),
+                    dayOfMonth = event.checkIn.dayOfMonthString(),
+                    time = event.checkIn.timeString(),
+                    hotelName = event.name ?: "",
+                    hotelAddress = event.address,
+                    showAddButton = false,
+                    showDivider = false,
+                )
+            } else {
+                TripItem.HotelCheckOutItem(
+                    id = UUID.randomUUID().toString(),
+                    timestamp = event.checkout,
+                    showDate = showDate,
+                    dayOfWeek = event.checkout.dayOfWeekString(),
+                    dayOfMonth = event.checkout.dayOfMonthString(),
+                    time = event.checkout.timeString(),
+                    hotelName = event.name ?: event.address,
+                    showAddButton = false,
+                    showDivider = false,
+                )
+            }
         } else {
-            TripViewModel.TripItem.FlightArrivalItem(
-                timestamp = event.arrival,
-                showDate = showDate,
-                dayOfMonth = event.arrival.dayOfMonthString(),
-                dayOfWeek = event.arrival.dayOfWeekString(),
-                time = event.arrival.timeString(),
-                airport = event.airportTo.name,
-                showDivider = false,
-            )
+            error("event must be FlightSegment or Lodging")
         }
-    } else if (event is Lodging) {
-        if (!items.contains { it is TripViewModel.TripItem.HotelCheckInItem && it.timestamp == event.checkIn }) {
-            TripViewModel.TripItem.HotelCheckInItem(
-                timestamp = event.checkIn,
-                showDate = showDate,
-                dayOfWeek = event.checkIn.dayOfWeekString(),
-                dayOfMonth = event.checkIn.dayOfMonthString(),
-                time = event.checkIn.timeString(),
-                hotelName = event.name ?: "",
-                hotelAddress = event.address,
-                showDivider = false,
-            )
-        } else {
-            TripViewModel.TripItem.HotelCheckOutItem(
-                timestamp = event.checkout,
-                showDate = showDate,
-                dayOfWeek = event.checkout.dayOfWeekString(),
-                dayOfMonth = event.checkout.dayOfMonthString(),
-                time = event.checkout.timeString(),
-                hotelName = event.name ?: event.address,
-                showDivider = false,
-            )
-        }
-    } else {
-        error("event must be FlightSegment or Lodging")
+        return item
     }
-    return item
-}
 
-fun getPlace(items: List<TripViewModel.TripItem>, event: Any): Place {
-    return if (event is FlightSegment) {
-        if (!items.contains { it is TripViewModel.TripItem.FlightDepartureItem && it.timestamp == event.departure }) {
-            event.airportFrom.city
+    fun getPlace(items: List<TripItem>, event: Any): Place {
+        return if (event is FlightSegment) {
+            if (!items.contains { it is TripItem.FlightDepartureItem && it.timestamp == event.departure }) {
+                event.airportFrom.city
+            } else {
+                event.airportTo.city
+            }
+        } else if (event is Lodging) {
+            event.city
         } else {
-            event.airportTo.city
+            error("event must be FlightSegment or Lodging")
         }
-    } else if (event is Lodging) {
-        event.city
-    } else {
-        error("event must be FlightSegment or Lodging")
     }
 }
 
