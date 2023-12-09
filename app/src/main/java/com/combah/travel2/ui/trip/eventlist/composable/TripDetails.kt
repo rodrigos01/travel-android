@@ -19,19 +19,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.combah.travel2.extensions.TimeConverter
+import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.repository.mock.MockTripRepository
 import com.combah.travel2.ui.theme.AppTheme
-import com.combah.travel2.ui.trip.TripViewModel
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.AddFlightItem
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.AddLodgingItem
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.DateRangeItem
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.FlightArrivalItem
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.FlightDepartureItem
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.HotelCheckInItem
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.HotelCheckOutItem
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.MonthItem
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.PlaceItem
 import com.combah.travel2.ui.trip.creation.composable.TransportationSetupDestination
+import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.DateRangeItem
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightArrivalItem
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightDepartureItem
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckInItem
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckOutItem
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.MonthItem
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.PlaceItem
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -103,8 +104,8 @@ fun TripDetails(
                         event.showDivider,
                     )
 
-                    is AddFlightItem -> AddFlightListItem()
-                    is AddLodgingItem -> AddLodgingListItem()
+                    is AddPlanUseCase.AddPlanItem.Flight -> AddFlightListItem()
+                    is AddPlanUseCase.AddPlanItem.Lodging -> AddLodgingListItem()
                 }
             }
         }
@@ -135,7 +136,15 @@ fun TripDetails(
 @Preview
 fun TripDetailsPreview() {
     AppTheme(dynamicColor = false) {
-        TripDetails(TripViewModel(MockTripRepository(), "minhaTrip"), rememberNavController())
+        TripDetails(
+            TripViewModel(
+                MockTripRepository(),
+                "minhaTrip",
+                AddPlanUseCase(TimeFormatter()),
+                TimeConverter(),
+                TimeFormatter(),
+            ), rememberNavController()
+        )
     }
 }
 
