@@ -58,6 +58,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
             val time: String
             val title: String?
             val subtitle: String?
+            val showDivider: Boolean
         }
 
         data class FlightDepartureItem(
@@ -66,6 +67,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
             override val dayOfMonth: String,
             override val dayOfWeek: String,
             override val time: String,
+            override val showDivider: Boolean,
             val destination: String,
             val airport: String
         ) : EventItem {
@@ -79,6 +81,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
             override val dayOfMonth: String,
             override val dayOfWeek: String,
             override val time: String,
+            override val showDivider: Boolean,
             val airport: String
         ) : EventItem {
             override val title = null
@@ -91,6 +94,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
             override val dayOfMonth: String,
             override val dayOfWeek: String,
             override val time: String,
+            override val showDivider: Boolean,
             val hotelName: String,
             val hotelAddress: String,
         ) : EventItem {
@@ -103,6 +107,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
             override val showDate: Boolean,
             override val dayOfMonth: String,
             override val dayOfWeek: String,
+            override val showDivider: Boolean,
             override val time: String,
             val hotelName: String,
         ) : EventItem {
@@ -138,8 +143,10 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
                 )
             }).sortedBy { (time, event) -> EventComparable(time, event) }
         pairs.forEach { (timestamp, event) ->
+            val previousEventItem = (items.lastOrNull() as? TripItem.EventItem)
             val day = timestamp.toMidnight()
-            val item = genItem(items, event, showDate = day != currentDay)
+            val firstInDay = day != currentDay
+            val item = genItem(items, event, showDate = firstInDay)
             currentDay = day
             lastTimestamp?.let {
                 val start = (it + TimeUnit.DAYS.toMillis(1))
@@ -184,6 +191,16 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
                     val newPlaceItem = it.copy(dateEnd = timestamp.dayAndMonthString)
                     items[items.indexOf(it)] = newPlaceItem
                     currentPlaceItem = newPlaceItem
+                }
+                if (firstInDay) {
+                    previousEventItem?.let {
+                        items[items.indexOf(it)] = when (it) {
+                            is TripItem.FlightDepartureItem -> it.copy(showDivider = true)
+                            is TripItem.FlightArrivalItem -> it.copy(showDivider = true)
+                            is TripItem.HotelCheckInItem -> it.copy(showDivider = true)
+                            is TripItem.HotelCheckOutItem -> it.copy(showDivider = true)
+                        }
+                    }
                 }
             }
             items.add(item)
@@ -237,6 +254,7 @@ private fun genItem(
                 time = event.departure.timeString(),
                 destination = event.airportTo.city.name,
                 airport = event.airportFrom.name,
+                showDivider = false,
             )
         } else {
             TripViewModel.TripItem.FlightArrivalItem(
@@ -246,6 +264,7 @@ private fun genItem(
                 dayOfWeek = event.arrival.dayOfWeekString(),
                 time = event.arrival.timeString(),
                 airport = event.airportTo.name,
+                showDivider = false,
             )
         }
     } else if (event is Lodging) {
@@ -258,6 +277,7 @@ private fun genItem(
                 time = event.checkIn.timeString(),
                 hotelName = event.name ?: "",
                 hotelAddress = event.address,
+                showDivider = false,
             )
         } else {
             TripViewModel.TripItem.HotelCheckOutItem(
@@ -267,6 +287,7 @@ private fun genItem(
                 dayOfMonth = event.checkout.dayOfMonthString(),
                 time = event.checkout.timeString(),
                 hotelName = event.name ?: event.address,
+                showDivider = false,
             )
         }
     } else {
@@ -321,24 +342,9 @@ private fun Time.toMidnight(): Time = copy(timeInMillis = asCalendar().apply {
     set(Calendar.SECOND, 0)
 }.timeInMillis)
 
-private val Time.midnightTime: Long
-    get() = toMidnight().timeInMillis
-
 private fun Time.isWithin24Hours(other: Time): Boolean {
     return abs(timeInMillis - other.timeInMillis) <= TimeUnit.DAYS.toMillis(1)
 }
-
-private fun Time.isSameDayIgnoringTimezone(other: Time): Boolean {
-    return asCalendar().run {
-        val otherCal = other.asCalendar()
-        get(Calendar.DAY_OF_MONTH) == otherCal[Calendar.DAY_OF_MONTH] &&
-                get(Calendar.MONTH) == otherCal[Calendar.MONTH] &&
-                get(Calendar.YEAR) == otherCal[Calendar.YEAR]
-    }
-}
-
-private fun <T, R> List<T>.zipWithNextWithLast(zipper: (current: T, next: T?) -> R) =
-    zip(subList(1, size) + listOf(null)).map { (current, next) -> zipper(current, next) }
 
 private fun <T> List<T>.contains(predicate: (T) -> Boolean) = find(predicate) != null
 
@@ -398,12 +404,12 @@ private class EventComparable(
             }
         }
 
-    enum class EventType(val priority: Int) {
-        CHECKOUT(0),
-        CHECKIN(1),
-        ARRIVAL(2),
-        DEPARTURE(3),
-        UNKNOWN(4),
+    enum class EventType {
+        CHECKOUT,
+        CHECKIN,
+        ARRIVAL,
+        DEPARTURE,
+        UNKNOWN,
     }
 
     override fun toString(): String {
