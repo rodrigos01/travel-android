@@ -25,6 +25,8 @@ import com.combah.travel2.model.repository.mock.MockData.sorentoHotel
 import com.combah.travel2.model.repository.mock.MockData.trip
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
 import com.combah.travel2.ui.trip.TripViewModel
+import com.combah.travel2.ui.trip.TripViewModel.AddPlanType
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.AddFlightItem
 import com.combah.travel2.ui.trip.TripViewModel.TripItem.DateRangeItem
 import com.combah.travel2.ui.trip.TripViewModel.TripItem.FlightArrivalItem
 import com.combah.travel2.ui.trip.TripViewModel.TripItem.FlightDepartureItem
@@ -334,6 +336,54 @@ class TripViewModelTest {
             assertThat(item.dayOfMonthEnd).isEqualTo("1")
         }
     }
+
+    @Test
+    fun `add Plan tapped should add add plan item below tapped item`() {
+        val eventItem =
+            subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
+        subject.addButtonTapped(eventItem.id)
+        val addedItem =
+            subject.viewState.value.items.nextAfter(eventItem)
+        assertType<AddFlightItem>(addedItem)
+        assertThat(addedItem.types).containsExactlyInAnyOrder(
+            AddPlanType.Flight,
+            AddPlanType.Lodging,
+        )
+        assertThat(addedItem.departureTime).isNull()
+        assertThat(addedItem.airportFromName).isNull()
+        assertThat(addedItem.arrivalDayOfMonth).isNull()
+        assertThat(addedItem.arrivalDayOfWeek).isNull()
+        assertThat(addedItem.arrivalTime).isNull()
+        assertThat(addedItem.airportToName).isNull()
+    }
+
+    @Test
+    fun `add plan item should be initialized empty`() {
+        val eventItem =
+            subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
+        subject.addButtonTapped(eventItem.id)
+        val addedItem = subject.viewState.value.items.nextAfter(eventItem)
+        assertType<AddFlightItem>(addedItem)
+        assertThat(addedItem.departureTime).isNull()
+        assertThat(addedItem.airportFromName).isNull()
+        assertThat(addedItem.arrivalDayOfMonth).isNull()
+        assertThat(addedItem.arrivalDayOfWeek).isNull()
+        assertThat(addedItem.arrivalTime).isNull()
+        assertThat(addedItem.airportToName).isNull()
+    }
+
+    @Test
+    fun `type selected should change item`() {
+        val eventItem =
+            subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
+        subject.addButtonTapped(eventItem.id)
+        val newItemIndex = subject.viewState.value.items.indexOf(eventItem) + 1
+        val id =
+            (subject.viewState.value.items[newItemIndex] as TripViewModel.TripItem.AddPlanItem).id
+        subject.addPlanTypeChanged(id, AddPlanType.Lodging)
+        val newItem = subject.viewState.value.items[newItemIndex]
+        assertType<TripViewModel.TripItem.AddLodgingItem>(newItem)
+    }
 }
 
 @ExperimentalContracts
@@ -341,3 +391,5 @@ private inline fun <reified T> assertType(obj: Any?) {
     contract { returns() implies (obj is T) }
     assertThat(obj).isInstanceOf(T::class.java)
 }
+
+private fun <T> List<T>.nextAfter(item: T, positions: Int = 1) = this[indexOf(item) + positions]
