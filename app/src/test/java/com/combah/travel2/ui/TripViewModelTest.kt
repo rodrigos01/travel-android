@@ -42,7 +42,6 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.mock
 import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 
 @OptIn(ExperimentalContracts::class)
 class TripViewModelTest {
@@ -55,7 +54,9 @@ class TripViewModelTest {
             flowOf(trip.toAppDataModel())
         }
     }
-    private val subject = TripViewModel(repository, "minhaTrip")
+    private val addPlanUseCase: AddPlanUseCase = mock()
+    private val subject =
+        TripViewModel(repository, "minhaTrip", addPlanUseCase, TimeConverter(), TimeFormatter())
 
     /*
     Expected List:
@@ -339,57 +340,36 @@ class TripViewModelTest {
 
     @Test
     fun `add Plan tapped should add add plan item below tapped item`() {
+        val expected: AddPlanItem = mock()
+        addPlanUseCase.stub {
+            on { createAddPlanItem(any()) } doReturn expected
+        }
         val eventItem =
             subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
         subject.addButtonTapped(eventItem.id)
         val addedItem =
             subject.viewState.value.items.nextAfter(eventItem)
-        assertType<AddFlightItem>(addedItem)
-        assertThat(addedItem.types).containsExactlyInAnyOrder(
-            AddPlanType.Flight,
-            AddPlanType.Lodging,
-        )
-        assertThat(addedItem.departureTime).isNull()
-        assertThat(addedItem.airportFromName).isNull()
-        assertThat(addedItem.arrivalDayOfMonth).isNull()
-        assertThat(addedItem.arrivalDayOfWeek).isNull()
-        assertThat(addedItem.arrivalTime).isNull()
-        assertThat(addedItem.airportToName).isNull()
-    }
-
-    @Test
-    fun `add plan item should be initialized empty`() {
-        val eventItem =
-            subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
-        subject.addButtonTapped(eventItem.id)
-        val addedItem = subject.viewState.value.items.nextAfter(eventItem)
-        assertType<AddFlightItem>(addedItem)
-        assertThat(addedItem.departureTime).isNull()
-        assertThat(addedItem.airportFromName).isNull()
-        assertThat(addedItem.arrivalDayOfMonth).isNull()
-        assertThat(addedItem.arrivalDayOfWeek).isNull()
-        assertThat(addedItem.arrivalTime).isNull()
-        assertThat(addedItem.airportToName).isNull()
+        assertThat(addedItem).isEqualTo(expected)
     }
 
     @Test
     fun `type selected should change item`() {
+        val addPlanItem: AddPlanItem = mock {
+            on { id } doReturn "originalItemId"
+        }
+        val expected: AddPlanItem = mock()
+        addPlanUseCase.stub {
+            on { createAddPlanItem(any()) } doReturn addPlanItem
+            on { typeChanged(eq(addPlanItem), any()) } doReturn expected
+        }
         val eventItem =
             subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
         subject.addButtonTapped(eventItem.id)
         val newItemIndex = subject.viewState.value.items.indexOf(eventItem) + 1
-        val id =
-            (subject.viewState.value.items[newItemIndex] as TripViewModel.TripItem.AddPlanItem).id
-        subject.addPlanTypeChanged(id, AddPlanType.Lodging)
+        subject.addPlanTypeChanged("originalItemId", AddPlanItem.Type.Lodging)
         val newItem = subject.viewState.value.items[newItemIndex]
-        assertType<TripViewModel.TripItem.AddLodgingItem>(newItem)
+        assertThat(newItem).isEqualTo(expected)
     }
-}
-
-@ExperimentalContracts
-private inline fun <reified T> assertType(obj: Any?) {
-    contract { returns() implies (obj is T) }
-    assertThat(obj).isInstanceOf(T::class.java)
 }
 
 private fun <T> List<T>.nextAfter(item: T, positions: Int = 1) = this[indexOf(item) + positions]

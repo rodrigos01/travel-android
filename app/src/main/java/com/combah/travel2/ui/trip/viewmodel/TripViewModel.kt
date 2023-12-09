@@ -1,11 +1,12 @@
 @file:OptIn(ExperimentalContracts::class)
 
-package com.combah.travel2.ui.trip
+package com.combah.travel2.ui.trip.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.combah.travel2.di.ServiceLocator
+import com.combah.travel2.extensions.TimeConverter
+import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.extensions.asStateFlow
-import com.combah.travel2.model.data.Airport
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Place
@@ -17,12 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
-import java.text.DateFormat
-import java.text.DateFormatSymbols
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.contracts.ExperimentalContracts
@@ -30,7 +26,13 @@ import kotlin.contracts.contract
 import kotlin.math.abs
 
 @OptIn(ExperimentalContracts::class)
-class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
+class TripViewModel(
+    repository: TripRepository,
+    tripId: String,
+    private val addPlanUseCase: AddPlanUseCase,
+    private val timeConverter: TimeConverter,
+    private val timeFormatter: TimeFormatter,
+) : ViewModel() {
 
     data class ViewState(
         val items: List<TripItem>,
@@ -160,55 +162,6 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
                 showDivider: Boolean
             ): HotelCheckOutItem = copy(showAddButton = showAddButton, showDivider = showDivider)
         }
-
-        sealed class AddPlanItem : TripItem, Identifiable {
-            val types: List<AddPlanType> = AddPlanType.entries
-        }
-
-        data class AddFlightItem(
-            override val id: String,
-            private val departure: Time? = null,
-            private val airportFrom: Airport? = null,
-            private val arrival: Time? = null,
-            private val airportTo: Airport? = null,
-        ) : AddPlanItem() {
-            val departureTime: String?
-                get() = departure?.timeString()
-            val airportFromName: String?
-                get() = airportFrom?.name
-
-            val arrivalTime: String?
-                get() = arrival?.timeString()
-
-            val arrivalDayOfMonth: String?
-                get() = arrival?.dayOfMonthString()
-            val arrivalDayOfWeek: String?
-                get() = arrival?.dayOfWeekString()
-            val airportToName: String?
-                get() = airportTo?.name
-        }
-
-        data class AddLodgingItem(
-            override val id: String,
-            private val lodging: Lodging? = null,
-            private val checkIn: Time? = null,
-            private val checkOut: Time? = null,
-        ) : AddPlanItem() {
-            val checkInTime: String?
-                get() = checkIn?.timeString()
-
-            val checkOutDayOfMonth: String?
-                get() = checkOut?.dayOfMonthString()
-            val checkOutDayOfWeek: String?
-                get() = checkOut?.dayOfWeekString()
-            val checkOutTime: String?
-                get() = checkOut?.timeString()
-        }
-    }
-
-    enum class AddPlanType {
-        Flight,
-        Lodging,
     }
 
     private val eventsFromTrip = repository.findTripById(tripId).map {
@@ -221,28 +174,20 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
         merge(eventsFromTrip, localState).asStateFlow(initialValue = ViewState(emptyList()))
 
     fun addButtonTapped(itemId: String) {
-        val index = viewState.value.items.let { items ->
-            items.indexOf(items.find { it is TripItem.Identifiable && it.id == itemId })
-        }
+        val tapped =
+            viewState.value.items.find { it is TripItem.EventItem && it.id == itemId } as TripItem.EventItem
+        val index = viewState.value.items.indexOf(tapped)
         val newItems = viewState.value.items.toMutableList()
-        newItems.add(index + 1, TripItem.AddFlightItem(id = UUID.randomUUID().toString()))
+        newItems.add(index + 1, addPlanUseCase.createAddPlanItem(tapped.timestamp))
         localState.value = ViewState(items = newItems)
     }
 
-    fun addPlanTypeChanged(itemId: String, newType: AddPlanType) {
-        val item = viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
-        if (item is TripItem.AddFlightItem && newType == AddPlanType.Flight) {
-            return
-        }
-        if (item is TripItem.AddLodgingItem && newType == AddPlanType.Lodging) {
-            return
-        }
+    fun addPlanTypeChanged(itemId: String, newType: AddPlanUseCase.AddPlanItem.Type) {
+        val item =
+            viewState.value.items.find { it is AddPlanUseCase.AddPlanItem && it.id == itemId } as AddPlanUseCase.AddPlanItem
         val index = viewState.value.items.indexOf(item)
         val newItems = viewState.value.items.toMutableList()
-        newItems[index] = when (newType) {
-            AddPlanType.Flight -> TripItem.AddFlightItem(id = UUID.randomUUID().toString())
-            AddPlanType.Lodging -> TripItem.AddLodgingItem(id = UUID.randomUUID().toString())
-        }
+        newItems[index] = addPlanUseCase.typeChanged(item, newType)
         localState.value = ViewState(items = newItems)
     }
 
@@ -351,10 +296,10 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
         end: Time
     ) = TripItem.DateRangeItem(
         timestamp = start,
-        dayOfMonthStart = start.dayOfMonthString(),
-        dayOfWeekStart = start.dayOfWeekString(),
-        dayOfMonthEnd = end.dayOfMonthString(),
-        dayOfWeekEnd = end.dayOfWeekString(),
+        dayOfMonthStart = start.dayOfMonthString,
+        dayOfWeekStart = start.dayOfWeekString,
+        dayOfMonthEnd = end.dayOfMonthString,
+        dayOfWeekEnd = end.dayOfWeekString,
     )
 
     fun TripViewModel(
@@ -364,7 +309,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
     serviceLocator.tripRepository,
     tripId,
 )
-    
+
 private fun genItem(
         items: List<TripItem>,
         event: Any,
@@ -377,9 +322,9 @@ private fun genItem(
                     id = UUID.randomUUID().toString(),
                     timestamp = event.departure,
                     showDate = showDate,
-                    dayOfMonth = event.departure.dayOfMonthString(),
-                    dayOfWeek = event.departure.dayOfWeekString(),
-                    time = event.departure.timeString(),
+                    dayOfMonth = event.departure.dayOfMonthString,
+                    dayOfWeek = event.departure.dayOfWeekString,
+                    time = event.departure.timeString,
                     destination = event.airportTo.city.name,
                     airport = event.airportFrom.name,
                     showAddButton = false,
@@ -390,9 +335,9 @@ private fun genItem(
                     id = "",
                     timestamp = event.arrival,
                     showDate = showDate,
-                    dayOfMonth = event.arrival.dayOfMonthString(),
-                    dayOfWeek = event.arrival.dayOfWeekString(),
-                    time = event.arrival.timeString(),
+                    dayOfMonth = event.arrival.dayOfMonthString,
+                    dayOfWeek = event.arrival.dayOfWeekString,
+                    time = event.arrival.timeString,
                     airport = event.airportTo.name,
                     showAddButton = false,
                     showDivider = false,
@@ -404,9 +349,9 @@ private fun genItem(
                     id = UUID.randomUUID().toString(),
                     timestamp = event.checkIn,
                     showDate = showDate,
-                    dayOfWeek = event.checkIn.dayOfWeekString(),
-                    dayOfMonth = event.checkIn.dayOfMonthString(),
-                    time = event.checkIn.timeString(),
+                    dayOfWeek = event.checkIn.dayOfWeekString,
+                    dayOfMonth = event.checkIn.dayOfMonthString,
+                    time = event.checkIn.timeString,
                     hotelName = event.name ?: "",
                     hotelAddress = event.address,
                     showAddButton = false,
@@ -417,9 +362,9 @@ private fun genItem(
                     id = UUID.randomUUID().toString(),
                     timestamp = event.checkout,
                     showDate = showDate,
-                    dayOfWeek = event.checkout.dayOfWeekString(),
-                    dayOfMonth = event.checkout.dayOfMonthString(),
-                    time = event.checkout.timeString(),
+                    dayOfWeek = event.checkout.dayOfWeekString,
+                    dayOfMonth = event.checkout.dayOfMonthString,
+                    time = event.checkout.timeString,
                     hotelName = event.name ?: event.address,
                     showAddButton = false,
                     showDivider = false,
@@ -431,7 +376,7 @@ private fun genItem(
         return item
     }
 
-    fun getPlace(items: List<TripItem>, event: Any): Place {
+    private fun getPlace(items: List<TripItem>, event: Any): Place {
         return if (event is FlightSegment) {
             if (!items.contains { it is TripItem.FlightDepartureItem && it.timestamp == event.departure }) {
                 event.airportFrom.city
@@ -444,42 +389,30 @@ private fun genItem(
             error("event must be FlightSegment or Lodging")
         }
     }
-}
 
-private fun Time.asCalendar(): Calendar = Calendar.getInstance().also {
-    it.timeInMillis = timeInMillis
-    it.timeZone = timeZone
-}
+    private fun Time.asCalendar() = timeConverter.asCalendar(this)
+    private fun Time.toMidnight(): Time =
+        copy(timeInMillis = asCalendar().apply {
+            this.set(Calendar.HOUR, 0)
+            this.set(Calendar.MINUTE, 0)
+            this.set(Calendar.SECOND, 0)
+        }.timeInMillis)
 
-private fun Time.dayOfMonthString(): String = asCalendar().get(Calendar.DAY_OF_MONTH).toString()
+    private val Time.dayOfMonthString: String
+        get() = timeFormatter.dayOfMonthString(this)
 
-private val Time.dayAndMonthString: String
-    get() = SimpleDateFormat("MMM d", Locale.getDefault()).apply {
-        timeZone = this@dayAndMonthString.timeZone
-    }.format(Date(timeInMillis))
+    private val Time.dayAndMonthString: String
+        get() = timeFormatter.dayAndMonthString(this)
 
-private fun Time.dayOfWeekString(): String =
-    DateFormatSymbols.getInstance().weekdays[asCalendar().get(Calendar.DAY_OF_WEEK)]
+    private val Time.dayOfWeekString: String
+        get() = timeFormatter.dayOfWeekString(this)
 
-private fun Time.timeString(): String {
-    val formatter = SimpleDateFormat.getTimeInstance(DateFormat.SHORT).apply {
-        timeZone = this@timeString.timeZone
-    }
-    val date = Date(timeInMillis)
-    return formatter.format(date)
-}
+    private val Time.timeString: String
+        get() = timeFormatter.timeString(this)
 
-private val Time.monthString: String
-    get() = DateFormatSymbols.getInstance().months[asCalendar().get(Calendar.MONTH)]
+    private val Time.monthString: String
+        get() = timeFormatter.monthString(this)
 
-private fun Time.toMidnight(): Time = copy(timeInMillis = asCalendar().apply {
-    set(Calendar.HOUR, 0)
-    set(Calendar.MINUTE, 0)
-    set(Calendar.SECOND, 0)
-}.timeInMillis)
-
-private fun Time.isWithin24Hours(other: Time): Boolean {
-    return abs(timeInMillis - other.timeInMillis) <= TimeUnit.DAYS.toMillis(1)
 }
 
 private fun <T> List<T>.contains(predicate: (T) -> Boolean) = find(predicate) != null
@@ -550,6 +483,10 @@ private class EventComparable(
 
     override fun toString(): String {
         return (time to event).toString()
+    }
+
+    fun Time.isWithin24Hours(other: Time): Boolean {
+        return abs(timeInMillis - other.timeInMillis) <= TimeUnit.DAYS.toMillis(1)
     }
 }
 
