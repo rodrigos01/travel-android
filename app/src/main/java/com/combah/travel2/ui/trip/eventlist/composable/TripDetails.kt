@@ -3,9 +3,11 @@ package com.combah.travel2.ui.trip.eventlist.composable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,13 +44,6 @@ fun TripDetails(
         rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
     Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(onClick = {
-                showBottomSheet = true
-            }) {
-                Icon(Icons.Default.Add, contentDescription = "add event")
-            }
-        },
         modifier = Modifier.background(MaterialTheme.colorScheme.surface),
     ) {
         LazyColumn(contentPadding = it) {
@@ -62,7 +57,13 @@ fun TripDetails(
                         dayOfWeekEnd = event.dayOfWeekEnd,
                     )
 
-                    is PlaceItem -> PlaceEventListItem(event.imageUrl, event.placeName, event.dateStart, event.dateEnd)
+                    is PlaceItem -> PlaceEventListItem(
+                        event.imageUrl,
+                        event.placeName,
+                        event.dateStart,
+                        event.dateEnd
+                    )
+
                     is FlightDepartureItem -> FlightEventListItem(
                         event.showDate,
                         event.dayOfMonth,
@@ -70,6 +71,7 @@ fun TripDetails(
                         event.time,
                         event.destination,
                         event.airport,
+                        event.showDivider,
                     )
 
                     is FlightArrivalItem -> ArrivalEventListItem(
@@ -78,6 +80,7 @@ fun TripDetails(
                         event.dayOfWeek,
                         event.time,
                         event.airport,
+                        event.showDivider,
                     )
 
                     is HotelCheckInItem -> CheckinListItem(
@@ -86,6 +89,7 @@ fun TripDetails(
                         event.dayOfWeek,
                         event.time,
                         event.hotelName,
+                        event.showDivider,
                     )
 
                     is HotelCheckOutItem -> CheckoutListItem(
@@ -94,6 +98,7 @@ fun TripDetails(
                         event.dayOfWeek,
                         event.time,
                         event.hotelName,
+                        event.showDivider,
                     )
                 }
             }

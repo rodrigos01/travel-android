@@ -1,6 +1,8 @@
 package com.combah.travel2.ui.trip.eventlist.composable
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Divider
@@ -20,28 +22,37 @@ fun DateRangeListItem(
     dayOfMonthEnd: String,
     dayOfWeekEnd: String,
 ) {
-    ListItem(
-        headlineContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                LeadingDate(
-                    dayOfMonth = dayOfMonthStart,
-                    dayOfWeek = dayOfWeekStart,
-                    showSmall = true,
-                )
-                Divider(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    thickness = 1.dp,
-                    modifier = Modifier
-                        .width(24.dp)
-                        .padding(horizontal = 8.dp),
-                )
-                LeadingDate(
-                    dayOfMonth = dayOfMonthEnd,
-                    dayOfWeek = dayOfWeekEnd,
-                    showSmall = true,
-                )
-            }
-        })
+    Column {
+        ListItem(
+            headlineContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    LeadingDate(
+                        dayOfMonth = dayOfMonthStart,
+                        dayOfWeek = dayOfWeekStart,
+                        showSmall = true,
+                    )
+                    Divider(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        thickness = 1.dp,
+                        modifier = Modifier
+                            .width(24.dp)
+                            .padding(horizontal = 8.dp),
+                    )
+                    LeadingDate(
+                        dayOfMonth = dayOfMonthEnd,
+                        dayOfWeek = dayOfWeekEnd,
+                        showSmall = true,
+                    )
+                }
+            })
+        Divider(
+            color = MaterialTheme.colorScheme.outlineVariant,
+            thickness = 1.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+        )
+    }
 }
 
 @Composable
