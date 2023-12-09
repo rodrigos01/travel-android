@@ -244,13 +244,13 @@ class TripViewModelTest {
         }
     }
 
-//    @Test
-//    fun `events should not have place item for origin`() {
-//        assertThat(subject.viewState.value.items).noneSatisfy {
-//            assertType<PlaceItem>(it)
-//            assertThat(it.placeName).isEqualTo("New York")
-//        }
-//    }
+    @Test
+    fun `events should not have place item for origin`() {
+        assertThat(subject.viewState.value.items).noneSatisfy {
+            assertType<PlaceItem>(it)
+            assertThat(it.placeName).isEqualTo("New York")
+        }
+    }
 
     @Test
     fun `events should have one month event for each month`() {
@@ -268,8 +268,6 @@ class TripViewModelTest {
 
     @Test
     fun `first events should be first of each day`() {
-        val items = subject.viewState.value.items
-
         subject.viewState.value.items.find { it is FlightDepartureItem && it.destination == lisbon.name }
             .let {
                 val item = it as TripViewModel.TripItem.EventItem
