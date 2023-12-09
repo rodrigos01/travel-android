@@ -22,6 +22,8 @@ import androidx.navigation.compose.rememberNavController
 import com.combah.travel2.model.repository.mock.MockTripRepository
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.TripViewModel
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.AddFlightItem
+import com.combah.travel2.ui.trip.TripViewModel.TripItem.AddLodgingItem
 import com.combah.travel2.ui.trip.TripViewModel.TripItem.DateRangeItem
 import com.combah.travel2.ui.trip.TripViewModel.TripItem.FlightArrivalItem
 import com.combah.travel2.ui.trip.TripViewModel.TripItem.FlightDepartureItem
@@ -100,6 +102,9 @@ fun TripDetails(
                         event.hotelName,
                         event.showDivider,
                     )
+
+                    is AddFlightItem -> AddFlightListItem()
+                    is AddLodgingItem -> AddLodgingListItem()
                 }
             }
         }
