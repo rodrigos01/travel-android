@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalContracts::class)
 
-package com.combah.travel2.ui
+package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.TimeConverter
 import com.combah.travel2.extensions.TimeFormatter
@@ -26,9 +26,7 @@ import com.combah.travel2.model.repository.mock.MockData.sorentoHotel
 import com.combah.travel2.model.repository.mock.MockData.trip
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
 import com.combah.travel2.test.assertType
-import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase.AddPlanItem
-import com.combah.travel2.ui.trip.viewmodel.TripViewModel
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.DateRangeItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightArrivalItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightDepartureItem
