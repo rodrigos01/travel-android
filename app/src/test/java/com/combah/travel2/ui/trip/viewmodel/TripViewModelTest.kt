@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalContracts::class)
 
-package com.combah.travel2.ui
+package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.model.firebase.toAppDataModel
 import com.combah.travel2.model.repository.TripRepository
@@ -24,6 +24,7 @@ import com.combah.travel2.model.repository.mock.MockData.sorento
 import com.combah.travel2.model.repository.mock.MockData.sorentoHotel
 import com.combah.travel2.model.repository.mock.MockData.trip
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
+import com.combah.travel2.test.assertType
 import com.combah.travel2.ui.trip.TripViewModel
 import com.combah.travel2.ui.trip.TripViewModel.AddPlanType
 import com.combah.travel2.ui.trip.TripViewModel.TripItem.AddFlightItem
