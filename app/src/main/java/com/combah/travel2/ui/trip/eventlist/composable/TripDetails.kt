@@ -24,6 +24,8 @@ import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.repository.mock.MockTripRepository
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.TransportationSetupDestination
+import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase
+import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.DateRangeItem
@@ -104,8 +106,8 @@ fun TripDetails(
                         event.showDivider,
                     )
 
-                    is AddPlanUseCase.AddPlanItem.Flight -> AddFlightListItem()
-                    is AddPlanUseCase.AddPlanItem.Lodging -> AddLodgingListItem()
+                    is AddFlightUseCase.AddFlightItem -> AddFlightListItem()
+                    is AddLodgingUseCase.AddLodgingItem -> AddLodgingListItem()
                 }
             }
         }
@@ -140,7 +142,10 @@ fun TripDetailsPreview() {
             TripViewModel(
                 MockTripRepository(),
                 "minhaTrip",
-                AddPlanUseCase(TimeFormatter()),
+                AddPlanUseCase(
+                    AddFlightUseCase(TimeFormatter()),
+                    AddLodgingUseCase(TimeFormatter())
+                ),
                 TimeConverter(),
                 TimeFormatter(),
             ), rememberNavController()
