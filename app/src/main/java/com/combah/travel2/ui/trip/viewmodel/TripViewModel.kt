@@ -3,7 +3,6 @@
 package com.combah.travel2.ui.trip.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.combah.travel2.extensions.TimeConverter
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.extensions.asStateFlow
 import com.combah.travel2.model.data.FlightSegment
@@ -17,7 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
-import java.util.Calendar
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.contracts.ExperimentalContracts
@@ -29,7 +27,6 @@ class TripViewModel(
     repository: TripRepository,
     tripId: String,
     private val addPlanUseCase: AddPlanUseCase,
-    private val timeConverter: TimeConverter,
     private val timeFormatter: TimeFormatter,
 ) : ViewModel() {
 
@@ -226,12 +223,10 @@ class TripViewModel(
             if (month != currentMonth) {
                 val monthItem = TripItem.MonthItem(
                     timestamp = timestamp.copy(
-                        timeInMillis = timestamp.toMidnight().asCalendar().apply {
-                            set(Calendar.DAY_OF_MONTH, 1)
-                        }.timeInMillis
+                        timeInMillis = timestamp.toMidnight().copy(month = 1).timeInMillis
                     ),
                     month = timestamp.monthString,
-                    year = timestamp.asCalendar()[Calendar.YEAR].toString(),
+                    year = timestamp.year.toString(),
                 )
                 items.add(monthItem)
                 currentMonth = month
@@ -381,13 +376,8 @@ class TripViewModel(
         }
     }
 
-    private fun Time.asCalendar() = timeConverter.asCalendar(this)
     private fun Time.toMidnight(): Time =
-        copy(timeInMillis = asCalendar().apply {
-            this.set(Calendar.HOUR, 0)
-            this.set(Calendar.MINUTE, 0)
-            this.set(Calendar.SECOND, 0)
-        }.timeInMillis)
+        copy(hour = 0, minute = 0, second = 0)
 
     private val Time.dayOfMonthString: String
         get() = timeFormatter.dayOfMonthString(this)

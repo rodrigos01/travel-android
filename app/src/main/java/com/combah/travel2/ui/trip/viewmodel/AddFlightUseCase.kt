@@ -5,7 +5,9 @@ import com.combah.travel2.model.data.Airport
 import com.combah.travel2.model.data.Time
 import java.util.UUID
 
-class AddFlightUseCase(private val timeFormatter: TimeFormatter) : AddPlanUseCase.AddItemUseCase {
+class AddFlightUseCase(
+    private val timeFormatter: TimeFormatter
+) : AddPlanUseCase.AddItemUseCase {
 
     private val pendingFlights: MutableMap<String, PendingFlight> = mutableMapOf()
 
@@ -34,6 +36,39 @@ class AddFlightUseCase(private val timeFormatter: TimeFormatter) : AddPlanUseCas
     override fun createPendingData(id: String, time: Time): AddPlanUseCase.PendingData =
         PendingFlight(departure = time).also { pendingFlights[id] = it }
 
-    override fun removePendingData(item: AddPlanUseCase.AddPlanItem): AddPlanUseCase.PendingData? =
+    override fun removePendingData(item: AddPlanUseCase.AddPlanItem): PendingFlight? =
         pendingFlights.remove(item.id)
+
+    fun setDepartureTime(item: AddFlightItem, hour: Int, minute: Int): AddFlightItem {
+        val pending = pendingFlights[item.id] ?: return item
+        val newTime = pending.departure.copy(hour = hour, minute = minute)
+        pendingFlights[item.id] =
+            pending.copy(departure = newTime)
+        return item.copy(departureTime = timeFormatter.timeString(newTime))
+    }
+
+    fun setArrivalDay(item: AddFlightItem, day: Time): AddFlightItem {
+        val pending = pendingFlights[item.id] ?: return item
+        val oldTime = pending.arrival ?: pending.departure
+        val newTime = oldTime.copy(
+            dayOfMonth = day.dayOfMonth,
+            month = day.month,
+            year = day.year,
+        )
+        pendingFlights[item.id] =
+            pending.copy(arrival = newTime)
+        return item.copy(
+            arrivalDayOfMonth = timeFormatter.dayOfMonthString(newTime),
+            arrivalDayOfWeek = timeFormatter.dayOfWeekString(newTime),
+        )
+    }
+
+    fun setArrivalTime(item: AddFlightItem, hour: Int, minute: Int): AddFlightItem {
+        val pending = pendingFlights[item.id] ?: return item
+        val oldTime = pending.arrival ?: pending.departure
+        val newTime = oldTime.copy(hour = hour, minute = minute)
+        pendingFlights[item.id] =
+            pending.copy(arrival = newTime)
+        return item.copy(arrivalTime = timeFormatter.timeString(newTime))
+    }
 }

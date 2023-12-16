@@ -1,6 +1,5 @@
 package com.combah.travel2.di
 
-import com.combah.travel2.extensions.TimeConverter
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.ui.trip.creation.TransportationSetupViewModel
 import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase
@@ -14,13 +13,14 @@ import org.koin.dsl.module
 val viewModelModule = module {
     viewModel { TripListViewModel(get()) }
     viewModel { (tripId: String) ->
-        val timeConverter = TimeConverter()
-        val timeFormatter = TimeFormatter(timeConverter)
+        val timeFormatter = TimeFormatter()
         TripViewModel(
             get(),
             tripId,
-            AddPlanUseCase(AddFlightUseCase(timeFormatter), AddLodgingUseCase(timeFormatter)),
-            timeConverter,
+            AddPlanUseCase(
+                AddFlightUseCase(timeFormatter),
+                AddLodgingUseCase(timeFormatter)
+            ),
             timeFormatter,
         )
     }
