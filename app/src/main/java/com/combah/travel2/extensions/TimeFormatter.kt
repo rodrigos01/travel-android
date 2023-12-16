@@ -4,13 +4,12 @@ import com.combah.travel2.model.data.Time
 import java.text.DateFormat
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-class TimeFormatter(private val converter: TimeConverter = TimeConverter()) {
+class TimeFormatter {
     fun dayOfMonthString(time: Time): String =
-        time.asCalendar().get(Calendar.DAY_OF_MONTH).toString()
+        time.dayOfMonth.toString()
 
     fun dayAndMonthString(time: Time): String =
         SimpleDateFormat("MMM d", Locale.getDefault()).apply {
@@ -18,7 +17,7 @@ class TimeFormatter(private val converter: TimeConverter = TimeConverter()) {
         }.format(Date(time.timeInMillis))
 
     fun dayOfWeekString(time: Time): String =
-        DateFormatSymbols.getInstance().weekdays[time.asCalendar().get(Calendar.DAY_OF_WEEK)]
+        DateFormatSymbols.getInstance().weekdays[time.dayOfWeek]
 
     fun timeString(time: Time): String {
         val formatter = SimpleDateFormat.getTimeInstance(DateFormat.SHORT).apply {
@@ -29,7 +28,5 @@ class TimeFormatter(private val converter: TimeConverter = TimeConverter()) {
     }
 
     fun monthString(time: Time): String =
-        DateFormatSymbols.getInstance().months[time.asCalendar().get(Calendar.MONTH)]
-
-    private fun Time.asCalendar() = converter.asCalendar(this)
+        DateFormatSymbols.getInstance().months[time.month]
 }

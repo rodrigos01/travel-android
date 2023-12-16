@@ -2,6 +2,7 @@
 
 package com.combah.travel2.ui.trip.viewmodel
 
+import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.firebase.toAppDataModel
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.model.repository.mock.MockData.jfk
@@ -57,7 +58,7 @@ class TripViewModelTest {
     }
     private val addPlanUseCase: AddPlanUseCase = mock()
     private val subject =
-        TripViewModel(repository, "minhaTrip", addPlanUseCase, TimeConverter(), TimeFormatter())
+        TripViewModel(repository, "minhaTrip", addPlanUseCase, TimeFormatter())
 
     /*
     Expected List:
