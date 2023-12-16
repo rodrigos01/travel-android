@@ -6,7 +6,7 @@ import com.combah.travel2.test.assertType
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.stub
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import kotlin.contracts.ExperimentalContracts
 
@@ -19,11 +19,11 @@ class AddFlightUseCaseTest {
     fun `created item should be initialized empty`() {
         val addedItem = subject.createItem(mock())
         assertType<AddFlightUseCase.AddFlightItem>(addedItem)
-        Assertions.assertThat(addedItem.airportFromName).isNull()
-        Assertions.assertThat(addedItem.arrivalDayOfMonth).isNull()
-        Assertions.assertThat(addedItem.arrivalDayOfWeek).isNull()
-        Assertions.assertThat(addedItem.arrivalTime).isNull()
-        Assertions.assertThat(addedItem.airportToName).isNull()
+        assertThat(addedItem.airportFromName).isNull()
+        assertThat(addedItem.arrivalDayOfMonth).isNull()
+        assertThat(addedItem.arrivalDayOfWeek).isNull()
+        assertThat(addedItem.arrivalTime).isNull()
+        assertThat(addedItem.airportToName).isNull()
     }
 
     @Test
@@ -34,7 +34,7 @@ class AddFlightUseCaseTest {
         }
         val addedItem = subject.createItem(initialTime)
         assertType<AddFlightUseCase.AddFlightItem>(addedItem)
-        Assertions.assertThat(addedItem.departureTime).isEqualTo("6:15")
+        assertThat(addedItem.departureTime).isEqualTo("6:15")
     }
 
     @Test
@@ -42,6 +42,61 @@ class AddFlightUseCaseTest {
         val initialTime: Time = mock()
         val pendingData = subject.createPendingData("id", initialTime)
         assertType<AddFlightUseCase.PendingFlight>(pendingData)
-        Assertions.assertThat(pendingData.departure).isEqualTo(initialTime)
+        assertThat(pendingData.departure).isEqualTo(initialTime)
+    }
+
+    @Test
+    fun `set departure time should update departure time`() {
+        val newTime = mock<Time>()
+        val originalTime = mock<Time> {
+            on { copy(hour = 9, minute = 15) } doReturn newTime
+        }
+        formatter.stub {
+            on { timeString(newTime) } doReturn "9:15"
+        }
+        val original = subject.createItem(originalTime)
+        subject.createPendingData(original.id, originalTime)
+        val new = subject.setDepartureTime(original, hour = 9, minute = 15)
+        assertThat(new.departureTime).isEqualTo("9:15")
+        assertThat(subject.removePendingData(new)?.departure).isEqualTo(newTime)
+    }
+
+    @Test
+    fun `set arrival day should update arrival day`() {
+        val newTime = mock<Time>()
+        val receivedTime = mock<Time> {
+            on { dayOfMonth } doReturn 21
+            on { month } doReturn 4
+            on { year } doReturn 2024
+        }
+        val originalTime = mock<Time> {
+            on { copy(dayOfMonth = 21, month = 4, year = 2024) } doReturn newTime
+        }
+        formatter.stub {
+            on { dayOfMonthString(newTime) } doReturn "21"
+            on { dayOfWeekString(newTime) } doReturn "Wed"
+        }
+        val original = subject.createItem(originalTime)
+        subject.createPendingData(original.id, originalTime)
+        val new = subject.setArrivalDay(original, receivedTime)
+        assertThat(new.arrivalDayOfMonth).isEqualTo("21")
+        assertThat(new.arrivalDayOfWeek).isEqualTo("Wed")
+        assertThat(subject.removePendingData(new)?.arrival).isEqualTo(newTime)
+    }
+
+    @Test
+    fun `set arrival time should update arrival time`() {
+        val newTime = mock<Time>()
+        val originalTime = mock<Time> {
+            on { copy(hour = 16, minute = 15) } doReturn newTime
+        }
+        formatter.stub {
+            on { timeString(newTime) } doReturn "16:15"
+        }
+        val original = subject.createItem(originalTime)
+        subject.createPendingData(original.id, originalTime)
+        val new = subject.setArrivalTime(original, hour = 16, minute = 15)
+        assertThat(new.arrivalTime).isEqualTo("16:15")
+        assertThat(subject.removePendingData(new)?.arrival).isEqualTo(newTime)
     }
 }
