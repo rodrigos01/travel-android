@@ -27,9 +27,9 @@ fun FirebaseData.Flight.toAppDataModel() = Flight(
 
 fun FirebaseData.FlightSegment.toAppDataModel() = FlightSegment(
     airportFrom = airportFrom.toAppDataModel(),
-    departure = departure.toTimestamp(),
+    departure = departure.toTimestamp(TimeZone.getTimeZone(airportFrom.city?.timeZone)),
     airportTo = airportTo.toAppDataModel(),
-    arrival = arrival.toTimestamp(),
+    arrival = arrival.toTimestamp(TimeZone.getTimeZone(airportTo.city?.timeZone)),
 )
 
 fun FirebaseData.Airport.toAppDataModel() = Airport(
@@ -42,8 +42,10 @@ fun FirebaseData.Lodging.toAppDataModel() = Lodging(
     name = name,
     address = address ?: error("address is required"),
     city = city?.toAppDataModel() ?: error("city is required"),
-    checkIn = checkIn?.toTimestamp() ?: error("checkin is required"),
-    checkout = checkout?.toTimestamp() ?: error("checkout is required"),
+    checkIn = checkIn?.toTimestamp(TimeZone.getTimeZone(city.timeZone))
+        ?: error("checkin is required"),
+    checkout = checkout?.toTimestamp(TimeZone.getTimeZone(city.timeZone))
+        ?: error("checkout is required"),
 )
 
 fun FirebaseData.Place.toAppDataModel() = Place(
@@ -57,7 +59,7 @@ fun FirebaseData.Place.toAppDataModel() = Place(
     source = source,
 )
 
-private fun Date.toTimestamp(): Time {
+private fun Date.toTimestamp(timeZone: TimeZone?): Time {
     val timeInMillis = time
-    return Time(timeInMillis, TimeZone.getDefault())
+    return Time(timeInMillis, timeZone ?: TimeZone.getDefault())
 }
