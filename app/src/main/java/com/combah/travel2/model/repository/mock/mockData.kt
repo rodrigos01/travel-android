@@ -1,6 +1,5 @@
 package com.combah.travel2.model.repository.mock
 
-import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.firebase.FirebaseData.Airport
 import com.combah.travel2.model.firebase.FirebaseData.Flight
 import com.combah.travel2.model.firebase.FirebaseData.FlightSegment
@@ -17,89 +16,89 @@ private const val WESTERN_EUROPEAN_SUMMER = "GMT+01:00"
 private const val CENTRAL_EUROPEAN_SUMMER = "GMT+02:00"
 
 object MockData {
-    val nyc = Place(name = "New York")
+    val nyc = Place(name = "New York", timeZone = EAST_DAYLIGHT)
     val jfk = Airport("JFK", "JFK International Airport", city = nyc)
-    val lisbon = Place(name = "Lisbon")
+    val lisbon = Place(name = "Lisbon", timeZone = WESTERN_EUROPEAN_SUMMER)
     val lis = Airport("LIS", "Humberto Delgado International Airport", city = lisbon)
     val flightToLisbon = Flight(
         FlightSegment(
             airportFrom = jfk,
             airportTo = lis,
-            departure = dateFromString("2024-05-10T22:05 $EAST_DAYLIGHT"),
-            arrival = dateFromString("2024-05-11T10:00 $WESTERN_EUROPEAN_SUMMER"),
+            departure = "2024-05-10T22:05",
+            arrival = "2024-05-11T10:00",
         )
     )
     val lisbonAirBnB = Lodging(
         name = null,
         address = "R. Prof. Branco Rodrigues 2, 1200-422 Lisboa, Portugal",
         city = lisbon,
-        checkIn = dateFromString("2024-05-11T13:00 $WESTERN_EUROPEAN_SUMMER"),
-        checkout = dateFromString("2024-05-19T11:00 $WESTERN_EUROPEAN_SUMMER"),
+        checkIn = "2024-05-11T13:00",
+        checkout = "2024-05-19T11:00",
     )
-    val porto = Place(name = "Porto")
+    val porto = Place(name = "Porto", timeZone = WESTERN_EUROPEAN_SUMMER)
     val opo = Airport("OPO", "Francisco Sá Carneiro Airport", city = porto)
     val portoHotel = Lodging(
         name = "Pestana Porto - A Brasileira",
         address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
         city = porto,
-        checkIn = dateFromString("2024-05-19T13:00 $WESTERN_EUROPEAN_SUMMER"),
-        checkout = dateFromString("2024-05-21T11:00 $WESTERN_EUROPEAN_SUMMER"),
+        checkIn = "2024-05-19T13:00",
+        checkout = "2024-05-21T11:00",
     )
-    val paris = Place(name = "Paris")
+    val paris = Place(name = "Paris", timeZone = CENTRAL_EUROPEAN_SUMMER)
     val ory = Airport("ORY", "Orly International Airport", city = paris)
     val flightToParis = Flight(
         FlightSegment(
             airportFrom = opo,
             airportTo = ory,
-            departure = dateFromString("2024-05-21T16:50 $WESTERN_EUROPEAN_SUMMER"),
-            arrival = dateFromString("2024-05-21T20:15 $CENTRAL_EUROPEAN_SUMMER"),
+            departure = "2024-05-21T16:50",
+            arrival = "2024-05-21T20:15",
         )
     )
     val parisAirBnB = Lodging(
         name = null,
         address = "155 Rue du Faubourg Saint-Antoine, 75011 Paris, France",
         city = paris,
-        checkIn = dateFromString("2024-05-21T13:00 $CENTRAL_EUROPEAN_SUMMER"),
-        checkout = dateFromString("2024-05-29T11:00 $CENTRAL_EUROPEAN_SUMMER"),
+        checkIn = "2024-05-21T13:00",
+        checkout = "2024-05-29T11:00",
     )
-    val nice = Place(name = "Nice")
+    val nice = Place(name = "Nice", timeZone = CENTRAL_EUROPEAN_SUMMER)
     val niceHotel = Lodging(
         name = "Hôtel La Villa Nice Victor Hugo",
         address = "19 Bis Bd Victor Hugo, 06000 Nice, France",
         city = nice,
-        checkIn = dateFromString("2024-05-29T13:00 $CENTRAL_EUROPEAN_SUMMER"),
-        checkout = dateFromString("2024-06-02T11:00 $CENTRAL_EUROPEAN_SUMMER"),
+        checkIn = "2024-05-29T13:00",
+        checkout = "2024-06-02T11:00",
     )
-    val milan = Place(name = "Milan")
+    val milan = Place(name = "Milan", timeZone = CENTRAL_EUROPEAN_SUMMER)
     val milanHotel = Lodging(
         name = "UNAHOTELS Galles Milano",
         city = milan,
         address = "Piazza Lima, 2, 20124 Milano MI, Italy",
-        checkIn = dateFromString("2024-06-02T13:00 $CENTRAL_EUROPEAN_SUMMER"),
-        checkout = dateFromString("2024-06-04T11:00 $CENTRAL_EUROPEAN_SUMMER"),
+        checkIn = "2024-06-02T13:00",
+        checkout = "2024-06-04T11:00",
     )
-    val naples = Place(name = "Naples")
-    val sorento = Place(name = "Sorento")
+    val naples = Place(name = "Naples", timeZone = CENTRAL_EUROPEAN_SUMMER)
+    val sorento = Place(name = "Sorento", timeZone = CENTRAL_EUROPEAN_SUMMER)
     val sorentoHotel = Lodging(
         name = "Hotel Conca Park",
         address = "Via degli Aranci, 13\\bis, 80067 Sorrento NA, Italy",
         city = sorento,
-        checkIn = dateFromString("2024-06-12T13:00 $CENTRAL_EUROPEAN_SUMMER"),
-        checkout = dateFromString("2024-06-14T11:00 $CENTRAL_EUROPEAN_SUMMER"),
+        checkIn = "2024-06-12T13:00",
+        checkout = "2024-06-14T11:00",
     )
     val nap = Airport("NAP", "Naples International Airport", city = naples)
     val flightToNewYork = Flight(
         FlightSegment(
             airportFrom = nap,
             airportTo = lis,
-            departure = dateFromString("2024-06-14T12:30 $CENTRAL_EUROPEAN_SUMMER"),
-            arrival = dateFromString("2024-06-14T14:50 $WESTERN_EUROPEAN_SUMMER"),
+            departure = "2024-06-14T12:30",
+            arrival = "2024-06-14T14:50",
         ),
         FlightSegment(
             airportFrom = lis,
             airportTo = jfk,
-            departure = dateFromString("2024-06-14T17:05 $WESTERN_EUROPEAN_SUMMER"),
-            arrival = dateFromString("2024-06-14T20:05 $EAST_DAYLIGHT"),
+            departure = "2024-06-14T17:05",
+            arrival = "2024-06-14T20:05",
         ),
     )
     val trip = Trip(
@@ -122,13 +121,42 @@ object MockData {
 
 private fun Flight(vararg segments: FlightSegment) = Flight(segments = segments.asList())
 
-fun dateFromString(value: String, pattern: String? = "yyyy-MM-dd'T'HH:mm z"): Date {
-    val timeInMillis = SimpleDateFormat(pattern, Locale.getDefault()).parse(value)?.time
-        ?: error("Null return from parsing $value with $pattern")
-    val timeZoneId = value.split(" ").last()
-    val timeZone = TimeZone.getTimeZone(timeZoneId)
-    if (timeZone.id != timeZoneId) {
-        error("Invalid Timezone in $value")
-    }
-    return Date(Time(timeInMillis, TimeZone.getTimeZone(timeZoneId)).timeInMillis)
+private fun FlightSegment(
+    airportFrom: Airport,
+    departure: String,
+    airportTo: Airport,
+    arrival: String,
+): FlightSegment {
+    return FlightSegment(
+        airportFrom,
+        dateFromString(departure, airportFrom.city?.timeZone),
+        airportTo,
+        dateFromString(arrival, airportTo.city?.timeZone)
+    )
+}
+
+private fun Lodging(
+    name: String? = null,
+    address: String? = null,
+    city: Place? = null,
+    checkIn: String? = null,
+    checkout: String? = null,
+) = Lodging(
+    name,
+    address,
+    city,
+    checkIn?.let { dateFromString(it, city?.timeZone) },
+    checkout?.let { dateFromString(it, city?.timeZone) }
+)
+
+fun dateFromString(
+    value: String,
+    timeZoneId: String?,
+    pattern: String? = "yyyy-MM-dd'T'HH:mm"
+): Date {
+    val timeInMillis = SimpleDateFormat(pattern, Locale.getDefault()).apply {
+        timeZoneId?.let { TimeZone.getTimeZone(it) }?.let { timeZone = it }
+    }.parse(value)?.time
+        ?: error("Null return from parsing")
+    return Date(timeInMillis)
 }

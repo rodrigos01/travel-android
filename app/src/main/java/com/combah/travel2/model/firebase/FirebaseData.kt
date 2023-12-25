@@ -47,6 +47,7 @@ sealed interface FirebaseData {
         val address: String = "",
         val latitude: Double = 0.0,
         val longitude: Double = 0.0,
+        val timeZone: String = "",
         val coverImage: String? = null,
         val externalId: String = "",
         val source: String = "",
