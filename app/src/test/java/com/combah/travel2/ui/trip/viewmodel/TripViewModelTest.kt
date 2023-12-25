@@ -57,8 +57,7 @@ class TripViewModelTest {
         }
     }
     private val addPlanUseCase: AddPlanUseCase = mock()
-    private val subject =
-        TripViewModel(repository, "minhaTrip", addPlanUseCase, TimeFormatter())
+    private val subject = TripViewModel(repository, "minhaTrip", addPlanUseCase, TimeFormatter())
 
     /*
     Expected List:
@@ -142,12 +141,11 @@ class TripViewModelTest {
                 assertThat(item.dayOfMonth).isEqualTo("21")
                 assertThat(item.time).isEqualTo("8:15 PM")
             }
-        subject.viewState.value.items.filter { it is FlightArrivalItem && it.airport == lis.name }[1]
-            .let {
-                val item = it as FlightArrivalItem
-                assertThat(item.dayOfMonth).isEqualTo("14")
-                assertThat(item.time).isEqualTo("2:50 PM")
-            }
+        subject.viewState.value.items.filter { it is FlightArrivalItem && it.airport == lis.name }[1].let {
+            val item = it as FlightArrivalItem
+            assertThat(item.dayOfMonth).isEqualTo("14")
+            assertThat(item.time).isEqualTo("2:50 PM")
+        }
         subject.viewState.value.items.find { it is FlightArrivalItem && it.airport == jfk.name }
             .let {
                 val item = it as FlightArrivalItem
@@ -344,13 +342,12 @@ class TripViewModelTest {
     fun `add Plan tapped should add add plan item below tapped item`() {
         val expected: AddPlanItem = mock()
         addPlanUseCase.stub {
-            on { createAddPlanItem(any()) } doReturn expected
+            on { createAddPlanItem(any(), any()) } doReturn expected
         }
         val eventItem =
             subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
         subject.addButtonTapped(eventItem.id)
-        val addedItem =
-            subject.viewState.value.items.nextAfter(eventItem)
+        val addedItem = subject.viewState.value.items.nextAfter(eventItem)
         assertThat(addedItem).isEqualTo(expected)
     }
 
@@ -361,7 +358,7 @@ class TripViewModelTest {
         }
         val expected: AddPlanItem = mock()
         addPlanUseCase.stub {
-            on { createAddPlanItem(any()) } doReturn addPlanItem
+            on { createAddPlanItem(any(), any()) } doReturn addPlanItem
             on { typeChanged(eq(addPlanItem), any()) } doReturn expected
         }
         val eventItem =
