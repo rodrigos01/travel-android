@@ -21,10 +21,12 @@ sealed interface FirebaseData {
     ) : FirebaseData
 
     data class FlightSegment(
-        val airportFrom: Airport,
-        val departure: Date,
-        val airportTo: Airport,
-        val arrival: Date,
+        val airportFrom: Airport? = null,
+        val departure: Date = Date(),
+        val airportTo: Airport? = null,
+        val arrival: Date = Date(),
+        val cityFrom: Place? = null,
+        val cityTo: Place? = null,
     ) : FirebaseData
 
     data class Airport(
