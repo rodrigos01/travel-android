@@ -7,15 +7,13 @@ class AddPlanUseCase(
     private val addLodgingUseCase: AddLodgingUseCase,
 ) {
 
-    interface AddItemUseCase {
+    interface AddItemUseCase<T : AddPlanItem> {
         fun createItem(time: Time): AddPlanItem
-        fun createPendingData(id: String, time: Time): PendingData
-
-        fun removePendingData(item: AddPlanItem): PendingData?
+        fun remove(item: T): PendingData?
     }
 
-    sealed interface AddPlanItem : TripViewModel.TripItem,
-        TripViewModel.TripItem.Identifiable {
+    sealed interface AddPlanItem : TripViewModel.TripItem, TripViewModel.TripItem.Identifiable,
+        TripViewModel.TripItem.Timeable {
         val types: List<Type>
             get() = Type.entries
 
@@ -31,28 +29,29 @@ class AddPlanUseCase(
 
     }
 
-    fun createAddPlanItem(time: Time): AddPlanItem {
-        return createAddPlanItem(AddPlanItem.Type.Flight, time).also {
-            it.type.useCase.createPendingData(it.id, time)
-        }
+    fun createAddPlanItem(
+        time: Time,
+        type: AddPlanItem.Type = AddPlanItem.Type.Flight
+    ): AddPlanItem {
+        return type.useCase.createItem(time)
     }
 
     fun typeChanged(addPlanItem: AddPlanItem, newType: AddPlanItem.Type): AddPlanItem {
         if (addPlanItem.type == newType) {
             return addPlanItem
         }
-        val originalTime =
-            addPlanItem.type.useCase.removePendingData(addPlanItem)?.timestamp ?: return addPlanItem
-        return createAddPlanItem(newType, originalTime).also {
-            it.type.useCase.createPendingData(it.id, originalTime)
+        removeItem(addPlanItem)
+        return createAddPlanItem(addPlanItem.timestamp, newType)
+    }
+
+    private fun removeItem(addPlanItem: AddPlanItem) {
+        when (addPlanItem) {
+            is AddFlightUseCase.AddFlightItem -> addFlightUseCase.remove(addPlanItem)
+            is AddLodgingUseCase.AddLodgingItem -> addLodgingUseCase.remove(addPlanItem)
         }
     }
 
-    private fun createAddPlanItem(type: AddPlanItem.Type, time: Time): AddPlanItem {
-        return type.useCase.createItem(time)
-    }
-
-    private val AddPlanItem.Type.useCase: AddItemUseCase
+    private val AddPlanItem.Type.useCase: AddItemUseCase<out AddPlanItem>
         get() = when (this) {
             AddPlanItem.Type.Flight -> addFlightUseCase
             AddPlanItem.Type.Lodging -> addLodgingUseCase

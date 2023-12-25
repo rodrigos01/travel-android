@@ -5,7 +5,6 @@ import com.combah.travel2.test.assertType
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase.AddPlanItem
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.stub
 import org.assertj.core.api.Assertions.assertThat
@@ -31,7 +30,7 @@ class AddPlanUseCaseTest {
 
     @Test
     fun `Add Plan Items should have all types available`() {
-        val original = AddFlightUseCase.AddFlightItem(id = "originalItem")
+        val original = AddFlightUseCase.AddFlightItem(id = "originalItem", timestamp = mock())
         assertThat(original.types).containsExactly(
             AddPlanItem.Type.Flight,
             AddPlanItem.Type.Lodging,
@@ -53,14 +52,10 @@ class AddPlanUseCaseTest {
         val initialTime: Time = mock()
         val original = mock<AddFlightUseCase.AddFlightItem> {
             on { id } doReturn "originalId"
-        }
-        val originalPendingData = mock<AddFlightUseCase.PendingFlight> {
             on { timestamp } doReturn initialTime
         }
         addFlightUseCase.stub {
             on { createItem(initialTime) } doReturn original
-            on { createPendingData(any(), eq(initialTime)) } doReturn originalPendingData
-            on { removePendingData(original) } doReturn originalPendingData
         }
         addLodgingUseCase.stub { on { createItem(initialTime) } doReturn expected }
         val item = subject.createAddPlanItem(initialTime)
@@ -70,18 +65,16 @@ class AddPlanUseCaseTest {
 
     @Test
     fun `type selected should keep original item's time`() {
-        val expected: AddLodgingUseCase.AddLodgingItem = mock()
         val initialTime: Time = mock()
+        val expected: AddLodgingUseCase.AddLodgingItem = mock {
+            on { timestamp } doReturn initialTime
+        }
         val original = mock<AddFlightUseCase.AddFlightItem> {
             on { id } doReturn "originalId"
-        }
-        val originalPendingData = mock<AddFlightUseCase.PendingFlight> {
             on { timestamp } doReturn initialTime
         }
         addFlightUseCase.stub {
             on { createItem(initialTime) } doReturn original
-            on { createPendingData(any(), eq(initialTime)) } doReturn originalPendingData
-            on { removePendingData(original) } doReturn originalPendingData
         }
         addLodgingUseCase.stub { on { createItem(initialTime) } doReturn expected }
         val addedItem = subject.createAddPlanItem(initialTime)
@@ -97,12 +90,8 @@ class AddPlanUseCaseTest {
         val original = mock<AddFlightUseCase.AddFlightItem> {
             on { id } doReturn "originalId"
         }
-        val originalPendingData = mock<AddFlightUseCase.PendingFlight> {
-            on { timestamp } doReturn initialTime
-        }
         addFlightUseCase.stub {
             on { createItem(initialTime) } doReturn original
-            on { createPendingData(any(), eq(initialTime)) } doReturn originalPendingData
         }
         addLodgingUseCase.stub { on { createItem(initialTime) } doReturn expected }
         val item = subject.createAddPlanItem(initialTime)

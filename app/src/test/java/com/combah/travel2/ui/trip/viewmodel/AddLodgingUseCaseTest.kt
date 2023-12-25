@@ -35,12 +35,4 @@ class AddLodgingUseCaseTest {
         assertType<AddLodgingUseCase.AddLodgingItem>(addedItem)
         Assertions.assertThat(addedItem.checkInTime).isEqualTo("6:15")
     }
-
-    @Test
-    fun `created pending data should be initialized with initial time as departure`() {
-        val initialTime: Time = mock()
-        val pendingData = subject.createPendingData("id", initialTime)
-        assertType<AddLodgingUseCase.PendingLodging>(pendingData)
-        Assertions.assertThat(pendingData.checkIn).isEqualTo(initialTime)
-    }
 }
