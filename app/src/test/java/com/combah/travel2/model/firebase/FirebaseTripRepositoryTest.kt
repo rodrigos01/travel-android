@@ -1,14 +1,12 @@
-package com.combah.travel2.model.repository.firebase
+package com.combah.travel2.model.firebase
 
 import com.combah.travel2.extensions.expectItem
-import com.combah.travel2.model.data.Trip
-import com.combah.travel2.model.repository.mock.MockData.trip
+import com.combah.travel2.model.repository.mock.MockData
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.EventListener
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.QuerySnapshot
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
@@ -16,7 +14,7 @@ import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
+import org.junit.Assert
 import org.junit.Test
 
 class FirebaseTripRepositoryTest {
@@ -28,8 +26,8 @@ class FirebaseTripRepositoryTest {
         }
     }
     private val mockDocumentSnapshot = mock<DocumentSnapshot> {
-        on { toObject(Trip::class.java) } doReturn trip
-        on { id } doReturn trip.id
+        on { toObject(FirebaseData.Trip::class.java) } doReturn MockData.trip
+        on { id } doReturn MockData.trip.id
     }
 
     private val mockCollectionReference = mock<CollectionReference> {
@@ -50,7 +48,7 @@ class FirebaseTripRepositoryTest {
     fun shouldGetTripsFromFirestore() = runTest {
         val repository = FirebaseTripRepository(firestore)
 
-        assertEquals(listOf(trip), repository.trips.expectItem())
+        Assert.assertEquals(listOf(MockData.trip.toAppDataModel()), repository.trips.expectItem())
         verify(firestore).collection("/trips")
     }
 
@@ -60,7 +58,7 @@ class FirebaseTripRepositoryTest {
 
         val tripObservable = repository.findTripById("myTrip")
 
-        assertEquals(trip, tripObservable.expectItem())
+        Assert.assertEquals(MockData.trip.toAppDataModel(), tripObservable.expectItem())
         verify(firestore).document("/trips/myTrip")
     }
 
@@ -70,7 +68,10 @@ class FirebaseTripRepositoryTest {
 
         val flightsObservable = repository.getTripFlights("myTrip")
 
-        assertEquals(trip.flights, flightsObservable.expectItem())
+        Assert.assertEquals(
+            MockData.trip.flights.map { it.toAppDataModel() },
+            flightsObservable.expectItem()
+        )
         verify(firestore).document("/trips/myTrip")
     }
 
@@ -80,7 +81,10 @@ class FirebaseTripRepositoryTest {
 
         val hotelsObservable = repository.getTripHotels("myTrip")
 
-        assertEquals(trip.lodgings, hotelsObservable.expectItem())
+        Assert.assertEquals(
+            MockData.trip.lodgings.map { it.toAppDataModel() },
+            hotelsObservable.expectItem()
+        )
         verify(firestore).document("/trips/myTrip")
     }
 }

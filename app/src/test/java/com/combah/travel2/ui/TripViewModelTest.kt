@@ -2,6 +2,7 @@
 
 package com.combah.travel2.ui
 
+import com.combah.travel2.model.firebase.toAppDataModel
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.model.repository.mock.MockData.jfk
 import com.combah.travel2.model.repository.mock.MockData.lis
@@ -49,7 +50,7 @@ class TripViewModelTest {
 
     private val repository = mock<TripRepository> {
         on { findTripById(any()) } doAnswer {
-            flowOf(trip)
+            flowOf(trip.toAppDataModel())
         }
     }
     private val subject = TripViewModel(repository, "minhaTrip")
