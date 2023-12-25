@@ -14,9 +14,6 @@ import androidx.navigation.navArgument
 import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.viewModel
 import com.combah.travel2.ui.theme.AppTheme
-import com.combah.travel2.ui.trip.creation.TransportationSetupViewModel
-import com.combah.travel2.ui.trip.creation.composable.TransportationSetup
-import com.combah.travel2.ui.trip.creation.composable.TransportationSetupDestination
 import com.combah.travel2.ui.trip.eventlist.composable.TripDetails
 import com.combah.travel2.ui.trip.eventlist.composable.TripDetailsDestination
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel
@@ -61,10 +58,6 @@ class MainActivity : AppCompatActivity() {
                         )
                     }
                     TripDetails(viewModel = viewModel, navController = navController)
-                }
-                composable(TransportationSetupDestination.KEY) {
-                    val viewModel: TransportationSetupViewModel by viewModels()
-                    TransportationSetup(viewModel = viewModel, navController)
                 }
             }
         }
