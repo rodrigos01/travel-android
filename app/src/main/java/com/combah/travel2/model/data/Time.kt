@@ -74,6 +74,10 @@ class Time private constructor(
         SimpleDateFormat.getDateTimeInstance().also { it.timeZone = this.timeZone }.format(
             Date(this.timeInMillis)
         )
+
+    override fun equals(other: Any?): Boolean {
+        return other is Time && timeInMillis == other.timeInMillis
+    }
 }
 
 private fun Calendar.asTime() = Time(timeInMillis, timeZone)
