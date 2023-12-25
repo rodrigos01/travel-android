@@ -3,6 +3,7 @@
 package com.combah.travel2.ui.trip
 
 import androidx.lifecycle.ViewModel
+import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.asStateFlow
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Lodging
@@ -237,6 +238,14 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
         dayOfWeekEnd = end.dayOfWeekString(),
     )
 }
+
+fun TripViewModel(
+    serviceLocator: ServiceLocator,
+    tripId: String,
+) = TripViewModel(
+    serviceLocator.tripRepository,
+    tripId,
+)
 
 private fun genItem(
     items: List<TripViewModel.TripItem>,
