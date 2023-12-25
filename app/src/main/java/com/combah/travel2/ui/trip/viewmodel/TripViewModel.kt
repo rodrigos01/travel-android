@@ -297,14 +297,6 @@ class TripViewModel(
         dayOfWeekEnd = end.dayOfWeekString,
     )
 
-    fun TripViewModel(
-        serviceLocator: ServiceLocator,
-        tripId: String,
-    ) = TripViewModel(
-        serviceLocator.tripRepository,
-        tripId,
-    )
-
     private fun genItem(
         items: List<TripItem>,
         event: Any,
@@ -403,6 +395,19 @@ class TripViewModel(
     private val Time.monthString: String
         get() = timeFormatter.monthString(this)
 
+}
+
+fun TripViewModel(
+    serviceLocator: ServiceLocator,
+    tripId: String,
+): TripViewModel {
+    val timeFormatter = TimeFormatter()
+    return TripViewModel(
+        serviceLocator.tripRepository,
+        tripId,
+        AddPlanUseCase(AddFlightUseCase(timeFormatter), AddLodgingUseCase(timeFormatter)),
+        timeFormatter,
+    )
 }
 
 private fun <T> List<T>.contains(predicate: (T) -> Boolean) = find(predicate) != null
