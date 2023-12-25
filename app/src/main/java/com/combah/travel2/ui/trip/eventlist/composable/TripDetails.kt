@@ -5,7 +5,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -22,7 +21,6 @@ import androidx.navigation.compose.rememberNavController
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.repository.mock.MockTripRepository
 import com.combah.travel2.ui.theme.AppTheme
-import com.combah.travel2.ui.trip.creation.composable.TransportationSetupDestination
 import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase
 import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase
@@ -34,7 +32,6 @@ import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckInI
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckOutItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.MonthItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.PlaceItem
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,26 +105,6 @@ fun TripDetails(
                     is AddFlightUseCase.AddFlightItem -> AddFlightListItem()
                     is AddLodgingUseCase.AddLodgingItem -> AddLodgingListItem()
                 }
-            }
-        }
-        if (showBottomSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showBottomSheet = false },
-                sheetState = bottomSheetState
-            ) {
-                AddPlan(
-                    addTransportationClickListener = {
-                        navController.navigate(
-                            TransportationSetupDestination.KEY
-                        )
-                    },
-                    onClickClose = {
-                        scope.launch {
-                            bottomSheetState.hide()
-                        }.invokeOnCompletion {
-                            showBottomSheet = false
-                        }
-                    })
             }
         }
     }
