@@ -7,12 +7,13 @@ import java.util.UUID
 
 class AddFlightUseCase(
     private val timeFormatter: TimeFormatter
-) : AddPlanUseCase.AddItemUseCase {
+) : AddPlanUseCase.AddItemUseCase<AddFlightUseCase.AddFlightItem> {
 
     private val pendingFlights: MutableMap<String, PendingFlight> = mutableMapOf()
 
     data class AddFlightItem(
         override val id: String,
+        override val timestamp: Time,
         val departureTime: String? = null,
         val airportFromName: String? = null,
         val arrivalTime: String? = null,
@@ -30,13 +31,14 @@ class AddFlightUseCase(
 
     override fun createItem(time: Time) = AddFlightItem(
         id = UUID.randomUUID().toString(),
+        timestamp = time,
         departureTime = timeFormatter.timeString(time),
-    )
+    ).also { pendingFlights[it.id] = createPendingData(it.id, time) }
 
-    override fun createPendingData(id: String, time: Time): AddPlanUseCase.PendingData =
+    private fun createPendingData(id: String, time: Time) =
         PendingFlight(departure = time).also { pendingFlights[id] = it }
 
-    override fun removePendingData(item: AddPlanUseCase.AddPlanItem): PendingFlight? =
+    override fun remove(item: AddFlightItem): AddPlanUseCase.PendingData? =
         pendingFlights.remove(item.id)
 
     fun setDepartureTime(item: AddFlightItem, hour: Int, minute: Int): AddFlightItem {
