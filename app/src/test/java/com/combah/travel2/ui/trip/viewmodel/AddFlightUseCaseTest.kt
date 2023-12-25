@@ -38,14 +38,6 @@ class AddFlightUseCaseTest {
     }
 
     @Test
-    fun `created pending data should be initialized with initial time as departure`() {
-        val initialTime: Time = mock()
-        val pendingData = subject.createPendingData("id", initialTime)
-        assertType<AddFlightUseCase.PendingFlight>(pendingData)
-        assertThat(pendingData.departure).isEqualTo(initialTime)
-    }
-
-    @Test
     fun `set departure time should update departure time`() {
         val newTime = mock<Time>()
         val originalTime = mock<Time> {
@@ -55,10 +47,8 @@ class AddFlightUseCaseTest {
             on { timeString(newTime) } doReturn "9:15"
         }
         val original = subject.createItem(originalTime)
-        subject.createPendingData(original.id, originalTime)
         val new = subject.setDepartureTime(original, hour = 9, minute = 15)
         assertThat(new.departureTime).isEqualTo("9:15")
-        assertThat(subject.removePendingData(new)?.departure).isEqualTo(newTime)
     }
 
     @Test
@@ -77,11 +67,9 @@ class AddFlightUseCaseTest {
             on { dayOfWeekString(newTime) } doReturn "Wed"
         }
         val original = subject.createItem(originalTime)
-        subject.createPendingData(original.id, originalTime)
         val new = subject.setArrivalDay(original, receivedTime)
         assertThat(new.arrivalDayOfMonth).isEqualTo("21")
         assertThat(new.arrivalDayOfWeek).isEqualTo("Wed")
-        assertThat(subject.removePendingData(new)?.arrival).isEqualTo(newTime)
     }
 
     @Test
@@ -94,9 +82,7 @@ class AddFlightUseCaseTest {
             on { timeString(newTime) } doReturn "16:15"
         }
         val original = subject.createItem(originalTime)
-        subject.createPendingData(original.id, originalTime)
         val new = subject.setArrivalTime(original, hour = 16, minute = 15)
         assertThat(new.arrivalTime).isEqualTo("16:15")
-        assertThat(subject.removePendingData(new)?.arrival).isEqualTo(newTime)
     }
 }

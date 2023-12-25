@@ -5,11 +5,13 @@ import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.Time
 import java.util.UUID
 
-class AddLodgingUseCase(private val timeFormatter: TimeFormatter) : AddPlanUseCase.AddItemUseCase {
+class AddLodgingUseCase(private val timeFormatter: TimeFormatter) :
+    AddPlanUseCase.AddItemUseCase<AddLodgingUseCase.AddLodgingItem> {
     private val pendingLodging: MutableMap<String, PendingLodging> = mutableMapOf()
 
     data class AddLodgingItem(
         override val id: String,
+        override val timestamp: Time,
         val name: String? = null,
         val checkInTime: String? = null,
         val checkOutDayOfMonth: String? = null,
@@ -28,12 +30,13 @@ class AddLodgingUseCase(private val timeFormatter: TimeFormatter) : AddPlanUseCa
     override fun createItem(time: Time) =
         AddLodgingItem(
             id = UUID.randomUUID().toString(),
+            timestamp = time,
             checkInTime = timeFormatter.timeString(time),
-        )
+        ).also { pendingLodging[it.id] = createPendingData(it.id, time) }
 
-    override fun createPendingData(id: String, time: Time) =
+    private fun createPendingData(id: String, time: Time) =
         PendingLodging(checkIn = time).also { pendingLodging[id] = it }
 
-    override fun removePendingData(item: AddPlanUseCase.AddPlanItem): AddPlanUseCase.PendingData? =
+    override fun remove(item: AddLodgingItem): AddPlanUseCase.PendingData? =
         pendingLodging.remove(item.id)
 }
