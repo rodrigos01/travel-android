@@ -26,16 +26,20 @@ fun FirebaseData.Flight.toAppDataModel() = Flight(
 )
 
 fun FirebaseData.FlightSegment.toAppDataModel() = FlightSegment(
-    airportFrom = airportFrom.toAppDataModel(),
-    departure = departure.toTimestamp(TimeZone.getTimeZone(airportFrom.city?.timeZone)),
-    airportTo = airportTo.toAppDataModel(),
-    arrival = arrival.toTimestamp(TimeZone.getTimeZone(airportTo.city?.timeZone)),
+    airportFrom = airportFrom?.toAppDataModel(cityFrom) ?: error("airportFrom is required"),
+    departure = departure.toTimestamp(
+        TimeZone.getTimeZone(
+            (airportFrom.city ?: cityFrom)?.timeZone
+        )
+    ),
+    airportTo = airportTo?.toAppDataModel(cityTo) ?: error("address is required"),
+    arrival = arrival.toTimestamp(TimeZone.getTimeZone((airportTo.city ?: cityTo)?.timeZone)),
 )
 
-fun FirebaseData.Airport.toAppDataModel() = Airport(
+fun FirebaseData.Airport.toAppDataModel(city: FirebaseData.Place? = null) = Airport(
     iata = iata ?: error("iata is required"),
     name = name ?: error("name is required"),
-    city = city?.toAppDataModel() ?: error("city is required"),
+    city = this.city?.toAppDataModel() ?: city?.toAppDataModel() ?: error("city is required"),
 )
 
 fun FirebaseData.Lodging.toAppDataModel() = Lodging(
