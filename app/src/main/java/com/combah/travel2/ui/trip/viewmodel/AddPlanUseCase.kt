@@ -5,11 +5,12 @@ import com.combah.travel2.model.data.Time
 class AddPlanUseCase(
     private val addFlightUseCase: AddFlightUseCase,
     private val addLodgingUseCase: AddLodgingUseCase,
-) {
+) : AddFlightItemActionHandler by addFlightUseCase,
+    AddLodgingItemActionHandler by addLodgingUseCase {
 
     interface AddItemUseCase<T : AddPlanItem> {
         fun createItem(time: Time): AddPlanItem
-        fun remove(item: T): PendingData?
+        fun remove(item: T)
     }
 
     sealed interface AddPlanItem : TripViewModel.TripItem, TripViewModel.TripItem.Identifiable,
@@ -43,26 +44,6 @@ class AddPlanUseCase(
         removeItem(addPlanItem)
         return createAddPlanItem(addPlanItem.timestamp, newType)
     }
-
-    suspend fun addFlightAirportFromSearchTextChanged(
-        addFlightItem: AddFlightUseCase.AddFlightItem,
-        content: CharSequence
-    ) = addFlightUseCase.airportFromSearchTextChanged(addFlightItem, content)
-
-    fun addFlightAirportFromSearchResultTapped(
-        addFlightItem: AddFlightUseCase.AddFlightItem,
-        index: Int,
-    ) = addFlightUseCase.airportFromSearchResultTapped(addFlightItem, index)
-
-    suspend fun addFlightAirportToSearchTextChanged(
-        addFlightItem: AddFlightUseCase.AddFlightItem,
-        content: CharSequence
-    ) = addFlightUseCase.airportToSearchTextChanged(addFlightItem, content)
-
-    fun addFlightAirportToSearchResultTapped(
-        addFlightItem: AddFlightUseCase.AddFlightItem,
-        index: Int,
-    ) = addFlightUseCase.airportToSearchResultTapped(addFlightItem, index)
 
     private fun removeItem(addPlanItem: AddPlanItem) {
         when (addPlanItem) {

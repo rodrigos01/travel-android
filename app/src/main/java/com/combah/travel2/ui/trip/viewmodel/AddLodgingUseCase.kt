@@ -6,7 +6,7 @@ import com.combah.travel2.model.data.Time
 import java.util.UUID
 
 class AddLodgingUseCase(private val timeFormatter: TimeFormatter) :
-    AddPlanUseCase.AddItemUseCase<AddLodgingUseCase.AddLodgingItem> {
+    AddPlanUseCase.AddItemUseCase<AddLodgingUseCase.AddLodgingItem>, AddLodgingItemActionHandler {
     private val pendingLodging: MutableMap<String, PendingLodging> = mutableMapOf()
 
     data class AddLodgingItem(
@@ -37,6 +37,7 @@ class AddLodgingUseCase(private val timeFormatter: TimeFormatter) :
     private fun createPendingData(id: String, time: Time) =
         PendingLodging(checkIn = time).also { pendingLodging[id] = it }
 
-    override fun remove(item: AddLodgingItem): AddPlanUseCase.PendingData? =
+    override fun remove(item: AddLodgingItem) {
         pendingLodging.remove(item.id)
+    }
 }

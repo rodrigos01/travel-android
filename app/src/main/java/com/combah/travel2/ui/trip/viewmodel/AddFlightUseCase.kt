@@ -8,8 +8,9 @@ import java.util.UUID
 
 class AddFlightUseCase(
     private val addFlightRepository: AddFlightRepository, private val timeFormatter: TimeFormatter
-) : AddPlanUseCase.AddItemUseCase<AddFlightUseCase.AddFlightItem> {
+) : AddPlanUseCase.AddItemUseCase<AddFlightUseCase.AddFlightItem>, AddFlightItemActionHandler {
 
+    private val items: MutableMap<String, AddFlightItem> = mutableMapOf()
     private val pendingFlights: MutableMap<String, PendingFlight> = mutableMapOf()
 
     data class AddFlightItem(
@@ -38,87 +39,102 @@ class AddFlightUseCase(
         id = UUID.randomUUID().toString(),
         timestamp = time,
         departureTime = timeFormatter.timeString(time),
-    ).also { pendingFlights[it.id] = createPendingData(it.id, time) }
+    ).also {
+        items[it.id] = it
+        pendingFlights[it.id] = createPendingData(it.id, time)
+    }
 
     private fun createPendingData(id: String, time: Time) =
         PendingFlight(departure = time).also { pendingFlights[id] = it }
 
-    override fun remove(item: AddFlightItem): AddPlanUseCase.PendingData? =
+    override fun remove(item: AddFlightItem) {
+        items.remove(item.id)
         pendingFlights.remove(item.id)
-
-    fun setDepartureTime(item: AddFlightItem, hour: Int, minute: Int): AddFlightItem {
-        val pending = pendingFlights[item.id] ?: return item
-        val newTime = pending.departure.copy(hour = hour, minute = minute)
-        pendingFlights[item.id] = pending.copy(departure = newTime)
-        return item.copy(departureTime = timeFormatter.timeString(newTime))
     }
 
-    fun setArrivalDay(item: AddFlightItem, day: Time): AddFlightItem {
-        val pending = pendingFlights[item.id] ?: return item
+    override fun setDepartureTime(itemId: String, hour: Int, minute: Int): AddFlightItem {
+        val (item, pending) = findItem(itemId)
+        val newTime = pending.departure.copy(hour = hour, minute = minute)
+        pendingFlights[itemId] = pending.copy(departure = newTime)
+        return item.copy(departureTime = timeFormatter.timeString(newTime))
+            .also { items[itemId] = it }
+    }
+
+    override fun setArrivalDay(itemId: String, day: Time): AddFlightItem {
+        val (item, pending) = findItem(itemId)
         val oldTime = pending.arrival ?: pending.departure
         val newTime = oldTime.copy(
             dayOfMonth = day.dayOfMonth,
             month = day.month,
             year = day.year,
         )
-        pendingFlights[item.id] = pending.copy(arrival = newTime)
+        pendingFlights[itemId] = pending.copy(arrival = newTime)
         return item.copy(
             arrivalDayOfMonth = timeFormatter.dayOfMonthString(newTime),
             arrivalDayOfWeek = timeFormatter.dayOfWeekString(newTime),
-        )
+        ).also { items[itemId] = it }
     }
 
-    fun setArrivalTime(item: AddFlightItem, hour: Int, minute: Int): AddFlightItem {
-        val pending = pendingFlights[item.id] ?: return item
+    override fun setArrivalTime(itemId: String, hour: Int, minute: Int): AddFlightItem {
+        val (item, pending) = findItem(itemId)
         val oldTime = pending.arrival ?: pending.departure
         val newTime = oldTime.copy(hour = hour, minute = minute)
-        pendingFlights[item.id] = pending.copy(arrival = newTime)
+        pendingFlights[itemId] = pending.copy(arrival = newTime)
         return item.copy(arrivalTime = timeFormatter.timeString(newTime))
+            .also { items[itemId] = it }
     }
 
-    suspend fun airportFromSearchTextChanged(
-        item: AddFlightItem, content: CharSequence
+    override suspend fun airportFromSearchTextChanged(
+        itemId: String, content: CharSequence
     ): AddFlightItem {
-        val pending = pendingFlights[item.id] ?: return item
+        val (item, pending) = findItem(itemId)
         val results = addFlightRepository.autocomplete(content.toString())
-        pendingFlights[item.id] = pending.copy(
+        pendingFlights[itemId] = pending.copy(
             airportFromSearchResults = results,
         )
         return item.copy(airportFromSearchResults = results.map { it.name })
+            .also { items[itemId] = it }
     }
 
-    fun airportFromSearchResultTapped(item: AddFlightItem, index: Int): AddFlightItem {
-        val pending = pendingFlights[item.id] ?: return item
+    override fun airportFromSearchResultTapped(itemId: String, index: Int): AddFlightItem {
+        val (item, pending) = findItem(itemId)
         val selectedAirport = pending.airportFromSearchResults[index]
-        pendingFlights[item.id] = pending.copy(
+        pendingFlights[itemId] = pending.copy(
             airportFromSearchResults = emptyList(),
             airportFrom = selectedAirport,
         )
         return item.copy(
             airportFromName = selectedAirport.name
-        )
+        ).also { items[itemId] = it }
     }
 
-    suspend fun airportToSearchTextChanged(
-        item: AddFlightItem, content: CharSequence
+    override suspend fun airportToSearchTextChanged(
+        itemId: String, content: CharSequence
     ): AddFlightItem {
-        val pending = pendingFlights[item.id] ?: return item
+        val (item, pending) = findItem(itemId)
         val results = addFlightRepository.autocomplete(content.toString())
-        pendingFlights[item.id] = pending.copy(
+        pendingFlights[itemId] = pending.copy(
             airportToSearchResults = results,
         )
         return item.copy(airportToSearchResults = results.map { it.name })
+            .also { items[itemId] = it }
     }
 
-    fun airportToSearchResultTapped(item: AddFlightItem, index: Int): AddFlightItem {
-        val pending = pendingFlights[item.id] ?: return item
+    override fun airportToSearchResultTapped(itemId: String, index: Int): AddFlightItem {
+        val (item, pending) = findItem(itemId)
         val selectedAirport = pending.airportToSearchResults[index]
-        pendingFlights[item.id] = pending.copy(
+        pendingFlights[itemId] = pending.copy(
             airportToSearchResults = emptyList(),
             airportTo = selectedAirport,
         )
         return item.copy(
             airportToName = selectedAirport.name
-        )
+        ).also { items[itemId] = it }
+    }
+
+    private fun findItem(itemId: String): Pair<AddFlightItem, PendingFlight> {
+        val item = items[itemId] ?: error("provided Id is not from this Use Case")
+        val pending = pendingFlights[itemId] ?: error("provided Id is not from this Use Case")
+        return item to pending
     }
 }

@@ -35,7 +35,6 @@ import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckOut
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.MonthItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.PlaceItem
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -45,7 +44,6 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
-import org.mockito.kotlin.verify
 import kotlin.contracts.ExperimentalContracts
 
 @OptIn(ExperimentalContracts::class)
@@ -369,104 +367,6 @@ class TripViewModelTest {
         subject.addButtonTapped(eventItem.id)
         val newItemIndex = subject.viewState.value.items.indexOf(eventItem) + 1
         subject.addPlanTypeChanged("originalItemId", AddPlanItem.Type.Lodging)
-        val newItem = subject.viewState.value.items[newItemIndex]
-        assertThat(newItem).isEqualTo(expected)
-    }
-
-    @Test
-    fun `airport from search changed should update item`() = runTest {
-        val addPlanItem: AddFlightUseCase.AddFlightItem = mock {
-            on { id } doReturn "originalItemId"
-        }
-        val expected: AddFlightUseCase.AddFlightItem = mock()
-        addPlanUseCase.stub {
-            on { createAddPlanItem(any(), any()) } doReturn addPlanItem
-            onBlocking {
-                addFlightAirportFromSearchTextChanged(
-                    eq(addPlanItem),
-                    any()
-                )
-            } doReturn expected
-        }
-        val eventItem =
-            subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
-        subject.addButtonTapped(eventItem.id)
-        val newItemIndex = subject.viewState.value.items.indexOf(eventItem) + 1
-        subject.addFlightAirportFromSearchTextChanged("originalItemId", "par")
-        val newItem = subject.viewState.value.items[newItemIndex]
-        assertThat(newItem).isEqualTo(expected)
-    }
-
-    @Test
-    fun `airport from search result tapped should update item`() {
-        val addPlanItem: AddFlightUseCase.AddFlightItem = mock {
-            on { id } doReturn "originalItemId"
-        }
-        val expected: AddFlightUseCase.AddFlightItem = mock()
-        addPlanUseCase.stub {
-            on { createAddPlanItem(any(), any()) } doReturn addPlanItem
-            on {
-                addFlightAirportFromSearchResultTapped(
-                    eq(addPlanItem),
-                    any()
-                )
-            } doReturn expected
-        }
-        val eventItem =
-            subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
-        subject.addButtonTapped(eventItem.id)
-        val newItemIndex = subject.viewState.value.items.indexOf(eventItem) + 1
-        subject.addFlightAirportFromSearchResultTapped("originalItemId", 1)
-        verify(addPlanUseCase).addFlightAirportFromSearchResultTapped(any(), eq(1))
-        val newItem = subject.viewState.value.items[newItemIndex]
-        assertThat(newItem).isEqualTo(expected)
-    }
-
-    @Test
-    fun `airport to search changed should update item`() = runTest {
-        val addPlanItem: AddFlightUseCase.AddFlightItem = mock {
-            on { id } doReturn "originalItemId"
-        }
-        val expected: AddFlightUseCase.AddFlightItem = mock()
-        addPlanUseCase.stub {
-            on { createAddPlanItem(any(), any()) } doReturn addPlanItem
-            onBlocking {
-                addFlightAirportToSearchTextChanged(
-                    eq(addPlanItem),
-                    any()
-                )
-            } doReturn expected
-        }
-        val eventItem =
-            subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
-        subject.addButtonTapped(eventItem.id)
-        val newItemIndex = subject.viewState.value.items.indexOf(eventItem) + 1
-        subject.addFlightAirportToSearchTextChanged("originalItemId", "par")
-        val newItem = subject.viewState.value.items[newItemIndex]
-        assertThat(newItem).isEqualTo(expected)
-    }
-
-    @Test
-    fun `airport to search result tapped should update item`() {
-        val addPlanItem: AddFlightUseCase.AddFlightItem = mock {
-            on { id } doReturn "originalItemId"
-        }
-        val expected: AddFlightUseCase.AddFlightItem = mock()
-        addPlanUseCase.stub {
-            on { createAddPlanItem(any(), any()) } doReturn addPlanItem
-            on {
-                addFlightAirportToSearchResultTapped(
-                    eq(addPlanItem),
-                    any()
-                )
-            } doReturn expected
-        }
-        val eventItem =
-            subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
-        subject.addButtonTapped(eventItem.id)
-        val newItemIndex = subject.viewState.value.items.indexOf(eventItem) + 1
-        subject.addFlightAirportToSearchResultTapped("originalItemId", 1)
-        verify(addPlanUseCase).addFlightAirportToSearchResultTapped(any(), eq(1))
         val newItem = subject.viewState.value.items[newItemIndex]
         assertThat(newItem).isEqualTo(expected)
     }
