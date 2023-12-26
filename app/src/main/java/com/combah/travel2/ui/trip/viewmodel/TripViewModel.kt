@@ -3,7 +3,6 @@
 package com.combah.travel2.ui.trip.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.extensions.asStateFlow
@@ -19,7 +18,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.contracts.ExperimentalContracts
@@ -32,7 +30,7 @@ class TripViewModel(
     tripId: String,
     private val addPlanUseCase: AddPlanUseCase,
     private val timeFormatter: TimeFormatter,
-) : ViewModel() {
+) : ViewModel(), AddFlightItemActionHandler by addPlanUseCase {
 
     data class ViewState(
         val items: List<TripItem>,
@@ -183,75 +181,18 @@ class TripViewModel(
     }
 
     fun addPlanTypeChanged(itemId: String, newType: AddPlanUseCase.AddPlanItem.Type) {
-        updateItem(itemId) { addPlanUseCase.typeChanged(it as AddPlanUseCase.AddPlanItem, newType) }
-    }
-
-    fun addFlightAirportFromSearchTextChanged(itemId: String, content: CharSequence) {
-        updateItemAsync(itemId) {
-            addPlanUseCase.addFlightAirportFromSearchTextChanged(
-                it as AddFlightUseCase.AddFlightItem,
-                content
-            )
+        val item =
+            viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
+                ?: return
+        val index = viewState.value.items.indexOf(item)
+        updateItems {
+            this[index] = addPlanUseCase.typeChanged(item as AddPlanUseCase.AddPlanItem, newType)
         }
-    }
-
-    fun addFlightAirportFromSearchResultTapped(itemId: String, resultIndex: Int) {
-        updateItem(itemId) {
-            addPlanUseCase.addFlightAirportFromSearchResultTapped(
-                it as AddFlightUseCase.AddFlightItem,
-                resultIndex
-            )
-        }
-    }
-
-    fun addFlightAirportToSearchTextChanged(itemId: String, content: CharSequence) {
-        updateItemAsync(itemId) {
-            addPlanUseCase.addFlightAirportToSearchTextChanged(
-                it as AddFlightUseCase.AddFlightItem,
-                content
-            )
-        }
-    }
-
-    fun addFlightAirportToSearchResultTapped(itemId: String, resultIndex: Int) {
-        updateItem(itemId) {
-            addPlanUseCase.addFlightAirportToSearchResultTapped(
-                it as AddFlightUseCase.AddFlightItem,
-                resultIndex,
-            )
-        }
-    }
-
-    private fun updateItem(itemId: String, updater: (TripItem) -> TripItem) {
-        runWithItem(itemId) { index, item -> updateItem(index, updater(item)) }
-    }
-
-    private fun updateItemAsync(
-        itemId: String,
-        updater: suspend (TripItem) -> TripItem
-    ) {
-        runWithItem(itemId) { index, item ->
-            viewModelScope.launch {
-                updateItem(index, updater(item))
-            }
-        }
-    }
-
-    private fun updateItem(index: Int, newItem: TripItem) {
-        updateItems { this[index] = newItem }
     }
 
     private fun updateItems(updater: MutableList<TripItem>.() -> Unit) {
         localState.value =
             ViewState(items = viewState.value.items.toMutableList().apply(updater).toList())
-    }
-
-    private fun runWithItem(itemId: String, block: (Int, TripItem) -> Unit) {
-        val item =
-            viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
-                ?: return
-        val index = viewState.value.items.indexOf(item)
-        block(index, item)
     }
 
     private fun genItems(trip: Trip): List<TripItem> {

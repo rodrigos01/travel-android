@@ -52,7 +52,7 @@ class AddFlightUseCaseTest {
             on { timeString(newTime) } doReturn "9:15"
         }
         val original = subject.createItem(originalTime)
-        val new = subject.setDepartureTime(original, hour = 9, minute = 15)
+        val new = subject.setDepartureTime(original.id, hour = 9, minute = 15)
         assertThat(new.departureTime).isEqualTo("9:15")
     }
 
@@ -72,7 +72,7 @@ class AddFlightUseCaseTest {
             on { dayOfWeekString(newTime) } doReturn "Wed"
         }
         val original = subject.createItem(originalTime)
-        val new = subject.setArrivalDay(original, receivedTime)
+        val new = subject.setArrivalDay(original.id, receivedTime)
         assertThat(new.arrivalDayOfMonth).isEqualTo("21")
         assertThat(new.arrivalDayOfWeek).isEqualTo("Wed")
     }
@@ -87,7 +87,7 @@ class AddFlightUseCaseTest {
             on { timeString(newTime) } doReturn "16:15"
         }
         val original = subject.createItem(originalTime)
-        val new = subject.setArrivalTime(original, hour = 16, minute = 15)
+        val new = subject.setArrivalTime(original.id, hour = 16, minute = 15)
         assertThat(new.arrivalTime).isEqualTo("16:15")
     }
 
@@ -97,7 +97,7 @@ class AddFlightUseCaseTest {
             onBlocking { autocomplete("par") } doReturn emptyList()
         }
         val original = subject.createItem(mock())
-        subject.airportFromSearchTextChanged(original, "par")
+        subject.airportFromSearchTextChanged(original.id, "par")
         verify(repository).autocomplete("par")
     }
 
@@ -117,7 +117,7 @@ class AddFlightUseCaseTest {
             onBlocking { autocomplete("par") } doReturn results
         }
         val original = subject.createItem(mock())
-        val newItem = subject.airportFromSearchTextChanged(original, "par")
+        val newItem = subject.airportFromSearchTextChanged(original.id, "par")
         assertThat(newItem.airportFromSearchResults).isEqualTo(expected)
     }
 
@@ -137,8 +137,8 @@ class AddFlightUseCaseTest {
             onBlocking { autocomplete("par") } doReturn results
         }
         val original = subject.createItem(mock())
-        val newItem = subject.airportFromSearchTextChanged(original, "par")
-        val selectedItem = subject.airportFromSearchResultTapped(newItem, 1)
+        val newItem = subject.airportFromSearchTextChanged(original.id, "par")
+        val selectedItem = subject.airportFromSearchResultTapped(newItem.id, 1)
         assertThat(selectedItem.airportFromName).isEqualTo("Orly Airport")
     }
 
@@ -148,7 +148,7 @@ class AddFlightUseCaseTest {
             onBlocking { autocomplete("par") } doReturn emptyList()
         }
         val original = subject.createItem(mock())
-        subject.airportToSearchTextChanged(original, "par")
+        subject.airportToSearchTextChanged(original.id, "par")
         verify(repository).autocomplete("par")
     }
 
@@ -168,7 +168,7 @@ class AddFlightUseCaseTest {
             onBlocking { autocomplete("par") } doReturn results
         }
         val original = subject.createItem(mock())
-        val newItem = subject.airportToSearchTextChanged(original, "par")
+        val newItem = subject.airportToSearchTextChanged(original.id, "par")
         assertThat(newItem.airportToSearchResults).isEqualTo(expected)
     }
 
@@ -188,8 +188,8 @@ class AddFlightUseCaseTest {
             onBlocking { autocomplete("par") } doReturn results
         }
         val original = subject.createItem(mock())
-        val newItem = subject.airportToSearchTextChanged(original, "par")
-        val selectedItem = subject.airportToSearchResultTapped(newItem, 1)
+        val newItem = subject.airportToSearchTextChanged(original.id, "par")
+        val selectedItem = subject.airportToSearchResultTapped(newItem.id, 1)
         assertThat(selectedItem.airportToName).isEqualTo("Orly Airport")
     }
 }
