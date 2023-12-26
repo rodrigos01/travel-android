@@ -44,6 +44,26 @@ class AddPlanUseCase(
         return createAddPlanItem(addPlanItem.timestamp, newType)
     }
 
+    suspend fun addFlightAirportFromSearchTextChanged(
+        addFlightItem: AddFlightUseCase.AddFlightItem,
+        content: CharSequence
+    ) = addFlightUseCase.airportFromSearchTextChanged(addFlightItem, content)
+
+    fun addFlightAirportFromSearchResultTapped(
+        addFlightItem: AddFlightUseCase.AddFlightItem,
+        index: Int,
+    ) = addFlightUseCase.airportFromSearchResultTapped(addFlightItem, index)
+
+    suspend fun addFlightAirportToSearchTextChanged(
+        addFlightItem: AddFlightUseCase.AddFlightItem,
+        content: CharSequence
+    ) = addFlightUseCase.airportToSearchTextChanged(addFlightItem, content)
+
+    fun addFlightAirportToSearchResultTapped(
+        addFlightItem: AddFlightUseCase.AddFlightItem,
+        index: Int,
+    ) = addFlightUseCase.airportToSearchResultTapped(addFlightItem, index)
+
     private fun removeItem(addPlanItem: AddPlanItem) {
         when (addPlanItem) {
             is AddFlightUseCase.AddFlightItem -> addFlightUseCase.remove(addPlanItem)

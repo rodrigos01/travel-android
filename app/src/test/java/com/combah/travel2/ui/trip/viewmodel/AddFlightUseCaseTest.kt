@@ -1,19 +1,24 @@
 package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.TimeFormatter
+import com.combah.travel2.model.data.Airport
 import com.combah.travel2.model.data.Time
+import com.combah.travel2.model.repository.AddFlightRepository
 import com.combah.travel2.test.assertType
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.stub
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.stub
+import org.mockito.kotlin.verify
 import kotlin.contracts.ExperimentalContracts
 
 @OptIn(ExperimentalContracts::class)
 class AddFlightUseCaseTest {
+    private val repository: AddFlightRepository = mock()
     private val formatter: TimeFormatter = mock()
-    private val subject = AddFlightUseCase(formatter)
+    private val subject = AddFlightUseCase(repository, formatter)
 
     @Test
     fun `created item should be initialized empty`() {
@@ -84,5 +89,107 @@ class AddFlightUseCaseTest {
         val original = subject.createItem(originalTime)
         val new = subject.setArrivalTime(original, hour = 16, minute = 15)
         assertThat(new.arrivalTime).isEqualTo("16:15")
+    }
+
+    @Test
+    fun `airport from search text changed should trigger repository autocomplete`() = runTest {
+        repository.stub {
+            onBlocking { autocomplete("par") } doReturn emptyList()
+        }
+        val original = subject.createItem(mock())
+        subject.airportFromSearchTextChanged(original, "par")
+        verify(repository).autocomplete("par")
+    }
+
+    @Test
+    fun `airport from search text changed should update item with repository results`() = runTest {
+        val expected = listOf(
+            "Charles de Gaule",
+            "Orly Airport",
+            "Beauvais Airport",
+        )
+        val results = expected.map { airportName ->
+            mock<Airport> {
+                on { name } doReturn airportName
+            }
+        }
+        repository.stub {
+            onBlocking { autocomplete("par") } doReturn results
+        }
+        val original = subject.createItem(mock())
+        val newItem = subject.airportFromSearchTextChanged(original, "par")
+        assertThat(newItem.airportFromSearchResults).isEqualTo(expected)
+    }
+
+    @Test
+    fun `airport from search result tapped should update item with selected airport`() = runTest {
+        val expected = listOf(
+            "Charles de Gaule",
+            "Orly Airport",
+            "Beauvais Airport",
+        )
+        val results = expected.map { airportName ->
+            mock<Airport> {
+                on { name } doReturn airportName
+            }
+        }
+        repository.stub {
+            onBlocking { autocomplete("par") } doReturn results
+        }
+        val original = subject.createItem(mock())
+        val newItem = subject.airportFromSearchTextChanged(original, "par")
+        val selectedItem = subject.airportFromSearchResultTapped(newItem, 1)
+        assertThat(selectedItem.airportFromName).isEqualTo("Orly Airport")
+    }
+
+    @Test
+    fun `airport to search text changed should trigger repository autocomplete`() = runTest {
+        repository.stub {
+            onBlocking { autocomplete("par") } doReturn emptyList()
+        }
+        val original = subject.createItem(mock())
+        subject.airportToSearchTextChanged(original, "par")
+        verify(repository).autocomplete("par")
+    }
+
+    @Test
+    fun `airport to search text changed should update item with repository results`() = runTest {
+        val expected = listOf(
+            "Charles de Gaule",
+            "Orly Airport",
+            "Beauvais Airport",
+        )
+        val results = expected.map { airportName ->
+            mock<Airport> {
+                on { name } doReturn airportName
+            }
+        }
+        repository.stub {
+            onBlocking { autocomplete("par") } doReturn results
+        }
+        val original = subject.createItem(mock())
+        val newItem = subject.airportToSearchTextChanged(original, "par")
+        assertThat(newItem.airportToSearchResults).isEqualTo(expected)
+    }
+
+    @Test
+    fun `airport to search result tapped should update item with selected airport`() = runTest {
+        val expected = listOf(
+            "Charles de Gaule",
+            "Orly Airport",
+            "Beauvais Airport",
+        )
+        val results = expected.map { airportName ->
+            mock<Airport> {
+                on { name } doReturn airportName
+            }
+        }
+        repository.stub {
+            onBlocking { autocomplete("par") } doReturn results
+        }
+        val original = subject.createItem(mock())
+        val newItem = subject.airportToSearchTextChanged(original, "par")
+        val selectedItem = subject.airportToSearchResultTapped(newItem, 1)
+        assertThat(selectedItem.airportToName).isEqualTo("Orly Airport")
     }
 }
