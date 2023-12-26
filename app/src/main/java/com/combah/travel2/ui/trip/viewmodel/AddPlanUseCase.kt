@@ -1,6 +1,7 @@
 package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.model.data.Time
+import com.combah.travel2.model.data.TripEntity
 
 class AddPlanUseCase(
     private val addFlightUseCase: AddFlightUseCase,
@@ -8,9 +9,11 @@ class AddPlanUseCase(
 ) : AddFlightItemActionHandler by addFlightUseCase,
     AddLodgingItemActionHandler by addLodgingUseCase {
 
-    interface AddItemUseCase<T : AddPlanItem> {
+    interface AddItemUseCase<E : TripEntity, T : AddPlanItem> {
         fun createItem(time: Time): AddPlanItem
         fun remove(item: T)
+
+        fun save(item: T): E
     }
 
     sealed interface AddPlanItem : TripViewModel.TripItem, TripViewModel.TripItem.Identifiable,
@@ -45,6 +48,11 @@ class AddPlanUseCase(
         return createAddPlanItem(addPlanItem.timestamp, newType)
     }
 
+    fun saveItem(addPlanItem: AddPlanItem): TripEntity = when (addPlanItem) {
+        is AddFlightUseCase.AddFlightItem -> addFlightUseCase.save(addPlanItem)
+        is AddLodgingUseCase.AddLodgingItem -> addLodgingUseCase.save(addPlanItem)
+    }
+
     private fun removeItem(addPlanItem: AddPlanItem) {
         when (addPlanItem) {
             is AddFlightUseCase.AddFlightItem -> addFlightUseCase.remove(addPlanItem)
@@ -52,7 +60,7 @@ class AddPlanUseCase(
         }
     }
 
-    private val AddPlanItem.Type.useCase: AddItemUseCase<out AddPlanItem>
+    private val AddPlanItem.Type.useCase: AddItemUseCase<out TripEntity, out AddPlanItem>
         get() = when (this) {
             AddPlanItem.Type.Flight -> addFlightUseCase
             AddPlanItem.Type.Lodging -> addLodgingUseCase

@@ -11,4 +11,7 @@ interface TripRepository {
     fun findTripById(tripId: String): Flow<Trip>
     fun getTripFlights(tripId: String): Flow<List<Flight>>
     fun getTripHotels(tripId: String): Flow<List<Lodging>>
+
+    suspend fun addFlight(tripId: String, flight: Flight)
+    suspend fun addLodging(tripId: String, lodging: Lodging)
 }

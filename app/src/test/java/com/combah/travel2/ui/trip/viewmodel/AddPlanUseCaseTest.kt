@@ -1,5 +1,7 @@
 package com.combah.travel2.ui.trip.viewmodel
 
+import com.combah.travel2.model.data.Flight
+import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.test.assertType
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase.AddPlanItem
@@ -97,5 +99,31 @@ class AddPlanUseCaseTest {
         val item = subject.createAddPlanItem(initialTime)
         val newItem = subject.typeChanged(item, AddPlanItem.Type.Flight)
         assertThat(newItem).isEqualTo(item)
+    }
+
+    @Test
+    fun `saveItem should return flight from use case`() {
+        val original = mock<AddFlightUseCase.AddFlightItem> {
+            on { id } doReturn "originalId"
+        }
+        val expected: Flight = mock()
+        addFlightUseCase.stub {
+            on { save(original) } doReturn expected
+        }
+        val entity = subject.saveItem(original)
+        assertThat(entity).isEqualTo(expected)
+    }
+
+    @Test
+    fun `saveItem should return lodging from use case`() {
+        val original = mock<AddLodgingUseCase.AddLodgingItem> {
+            on { id } doReturn "originalId"
+        }
+        val expected: Lodging = mock()
+        addLodgingUseCase.stub {
+            on { save(original) } doReturn expected
+        }
+        val entity = subject.saveItem(original)
+        assertThat(entity).isEqualTo(expected)
     }
 }

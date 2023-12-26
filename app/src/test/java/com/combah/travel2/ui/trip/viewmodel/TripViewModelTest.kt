@@ -3,6 +3,8 @@
 package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.TimeFormatter
+import com.combah.travel2.model.data.Flight
+import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.firebase.toAppDataModel
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.model.repository.mock.MockData.jfk
@@ -35,6 +37,7 @@ import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckOut
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.MonthItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.PlaceItem
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -44,6 +47,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
+import org.mockito.kotlin.verify
 import kotlin.contracts.ExperimentalContracts
 
 @OptIn(ExperimentalContracts::class)
@@ -369,6 +373,42 @@ class TripViewModelTest {
         subject.addPlanTypeChanged("originalItemId", AddPlanItem.Type.Lodging)
         val newItem = subject.viewState.value.items[newItemIndex]
         assertThat(newItem).isEqualTo(expected)
+    }
+
+    @Test
+    fun `save should add new hotel to repository`() = runTest {
+        val addPlanItem: AddPlanItem = mock {
+            on { id } doReturn "originalItemId"
+        }
+        val entity: Flight = mock()
+        addPlanUseCase.stub {
+            on { createAddPlanItem(any(), any()) } doReturn addPlanItem
+            on { saveItem(addPlanItem) } doReturn entity
+        }
+        val eventItem =
+            subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
+        subject.addButtonTapped(eventItem.id)
+        subject.save("originalItemId")
+        verify(addPlanUseCase).saveItem(addPlanItem)
+        verify(repository).addFlight("minhaTrip", entity)
+    }
+
+    @Test
+    fun `save should add new lodging to repository`() = runTest {
+        val addPlanItem: AddPlanItem = mock {
+            on { id } doReturn "originalItemId"
+        }
+        val entity: Lodging = mock()
+        addPlanUseCase.stub {
+            on { createAddPlanItem(any(), any()) } doReturn addPlanItem
+            on { saveItem(addPlanItem) } doReturn entity
+        }
+        val eventItem =
+            subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
+        subject.addButtonTapped(eventItem.id)
+        subject.save("originalItemId")
+        verify(addPlanUseCase).saveItem(addPlanItem)
+        verify(repository).addLodging("minhaTrip", entity)
     }
 }
 

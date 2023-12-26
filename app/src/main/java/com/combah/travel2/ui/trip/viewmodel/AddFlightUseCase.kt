@@ -2,13 +2,16 @@ package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.data.Airport
+import com.combah.travel2.model.data.Flight
+import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddFlightRepository
 import java.util.UUID
 
 class AddFlightUseCase(
     private val addFlightRepository: AddFlightRepository, private val timeFormatter: TimeFormatter
-) : AddPlanUseCase.AddItemUseCase<AddFlightUseCase.AddFlightItem>, AddFlightItemActionHandler {
+) : AddPlanUseCase.AddItemUseCase<Flight, AddFlightUseCase.AddFlightItem>,
+    AddFlightItemActionHandler {
 
     private val items: MutableMap<String, AddFlightItem> = mutableMapOf()
     private val pendingFlights: MutableMap<String, PendingFlight> = mutableMapOf()
@@ -39,6 +42,8 @@ class AddFlightUseCase(
         id = UUID.randomUUID().toString(),
         timestamp = time,
         departureTime = timeFormatter.timeString(time),
+        arrivalDayOfWeek = timeFormatter.dayOfWeekString(time),
+        arrivalDayOfMonth = timeFormatter.dayOfMonthString(time),
     ).also {
         items[it.id] = it
         pendingFlights[it.id] = createPendingData(it.id, time)
@@ -130,6 +135,26 @@ class AddFlightUseCase(
         return item.copy(
             airportToName = selectedAirport.name
         ).also { items[itemId] = it }
+    }
+
+    override fun save(item: AddFlightItem): Flight {
+        val pending = pendingFlights[item.id] ?: error("provided Id is not from this Use Case")
+        pending.airportFrom ?: error("airport from is not set")
+        pending.airportTo ?: error("airport to is not set")
+        pending.arrival ?: error("arival time is not set")
+        remove(item)
+        return Flight(
+            item.id,
+            listOf(
+                FlightSegment(
+                    pending.airportFrom,
+                    pending.departure,
+                    pending.airportTo,
+                    pending.arrival,
+                )
+            ),
+            0.0,
+        )
     }
 
     private fun findItem(itemId: String): Pair<AddFlightItem, PendingFlight> {

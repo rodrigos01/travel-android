@@ -63,6 +63,36 @@ fun FirebaseData.Place.toAppDataModel() = Place(
     source = source,
 )
 
+fun Flight.toFirebaseDataModel() = FirebaseData.Flight(
+    id = id,
+    segments = segments.map { it.toFirebaseDataModel() },
+    price = price,
+)
+
+fun FlightSegment.toFirebaseDataModel() = FirebaseData.FlightSegment(
+    airportFrom = airportFrom.toFirebaseDataModel(),
+    departure = Date(departure.timeInMillis),
+    airportTo = airportTo.toFirebaseDataModel(),
+    arrival = Date(arrival.timeInMillis),
+)
+
+fun Airport.toFirebaseDataModel() = FirebaseData.Airport(
+    iata = iata,
+    name = name,
+    city = city.toFirebaseDataModel(),
+)
+
+fun Place.toFirebaseDataModel() = FirebaseData.Place(
+    id = id,
+    name = name,
+    address = address,
+    latitude = latitude,
+    longitude = longitude,
+    coverImage = coverImage,
+    externalId = externalId,
+    source = source,
+)
+
 private fun Date.toTimestamp(timeZone: TimeZone?): Time {
     val timeInMillis = time
     return Time(timeInMillis, timeZone ?: TimeZone.getDefault())
