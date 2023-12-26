@@ -3,11 +3,11 @@ package com.combah.travel2.ui.trip.viewmodel
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.test.assertType
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.stub
 import org.assertj.core.api.Assertions
 import org.junit.Test
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.stub
 import kotlin.contracts.ExperimentalContracts
 
 @OptIn(ExperimentalContracts::class)

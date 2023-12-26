@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.combah.travel2.extensions.TimeFormatter
+import com.combah.travel2.model.repository.AddFlightRepository
 import com.combah.travel2.model.repository.mock.MockTripRepository
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase
@@ -119,7 +120,7 @@ fun TripDetailsPreview() {
                 MockTripRepository(),
                 "minhaTrip",
                 AddPlanUseCase(
-                    AddFlightUseCase(TimeFormatter()),
+                    AddFlightUseCase(AddFlightRepository(), TimeFormatter()),
                     AddLodgingUseCase(TimeFormatter())
                 ),
                 TimeFormatter(),
