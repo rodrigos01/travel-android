@@ -32,13 +32,13 @@ import com.combah.travel2.ui.trip.TripViewModel.TripItem.HotelCheckInItem
 import com.combah.travel2.ui.trip.TripViewModel.TripItem.HotelCheckOutItem
 import com.combah.travel2.ui.trip.TripViewModel.TripItem.MonthItem
 import com.combah.travel2.ui.trip.TripViewModel.TripItem.PlaceItem
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doAnswer
-import com.nhaarman.mockito_kotlin.mock
 import kotlinx.coroutines.flow.flowOf
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.mock
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
