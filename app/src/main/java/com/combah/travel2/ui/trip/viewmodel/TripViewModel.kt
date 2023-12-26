@@ -177,58 +177,81 @@ class TripViewModel(
         val tapped =
             viewState.value.items.find { it is TripItem.EventItem && it.id == itemId } as TripItem.EventItem
         val index = viewState.value.items.indexOf(tapped)
-        val newItems = viewState.value.items.toMutableList()
-        newItems.add(index + 1, addPlanUseCase.createAddPlanItem(tapped.timestamp))
-        localState.value = ViewState(items = newItems)
+        updateItems {
+            add(index + 1, addPlanUseCase.createAddPlanItem(tapped.timestamp))
+        }
     }
 
     fun addPlanTypeChanged(itemId: String, newType: AddPlanUseCase.AddPlanItem.Type) {
-        val item =
-            viewState.value.items.find { it is AddPlanUseCase.AddPlanItem && it.id == itemId } as AddPlanUseCase.AddPlanItem
-        val index = viewState.value.items.indexOf(item)
-        val newItems = viewState.value.items.toMutableList()
-        newItems[index] = addPlanUseCase.typeChanged(item, newType)
-        localState.value = ViewState(items = newItems)
+        updateItem(itemId) { addPlanUseCase.typeChanged(it as AddPlanUseCase.AddPlanItem, newType) }
     }
 
     fun addFlightAirportFromSearchTextChanged(itemId: String, content: CharSequence) {
-        val item =
-            viewState.value.items.find { it is AddPlanUseCase.AddPlanItem && it.id == itemId } as AddFlightUseCase.AddFlightItem
-        val index = viewState.value.items.indexOf(item)
-        val newItems = viewState.value.items.toMutableList()
-        viewModelScope.launch {
-            newItems[index] = addPlanUseCase.addFlightAirportFromSearchTextChanged(item, content)
-            localState.value = ViewState(items = newItems)
+        updateItemAsync(itemId) {
+            addPlanUseCase.addFlightAirportFromSearchTextChanged(
+                it as AddFlightUseCase.AddFlightItem,
+                content
+            )
         }
     }
 
     fun addFlightAirportFromSearchResultTapped(itemId: String, resultIndex: Int) {
-        val item =
-            viewState.value.items.find { it is AddPlanUseCase.AddPlanItem && it.id == itemId } as AddFlightUseCase.AddFlightItem
-        val index = viewState.value.items.indexOf(item)
-        val newItems = viewState.value.items.toMutableList()
-        newItems[index] = addPlanUseCase.addFlightAirportFromSearchResultTapped(item, resultIndex)
-        localState.value = ViewState(items = newItems)
+        updateItem(itemId) {
+            addPlanUseCase.addFlightAirportFromSearchResultTapped(
+                it as AddFlightUseCase.AddFlightItem,
+                resultIndex
+            )
+        }
     }
 
     fun addFlightAirportToSearchTextChanged(itemId: String, content: CharSequence) {
-        val item =
-            viewState.value.items.find { it is AddPlanUseCase.AddPlanItem && it.id == itemId } as AddFlightUseCase.AddFlightItem
-        val index = viewState.value.items.indexOf(item)
-        val newItems = viewState.value.items.toMutableList()
-        viewModelScope.launch {
-            newItems[index] = addPlanUseCase.addFlightAirportToSearchTextChanged(item, content)
-            localState.value = ViewState(items = newItems)
+        updateItemAsync(itemId) {
+            addPlanUseCase.addFlightAirportToSearchTextChanged(
+                it as AddFlightUseCase.AddFlightItem,
+                content
+            )
         }
     }
 
     fun addFlightAirportToSearchResultTapped(itemId: String, resultIndex: Int) {
+        updateItem(itemId) {
+            addPlanUseCase.addFlightAirportToSearchResultTapped(
+                it as AddFlightUseCase.AddFlightItem,
+                resultIndex,
+            )
+        }
+    }
+
+    private fun updateItem(itemId: String, updater: (TripItem) -> TripItem) {
+        runWithItem(itemId) { index, item -> updateItem(index, updater(item)) }
+    }
+
+    private fun updateItemAsync(
+        itemId: String,
+        updater: suspend (TripItem) -> TripItem
+    ) {
+        runWithItem(itemId) { index, item ->
+            viewModelScope.launch {
+                updateItem(index, updater(item))
+            }
+        }
+    }
+
+    private fun updateItem(index: Int, newItem: TripItem) {
+        updateItems { this[index] = newItem }
+    }
+
+    private fun updateItems(updater: MutableList<TripItem>.() -> Unit) {
+        localState.value =
+            ViewState(items = viewState.value.items.toMutableList().apply(updater).toList())
+    }
+
+    private fun runWithItem(itemId: String, block: (Int, TripItem) -> Unit) {
         val item =
-            viewState.value.items.find { it is AddPlanUseCase.AddPlanItem && it.id == itemId } as AddFlightUseCase.AddFlightItem
+            viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
+                ?: return
         val index = viewState.value.items.indexOf(item)
-        val newItems = viewState.value.items.toMutableList()
-        newItems[index] = addPlanUseCase.addFlightAirportToSearchResultTapped(item, resultIndex)
-        localState.value = ViewState(items = newItems)
+        block(index, item)
     }
 
     private fun genItems(trip: Trip): List<TripItem> {
