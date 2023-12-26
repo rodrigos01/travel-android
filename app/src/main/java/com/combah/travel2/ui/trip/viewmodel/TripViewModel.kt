@@ -3,9 +3,11 @@
 package com.combah.travel2.ui.trip.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.extensions.asStateFlow
+import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Place
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.contracts.ExperimentalContracts
@@ -26,8 +29,8 @@ import kotlin.math.abs
 
 @OptIn(ExperimentalContracts::class)
 class TripViewModel(
-    repository: TripRepository,
-    tripId: String,
+    private val repository: TripRepository,
+    private val tripId: String,
     private val addPlanUseCase: AddPlanUseCase,
     private val timeFormatter: TimeFormatter,
 ) : ViewModel(), AddFlightItemActionHandler by addPlanUseCase {
@@ -187,6 +190,19 @@ class TripViewModel(
         val index = viewState.value.items.indexOf(item)
         updateItems {
             this[index] = addPlanUseCase.typeChanged(item as AddPlanUseCase.AddPlanItem, newType)
+        }
+    }
+
+    fun save(itemId: String) {
+        val item =
+            viewState.value.items.find { it is AddPlanUseCase.AddPlanItem && it.id == itemId }
+                ?: return
+        val entity = addPlanUseCase.saveItem(item as AddPlanUseCase.AddPlanItem)
+        viewModelScope.launch {
+            when (entity) {
+                is Flight -> repository.addFlight(tripId, entity)
+                is Lodging -> repository.addLodging(tripId, entity)
+            }
         }
     }
 

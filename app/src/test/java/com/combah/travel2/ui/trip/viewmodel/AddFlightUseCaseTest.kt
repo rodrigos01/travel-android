@@ -192,4 +192,54 @@ class AddFlightUseCaseTest {
         val selectedItem = subject.airportToSearchResultTapped(newItem.id, 1)
         assertThat(selectedItem.airportToName).isEqualTo("Orly Airport")
     }
+
+    @Test
+    fun `save should return a Flight with pending values`() = runTest {
+        val expected = listOf(
+            "Charles de Gaule",
+            "Orly Airport",
+            "Beauvais Airport",
+        )
+        val results = expected.map { airportName ->
+            mock<Airport> {
+                on { name } doReturn airportName
+            }
+        }
+        val toResults = listOf(
+            mock<Airport> {
+                on { name } doReturn "Brussels Airport"
+            }
+        )
+        repository.stub {
+            onBlocking { autocomplete("par") } doReturn results
+            onBlocking { autocomplete("bru") } doReturn toResults
+        }
+        val newArrival = mock<Time>()
+        val arrivalDay = mock<Time> {
+            on { dayOfMonth } doReturn 21
+            on { month } doReturn 4
+            on { year } doReturn 2024
+            on { copy(hour = 11, minute = 5) } doReturn newArrival
+        }
+        val newDeparture = mock<Time> {
+            on { copy(dayOfMonth = 21, month = 4, year = 2024) } doReturn arrivalDay
+        }
+        val initialTime = mock<Time> {
+            on { copy(hour = 22, minute = 35) } doReturn newDeparture
+        }
+        val item = subject.createItem(initialTime)
+        subject.setDepartureTime(item.id, 22, 35)
+        subject.airportFromSearchTextChanged(item.id, "par")
+        subject.airportFromSearchResultTapped(item.id, 1)
+        subject.setArrivalDay(item.id, arrivalDay)
+        subject.setArrivalTime(item.id, 11, 5)
+        subject.airportToSearchTextChanged(item.id, "bru")
+        subject.airportToSearchResultTapped(item.id, 0)
+        val result = subject.save(item)
+        assertThat(result.id).isEqualTo(item.id)
+        assertThat(result.segments[0].departure).isEqualTo(newDeparture)
+        assertThat(result.segments[0].airportFrom).isEqualTo(results[1])
+        assertThat(result.segments[0].arrival).isEqualTo(newArrival)
+        assertThat(result.segments[0].airportTo).isEqualTo(toResults[0])
+    }
 }

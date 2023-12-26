@@ -19,4 +19,8 @@ class MockTripRepository : TripRepository {
 
     override fun getTripHotels(tripId: String): Flow<List<Lodging>> =
         flowOf(MockData.trip.lodgings.map { it.toAppDataModel() })
+
+    override suspend fun addFlight(tripId: String, flight: Flight) = Unit
+
+    override suspend fun addLodging(tripId: String, lodging: Lodging) = Unit
 }

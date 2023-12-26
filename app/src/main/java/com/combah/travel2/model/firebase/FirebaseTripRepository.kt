@@ -7,9 +7,11 @@ import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FirebaseTripRepository(private val firestore: FirebaseFirestore) : TripRepository {
@@ -34,4 +36,15 @@ class FirebaseTripRepository(private val firestore: FirebaseFirestore) : TripRep
     private fun tripConverter(snapshot: DocumentSnapshot) =
         (snapshot.toObject(FirebaseData.Trip::class.java)?.copy(id = snapshot.id)
             ?: FirebaseData.Trip(snapshot.id)).toAppDataModel()
+
+    override suspend fun addFlight(tripId: String, flight: Flight) {
+        val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
+        firestore.document("/trips/$tripId").update("flights", trip.flights.toMutableList().apply {
+            add(flight.toFirebaseDataModel())
+        }.toList())
+    }
+
+    override suspend fun addLodging(tripId: String, lodging: Lodging) = Unit
+
+    private suspend fun getTrip(tripId: String) = firestore.document("/trips/$tripId").get().await()
 }
