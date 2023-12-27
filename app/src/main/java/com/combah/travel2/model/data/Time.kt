@@ -15,6 +15,7 @@ class Time private constructor(
     ) : this(Calendar.getInstance().also {
         it.timeInMillis = timeInMillis
         it.timeZone = timeZone
+        it[Calendar.MILLISECOND] = 0
     })
 
     val timeInMillis: Long
@@ -76,7 +77,7 @@ class Time private constructor(
         )
 
     override fun equals(other: Any?): Boolean {
-        return other is Time && timeInMillis == other.timeInMillis
+        return other is Time && calendar == other.calendar
     }
 }
 

@@ -67,7 +67,6 @@ fun TripDetails(
                         event.time,
                         event.destination,
                         event.airport,
-                        event.showDivider,
                     )
 
                     is FlightArrivalItem -> ArrivalEventListItem(
@@ -76,7 +75,6 @@ fun TripDetails(
                         event.dayOfWeek,
                         event.time,
                         event.airport,
-                        event.showDivider,
                     )
 
                     is HotelCheckInItem -> CheckinListItem(
@@ -85,7 +83,6 @@ fun TripDetails(
                         event.dayOfWeek,
                         event.time,
                         event.hotelName,
-                        event.showDivider,
                     )
 
                     is HotelCheckOutItem -> CheckoutListItem(
@@ -94,7 +91,11 @@ fun TripDetails(
                         event.dayOfWeek,
                         event.time,
                         event.hotelName,
-                        event.showDivider,
+                    )
+
+                    is TripViewModel.TripItem.EmptyAddPlanItem -> EmptyAddPlanListItem(
+                        showDivider = event.showDivider,
+                        onAddButtonClick = { viewModel.addButtonTapped(event.id) }
                     )
 
                     is AddFlightUseCase.AddFlightItem -> AddFlightListItem(

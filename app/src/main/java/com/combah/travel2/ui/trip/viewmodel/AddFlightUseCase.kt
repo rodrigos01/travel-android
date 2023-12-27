@@ -41,7 +41,6 @@ class AddFlightUseCase(
     override fun createItem(time: Time) = AddFlightItem(
         id = UUID.randomUUID().toString(),
         timestamp = time,
-        departureTime = timeFormatter.timeString(time),
         arrivalDayOfWeek = timeFormatter.dayOfWeekString(time),
         arrivalDayOfMonth = timeFormatter.dayOfMonthString(time),
     ).also {

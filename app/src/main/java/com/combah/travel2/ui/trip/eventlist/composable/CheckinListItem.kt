@@ -13,7 +13,6 @@ fun CheckinListItem(
     dayOfWeekString: String?,
     timeString: String,
     hotelName: String,
-    showSeparator: Boolean,
 ) {
     EventListItem(
         showDate,
@@ -23,7 +22,6 @@ fun CheckinListItem(
         icon = R.drawable.ic_hotel_black_24dp,
         headline = stringResource(id = R.string.hotel_checkin_title),
         supporting = hotelName,
-        showSeparator,
     )
 }
 
@@ -37,7 +35,6 @@ fun CheckinListItemPreview() {
             dayOfWeekString = "Fri",
             timeString = "6:15 AM",
             hotelName = "Hotel des Arms",
-            showSeparator = true,
         )
     }
 }

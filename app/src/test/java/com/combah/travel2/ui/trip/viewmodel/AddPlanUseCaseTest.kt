@@ -32,7 +32,12 @@ class AddPlanUseCaseTest {
 
     @Test
     fun `Add Plan Items should have all types available`() {
-        val original = AddFlightUseCase.AddFlightItem(id = "originalItem", timestamp = mock())
+        val original = AddFlightUseCase.AddFlightItem(
+            id = "originalItem",
+            timestamp = mock(),
+            arrivalDayOfMonth = "15",
+            arrivalDayOfWeek = "Wed",
+        )
         assertThat(original.types).containsExactly(
             AddPlanItem.Type.Flight,
             AddPlanItem.Type.Lodging,
