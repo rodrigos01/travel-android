@@ -75,12 +75,6 @@ class TripViewModel(
             val time: String
             val title: String?
             val subtitle: String?
-            val showAddButton: Boolean
-            val showDivider: Boolean
-            fun withNewValues(
-                showAddButton: Boolean = this.showAddButton,
-                showDivider: Boolean = this.showDivider,
-            ): EventItem
         }
 
         data class FlightDepartureItem(
@@ -90,17 +84,11 @@ class TripViewModel(
             override val dayOfMonth: String,
             override val dayOfWeek: String,
             override val time: String,
-            override val showAddButton: Boolean,
-            override val showDivider: Boolean,
             val destination: String,
             val airport: String
         ) : EventItem {
             override val title = destination
             override val subtitle = airport
-            override fun withNewValues(
-                showAddButton: Boolean,
-                showDivider: Boolean
-            ): FlightDepartureItem = copy(showAddButton = showAddButton, showDivider = showDivider)
         }
 
         data class FlightArrivalItem(
@@ -110,17 +98,10 @@ class TripViewModel(
             override val dayOfMonth: String,
             override val dayOfWeek: String,
             override val time: String,
-            override val showAddButton: Boolean,
-            override val showDivider: Boolean,
             val airport: String
         ) : EventItem {
             override val title = null
             override val subtitle = airport
-
-            override fun withNewValues(
-                showAddButton: Boolean,
-                showDivider: Boolean
-            ): FlightArrivalItem = copy(showAddButton = showAddButton, showDivider = showDivider)
         }
 
         data class HotelCheckInItem(
@@ -130,18 +111,11 @@ class TripViewModel(
             override val dayOfMonth: String,
             override val dayOfWeek: String,
             override val time: String,
-            override val showAddButton: Boolean,
-            override val showDivider: Boolean,
             val hotelName: String,
             val hotelAddress: String,
         ) : EventItem {
             override val title = null
             override val subtitle = hotelAddress
-
-            override fun withNewValues(
-                showAddButton: Boolean,
-                showDivider: Boolean
-            ): HotelCheckInItem = copy(showAddButton = showAddButton, showDivider = showDivider)
         }
 
         data class HotelCheckOutItem(
@@ -150,19 +124,19 @@ class TripViewModel(
             override val showDate: Boolean,
             override val dayOfMonth: String,
             override val dayOfWeek: String,
-            override val showAddButton: Boolean,
-            override val showDivider: Boolean,
             override val time: String,
             val hotelName: String,
         ) : EventItem {
             override val title = null
             override val subtitle = hotelName
-
-            override fun withNewValues(
-                showAddButton: Boolean,
-                showDivider: Boolean
-            ): HotelCheckOutItem = copy(showAddButton = showAddButton, showDivider = showDivider)
         }
+
+        data class EmptyAddPlanItem(
+            override val id: String,
+            override val timestamp: Time,
+            val showDivider: Boolean,
+        ) :
+            Timeable, Identifiable, TripItem
     }
 
     private val eventsFromTrip = repository.findTripById(tripId).map {
@@ -176,10 +150,11 @@ class TripViewModel(
 
     fun addButtonTapped(itemId: String) {
         val tapped =
-            viewState.value.items.find { it is TripItem.EventItem && it.id == itemId } as TripItem.EventItem
+            viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId } as TripItem.EmptyAddPlanItem
         val index = viewState.value.items.indexOf(tapped)
         updateItems {
-            add(index + 1, addPlanUseCase.createAddPlanItem(tapped.timestamp))
+            removeAt(index)
+            add(index, addPlanUseCase.createAddPlanItem(tapped.timestamp))
         }
     }
 
@@ -229,7 +204,7 @@ class TripViewModel(
                     it.arrival to it
                 )
             }).sortedBy { (time, event) -> EventComparable(time, event) }
-        pairs.forEach { (timestamp, event) ->
+        pairs.forEachIndexed { index, (timestamp, event) ->
             val previousEventItem = (items.lastOrNull() as? TripItem.EventItem)
             val day = timestamp.toMidnight()
             val firstInDay = day != currentDay
@@ -256,7 +231,8 @@ class TripViewModel(
                 currentMonth = month
             }
             val place = getPlace(items, event)
-            if (place != currentPlace) {
+            val firstInPlace = place != currentPlace
+            if (firstInPlace) {
                 val lastPlaceItem = currentPlaceItem
                 if (lastPlaceItem?.isOrigin(items) == true) {
                     items.remove(lastPlaceItem)
@@ -277,16 +253,28 @@ class TripViewModel(
                     items[items.indexOf(it)] = newPlaceItem
                     currentPlaceItem = newPlaceItem
                 }
-                if (firstInDay) {
-                    previousEventItem?.let {
-                        items[items.indexOf(it)] = it.withNewValues(
-                            showAddButton = true,
-                            showDivider = true,
-                        )
-                    }
-                }
             }
+            val firstInSection = firstInDay || firstInPlace
             items.add(item)
+            val emptyAddPlanItemIndex = if (firstInSection) {
+                previousEventItem?.let { items.indexOf(it) + 1 }
+            } else if (index == pairs.lastIndex) {
+                items.size + 1
+            } else {
+                null
+            }
+            val emptyAddPlanItemTimestamp =
+                if (firstInSection) previousEventItem?.timestamp else item.timestamp
+            if (emptyAddPlanItemIndex != null && emptyAddPlanItemTimestamp != null) {
+                items.add(
+                    emptyAddPlanItemIndex,
+                    TripItem.EmptyAddPlanItem(
+                        UUID.randomUUID().toString(),
+                        emptyAddPlanItemTimestamp,
+                        showDivider = !firstInPlace,
+                    )
+                )
+            }
         }
         val lastPlaceItem = currentPlaceItem
         if (lastPlaceItem?.isOrigin(items) == true) {
@@ -337,8 +325,6 @@ class TripViewModel(
                     time = event.departure.timeString,
                     destination = event.airportTo.city.name,
                     airport = event.airportFrom.name,
-                    showAddButton = false,
-                    showDivider = false,
                 )
             } else {
                 TripItem.FlightArrivalItem(
@@ -349,8 +335,6 @@ class TripViewModel(
                     dayOfWeek = event.arrival.dayOfWeekString,
                     time = event.arrival.timeString,
                     airport = event.airportTo.name,
-                    showAddButton = false,
-                    showDivider = false,
                 )
             }
         } else if (event is Lodging) {
@@ -364,8 +348,6 @@ class TripViewModel(
                     time = event.checkIn.timeString,
                     hotelName = event.name ?: "",
                     hotelAddress = event.address,
-                    showAddButton = false,
-                    showDivider = false,
                 )
             } else {
                 TripItem.HotelCheckOutItem(
@@ -376,8 +358,6 @@ class TripViewModel(
                     dayOfMonth = event.checkout.dayOfMonthString,
                     time = event.checkout.timeString,
                     hotelName = event.name ?: event.address,
-                    showAddButton = false,
-                    showDivider = false,
                 )
             }
         } else {

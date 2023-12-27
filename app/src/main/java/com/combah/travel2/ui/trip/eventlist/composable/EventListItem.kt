@@ -12,7 +12,9 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
@@ -29,7 +31,6 @@ fun EventListItem(
     @DrawableRes icon: Int,
     headline: String,
     supporting: String,
-    showSeparator: Boolean,
 ) {
     val typography = MaterialTheme.typography
     Column(
@@ -69,14 +70,6 @@ fun EventListItem(
                 },
             )
         }
-        if (showSeparator) {
-            Divider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp,
-                modifier = Modifier
-                    .fillMaxWidth(),
-            )
-        }
     }
 }
 
@@ -92,7 +85,6 @@ fun EventListItemPreview() {
             timeString = "6:15 AM",
             headline = "Flight to Paris",
             supporting = "John F. Kennedy Intl.",
-            showSeparator = true,
         )
     }
 }
