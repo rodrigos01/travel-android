@@ -23,8 +23,8 @@ class AddFlightUseCase(
         val airportFromName: String? = null,
         val airportFromSearchResults: List<String> = emptyList(),
         val arrivalTime: String? = null,
-        val arrivalDayOfMonth: String? = null,
-        val arrivalDayOfWeek: String? = null,
+        val arrivalDayOfMonth: String,
+        val arrivalDayOfWeek: String,
         val airportToName: String? = null,
         val airportToSearchResults: List<String> = emptyList(),
     ) : AddPlanUseCase.AddPlanItem

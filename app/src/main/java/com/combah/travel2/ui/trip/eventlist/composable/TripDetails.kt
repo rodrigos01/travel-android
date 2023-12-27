@@ -6,13 +6,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -33,6 +29,7 @@ import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckInI
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckOutItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.MonthItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.PlaceItem
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,13 +39,10 @@ fun TripDetails(
 ) {
     val state by viewModel.viewState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    val bottomSheetState =
-        rememberModalBottomSheetState()
-    var showBottomSheet by remember { mutableStateOf(false) }
     Scaffold(
         modifier = Modifier.background(MaterialTheme.colorScheme.surface),
-    ) {
-        LazyColumn(contentPadding = it) {
+    ) { paddingValues ->
+        LazyColumn(contentPadding = paddingValues) {
             items(state.items) { event ->
                 when (event) {
                     is MonthItem -> MonthEventListItem(event.month, event.year)
@@ -103,7 +97,29 @@ fun TripDetails(
                         event.showDivider,
                     )
 
-                    is AddFlightUseCase.AddFlightItem -> AddFlightListItem()
+                    is AddFlightUseCase.AddFlightItem -> AddFlightListItem(
+                        event.departureTime,
+                        event.airportFromName,
+                        {
+                            scope.launch {
+                                viewModel.airportFromSearchTextChanged(event.id, it)
+                            }
+                        },
+                        event.airportFromSearchResults,
+                        { viewModel.airportFromSearchResultTapped(event.id, it) },
+                        event.arrivalTime,
+                        event.arrivalDayOfMonth,
+                        event.arrivalDayOfWeek,
+                        event.airportToName,
+                        {
+                            scope.launch {
+                                viewModel.airportToSearchTextChanged(event.id, it)
+                            }
+                        },
+                        event.airportToSearchResults,
+                        { viewModel.airportToSearchResultTapped(event.id, it) },
+                    )
+
                     is AddLodgingUseCase.AddLodgingItem -> AddLodgingListItem()
                 }
             }
