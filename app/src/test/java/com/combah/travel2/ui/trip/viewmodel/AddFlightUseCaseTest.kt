@@ -72,7 +72,7 @@ class AddFlightUseCaseTest {
             on { dayOfWeekString(newTime) } doReturn "Wed"
         }
         val original = subject.createItem(originalTime)
-        val new = subject.setArrivalDay(original.id, receivedTime)
+        val new = subject.setArrivalDate(original.id, receivedTime)
         assertThat(new.arrivalDayOfMonth).isEqualTo("21")
         assertThat(new.arrivalDayOfWeek).isEqualTo("Wed")
     }
@@ -231,7 +231,7 @@ class AddFlightUseCaseTest {
         subject.setDepartureTime(item.id, 22, 35)
         subject.airportFromSearchTextChanged(item.id, "par")
         subject.airportFromSearchResultTapped(item.id, 1)
-        subject.setArrivalDay(item.id, arrivalDay)
+        subject.setArrivalDate(item.id, arrivalDay)
         subject.setArrivalTime(item.id, 11, 5)
         subject.airportToSearchTextChanged(item.id, "bru")
         subject.airportToSearchResultTapped(item.id, 0)
