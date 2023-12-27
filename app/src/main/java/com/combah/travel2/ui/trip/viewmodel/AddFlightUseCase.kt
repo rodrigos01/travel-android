@@ -64,9 +64,10 @@ class AddFlightUseCase(
             .also { items[itemId] = it }
     }
 
-    override fun setArrivalDay(itemId: String, day: Time): AddFlightItem {
+    override fun setArrivalDate(itemId: String, date: Long): AddFlightItem {
         val (item, pending) = findItem(itemId)
         val oldTime = pending.arrival ?: pending.departure
+        val day = Time(date, oldTime.timeZone)
         val newTime = oldTime.copy(
             dayOfMonth = day.dayOfMonth,
             month = day.month,

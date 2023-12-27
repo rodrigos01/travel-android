@@ -100,6 +100,7 @@ fun TripDetails(
 
                     is AddFlightUseCase.AddFlightItem -> AddFlightListItem(
                         event.departureTime,
+                        { hour, minute -> viewModel.setDepartureTime(event.id, hour, minute) },
                         event.airportFromName,
                         {
                             scope.launch {
@@ -111,6 +112,7 @@ fun TripDetails(
                         event.arrivalTime,
                         event.arrivalDayOfMonth,
                         event.arrivalDayOfWeek,
+                        { viewModel.setArrivalDate(event.id, it) },
                         event.airportToName,
                         {
                             scope.launch {
