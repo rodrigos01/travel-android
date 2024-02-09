@@ -17,6 +17,7 @@ import com.combah.travel2.model.repository.AddFlightRepository
 import com.combah.travel2.model.repository.TripRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
@@ -146,7 +147,18 @@ class TripViewModel(
     }.onEach { localState.value = it }
     private val localState = MutableStateFlow(ViewState(items = emptyList()))
     val viewState: StateFlow<ViewState> =
-        merge(eventsFromTrip, localState).asStateFlow(initialValue = ViewState(emptyList()))
+        merge(eventsFromTrip, localState)
+            .combine(addPlanUseCase.items) { state, addPlanItems ->
+                state.updateItems {
+                    addPlanItems.forEach { (id, addPlanItem) ->
+                        set(
+                            indexOfFirst { it is TripItem.Identifiable && it.id == id },
+                            addPlanItem
+                        )
+                    }
+                }
+            }
+            .asStateFlow(initialValue = ViewState(emptyList()))
 
     fun addButtonTapped(itemId: String) {
         val tapped =
@@ -182,8 +194,7 @@ class TripViewModel(
     }
 
     private fun updateItems(updater: MutableList<TripItem>.() -> Unit) {
-        localState.value =
-            ViewState(items = viewState.value.items.toMutableList().apply(updater).toList())
+        localState.value = localState.value.updateItems(updater)
     }
 
     private fun genItems(trip: Trip): List<TripItem> {
@@ -417,6 +428,12 @@ fun TripViewModel(
 }
 
 private fun <T> List<T>.contains(predicate: (T) -> Boolean) = find(predicate) != null
+
+private fun TripViewModel.ViewState.updateItems(updater: MutableList<TripViewModel.TripItem>.() -> Unit): TripViewModel.ViewState {
+    return TripViewModel.ViewState(
+        items = items.toMutableList().apply(updater).toList()
+    )
+}
 
 private class EventComparable(
     private val time: Time, private

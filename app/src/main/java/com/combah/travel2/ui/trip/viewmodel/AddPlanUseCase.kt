@@ -2,6 +2,8 @@ package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.TripEntity
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 
 class AddPlanUseCase(
     private val addFlightUseCase: AddFlightUseCase,
@@ -10,6 +12,8 @@ class AddPlanUseCase(
     AddLodgingItemActionHandler by addLodgingUseCase {
 
     interface AddItemUseCase<E : TripEntity, T : AddPlanItem> {
+
+        val items: Flow<Map<String, AddPlanItem>>
         fun createItem(time: Time): AddPlanItem
         fun remove(item: T)
 
@@ -32,6 +36,14 @@ class AddPlanUseCase(
             get() = getTimestamp()
 
     }
+
+    val items: Flow<Map<String, AddPlanItem>> =
+        combine(
+            addFlightUseCase.items,
+            addLodgingUseCase.items
+        ) { (addFlightItems, addLodgingItems) ->
+            addFlightItems + addLodgingItems
+        }
 
     fun createAddPlanItem(
         time: Time,

@@ -6,15 +6,13 @@ import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddFlightRepository
+import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 class AddFlightUseCase(
     private val addFlightRepository: AddFlightRepository, private val timeFormatter: TimeFormatter
 ) : AddPlanUseCase.AddItemUseCase<Flight, AddFlightUseCase.AddFlightItem>,
     AddFlightItemActionHandler {
-
-    private val items: MutableMap<String, AddFlightItem> = mutableMapOf()
-    private val pendingFlights: MutableMap<String, PendingFlight> = mutableMapOf()
 
     data class AddFlightItem(
         override val id: String,
@@ -38,13 +36,19 @@ class AddFlightUseCase(
         val arrival: Time? = null,
     ) : AddPlanUseCase.PendingData({ departure })
 
+    private val _items: MutableMapStateFlow<String, AddFlightItem> = MutableMapStateFlow()
+    override val items: Flow<Map<String, AddPlanUseCase.AddPlanItem>>
+        get() = _items
+
+    private val pendingFlights: MutableMap<String, PendingFlight> = mutableMapOf()
+
     override fun createItem(time: Time) = AddFlightItem(
         id = UUID.randomUUID().toString(),
         timestamp = time,
         arrivalDayOfWeek = timeFormatter.dayOfWeekString(time),
         arrivalDayOfMonth = timeFormatter.dayOfMonthString(time),
     ).also {
-        items[it.id] = it
+        _items[it.id] = it
         pendingFlights[it.id] = createPendingData(it.id, time)
     }
 
@@ -52,7 +56,7 @@ class AddFlightUseCase(
         PendingFlight(departure = time).also { pendingFlights[id] = it }
 
     override fun remove(item: AddFlightItem) {
-        items.remove(item.id)
+        _items.remove(item.id)
         pendingFlights.remove(item.id)
     }
 
@@ -61,7 +65,7 @@ class AddFlightUseCase(
         val newTime = pending.departure.copy(hour = hour, minute = minute)
         pendingFlights[itemId] = pending.copy(departure = newTime)
         return item.copy(departureTime = timeFormatter.timeString(newTime))
-            .also { items[itemId] = it }
+            .also { _items[itemId] = it }
     }
 
     override fun setArrivalDate(itemId: String, date: Long): AddFlightItem {
@@ -77,7 +81,7 @@ class AddFlightUseCase(
         return item.copy(
             arrivalDayOfMonth = timeFormatter.dayOfMonthString(newTime),
             arrivalDayOfWeek = timeFormatter.dayOfWeekString(newTime),
-        ).also { items[itemId] = it }
+        ).also { _items[itemId] = it }
     }
 
     override fun setArrivalTime(itemId: String, hour: Int, minute: Int): AddFlightItem {
@@ -86,7 +90,7 @@ class AddFlightUseCase(
         val newTime = oldTime.copy(hour = hour, minute = minute)
         pendingFlights[itemId] = pending.copy(arrival = newTime)
         return item.copy(arrivalTime = timeFormatter.timeString(newTime))
-            .also { items[itemId] = it }
+            .also { _items[itemId] = it }
     }
 
     override suspend fun airportFromSearchTextChanged(
@@ -98,7 +102,7 @@ class AddFlightUseCase(
             airportFromSearchResults = results,
         )
         return item.copy(airportFromSearchResults = results.map { it.name })
-            .also { items[itemId] = it }
+            .also { _items[itemId] = it }
     }
 
     override fun airportFromSearchResultTapped(itemId: String, index: Int): AddFlightItem {
@@ -110,7 +114,7 @@ class AddFlightUseCase(
         )
         return item.copy(
             airportFromName = selectedAirport.name
-        ).also { items[itemId] = it }
+        ).also { _items[itemId] = it }
     }
 
     override suspend fun airportToSearchTextChanged(
@@ -122,7 +126,7 @@ class AddFlightUseCase(
             airportToSearchResults = results,
         )
         return item.copy(airportToSearchResults = results.map { it.name })
-            .also { items[itemId] = it }
+            .also { _items[itemId] = it }
     }
 
     override fun airportToSearchResultTapped(itemId: String, index: Int): AddFlightItem {
@@ -134,7 +138,7 @@ class AddFlightUseCase(
         )
         return item.copy(
             airportToName = selectedAirport.name
-        ).also { items[itemId] = it }
+        ).also { _items[itemId] = it }
     }
 
     override fun save(item: AddFlightItem): Flight {
@@ -158,7 +162,7 @@ class AddFlightUseCase(
     }
 
     private fun findItem(itemId: String): Pair<AddFlightItem, PendingFlight> {
-        val item = items[itemId] ?: error("provided Id is not from this Use Case")
+        val item = _items[itemId] ?: error("provided Id is not from this Use Case")
         val pending = pendingFlights[itemId] ?: error("provided Id is not from this Use Case")
         return item to pending
     }
