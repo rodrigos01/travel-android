@@ -4,6 +4,7 @@ import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.Time
+import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 class AddLodgingUseCase(private val timeFormatter: TimeFormatter) :
@@ -29,12 +30,19 @@ class AddLodgingUseCase(private val timeFormatter: TimeFormatter) :
         val checkOut: Time? = null,
     ) : AddPlanUseCase.PendingData({ checkIn })
 
+    private val _items: MutableMapStateFlow<String, AddLodgingItem> = MutableMapStateFlow()
+    override val items: Flow<Map<String, AddPlanUseCase.AddPlanItem>>
+        get() = _items
+
     override fun createItem(time: Time) =
         AddLodgingItem(
             id = UUID.randomUUID().toString(),
             timestamp = time,
             checkInTime = timeFormatter.timeString(time),
-        ).also { pendingLodging[it.id] = createPendingData(it.id, time) }
+        ).also {
+            _items[it.id] = it
+            pendingLodging[it.id] = createPendingData(it.id, time)
+        }
 
     override fun save(item: AddLodgingItem): Lodging {
         val pending = pendingLodging[item.id] ?: error("provided Id is not from this Use Case")
@@ -50,10 +58,11 @@ class AddLodgingUseCase(private val timeFormatter: TimeFormatter) :
         )
     }
 
-    private fun createPendingData(id: String, time: Time) =
-        PendingLodging(checkIn = time).also { pendingLodging[id] = it }
-
     override fun remove(item: AddLodgingItem) {
+        _items.remove(item.id)
         pendingLodging.remove(item.id)
     }
+
+    private fun createPendingData(id: String, time: Time) =
+        PendingLodging(checkIn = time).also { pendingLodging[id] = it }
 }

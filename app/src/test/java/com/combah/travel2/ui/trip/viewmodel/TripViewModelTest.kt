@@ -36,6 +36,7 @@ import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckInI
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckOutItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.MonthItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.PlaceItem
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -61,7 +62,11 @@ class TripViewModelTest {
             flowOf(trip.toAppDataModel())
         }
     }
-    private val addPlanUseCase: AddPlanUseCase = mock()
+
+    private val addPlanItems = MutableStateFlow<Map<String, AddPlanItem>>(mapOf())
+    private val addPlanUseCase: AddPlanUseCase = mock {
+        on { items } doReturn addPlanItems
+    }
     private val subject = TripViewModel(repository, "minhaTrip", addPlanUseCase, TimeFormatter())
 
     /*
@@ -345,68 +350,96 @@ class TripViewModelTest {
 
     @Test
     fun `add Plan tapped should add add plan item below tapped item`() {
-        val expected: AddPlanItem = mock()
+        val addPlanItemId = "originalItemId"
+        val expected: AddPlanItem = mock {
+            on { id } doReturn addPlanItemId
+        }
         addPlanUseCase.stub {
             on { createAddPlanItem(any(), any()) } doReturn expected
         }
-        val eventItem =
-            subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
-        subject.addButtonTapped(eventItem.id)
-        val addedItem = subject.viewState.value.items.nextAfter(eventItem)
+        val originalItem =
+            subject.viewState.value.items.first { it is TripViewModel.TripItem.EmptyAddPlanItem } as TripViewModel.TripItem.EmptyAddPlanItem
+        val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
+        subject.addButtonTapped(originalItem.id)
+        val addedItem = subject.viewState.value.items[originalItemIndex]
         assertThat(addedItem).isEqualTo(expected)
     }
 
     @Test
     fun `type selected should change item`() {
+        val addPlanItemId = "originalItemId"
         val addPlanItem: AddPlanItem = mock {
-            on { id } doReturn "originalItemId"
+            on { id } doReturn addPlanItemId
         }
         val expected: AddPlanItem = mock()
         addPlanUseCase.stub {
             on { createAddPlanItem(any(), any()) } doReturn addPlanItem
             on { typeChanged(eq(addPlanItem), any()) } doReturn expected
         }
-        val eventItem =
-            subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
-        subject.addButtonTapped(eventItem.id)
-        val newItemIndex = subject.viewState.value.items.indexOf(eventItem) + 1
+        val originalItem =
+            subject.viewState.value.items.first { it is TripViewModel.TripItem.EmptyAddPlanItem } as TripViewModel.TripItem.EmptyAddPlanItem
+        val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
+        subject.addButtonTapped(originalItem.id)
         subject.addPlanTypeChanged("originalItemId", AddPlanItem.Type.Lodging)
-        val newItem = subject.viewState.value.items[newItemIndex]
+        val newItem = subject.viewState.value.items[originalItemIndex]
         assertThat(newItem).isEqualTo(expected)
     }
 
     @Test
-    fun `save should add new hotel to repository`() = runTest {
+    fun `save should add new flight to repository`() = runTest {
+        val addPlanItemId = "originalItemId"
         val addPlanItem: AddPlanItem = mock {
-            on { id } doReturn "originalItemId"
+            on { id } doReturn addPlanItemId
         }
         val entity: Flight = mock()
         addPlanUseCase.stub {
             on { createAddPlanItem(any(), any()) } doReturn addPlanItem
             on { saveItem(addPlanItem) } doReturn entity
         }
-        val eventItem =
-            subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
-        subject.addButtonTapped(eventItem.id)
-        subject.save("originalItemId")
+        val originalItem =
+            subject.viewState.value.items.first { it is TripViewModel.TripItem.EmptyAddPlanItem } as TripViewModel.TripItem.EmptyAddPlanItem
+        subject.addButtonTapped(originalItem.id)
+        subject.save(addPlanItemId)
         verify(addPlanUseCase).saveItem(addPlanItem)
         verify(repository).addFlight("minhaTrip", entity)
     }
 
     @Test
-    fun `save should add new lodging to repository`() = runTest {
+    fun `addPlanUseCase items changed should update existing item`() = runTest {
+        val addPlanItemId = "originalItemId"
         val addPlanItem: AddPlanItem = mock {
-            on { id } doReturn "originalItemId"
+            on { id } doReturn addPlanItemId
+        }
+        addPlanUseCase.stub {
+            on { createAddPlanItem(any(), any()) } doReturn addPlanItem
+        }
+        val originalItem =
+            subject.viewState.value.items.first { it is TripViewModel.TripItem.EmptyAddPlanItem } as TripViewModel.TripItem.EmptyAddPlanItem
+        val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
+        subject.addButtonTapped(originalItem.id)
+        val newAddPlanItem = mock<AddFlightUseCase.AddFlightItem> {
+            on { id } doReturn addPlanItemId
+        }
+        addPlanItems.value = mapOf(addPlanItemId to newAddPlanItem)
+        val resultAddPlanItem = subject.viewState.value.items[originalItemIndex]
+        assertThat(resultAddPlanItem).isEqualTo(newAddPlanItem)
+    }
+
+    @Test
+    fun `save should add new lodging to repository`() = runTest {
+        val addPlanItemId = "originalItemId"
+        val addPlanItem: AddPlanItem = mock {
+            on { id } doReturn addPlanItemId
         }
         val entity: Lodging = mock()
         addPlanUseCase.stub {
             on { createAddPlanItem(any(), any()) } doReturn addPlanItem
             on { saveItem(addPlanItem) } doReturn entity
         }
-        val eventItem =
-            subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name } as HotelCheckOutItem
-        subject.addButtonTapped(eventItem.id)
-        subject.save("originalItemId")
+        val originalItem =
+            subject.viewState.value.items.first { it is TripViewModel.TripItem.EmptyAddPlanItem } as TripViewModel.TripItem.EmptyAddPlanItem
+        subject.addButtonTapped(originalItem.id)
+        subject.save(addPlanItemId)
         verify(addPlanUseCase).saveItem(addPlanItem)
         verify(repository).addLodging("minhaTrip", entity)
     }
