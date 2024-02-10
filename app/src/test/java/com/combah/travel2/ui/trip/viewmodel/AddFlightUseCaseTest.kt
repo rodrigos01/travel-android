@@ -7,6 +7,7 @@ import com.combah.travel2.model.repository.AddFlightRepository
 import com.combah.travel2.test.assertType
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.fail
 import org.junit.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
@@ -56,8 +57,9 @@ class AddFlightUseCaseTest {
             on { timeString(newTime) } doReturn "9:15"
         }
         val original = subject.createItem(originalTime)
-        val new = subject.setDepartureTime(original.id, hour = 9, minute = 15)
-        assertThat(new.departureTime).isEqualTo("9:15")
+        subject.setDepartureTime(original.id, hour = 9, minute = 15)
+        val new = subject.items.value[original.id]
+        assertThat(new?.departureTime).isEqualTo("9:15")
     }
 
     @Test
@@ -76,9 +78,10 @@ class AddFlightUseCaseTest {
             on { dayOfWeekString(newTime) } doReturn "Wed"
         }
         val original = subject.createItem(originalTime)
-        val new = subject.setArrivalDate(original.id, receivedTime)
-        assertThat(new.arrivalDayOfMonth).isEqualTo("21")
-        assertThat(new.arrivalDayOfWeek).isEqualTo("Wed")
+        subject.setArrivalDate(original.id, receivedTime)
+        val new = subject.items.value[original.id]
+        assertThat(new?.arrivalDayOfMonth).isEqualTo("21")
+        assertThat(new?.arrivalDayOfWeek).isEqualTo("Wed")
     }
 
     @Test
@@ -91,8 +94,9 @@ class AddFlightUseCaseTest {
             on { timeString(newTime) } doReturn "16:15"
         }
         val original = subject.createItem(originalTime)
-        val new = subject.setArrivalTime(original.id, hour = 16, minute = 15)
-        assertThat(new.arrivalTime).isEqualTo("16:15")
+        subject.setArrivalTime(original.id, hour = 16, minute = 15)
+        val new = subject.items.value[original.id]
+        assertThat(new?.arrivalTime).isEqualTo("16:15")
     }
 
     @Test
@@ -121,8 +125,9 @@ class AddFlightUseCaseTest {
             onBlocking { autocomplete("par") } doReturn results
         }
         val original = subject.createItem(mock())
-        val newItem = subject.airportFromSearchTextChanged(original.id, "par")
-        assertThat(newItem.airportFromSearchResults).isEqualTo(expected)
+        subject.airportFromSearchTextChanged(original.id, "par")
+        val newItem = subject.items.value[original.id]
+        assertThat(newItem?.airportFromSearchResults).isEqualTo(expected)
     }
 
     @Test
@@ -141,9 +146,11 @@ class AddFlightUseCaseTest {
             onBlocking { autocomplete("par") } doReturn results
         }
         val original = subject.createItem(mock())
-        val newItem = subject.airportFromSearchTextChanged(original.id, "par")
-        val selectedItem = subject.airportFromSearchResultTapped(newItem.id, 1)
-        assertThat(selectedItem.airportFromName).isEqualTo("Orly Airport")
+        subject.airportFromSearchTextChanged(original.id, "par")
+        val newItem = subject.items.value[original.id] ?: fail("no item after search text changed")
+        subject.airportFromSearchResultTapped(newItem.id, 1)
+        val selectedItem = subject.items.value[original.id]
+        assertThat(selectedItem?.airportFromName).isEqualTo("Orly Airport")
     }
 
     @Test
@@ -172,8 +179,9 @@ class AddFlightUseCaseTest {
             onBlocking { autocomplete("par") } doReturn results
         }
         val original = subject.createItem(mock())
-        val newItem = subject.airportToSearchTextChanged(original.id, "par")
-        assertThat(newItem.airportToSearchResults).isEqualTo(expected)
+        subject.airportToSearchTextChanged(original.id, "par")
+        val newItem = subject.items.value[original.id]
+        assertThat(newItem?.airportToSearchResults).isEqualTo(expected)
     }
 
     @Test
@@ -192,9 +200,11 @@ class AddFlightUseCaseTest {
             onBlocking { autocomplete("par") } doReturn results
         }
         val original = subject.createItem(mock())
-        val newItem = subject.airportToSearchTextChanged(original.id, "par")
-        val selectedItem = subject.airportToSearchResultTapped(newItem.id, 1)
-        assertThat(selectedItem.airportToName).isEqualTo("Orly Airport")
+        subject.airportToSearchTextChanged(original.id, "par")
+        val newItem = subject.items.value[original.id] ?: fail("no item after text changed")
+        subject.airportToSearchResultTapped(newItem.id, 1)
+        val selectedItem = subject.items.value[original.id]
+        assertThat(selectedItem?.airportToName).isEqualTo("Orly Airport")
     }
 
     @Test

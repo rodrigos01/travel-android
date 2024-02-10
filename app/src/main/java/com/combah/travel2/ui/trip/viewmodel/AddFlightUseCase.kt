@@ -6,7 +6,7 @@ import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddFlightRepository
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import java.util.UUID
 
 class AddFlightUseCase(
@@ -37,7 +37,7 @@ class AddFlightUseCase(
     ) : AddPlanUseCase.PendingData({ departure })
 
     private val _items: MutableMapStateFlow<String, AddFlightItem> = MutableMapStateFlow()
-    override val items: Flow<Map<String, AddPlanUseCase.AddPlanItem>>
+    override val items: StateFlow<Map<String, AddFlightItem>>
         get() = _items
 
     private val pendingFlights: MutableMap<String, PendingFlight> = mutableMapOf()
@@ -60,15 +60,14 @@ class AddFlightUseCase(
         pendingFlights.remove(item.id)
     }
 
-    override fun setDepartureTime(itemId: String, hour: Int, minute: Int): AddFlightItem {
+    override fun setDepartureTime(itemId: String, hour: Int, minute: Int) {
         val (item, pending) = findItem(itemId)
         val newTime = pending.departure.copy(hour = hour, minute = minute)
         pendingFlights[itemId] = pending.copy(departure = newTime)
-        return item.copy(departureTime = timeFormatter.timeString(newTime))
-            .also { _items[itemId] = it }
+        _items[itemId] = item.copy(departureTime = timeFormatter.timeString(newTime))
     }
 
-    override fun setArrivalDate(itemId: String, date: Time): AddFlightItem {
+    override fun setArrivalDate(itemId: String, date: Time) {
         val (item, pending) = findItem(itemId)
         val oldTime = pending.arrival ?: pending.departure
         val newTime = oldTime.copy(
@@ -77,67 +76,64 @@ class AddFlightUseCase(
             year = date.year,
         )
         pendingFlights[itemId] = pending.copy(arrival = newTime)
-        return item.copy(
+        _items[itemId] = item.copy(
             arrivalDayOfMonth = timeFormatter.dayOfMonthString(newTime),
             arrivalDayOfWeek = timeFormatter.dayOfWeekString(newTime),
-        ).also { _items[itemId] = it }
+        )
     }
 
-    override fun setArrivalTime(itemId: String, hour: Int, minute: Int): AddFlightItem {
+    override fun setArrivalTime(itemId: String, hour: Int, minute: Int) {
         val (item, pending) = findItem(itemId)
         val oldTime = pending.arrival ?: pending.departure
         val newTime = oldTime.copy(hour = hour, minute = minute)
         pendingFlights[itemId] = pending.copy(arrival = newTime)
-        return item.copy(arrivalTime = timeFormatter.timeString(newTime))
-            .also { _items[itemId] = it }
+        _items[itemId] = item.copy(arrivalTime = timeFormatter.timeString(newTime))
     }
 
     override suspend fun airportFromSearchTextChanged(
         itemId: String, content: CharSequence
-    ): AddFlightItem {
+    ) {
         val (item, pending) = findItem(itemId)
         val results = addFlightRepository.autocomplete(content.toString())
         pendingFlights[itemId] = pending.copy(
             airportFromSearchResults = results,
         )
-        return item.copy(airportFromSearchResults = results.map { it.name })
-            .also { _items[itemId] = it }
+        _items[itemId] = item.copy(airportFromSearchResults = results.map { it.name })
     }
 
-    override fun airportFromSearchResultTapped(itemId: String, index: Int): AddFlightItem {
+    override fun airportFromSearchResultTapped(itemId: String, index: Int) {
         val (item, pending) = findItem(itemId)
         val selectedAirport = pending.airportFromSearchResults[index]
         pendingFlights[itemId] = pending.copy(
             airportFromSearchResults = emptyList(),
             airportFrom = selectedAirport,
         )
-        return item.copy(
+        _items[itemId] = item.copy(
             airportFromName = selectedAirport.name
-        ).also { _items[itemId] = it }
+        )
     }
 
     override suspend fun airportToSearchTextChanged(
         itemId: String, content: CharSequence
-    ): AddFlightItem {
+    ) {
         val (item, pending) = findItem(itemId)
         val results = addFlightRepository.autocomplete(content.toString())
         pendingFlights[itemId] = pending.copy(
             airportToSearchResults = results,
         )
-        return item.copy(airportToSearchResults = results.map { it.name })
-            .also { _items[itemId] = it }
+        _items[itemId] = item.copy(airportToSearchResults = results.map { it.name })
     }
 
-    override fun airportToSearchResultTapped(itemId: String, index: Int): AddFlightItem {
+    override fun airportToSearchResultTapped(itemId: String, index: Int) {
         val (item, pending) = findItem(itemId)
         val selectedAirport = pending.airportToSearchResults[index]
         pendingFlights[itemId] = pending.copy(
             airportToSearchResults = emptyList(),
             airportTo = selectedAirport,
         )
-        return item.copy(
+        _items[itemId] = item.copy(
             airportToName = selectedAirport.name
-        ).also { _items[itemId] = it }
+        )
     }
 
     override fun save(item: AddFlightItem): Flight {
