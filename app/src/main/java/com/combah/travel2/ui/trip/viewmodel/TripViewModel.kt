@@ -34,7 +34,7 @@ class TripViewModel(
     private val tripId: String,
     private val addPlanUseCase: AddPlanUseCase,
     private val timeFormatter: TimeFormatter,
-) : ViewModel(), AddFlightItemActionHandler by addPlanUseCase {
+) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
 
     data class ViewState(
         val items: List<TripItem>,

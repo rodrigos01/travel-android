@@ -112,7 +112,8 @@ fun TripDetails(
                         event.arrivalTime,
                         event.arrivalDayOfMonth,
                         event.arrivalDayOfWeek,
-                        { viewModel.setArrivalDate(event.id, it) },
+//                        { viewModel.setArrivalDate(event.id, it) },
+                        {},
                         event.airportToName,
                         {
                             scope.launch {

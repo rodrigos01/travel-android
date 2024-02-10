@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.combine
 class AddPlanUseCase(
     private val addFlightUseCase: AddFlightUseCase,
     private val addLodgingUseCase: AddLodgingUseCase,
-) : AddFlightItemActionHandler by addFlightUseCase,
+) : AddPlanItemActionHandler, AddFlightItemActionHandler by addFlightUseCase,
     AddLodgingItemActionHandler by addLodgingUseCase {
 
     interface AddItemUseCase<E : TripEntity, T : AddPlanItem> {
@@ -26,8 +26,7 @@ class AddPlanUseCase(
             get() = Type.entries
 
         enum class Type {
-            Flight,
-            Lodging,
+            Flight, Lodging,
         }
     }
 
@@ -37,17 +36,14 @@ class AddPlanUseCase(
 
     }
 
-    val items: Flow<Map<String, AddPlanItem>> =
-        combine(
-            addFlightUseCase.items,
-            addLodgingUseCase.items
-        ) { (addFlightItems, addLodgingItems) ->
-            addFlightItems + addLodgingItems
-        }
+    val items: Flow<Map<String, AddPlanItem>> = combine(
+        addFlightUseCase.items, addLodgingUseCase.items
+    ) { (addFlightItems, addLodgingItems) ->
+        addFlightItems + addLodgingItems
+    }
 
     fun createAddPlanItem(
-        time: Time,
-        type: AddPlanItem.Type = AddPlanItem.Type.Flight
+        time: Time, type: AddPlanItem.Type = AddPlanItem.Type.Flight
     ): AddPlanItem {
         return type.useCase.createItem(time)
     }

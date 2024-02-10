@@ -1,8 +1,14 @@
 package com.combah.travel2.ui.trip.viewmodel
 
+import com.combah.travel2.model.data.Time
+
+interface AddPlanItemActionHandler : AddLodgingItemActionHandler, AddFlightItemActionHandler
+
+interface AddLodgingItemActionHandler
+
 interface AddFlightItemActionHandler {
     fun setDepartureTime(itemId: String, hour: Int, minute: Int): AddFlightUseCase.AddFlightItem
-    fun setArrivalDate(itemId: String, date: Long): AddFlightUseCase.AddFlightItem
+    fun setArrivalDate(itemId: String, date: Time): AddFlightUseCase.AddFlightItem
     fun setArrivalTime(itemId: String, hour: Int, minute: Int): AddFlightUseCase.AddFlightItem
 
     suspend fun airportFromSearchTextChanged(
