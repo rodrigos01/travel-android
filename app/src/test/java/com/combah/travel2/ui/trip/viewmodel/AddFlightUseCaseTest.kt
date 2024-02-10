@@ -8,6 +8,7 @@ import com.combah.travel2.test.assertType
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
@@ -17,7 +18,10 @@ import kotlin.contracts.ExperimentalContracts
 @OptIn(ExperimentalContracts::class)
 class AddFlightUseCaseTest {
     private val repository: AddFlightRepository = mock()
-    private val formatter: TimeFormatter = mock()
+    private val formatter: TimeFormatter = mock {
+        on { dayOfMonthString(any()) } doReturn ""
+        on { dayOfWeekString(any()) } doReturn ""
+    }
     private val subject = AddFlightUseCase(repository, formatter)
 
     @Test
@@ -25,8 +29,6 @@ class AddFlightUseCaseTest {
         val addedItem = subject.createItem(mock())
         assertType<AddFlightUseCase.AddFlightItem>(addedItem)
         assertThat(addedItem.airportFromName).isNull()
-        assertThat(addedItem.arrivalDayOfMonth).isNull()
-        assertThat(addedItem.arrivalDayOfWeek).isNull()
         assertThat(addedItem.arrivalTime).isNull()
         assertThat(addedItem.airportToName).isNull()
     }
@@ -35,11 +37,13 @@ class AddFlightUseCaseTest {
     fun `created item should be initialized with initial time as departure`() {
         val initialTime: Time = mock()
         formatter.stub {
-            on { timeString(initialTime) } doReturn "6:15"
+            on { dayOfMonthString(initialTime) } doReturn "16"
+            on { dayOfWeekString(initialTime) } doReturn "Fri"
         }
         val addedItem = subject.createItem(initialTime)
         assertType<AddFlightUseCase.AddFlightItem>(addedItem)
-        assertThat(addedItem.departureTime).isEqualTo("6:15")
+        assertThat(addedItem.arrivalDayOfMonth).isEqualTo("16")
+        assertThat(addedItem.arrivalDayOfWeek).isEqualTo("Fri")
     }
 
     @Test
@@ -72,7 +76,7 @@ class AddFlightUseCaseTest {
             on { dayOfWeekString(newTime) } doReturn "Wed"
         }
         val original = subject.createItem(originalTime)
-        val new = subject.setArrivalDate(original.id, receivedTime.timeInMillis)
+        val new = subject.setArrivalDate(original.id, receivedTime)
         assertThat(new.arrivalDayOfMonth).isEqualTo("21")
         assertThat(new.arrivalDayOfWeek).isEqualTo("Wed")
     }
@@ -205,11 +209,9 @@ class AddFlightUseCaseTest {
                 on { name } doReturn airportName
             }
         }
-        val toResults = listOf(
-            mock<Airport> {
-                on { name } doReturn "Brussels Airport"
-            }
-        )
+        val toResults = listOf(mock<Airport> {
+            on { name } doReturn "Brussels Airport"
+        })
         repository.stub {
             onBlocking { autocomplete("par") } doReturn results
             onBlocking { autocomplete("bru") } doReturn toResults
@@ -231,7 +233,7 @@ class AddFlightUseCaseTest {
         subject.setDepartureTime(item.id, 22, 35)
         subject.airportFromSearchTextChanged(item.id, "par")
         subject.airportFromSearchResultTapped(item.id, 1)
-        subject.setArrivalDate(item.id, arrivalDay.timeInMillis)
+        subject.setArrivalDate(item.id, arrivalDay)
         subject.setArrivalTime(item.id, 11, 5)
         subject.airportToSearchTextChanged(item.id, "bru")
         subject.airportToSearchResultTapped(item.id, 0)
