@@ -7,19 +7,19 @@ interface AddPlanItemActionHandler : AddLodgingItemActionHandler, AddFlightItemA
 interface AddLodgingItemActionHandler
 
 interface AddFlightItemActionHandler {
-    fun setDepartureTime(itemId: String, hour: Int, minute: Int): AddFlightUseCase.AddFlightItem
-    fun setArrivalDate(itemId: String, date: Time): AddFlightUseCase.AddFlightItem
-    fun setArrivalTime(itemId: String, hour: Int, minute: Int): AddFlightUseCase.AddFlightItem
+    fun setDepartureTime(itemId: String, hour: Int, minute: Int)
+    fun setArrivalDate(itemId: String, date: Time)
+    fun setArrivalTime(itemId: String, hour: Int, minute: Int)
 
     suspend fun airportFromSearchTextChanged(
         itemId: String, content: CharSequence
-    ): AddFlightUseCase.AddFlightItem
+    )
 
-    fun airportFromSearchResultTapped(itemId: String, index: Int): AddFlightUseCase.AddFlightItem
+    fun airportFromSearchResultTapped(itemId: String, index: Int)
 
     suspend fun airportToSearchTextChanged(
         itemId: String, content: CharSequence
-    ): AddFlightUseCase.AddFlightItem
+    )
 
-    fun airportToSearchResultTapped(itemId: String, index: Int): AddFlightUseCase.AddFlightItem
+    fun airportToSearchResultTapped(itemId: String, index: Int)
 }
