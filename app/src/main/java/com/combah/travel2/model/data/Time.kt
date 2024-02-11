@@ -12,9 +12,8 @@ class Time private constructor(
     constructor(
         timeInMillis: Long,
         timeZone: TimeZone,
-    ) : this(Calendar.getInstance().also {
+    ) : this(Calendar.getInstance(timeZone).also {
         it.timeInMillis = timeInMillis
-        it.timeZone = timeZone
         it[Calendar.MILLISECOND] = 0
     })
 
@@ -68,7 +67,7 @@ class Time private constructor(
             set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, minute)
             set(Calendar.SECOND, second)
-        }.asTime()
+        }.let { Time(it) }
     }
 
     override fun toString(): String =
@@ -80,5 +79,3 @@ class Time private constructor(
         return other is Time && calendar == other.calendar
     }
 }
-
-private fun Calendar.asTime() = Time(timeInMillis, timeZone)
