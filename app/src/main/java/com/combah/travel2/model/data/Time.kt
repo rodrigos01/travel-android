@@ -42,9 +42,9 @@ class Time private constructor(
         get() = calendar[Calendar.SECOND]
 
     operator fun plus(other: Long): Time = copy(timeInMillis = timeInMillis + other)
+
     operator fun minus(other: Long): Time = copy(timeInMillis = timeInMillis - other)
     operator fun plus(other: Time): Time = this + other.timeInMillis
-
     override operator fun compareTo(other: Time): Int {
         return timeInMillis.compareTo(other.timeInMillis)
     }
@@ -69,6 +69,8 @@ class Time private constructor(
             set(Calendar.SECOND, second)
         }.let { Time(it) }
     }
+
+    fun midnightTime() = copy(hour = 0, minute = 0)
 
     override fun toString(): String =
         SimpleDateFormat.getDateTimeInstance().also { it.timeZone = this.timeZone }.format(

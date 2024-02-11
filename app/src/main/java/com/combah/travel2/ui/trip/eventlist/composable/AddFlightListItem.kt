@@ -49,6 +49,7 @@ import com.combah.travel2.ui.trip.creation.composable.selectedTime
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AddFlightListItem(
+    minArrivalTimeMillis: Long,
     departureTime: String? = null,
     onDepartureTimeChanged: (hour: Int, minute: Int) -> Unit,
     airportFromName: String? = null,
@@ -209,7 +210,9 @@ fun AddFlightListItem(
             )
         }
         val showArrivalDatePicker = remember { mutableStateOf(false) }
-        val arrivalDatePickerState = rememberDatePickerState()
+        val arrivalDatePickerState = rememberDatePickerState(
+            initialDisplayedMonthMillis = minArrivalTimeMillis,
+        )
         FilledTonalButton(onClick = { showArrivalDatePicker.value = true },
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier
@@ -244,7 +247,7 @@ fun AddFlightListItem(
             ) {
                 DatePicker(
                     state = arrivalDatePickerState,
-//                    dateValidator = { validateTime(state.minDate?.midnightTime?.minus(1), it) },
+                    dateValidator = { it > minArrivalTimeMillis },
                 )
             }
         }
@@ -286,6 +289,7 @@ fun AddFlightListItem(
 fun AddFlightListItemPreview() {
     AppTheme {
         AddFlightListItem(
+            minArrivalTimeMillis = 0L,
             onDepartureTimeChanged = { _, _ -> },
             onAirportFromTextChanged = {},
             airportFromSearchResultTapped = {},

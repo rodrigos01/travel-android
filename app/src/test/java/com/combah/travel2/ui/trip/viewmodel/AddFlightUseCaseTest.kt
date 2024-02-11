@@ -48,6 +48,22 @@ class AddFlightUseCaseTest {
     }
 
     @Test
+    fun `minArrivalTimeMillis should be one minute before departure day`() {
+        val oneToMidnightTime: Time = mock {
+            on { timeInMillis } doReturn 1259L
+        }
+        val midnightTime: Time = mock {
+            on { minus(60000) } doReturn oneToMidnightTime
+        }
+        val initialTime: Time = mock {
+            on { midnightTime() } doReturn midnightTime
+        }
+        val addedItem = subject.createItem(initialTime)
+        assertType<AddFlightUseCase.AddFlightItem>(addedItem)
+        assertThat(addedItem.minArrivalTimeMillis).isEqualTo(1259L)
+    }
+
+    @Test
     fun `set departure time should update departure time`() {
         val newTime = mock<Time>()
         val originalTime = mock<Time> {

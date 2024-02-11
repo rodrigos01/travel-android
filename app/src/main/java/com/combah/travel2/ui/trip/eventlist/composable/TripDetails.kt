@@ -99,6 +99,7 @@ fun TripDetails(
                     )
 
                     is AddFlightUseCase.AddFlightItem -> AddFlightListItem(
+                        minArrivalTimeMillis = event.minArrivalTimeMillis,
                         event.departureTime,
                         onDepartureTimeChanged = { hour, minute ->
                             viewModel.setDepartureTime(
