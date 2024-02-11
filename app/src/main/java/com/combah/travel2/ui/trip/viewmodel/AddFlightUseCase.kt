@@ -103,7 +103,9 @@ class AddFlightUseCase(
         pendingFlights[itemId] = pending.copy(
             airportFromSearchResults = results,
         )
-        _items[itemId] = item.copy(airportFromSearchResults = results.map { it.name })
+        _items[itemId] = item.copy(
+            airportFromName = content.toString(),
+            airportFromSearchResults = results.map { it.name })
     }
 
     override fun airportFromSearchResultTapped(itemId: String, index: Int) {
@@ -126,7 +128,10 @@ class AddFlightUseCase(
         pendingFlights[itemId] = pending.copy(
             airportToSearchResults = results,
         )
-        _items[itemId] = item.copy(airportToSearchResults = results.map { it.name })
+        _items[itemId] = item.copy(
+            airportToName = content.toString(),
+            airportToSearchResults = results.map { it.name }
+        )
     }
 
     override fun airportToSearchResultTapped(itemId: String, index: Int) {
