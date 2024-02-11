@@ -9,6 +9,7 @@ import com.combah.travel2.model.repository.AddFlightRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 class AddFlightUseCase(
     private val addFlightRepository: AddFlightRepository, private val timeFormatter: TimeFormatter
@@ -18,6 +19,7 @@ class AddFlightUseCase(
     data class AddFlightItem(
         override val id: String,
         override val timestamp: Time,
+        val minArrivalTimeMillis: Long,
         val departureTime: String? = null,
         val airportFromName: String? = null,
         val airportFromSearchResults: List<String> = emptyList(),
@@ -44,6 +46,8 @@ class AddFlightUseCase(
     private val pendingFlights: MutableMap<String, PendingFlight> = mutableMapOf()
 
     override fun createItem(time: Time) = AddFlightItem(
+        minArrivalTimeMillis = time.midnightTime()
+            .minus(TimeUnit.MINUTES.toMillis(1L)).timeInMillis,
         id = UUID.randomUUID().toString(),
         timestamp = time,
         arrivalDayOfWeek = timeFormatter.dayOfWeekString(time),
