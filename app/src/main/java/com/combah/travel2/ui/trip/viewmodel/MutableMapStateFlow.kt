@@ -2,25 +2,24 @@ package com.combah.travel2.ui.trip.viewmodel
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import okhttp3.internal.toImmutableMap
 
-interface MapStateFlow<K, V> : Map<K, V>, StateFlow<Map<K, V>>
+typealias MapStateFlow<K, V> = StateFlow<Map<K, V>>
+typealias MutableMapStateFlow<K, V> = MutableStateFlow<Map<K, V>>
 
-class MutableMapStateFlow<K, V> private constructor(
-    private val map: MutableMap<K, V>,
-    val stateFlow: MutableStateFlow<Map<K, V>> = MutableStateFlow(map),
-) : MapStateFlow<K, V>, Map<K, V> by map, StateFlow<Map<K, V>> by stateFlow {
+fun <K, V> MutableMapStateFlow(): MutableMapStateFlow<K, V> = MutableStateFlow(emptyMap())
 
-    constructor() : this(mutableMapOf())
-
-    operator fun set(key: K, value: V) {
-        stateFlow.value = map.also {
-            it[key] = value
-        }
-    }
-
-    fun remove(key: K): V? {
-        val value = map.remove(key)
-        stateFlow.value = map
-        return value
-    }
+operator fun <K, V> MutableMapStateFlow<K, V>.set(key: K, value: V) {
+    this.value = this.value.toMutableMap().also {
+        it[key] = value
+    }.toImmutableMap()
 }
+
+fun <K, V> MutableMapStateFlow<K, V>.remove(key: K): V? {
+    val newMap = value.toMutableMap()
+    val removed = newMap.remove(key)
+    value = newMap.toImmutableMap()
+    return removed
+}
+
+operator fun <K, V> MapStateFlow<K, V>.get(key: K): V? = value[key]

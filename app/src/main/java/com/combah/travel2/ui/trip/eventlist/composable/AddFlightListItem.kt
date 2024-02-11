@@ -41,8 +41,10 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.combah.travel2.R
+import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.ConfirmationDialog
+import com.combah.travel2.ui.trip.creation.composable.selectedTime
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -56,7 +58,7 @@ fun AddFlightListItem(
     arrivalTime: String? = null,
     arrivalDayOfMonth: String,
     arrivalDayOfWeek: String,
-    onArrivalDateChanged: (Long) -> Unit,
+    onArrivalDateChanged: (Time) -> Unit,
     airportToName: String? = null,
     onAirportToTextChanged: (CharSequence) -> Unit,
     airportToSearchResults: List<String> = emptyList(),
@@ -230,7 +232,7 @@ fun AddFlightListItem(
         if (showArrivalDatePicker.value) {
             ConfirmationDialog(
                 onConfirm = {
-                    arrivalDatePickerState.selectedDateMillis?.let {
+                    arrivalDatePickerState.selectedTime?.let {
                         onArrivalDateChanged(
                             it
                         )

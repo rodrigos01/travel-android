@@ -426,6 +426,16 @@ class TripViewModelTest {
     }
 
     @Test
+    fun `addPlanUseCase items changed invalid item should ignore`() = runTest {
+        val newItemId = "originalItemId"
+        val newAddPlanItem = mock<AddFlightUseCase.AddFlightItem> {
+            on { id } doReturn newItemId
+        }
+        addPlanItems.value = mapOf(newItemId to newAddPlanItem)
+        assertThat(subject.viewState.value.items).doesNotContain(newAddPlanItem)
+    }
+
+    @Test
     fun `save should add new lodging to repository`() = runTest {
         val addPlanItemId = "originalItemId"
         val addPlanItem: AddPlanItem = mock {
