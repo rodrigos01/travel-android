@@ -38,8 +38,10 @@ import com.combah.travel2.extensions.formatTime
 import com.combah.travel2.extensions.hour
 import com.combah.travel2.extensions.midnightTime
 import com.combah.travel2.extensions.minute
+import com.combah.travel2.model.data.Time
 import java.text.DateFormat
-import java.util.*
+import java.util.Date
+import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 
 @Composable
@@ -269,3 +271,10 @@ fun DateTimePickerDialogPreview() {
         DateTimePickerDialog(state = dateTimePickerState, onDismiss = {}, onDateSelected = {})
     }
 }
+
+/**
+ * Currently selected date as a Time object. TimeZone is always UTC
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+val DatePickerState.selectedTime: Time?
+    get() = selectedDateMillis?.let { Time(it, TimeZone.getTimeZone("UTC")) }

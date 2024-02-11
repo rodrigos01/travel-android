@@ -100,28 +100,43 @@ fun TripDetails(
 
                     is AddFlightUseCase.AddFlightItem -> AddFlightListItem(
                         event.departureTime,
-                        { hour, minute -> viewModel.setDepartureTime(event.id, hour, minute) },
+                        onDepartureTimeChanged = { hour, minute ->
+                            viewModel.setDepartureTime(
+                                event.id,
+                                hour,
+                                minute
+                            )
+                        },
                         event.airportFromName,
-                        {
+                        onAirportFromTextChanged = {
                             scope.launch {
                                 viewModel.airportFromSearchTextChanged(event.id, it)
                             }
                         },
                         event.airportFromSearchResults,
-                        { viewModel.airportFromSearchResultTapped(event.id, it) },
+                        airportFromSearchResultTapped = {
+                            viewModel.airportFromSearchResultTapped(
+                                event.id,
+                                it
+                            )
+                        },
                         event.arrivalTime,
                         event.arrivalDayOfMonth,
                         event.arrivalDayOfWeek,
-//                        { viewModel.setArrivalDate(event.id, it) },
-                        {},
+                        onArrivalDateChanged = { viewModel.setArrivalDate(event.id, it) },
                         event.airportToName,
-                        {
+                        onAirportToTextChanged = {
                             scope.launch {
                                 viewModel.airportToSearchTextChanged(event.id, it)
                             }
                         },
                         event.airportToSearchResults,
-                        { viewModel.airportToSearchResultTapped(event.id, it) },
+                        airportToSearchResultTapped = {
+                            viewModel.airportToSearchResultTapped(
+                                event.id,
+                                it
+                            )
+                        },
                     )
 
                     is AddLodgingUseCase.AddLodgingItem -> AddLodgingListItem()

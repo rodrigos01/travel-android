@@ -6,6 +6,7 @@ import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddFlightRepository
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.UUID
 
@@ -36,7 +37,7 @@ class AddFlightUseCase(
         val arrival: Time? = null,
     ) : AddPlanUseCase.PendingData({ departure })
 
-    private val _items: MutableMapStateFlow<String, AddFlightItem> = MutableMapStateFlow()
+    private val _items: MutableStateFlow<Map<String, AddFlightItem>> = MutableMapStateFlow()
     override val items: StateFlow<Map<String, AddFlightItem>>
         get() = _items
 

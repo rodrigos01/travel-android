@@ -151,10 +151,13 @@ class TripViewModel(
             .combine(addPlanUseCase.items) { state, addPlanItems ->
                 state.updateItems {
                     addPlanItems.forEach { (id, addPlanItem) ->
-                        set(
-                            indexOfFirst { it is TripItem.Identifiable && it.id == id },
-                            addPlanItem
-                        )
+                        indexOfFirst { it is TripItem.Identifiable && it.id == id }.takeIf { it != -1 }
+                            ?.let {
+                                set(
+                                    it,
+                                    addPlanItem
+                                )
+                            }
                     }
                 }
             }
