@@ -104,7 +104,6 @@ class AddFlightUseCase(
             airportFromSearchResults = results,
         )
         _items[itemId] = item.copy(
-            airportFromName = content.toString(),
             airportFromSearchResults = results.map { it.name })
     }
 

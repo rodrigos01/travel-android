@@ -6,6 +6,8 @@ apply plugin: 'kotlin-kapt'
 
 apply plugin: "androidx.navigation.safeargs"
 
+apply plugin: 'kotlinx-serialization'
+
 android {
     signingConfigs {
         release {
@@ -97,6 +99,11 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.6.2'
     implementation "androidx.compose.runtime:runtime-livedata:1.5.4"
     implementation "androidx.constraintlayout:constraintlayout-compose:1.0.1"
+    // Ktor
+    implementation "io.ktor:ktor-client-core:$ktor_version"
+    implementation "io.ktor:ktor-client-android:$ktor_version"
+    implementation "io.ktor:ktor-client-content-negotiation:$ktor_version"
+    implementation "io.ktor:ktor-serialization-kotlinx-json:$ktor_version"
     // Testing
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.mockito:mockito-core:5.5.0'
