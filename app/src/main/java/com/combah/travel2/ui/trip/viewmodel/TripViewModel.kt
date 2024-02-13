@@ -196,6 +196,8 @@ class TripViewModel(
         }
     }
 
+    fun cancelEdit(itemId: String) = Unit
+
     private fun updateItems(updater: MutableList<TripItem>.() -> Unit) {
         localState.value = localState.value.updateItems(updater)
     }
