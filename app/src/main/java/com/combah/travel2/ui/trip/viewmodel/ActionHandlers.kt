@@ -4,7 +4,15 @@ import com.combah.travel2.model.data.Time
 
 interface AddPlanItemActionHandler : AddLodgingItemActionHandler, AddFlightItemActionHandler
 
-interface AddLodgingItemActionHandler
+interface AddLodgingItemActionHandler {
+    fun setCheckInTime(itemId: String, hour: Int, minute: Int)
+    fun setCheckOutDate(itemId: String, date: Time)
+    fun setCheckoutTime(itemId: String, hour: Int, minute: Int)
+
+    fun lodgingTextChanged(itemId: String, content: CharSequence)
+
+    fun lodgingSearchResultTapped(itemId: String, index: Int)
+}
 
 interface AddFlightItemActionHandler {
     fun setDepartureTime(itemId: String, hour: Int, minute: Int)

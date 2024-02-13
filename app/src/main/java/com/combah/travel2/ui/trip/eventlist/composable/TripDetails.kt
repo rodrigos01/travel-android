@@ -158,16 +158,33 @@ fun TripDetails(
 
                     is AddLodgingUseCase.AddLodgingItem -> AddLodgingListItem(
                         onTypeSelected = { viewModel.typeSelected(event.id, it) },
-                        checkInTime = null,
-                        onCheckInTimeChanged = { _, _ -> },
-                        onLodgingTextChanged = {},
-                        lodgingSearchResultTapped = {},
-                        checkOutDayOfMonth = "15",
-                        checkOutDayOfWeek = "Wed",
-                        onCheckOutDateChanged = {},
-                        checkOutTime = null,
-                        minCheckoutDateMillis = 0L,
-                        onCheckOutTimeChanged = { _, _ -> },
+                        checkInTime = event.checkInTime,
+                        onCheckInTimeChanged = { hour, minute ->
+                            viewModel.setCheckInTime(
+                                event.id,
+                                hour,
+                                minute
+                            )
+                        },
+                        onLodgingTextChanged = { viewModel.lodgingTextChanged(event.id, it) },
+                        lodgingSearchResultTapped = {
+                            viewModel.lodgingSearchResultTapped(
+                                event.id,
+                                it
+                            )
+                        },
+                        checkOutDayOfMonth = event.checkOutDayOfMonth,
+                        checkOutDayOfWeek = event.checkOutDayOfWeek,
+                        onCheckOutDateChanged = { viewModel.setCheckOutDate(event.id, it) },
+                        checkOutTime = event.checkOutTime,
+                        minCheckoutDateMillis = event.minCheckOutTimeMillis,
+                        onCheckOutTimeChanged = { hour, minute ->
+                            viewModel.setCheckoutTime(
+                                event.id,
+                                hour,
+                                minute
+                            )
+                        },
                         onSaveButtonTapped = { viewModel.save(event.id) },
                         onCancelButtonTapped = { viewModel.cancelEdit(event.id) },
                     )

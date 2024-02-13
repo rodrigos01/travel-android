@@ -17,8 +17,9 @@ class AddLodgingUseCase(private val timeFormatter: TimeFormatter) :
         override val timestamp: Time,
         val name: String? = null,
         val checkInTime: String? = null,
-        val checkOutDayOfMonth: String? = null,
-        val checkOutDayOfWeek: String? = null,
+        val minCheckOutTimeMillis: Long,
+        val checkOutDayOfMonth: String,
+        val checkOutDayOfWeek: String,
         val checkOutTime: String? = null,
     ) : AddPlanUseCase.AddPlanItem
 
@@ -39,6 +40,9 @@ class AddLodgingUseCase(private val timeFormatter: TimeFormatter) :
             id = UUID.randomUUID().toString(),
             timestamp = time,
             checkInTime = timeFormatter.timeString(time),
+            minCheckOutTimeMillis = time.timeInMillis,
+            checkOutDayOfMonth = timeFormatter.dayOfMonthString(time),
+            checkOutDayOfWeek = timeFormatter.dayOfWeekString(time),
         ).also {
             _items[it.id] = it
             pendingLodging[it.id] = createPendingData(it.id, time)
@@ -62,6 +66,16 @@ class AddLodgingUseCase(private val timeFormatter: TimeFormatter) :
         _items.remove(item.id)
         pendingLodging.remove(item.id)
     }
+
+    override fun setCheckInTime(itemId: String, hour: Int, minute: Int) = Unit
+
+    override fun setCheckOutDate(itemId: String, date: Time) = Unit
+
+    override fun setCheckoutTime(itemId: String, hour: Int, minute: Int) = Unit
+
+    override fun lodgingTextChanged(itemId: String, content: CharSequence) = Unit
+
+    override fun lodgingSearchResultTapped(itemId: String, index: Int) = Unit
 
     private fun createPendingData(id: String, time: Time) =
         PendingLodging(checkIn = time).also { pendingLodging[id] = it }
