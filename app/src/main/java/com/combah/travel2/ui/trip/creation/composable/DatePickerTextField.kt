@@ -36,10 +36,11 @@ import androidx.compose.ui.window.DialogProperties
 import com.combah.travel2.extensions.format
 import com.combah.travel2.extensions.formatTime
 import com.combah.travel2.extensions.hour
-import com.combah.travel2.extensions.midnightTime
 import com.combah.travel2.extensions.minute
 import java.text.DateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 
 @Composable
@@ -104,6 +105,7 @@ class DateTimePickerState(
     ) : this(
         minDate,
         DatePickerState(
+            locale = Locale.getDefault(),
             date?.time,
             minDate?.time,
             DatePickerDefaults.YearRange,
@@ -178,7 +180,6 @@ private fun DateTimePickerDialog(
         ) {
             DatePicker(
                 state = state.datePickerState,
-                dateValidator = { validateTime(state.minDate?.midnightTime?.minus(1), it) },
             )
         }
 
