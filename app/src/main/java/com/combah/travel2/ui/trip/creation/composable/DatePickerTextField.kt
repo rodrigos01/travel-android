@@ -41,6 +41,7 @@ import com.combah.travel2.extensions.minute
 import com.combah.travel2.model.data.Time
 import java.text.DateFormat
 import java.util.Date
+import java.util.Locale
 import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 
@@ -106,6 +107,7 @@ class DateTimePickerState(
     ) : this(
         minDate,
         DatePickerState(
+            locale = Locale.getDefault(),
             date?.time,
             minDate?.time,
             DatePickerDefaults.YearRange,
@@ -180,7 +182,6 @@ private fun DateTimePickerDialog(
         ) {
             DatePicker(
                 state = state.datePickerState,
-                dateValidator = { validateTime(state.minDate?.midnightTime?.minus(1), it) },
             )
         }
 
