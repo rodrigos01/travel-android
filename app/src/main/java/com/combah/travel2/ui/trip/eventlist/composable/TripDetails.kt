@@ -124,20 +124,33 @@ fun TripDetails(
                         event.arrivalTime,
                         event.arrivalDayOfMonth,
                         event.arrivalDayOfWeek,
+                        onArrivalTimeChanged = { hour, minute ->
+                            viewModel.setArrivalTime(
+                                event.id,
+                                hour,
+                                minute
+                            )
+                        },
                         onArrivalDateChanged = { viewModel.setArrivalDate(event.id, it) },
-                        event.airportToName,
+                        airportToName = event.airportToName,
                         onAirportToTextChanged = {
                             scope.launch {
                                 viewModel.airportToSearchTextChanged(event.id, it)
                             }
                         },
-                        event.airportToSearchResults,
+                        airportToSearchResults = event.airportToSearchResults,
                         airportToSearchResultTapped = {
                             viewModel.airportToSearchResultTapped(
                                 event.id,
                                 it
                             )
                         },
+                        onSaveButtonTapped = {
+                            viewModel.save(event.id)
+                        },
+                        onCancelButtonTapped = {
+                            viewModel.cancelEdit(event.id)
+                        }
                     )
 
                     is AddLodgingUseCase.AddLodgingItem -> AddLodgingListItem()

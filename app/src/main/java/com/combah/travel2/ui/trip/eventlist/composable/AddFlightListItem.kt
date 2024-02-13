@@ -2,53 +2,42 @@ package com.combah.travel2.ui.trip.eventlist.composable
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.PopupProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.combah.travel2.R
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.theme.AppTheme
+import com.combah.travel2.ui.trip.creation.composable.AutoCompleteTextField
 import com.combah.travel2.ui.trip.creation.composable.ConfirmationDialog
+import com.combah.travel2.ui.trip.creation.composable.TimePickerTextButton
+import com.combah.travel2.ui.trip.creation.composable.rememberAutoCompleteTextFieldState
 import com.combah.travel2.ui.trip.creation.composable.selectedTime
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
@@ -65,10 +54,13 @@ fun AddFlightListItem(
     arrivalDayOfMonth: String,
     arrivalDayOfWeek: String,
     onArrivalDateChanged: (Time) -> Unit,
+    onArrivalTimeChanged: (hour: Int, minute: Int) -> Unit,
     airportToName: String? = null,
     onAirportToTextChanged: (CharSequence) -> Unit,
     airportToSearchResults: List<String> = emptyList(),
     airportToSearchResultTapped: (Int) -> Unit,
+    onSaveButtonTapped: () -> Unit,
+    onCancelButtonTapped: () -> Unit,
 ) {
     ConstraintLayout(
         Modifier
@@ -93,50 +85,19 @@ fun AddFlightListItem(
                 top.linkTo(parent.top, margin = 16.dp)
                 start.linkTo(parent.start, margin = 16.dp)
             })
-        val showDepartureTimePicker = remember { mutableStateOf(false) }
-        val departureTimePickerState = rememberTimePickerState()
-        Surface(
-            onClick = { showDepartureTimePicker.value = true },
+        TimePickerTextButton(
+            text = departureTime ?: "Choose Departure Time",
+            onDepartureTimeChanged,
             modifier = Modifier
                 .semantics { role = Role.Button }
                 .constrainAs(departureTimeSelector) {
-                    top.linkTo(departureLabel.bottom)
+                    top.linkTo(departureLabel.top)
+                    bottom.linkTo(departureLabel.bottom)
                     start.linkTo(airportFrom.start)
                 },
-        ) {
-            Row {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_time_16),
-                    contentDescription = null,
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.tertiary),
-                    modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .padding(end = 4.dp)
-                )
-                Text(
-                    text = departureTime ?: "Choose Departure Time",
-                    style = TextStyle(color = MaterialTheme.colorScheme.tertiary)
-                )
-            }
-        }
-        if (showDepartureTimePicker.value) {
-            ConfirmationDialog(
-                onConfirm = {
-                    onDepartureTimeChanged(
-                        departureTimePickerState.hour,
-                        departureTimePickerState.minute,
-                    )
-                    showDepartureTimePicker.value = false
-                },
-                onDismiss = { showDepartureTimePicker.value = false },
-                buttonEnabled = true,
-            ) {
-                TimePicker(
-                    modifier = Modifier.padding(top = 16.dp), state = departureTimePickerState,
-                )
-            }
-        }
-        OutlinedButton(onClick = { /*TODO*/ },
+        )
+        OutlinedButton(
+            onClick = { /*TODO*/ },
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier
                 .constrainAs(typeSelector) {
@@ -158,81 +119,36 @@ fun AddFlightListItem(
                 )
             }
         }
-        val focusManager = LocalFocusManager.current
-        Box(
+        AutoCompleteTextField(
+            state = rememberAutoCompleteTextFieldState(
+                airportFromName, airportFromSearchResults,
+            ),
+            onAirportFromTextChanged,
+            airportFromSearchResultTapped,
             modifier = Modifier
                 .constrainAs(airportFrom) {
                     start.linkTo(typeSelector.end, margin = 8.dp)
-                    top.linkTo(departureTimeSelector.bottom, margin = 8.dp)
+                    top.linkTo(departureTimeSelector.bottom)
                     end.linkTo(parent.end, margin = 16.dp)
                     width = Dimension.fillToConstraints
                 }
                 .wrapContentSize(Alignment.TopStart)
-        ) {
-            var airportFromInput: String? by remember {
-                mutableStateOf(null)
-            }
-            val airportFromText = remember(airportFromName, airportFromInput) {
-                airportFromInput ?: airportFromName.orEmpty()
-            }
-            OutlinedTextField(
-                value = airportFromText,
-                label = {
-                    Text("from")
-                },
-                placeholder = {
-                    Text("Enter City or Airport")
-                },
-                onValueChange = {
-                    airportFromInput = it
-                    onAirportFromTextChanged(it)
-                },
-            )
-            var showAirportFromDropDown by remember(airportFromSearchResults) {
-                mutableStateOf(airportFromSearchResults.isNotEmpty())
-            }
-            DropdownMenu(
-                expanded = showAirportFromDropDown,
-                onDismissRequest = { showAirportFromDropDown = false },
-                properties = PopupProperties(focusable = false)
-            ) {
-                airportFromSearchResults.forEachIndexed { index, airportName ->
-                    DropdownMenuItem(
-                        text = { Text(airportName) },
-                        onClick = {
-                            showAirportFromDropDown = false
-                            airportFromInput = null
-                            airportFromSearchResultTapped(index)
-                            focusManager.clearFocus()
-                        },
-                        colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.onSecondaryContainer),
-                    )
-                }
-            }
-        }
+        )
         Text(text = "Arrival",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.constrainAs(arrivalLabel) {
-                top.linkTo(typeSelector.bottom, margin = 16.dp)
+                top.linkTo(typeSelector.bottom, margin = 8.dp)
                 start.linkTo(parent.start, margin = 16.dp)
             })
-        Row(modifier = Modifier.constrainAs(arrivalTimeSelector) {
-            top.linkTo(arrivalLabel.bottom)
-            start.linkTo(airportTo.start)
-        }) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_time_16),
-                contentDescription = null,
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.tertiary),
-                modifier = Modifier
-                    .align(Alignment.CenterVertically)
-                    .padding(end = 4.dp)
-            )
-            Text(
-                text = arrivalTime ?: "Choose Arrival Time",
-                style = TextStyle(color = MaterialTheme.colorScheme.tertiary)
-            )
-        }
+        TimePickerTextButton(
+            text = arrivalTime ?: "Choose Arrival Time",
+            onArrivalTimeChanged,
+            modifier = Modifier.constrainAs(arrivalTimeSelector) {
+                top.linkTo(arrivalLabel.top)
+                bottom.linkTo(arrivalLabel.bottom)
+                start.linkTo(airportTo.start)
+            }
+        )
         val showArrivalDatePicker = remember { mutableStateOf(false) }
         val arrivalDatePickerState = rememberDatePickerState(
             initialDisplayedMonthMillis = minArrivalTimeMillis,
@@ -242,7 +158,8 @@ fun AddFlightListItem(
                 }
             }
         )
-        FilledTonalButton(onClick = { showArrivalDatePicker.value = true },
+        FilledTonalButton(
+            onClick = { showArrivalDatePicker.value = true },
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier
                 .constrainAs(arrivalDaySelector) {
@@ -279,34 +196,39 @@ fun AddFlightListItem(
                 )
             }
         }
-        Box(modifier = Modifier.constrainAs(airportTo) {
-            start.linkTo(arrivalDaySelector.end, margin = 8.dp)
-            top.linkTo(arrivalTimeSelector.bottom, margin = 8.dp)
-            end.linkTo(parent.end, margin = 16.dp)
-            bottom.linkTo(parent.bottom, margin = 16.dp)
-            width = Dimension.fillToConstraints
-        }) {
-            OutlinedTextField(
-                value = airportToName.orEmpty(),
-                label = {
-                    Text("to")
-                },
-                placeholder = {
-                    Text("Enter City or Airport")
-                },
-                onValueChange = onAirportToTextChanged,
-            )
-            if (airportToSearchResults.isNotEmpty()) {
-                DropdownMenu(
-                    expanded = true,
-                    onDismissRequest = { onAirportToTextChanged("") },
-                ) {
-                    airportToSearchResults.forEachIndexed { index, airportName ->
-                        DropdownMenuItem(text = { Text(airportName) },
-                            onClick = { airportToSearchResultTapped(index) })
-                    }
-                }
+        AutoCompleteTextField(
+            state = rememberAutoCompleteTextFieldState(
+                airportToName,
+                airportToSearchResults,
+            ),
+            onAirportToTextChanged,
+            airportToSearchResultTapped,
+            modifier = Modifier.constrainAs(airportTo) {
+                start.linkTo(arrivalDaySelector.end, margin = 8.dp)
+                top.linkTo(arrivalTimeSelector.bottom)
+                end.linkTo(parent.end, margin = 16.dp)
+                width = Dimension.fillToConstraints
             }
+        )
+        OutlinedButton(
+            onClick = { onSaveButtonTapped() },
+            modifier = Modifier.constrainAs(cancelButton) {
+                top.linkTo(saveButton.top)
+                bottom.linkTo(saveButton.bottom)
+                end.linkTo(saveButton.start, margin = 8.dp)
+            }
+        ) {
+            Text("Cancel")
+        }
+        Button(
+            onClick = { onCancelButtonTapped() },
+            modifier = Modifier.constrainAs(saveButton) {
+                top.linkTo(arrivalDaySelector.bottom, margin = 8.dp)
+                bottom.linkTo(parent.bottom, margin = 16.dp)
+                end.linkTo(parent.end, margin = 16.dp)
+            }
+        ) {
+            Text("Save")
         }
     }
 
@@ -324,8 +246,11 @@ fun AddFlightListItemPreview() {
             arrivalDayOfMonth = "15",
             arrivalDayOfWeek = "Wed",
             onArrivalDateChanged = {},
+            onArrivalTimeChanged = { _, _ -> },
             onAirportToTextChanged = {},
             airportToSearchResultTapped = {},
+            onSaveButtonTapped = {},
+            onCancelButtonTapped = {},
         )
     }
 }
