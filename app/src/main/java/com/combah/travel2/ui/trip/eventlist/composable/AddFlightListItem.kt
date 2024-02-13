@@ -6,9 +6,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DropdownMenu
@@ -145,7 +145,7 @@ fun AddFlightListItem(
                     start.linkTo(parent.start, margin = 16.dp)
                     height = Dimension.fillToConstraints
                 }
-                .wrapContentWidth()) {
+                .width(96.dp)) {
             Row {
                 Image(
                     painter = painterResource(id = R.drawable.ic_flight_24dp),
@@ -250,7 +250,7 @@ fun AddFlightListItem(
                     bottom.linkTo(airportTo.bottom)
                     start.linkTo(parent.start, margin = 16.dp)
                 }
-                .wrapContentWidth()
+                .width(96.dp)
                 .wrapContentHeight()) {
             Row {
                 LeadingDate(dayOfMonth = arrivalDayOfMonth, dayOfWeek = arrivalDayOfWeek)

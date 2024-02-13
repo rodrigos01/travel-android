@@ -17,7 +17,7 @@ class TimeFormatter {
         }.format(Date(time.timeInMillis))
 
     fun dayOfWeekString(time: Time): String =
-        DateFormatSymbols.getInstance().weekdays[time.dayOfWeek]
+        DateFormatSymbols.getInstance().shortWeekdays[time.dayOfWeek]
 
     fun timeString(time: Time): String {
         val formatter = SimpleDateFormat.getTimeInstance(DateFormat.SHORT).apply {
