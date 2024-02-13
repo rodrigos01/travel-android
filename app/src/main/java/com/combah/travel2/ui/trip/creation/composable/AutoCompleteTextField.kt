@@ -28,6 +28,8 @@ fun rememberAutoCompleteTextFieldState(initialValue: String?, suggestions: List<
 @Composable
 fun AutoCompleteTextField(
     state: AutoCompleteTextFieldState,
+    label: String?,
+    placeHolder: String?,
     onTextChanged: (String) -> Unit,
     onOptionSelected: (Int) -> Unit,
     modifier: Modifier
@@ -48,10 +50,10 @@ fun AutoCompleteTextField(
         OutlinedTextField(
             value = airportFromText,
             label = {
-                Text("from")
+                label?.let { Text(it) }
             },
             placeholder = {
-                Text("Enter City or Airport")
+                placeHolder?.let { Text(it) }
             },
             onValueChange = {
                 input = it

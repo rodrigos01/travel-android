@@ -1,29 +1,19 @@
 package com.combah.travel2.ui.trip.eventlist.composable
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.DatePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -31,18 +21,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.combah.travel2.R
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.theme.AppTheme
+import com.combah.travel2.ui.trip.creation.composable.AddPlanType
 import com.combah.travel2.ui.trip.creation.composable.AutoCompleteTextField
-import com.combah.travel2.ui.trip.creation.composable.ConfirmationDialog
+import com.combah.travel2.ui.trip.creation.composable.DatePickerButton
 import com.combah.travel2.ui.trip.creation.composable.TimePickerTextButton
+import com.combah.travel2.ui.trip.creation.composable.TypeSelectorButton
 import com.combah.travel2.ui.trip.creation.composable.rememberAutoCompleteTextFieldState
-import com.combah.travel2.ui.trip.creation.composable.selectedTime
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AddFlightListItem(
+    onTypeSelected: (AddPlanType) -> Unit,
     minArrivalTimeMillis: Long,
     departureTime: String? = null,
     onDepartureTimeChanged: (hour: Int, minute: Int) -> Unit,
@@ -96,9 +87,9 @@ fun AddFlightListItem(
                     start.linkTo(airportFrom.start)
                 },
         )
-        OutlinedButton(
-            onClick = { /*TODO*/ },
-            shape = RoundedCornerShape(8.dp),
+        TypeSelectorButton(
+            initialType = AddPlanType.Flight,
+            onOptionSelected = onTypeSelected,
             modifier = Modifier
                 .constrainAs(typeSelector) {
                     top.linkTo(airportFrom.top, margin = 8.dp)
@@ -106,23 +97,14 @@ fun AddFlightListItem(
                     start.linkTo(parent.start, margin = 16.dp)
                     height = Dimension.fillToConstraints
                 }
-                .width(96.dp)) {
-            Row {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_flight_24dp),
-                    contentDescription = null,
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.ic_arrow_drop_down_24),
-                    contentDescription = null,
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                )
-            }
-        }
+                .width(96.dp),
+        )
         AutoCompleteTextField(
             state = rememberAutoCompleteTextFieldState(
                 airportFromName, airportFromSearchResults,
             ),
+            label = "from",
+            placeHolder = "Enter City or Airport",
             onAirportFromTextChanged,
             airportFromSearchResultTapped,
             modifier = Modifier
@@ -149,18 +131,11 @@ fun AddFlightListItem(
                 start.linkTo(airportTo.start)
             }
         )
-        val showArrivalDatePicker = remember { mutableStateOf(false) }
-        val arrivalDatePickerState = rememberDatePickerState(
-            initialDisplayedMonthMillis = minArrivalTimeMillis,
-            selectableDates = object : SelectableDates {
-                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                    return utcTimeMillis > minArrivalTimeMillis
-                }
-            }
-        )
-        FilledTonalButton(
-            onClick = { showArrivalDatePicker.value = true },
-            shape = RoundedCornerShape(8.dp),
+        DatePickerButton(
+            minArrivalTimeMillis,
+            arrivalDayOfMonth,
+            arrivalDayOfWeek,
+            onArrivalDateChanged,
             modifier = Modifier
                 .constrainAs(arrivalDaySelector) {
                     top.linkTo(airportTo.top, margin = 8.dp)
@@ -168,39 +143,15 @@ fun AddFlightListItem(
                     start.linkTo(parent.start, margin = 16.dp)
                 }
                 .width(96.dp)
-                .wrapContentHeight()) {
-            Row {
-                LeadingDate(dayOfMonth = arrivalDayOfMonth, dayOfWeek = arrivalDayOfWeek)
-                Image(
-                    painter = painterResource(id = R.drawable.ic_arrow_drop_down_24),
-                    contentDescription = null,
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                )
-            }
-        }
-        if (showArrivalDatePicker.value) {
-            ConfirmationDialog(
-                onConfirm = {
-                    arrivalDatePickerState.selectedTime?.let {
-                        onArrivalDateChanged(
-                            it
-                        )
-                    }
-                    showArrivalDatePicker.value = false
-                },
-                onDismiss = { showArrivalDatePicker.value = false },
-                buttonEnabled = true,
-            ) {
-                DatePicker(
-                    state = arrivalDatePickerState,
-                )
-            }
-        }
+                .wrapContentHeight(),
+        )
         AutoCompleteTextField(
             state = rememberAutoCompleteTextFieldState(
                 airportToName,
                 airportToSearchResults,
             ),
+            label = "To",
+            placeHolder = "Enter City or Airport",
             onAirportToTextChanged,
             airportToSearchResultTapped,
             modifier = Modifier.constrainAs(airportTo) {
@@ -239,6 +190,7 @@ fun AddFlightListItem(
 fun AddFlightListItemPreview() {
     AppTheme {
         AddFlightListItem(
+            onTypeSelected = {},
             minArrivalTimeMillis = 0L,
             onDepartureTimeChanged = { _, _ -> },
             onAirportFromTextChanged = {},

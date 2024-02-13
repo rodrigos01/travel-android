@@ -18,9 +18,11 @@ import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.repository.AddFlightRepository
 import com.combah.travel2.model.repository.mock.MockTripRepository
 import com.combah.travel2.ui.theme.AppTheme
+import com.combah.travel2.ui.trip.creation.composable.AddPlanType
 import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase
 import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase
+import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase.AddPlanItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.DateRangeItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightArrivalItem
@@ -99,6 +101,7 @@ fun TripDetails(
                     )
 
                     is AddFlightUseCase.AddFlightItem -> AddFlightListItem(
+                        onTypeSelected = { viewModel.typeSelected(event.id, it) },
                         minArrivalTimeMillis = event.minArrivalTimeMillis,
                         event.departureTime,
                         onDepartureTimeChanged = { hour, minute ->
@@ -153,11 +156,30 @@ fun TripDetails(
                         }
                     )
 
-                    is AddLodgingUseCase.AddLodgingItem -> AddLodgingListItem()
+                    is AddLodgingUseCase.AddLodgingItem -> AddLodgingListItem(
+                        onTypeSelected = { viewModel.typeSelected(event.id, it) },
+                        checkInTime = null,
+                        onCheckInTimeChanged = { _, _ -> },
+                        onLodgingTextChanged = {},
+                        lodgingSearchResultTapped = {},
+                        checkOutDayOfMonth = "15",
+                        checkOutDayOfWeek = "Wed",
+                        onCheckOutDateChanged = {},
+                        checkOutTime = null,
+                        minCheckoutDateMillis = 0L,
+                        onCheckOutTimeChanged = { _, _ -> },
+                        onSaveButtonTapped = { viewModel.save(event.id) },
+                        onCancelButtonTapped = { viewModel.cancelEdit(event.id) },
+                    )
                 }
             }
         }
     }
+}
+
+private fun TripViewModel.typeSelected(itemId: String, newType: AddPlanType) = when (newType) {
+    AddPlanType.Flight -> addPlanTypeChanged(itemId, AddPlanItem.Type.Flight)
+    AddPlanType.Lodging -> addPlanTypeChanged(itemId, AddPlanItem.Type.Lodging)
 }
 
 @Composable

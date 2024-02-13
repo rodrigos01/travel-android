@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,11 +27,12 @@ import com.combah.travel2.R
 @Composable
 fun TimePickerButton(
     onTimeSelected: (hour: Int, minute: Int) -> Unit,
+    showTimePickerState: MutableState<Boolean> = remember { mutableStateOf(false) },
     modifier: Modifier,
     content: @Composable () -> Unit,
 ) {
+    var showTimePicker: Boolean by showTimePickerState
     val timePickerState = rememberTimePickerState()
-    var showTimePicker: Boolean by remember { mutableStateOf(false) }
     Surface(
         onClick = { showTimePicker = true },
         modifier = modifier,
