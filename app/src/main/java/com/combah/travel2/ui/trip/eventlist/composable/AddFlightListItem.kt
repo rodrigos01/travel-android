@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
@@ -235,6 +236,11 @@ fun AddFlightListItem(
         val showArrivalDatePicker = remember { mutableStateOf(false) }
         val arrivalDatePickerState = rememberDatePickerState(
             initialDisplayedMonthMillis = minArrivalTimeMillis,
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    return utcTimeMillis > minArrivalTimeMillis
+                }
+            }
         )
         FilledTonalButton(onClick = { showArrivalDatePicker.value = true },
             shape = RoundedCornerShape(8.dp),
@@ -270,7 +276,6 @@ fun AddFlightListItem(
             ) {
                 DatePicker(
                     state = arrivalDatePickerState,
-                    dateValidator = { it > minArrivalTimeMillis },
                 )
             }
         }
