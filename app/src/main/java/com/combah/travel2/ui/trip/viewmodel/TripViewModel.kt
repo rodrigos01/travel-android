@@ -14,6 +14,7 @@ import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.AddFlightRepository
+import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.model.repository.TripRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -426,7 +427,7 @@ fun TripViewModel(
         tripId,
         AddPlanUseCase(
             AddFlightUseCase(AddFlightRepository(), timeFormatter),
-            AddLodgingUseCase(timeFormatter)
+            AddLodgingUseCase(AddLodgingRepository(), timeFormatter)
         ),
         timeFormatter,
     )

@@ -9,7 +9,7 @@ interface AddLodgingItemActionHandler {
     fun setCheckOutDate(itemId: String, date: Time)
     fun setCheckoutTime(itemId: String, hour: Int, minute: Int)
 
-    fun lodgingTextChanged(itemId: String, content: CharSequence)
+    suspend fun lodgingTextChanged(itemId: String, content: CharSequence)
 
     fun lodgingSearchResultTapped(itemId: String, index: Int)
 }
