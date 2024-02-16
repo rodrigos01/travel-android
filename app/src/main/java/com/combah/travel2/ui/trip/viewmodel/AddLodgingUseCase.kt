@@ -1,10 +1,15 @@
 package com.combah.travel2.ui.trip.viewmodel
 
+import com.combah.travel2.extensions.MutableMapStateFlow
 import com.combah.travel2.extensions.TimeFormatter
+import com.combah.travel2.extensions.get
+import com.combah.travel2.extensions.remove
+import com.combah.travel2.extensions.set
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddLodgingRepository
+import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandler
 import kotlinx.coroutines.flow.StateFlow
 import java.util.UUID
 

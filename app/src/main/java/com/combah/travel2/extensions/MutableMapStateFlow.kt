@@ -1,4 +1,4 @@
-package com.combah.travel2.ui.trip.viewmodel
+package com.combah.travel2.extensions
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

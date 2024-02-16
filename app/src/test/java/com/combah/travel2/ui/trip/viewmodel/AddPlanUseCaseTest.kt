@@ -3,8 +3,8 @@ package com.combah.travel2.ui.trip.viewmodel
 import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
+import com.combah.travel2.test.Assertions.assertType
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
-import com.combah.travel2.test.assertType
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase.AddPlanItem
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
