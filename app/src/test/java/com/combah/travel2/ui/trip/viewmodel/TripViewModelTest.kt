@@ -26,8 +26,8 @@ import com.combah.travel2.model.repository.mock.MockData.portoHotel
 import com.combah.travel2.model.repository.mock.MockData.sorento
 import com.combah.travel2.model.repository.mock.MockData.sorentoHotel
 import com.combah.travel2.model.repository.mock.MockData.trip
+import com.combah.travel2.test.Assertions.assertType
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
-import com.combah.travel2.test.assertType
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase.AddPlanItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.DateRangeItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightArrivalItem

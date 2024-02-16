@@ -7,8 +7,8 @@ import com.combah.travel2.model.network.toAppDataModel
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 
-class AddFlightRepository {
-    suspend fun autocomplete(query: String): List<Airport> {
+class AddFlightRepository : AutoCompleteRepository<Airport> {
+    override suspend fun autocomplete(query: String): List<Airport> {
         val response: ApiResponse.AirportAutoComplete =
             httpClient().get("http://10.0.2.2:5000/places/autocomplete") {
                 url {

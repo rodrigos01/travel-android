@@ -4,10 +4,19 @@ import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.data.Airport
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddFlightRepository
-import com.combah.travel2.test.assertType
+import com.combah.travel2.test.Assertions.assertType
+import com.combah.travel2.test.UnconfinedDispatcherTestRule
+import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase
+import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase.AutoCompleteState
+import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseFactory
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
@@ -18,12 +27,22 @@ import kotlin.contracts.ExperimentalContracts
 
 @OptIn(ExperimentalContracts::class)
 class AddFlightUseCaseTest {
+
+    @get:Rule
+    val rule = UnconfinedDispatcherTestRule()
+
     private val repository: AddFlightRepository = mock()
     private val formatter: TimeFormatter = mock {
         on { dayOfMonthString(any()) } doReturn ""
         on { dayOfWeekString(any()) } doReturn ""
     }
-    private val subject = AddFlightUseCase(repository, formatter)
+    private val inputUseCaseFactory: InputUseCaseFactory = mock()
+    private val subject = AddFlightUseCase(repository, formatter, inputUseCaseFactory)
+    private val items = subject.items.stateIn(
+        TestScope(rule.dispatcher),
+        started = SharingStarted.Eagerly,
+        initialValue = emptyMap()
+    )
 
     @Test
     fun `created item should be initialized empty`() {
@@ -74,7 +93,7 @@ class AddFlightUseCaseTest {
         }
         val original = subject.createItem(originalTime)
         subject.setDepartureTime(original.id, hour = 9, minute = 15)
-        val new = subject.items.value[original.id]
+        val new = items.value[original.id]
         assertThat(new?.departureTime).isEqualTo("9:15")
     }
 
@@ -95,7 +114,7 @@ class AddFlightUseCaseTest {
         }
         val original = subject.createItem(originalTime)
         subject.setArrivalDate(original.id, receivedTime)
-        val new = subject.items.value[original.id]
+        val new = items.value[original.id]
         assertThat(new?.arrivalDayOfMonth).isEqualTo("21")
         assertThat(new?.arrivalDayOfWeek).isEqualTo("Wed")
     }
@@ -111,22 +130,23 @@ class AddFlightUseCaseTest {
         }
         val original = subject.createItem(originalTime)
         subject.setArrivalTime(original.id, hour = 16, minute = 15)
-        val new = subject.items.value[original.id]
+        val new = items.value[original.id]
         assertThat(new?.arrivalTime).isEqualTo("16:15")
     }
 
     @Test
-    fun `airport from search text changed should trigger repository autocomplete`() = runTest {
-        repository.stub {
-            onBlocking { autocomplete("par") } doReturn emptyList()
+    fun `airport from search text changed should update autocomplete query`() = runTest {
+        val autoCompleteUseCase: AutoCompleteUseCase<Airport> = mock()
+        inputUseCaseFactory.stub {
+            on { createAutoCompleteUseCase(repository) } doReturn autoCompleteUseCase
         }
-        val original = subject.createItem(mock())
+        val original = subject.createItem(mockTime())
         subject.airportFromSearchTextChanged(original.id, "par")
-        verify(repository).autocomplete("par")
+        verify(autoCompleteUseCase).setQuery("par")
     }
 
     @Test
-    fun `airport from search text changed should update item with repository results`() = runTest {
+    fun `autocomplete use case search results changed should update item with results`() {
         val expected = listOf(
             "Charles de Gaule",
             "Orly Airport",
@@ -137,12 +157,20 @@ class AddFlightUseCaseTest {
                 on { name } doReturn airportName
             }
         }
-        repository.stub {
-            onBlocking { autocomplete("par") } doReturn results
+        val searchResultsStateFlow = MutableStateFlow(
+            AutoCompleteState<Airport>(
+                emptyList()
+            )
+        )
+        val autoCompleteUseCase: AutoCompleteUseCase<Airport> = mock {
+            on { state } doReturn searchResultsStateFlow
         }
-        val original = subject.createItem(mock())
-        subject.airportFromSearchTextChanged(original.id, "par")
-        val newItem = subject.items.value[original.id]
+        inputUseCaseFactory.stub {
+            on { createAutoCompleteUseCase(repository) } doReturn autoCompleteUseCase
+        }
+        val original = subject.createItem(mockTime())
+        searchResultsStateFlow.value = AutoCompleteState(searchResults = results)
+        val newItem = items.value[original.id]
         assertThat(newItem?.airportFromSearchResults).isEqualTo(expected)
     }
 
@@ -163,9 +191,9 @@ class AddFlightUseCaseTest {
         }
         val original = subject.createItem(mock())
         subject.airportFromSearchTextChanged(original.id, "par")
-        val newItem = subject.items.value[original.id] ?: fail("no item after search text changed")
+        val newItem = items.value[original.id] ?: fail("no item after search text changed")
         subject.airportFromSearchResultTapped(newItem.id, 1)
-        val selectedItem = subject.items.value[original.id]
+        val selectedItem = items.value[original.id]
         assertThat(selectedItem?.airportFromName).isEqualTo("Orly Airport")
     }
 
@@ -196,7 +224,7 @@ class AddFlightUseCaseTest {
         }
         val original = subject.createItem(mock())
         subject.airportToSearchTextChanged(original.id, "par")
-        val newItem = subject.items.value[original.id]
+        val newItem = items.value[original.id]
         assertThat(newItem?.airportToSearchResults).isEqualTo(expected)
     }
 
@@ -217,9 +245,9 @@ class AddFlightUseCaseTest {
         }
         val original = subject.createItem(mock())
         subject.airportToSearchTextChanged(original.id, "par")
-        val newItem = subject.items.value[original.id] ?: fail("no item after text changed")
+        val newItem = items.value[original.id] ?: fail("no item after text changed")
         subject.airportToSearchResultTapped(newItem.id, 1)
-        val selectedItem = subject.items.value[original.id]
+        val selectedItem = items.value[original.id]
         assertThat(selectedItem?.airportToName).isEqualTo("Orly Airport")
     }
 
@@ -269,5 +297,11 @@ class AddFlightUseCaseTest {
         assertThat(result.segments[0].airportFrom).isEqualTo(results[1])
         assertThat(result.segments[0].arrival).isEqualTo(newArrival)
         assertThat(result.segments[0].airportTo).isEqualTo(toResults[0])
+    }
+
+    private fun mockTime(): Time = mock {
+        on { midnightTime() } doReturn it
+        on { minus(any()) } doReturn it
+        on { timeInMillis } doReturn 0L
     }
 }

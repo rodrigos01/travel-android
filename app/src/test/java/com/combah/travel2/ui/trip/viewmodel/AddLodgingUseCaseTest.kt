@@ -4,7 +4,7 @@ import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddLodgingRepository
-import com.combah.travel2.test.assertType
+import com.combah.travel2.test.Assertions.assertType
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat

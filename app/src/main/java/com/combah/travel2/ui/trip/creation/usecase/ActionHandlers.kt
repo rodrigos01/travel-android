@@ -1,4 +1,4 @@
-package com.combah.travel2.ui.trip.viewmodel
+package com.combah.travel2.ui.trip.creation.usecase
 
 import com.combah.travel2.model.data.Time
 
@@ -19,7 +19,7 @@ interface AddFlightItemActionHandler {
     fun setArrivalDate(itemId: String, date: Time)
     fun setArrivalTime(itemId: String, hour: Int, minute: Int)
 
-    suspend fun airportFromSearchTextChanged(
+    fun airportFromSearchTextChanged(
         itemId: String, content: CharSequence
     )
 
