@@ -16,6 +16,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.repository.AddFlightRepository
+import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.model.repository.mock.MockTripRepository
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.AddPlanType
@@ -166,7 +167,14 @@ fun TripDetails(
                                 minute
                             )
                         },
-                        onLodgingTextChanged = { viewModel.lodgingTextChanged(event.id, it) },
+                        onLodgingTextChanged = {
+                            scope.launch {
+                                viewModel.lodgingTextChanged(
+                                    event.id,
+                                    it
+                                )
+                            }
+                        },
                         lodgingSearchResultTapped = {
                             viewModel.lodgingSearchResultTapped(
                                 event.id,
@@ -209,7 +217,7 @@ fun TripDetailsPreview() {
                 "minhaTrip",
                 AddPlanUseCase(
                     AddFlightUseCase(AddFlightRepository(), TimeFormatter()),
-                    AddLodgingUseCase(TimeFormatter())
+                    AddLodgingUseCase(AddLodgingRepository(), TimeFormatter()),
                 ),
                 TimeFormatter(),
             ), rememberNavController()

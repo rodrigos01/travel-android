@@ -138,9 +138,8 @@ fun AddLodgingListItem(
         val focusManager = LocalFocusManager.current
         TimePickerButton(
             onTimeSelected = { hour, minute ->
-                onCheckInTimeChanged(hour, minute)
+                onCheckOutTimeChanged(hour, minute)
                 focusManager.clearFocus()
-
             },
             showTimePickerState = timePickerButtonState,
             modifier = Modifier.constrainAs(checkOutTimeText) {
