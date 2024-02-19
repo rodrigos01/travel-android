@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
             NavHost(navController = navController, startDestination = TripListDestination.ROUTE) {
                 composable(TripListDestination.ROUTE) {
                     val viewModel: TripListViewModel by viewModel {
-                        TripListViewModel(serviceLocator.tripRepository)
+                        TripListViewModel(serviceLocator.tripRepository, navController)
                     }
                     TripList(viewModel = viewModel, navController = navController)
                 }
@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
                             serviceLocator, tripId
                         )
                     }
-                    TripDetails(viewModel = viewModel)
+                    TripDetails(viewModel = viewModel, navController = navController)
                 }
             }
         }

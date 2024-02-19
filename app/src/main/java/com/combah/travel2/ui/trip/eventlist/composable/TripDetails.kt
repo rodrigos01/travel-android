@@ -3,14 +3,30 @@ package com.combah.travel2.ui.trip.eventlist.composable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.repository.AddFlightRepository
 import com.combah.travel2.model.repository.AddLodgingRepository
@@ -31,13 +47,56 @@ import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.MonthItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.PlaceItem
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripDetails(
     viewModel: TripViewModel,
+    navController: NavController,
 ) {
     val state by viewModel.viewState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    var isInEditMode by remember {
+        mutableStateOf(false)
+    }
+    var enteredName by remember(state.title) {
+        mutableStateOf(state.title)
+    }
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    if (isInEditMode) {
+                        TextField(value = enteredName, onValueChange = { enteredName = it })
+                    } else {
+                        Text(text = state.title)
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = ""
+                        )
+                    }
+                },
+                actions = {
+                    if (isInEditMode) {
+                        IconButton(onClick = { isInEditMode = false }) {
+                            Icon(imageVector = Icons.Filled.Close, contentDescription = "")
+                        }
+                        IconButton(onClick = {
+                            isInEditMode = false
+                            viewModel.tripNameChanged(enteredName)
+                        }) {
+                            Icon(imageVector = Icons.Filled.Check, contentDescription = "")
+                        }
+                    } else {
+                        IconButton(onClick = { isInEditMode = true }) {
+                            Icon(imageVector = Icons.Filled.Edit, contentDescription = "")
+                        }
+                    }
+                })
+        },
         modifier = Modifier.background(MaterialTheme.colorScheme.surface),
     ) { paddingValues ->
         LazyColumn(contentPadding = paddingValues) {
@@ -216,7 +275,8 @@ fun TripDetailsPreview() {
                     AddLodgingUseCase(AddLodgingRepository(), TimeFormatter()),
                 ),
                 TimeFormatter(),
-            )
+            ),
+            rememberNavController(),
         )
     }
 }
