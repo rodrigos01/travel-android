@@ -41,6 +41,7 @@ class TripViewModel(
 ) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
 
     data class ViewState(
+        val title: String,
         val items: List<TripItem>,
     )
 
@@ -145,6 +146,7 @@ class TripViewModel(
 
     private val eventsFromTrip = repository.findTripById(tripId).map {
         ViewState(
+            title = it.name ?: "Untitled Trip",
             items = genItems(it),
         )
     }.onEach { localState.value = it }
@@ -153,7 +155,7 @@ class TripViewModel(
         started = SharingStarted.WhileSubscribed(),
         initialValue = emptyMap(),
     )
-    private val localState = MutableStateFlow(ViewState(items = emptyList()))
+    private val localState = MutableStateFlow(ViewState(title = "", items = emptyList()))
     val viewState: StateFlow<ViewState> =
         merge(eventsFromTrip, localState).combine(addPlanItems) { state, addPlanItems ->
             state.updateItems {
@@ -166,7 +168,13 @@ class TripViewModel(
                         }
                 }
             }
-        }.asStateFlow(initialValue = ViewState(emptyList()))
+        }.asStateFlow(initialValue = localState.value)
+
+    fun tripNameChanged(newName: String) {
+        viewModelScope.launch {
+            repository.updateName(tripId, newName)
+        }
+    }
 
     fun addButtonTapped(itemId: String) {
         val tapped =
@@ -427,7 +435,7 @@ private val Time.dateString
 private fun <T> List<T>.contains(predicate: (T) -> Boolean) = find(predicate) != null
 
 private fun TripViewModel.ViewState.updateItems(updater: MutableList<TripViewModel.TripItem>.() -> Unit): TripViewModel.ViewState {
-    return TripViewModel.ViewState(
+    return copy(
         items = items.toMutableList().apply(updater).toList()
     )
 }

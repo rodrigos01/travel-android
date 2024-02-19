@@ -12,30 +12,45 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FirebaseTripRepository(private val firestore: FirebaseFirestore) : TripRepository {
-    override val trips: Flow<List<Trip>> = firestore.collection("/trips")
-        .asFlow(this::tripConverter)
+    override val trips: Flow<List<Trip>> =
+        firestore.collection("/trips").asFlow(this::tripConverter)
 
     override fun findTripById(tripId: String): Flow<Trip> {
-        return firestore.document("/trips/$tripId")
-            .asFlow(this::tripConverter)
+        return firestore.document("/trips/$tripId").asFlow(this::tripConverter)
     }
 
     override fun getTripFlights(tripId: String): Flow<List<Flight>> {
-        return findTripById(tripId)
-            .map { it.flights }
+        return findTripById(tripId).map { it.flights }
     }
 
     override fun getTripHotels(tripId: String): Flow<List<Lodging>> {
-        return findTripById(tripId)
-            .map { it.lodgings }
+        return findTripById(tripId).map { it.lodgings }
     }
 
     private fun tripConverter(snapshot: DocumentSnapshot) =
         (snapshot.toObject(FirebaseData.Trip::class.java)?.copy(id = snapshot.id)
             ?: FirebaseData.Trip(snapshot.id)).toAppDataModel()
+
+    override suspend fun addTrip(): String {
+        val newTrip = Trip(
+            id = UUID.randomUUID().toString(),
+            null,
+            null,
+            emptyList(),
+            emptyList(),
+            emptyList(),
+        )
+        firestore.collection("/trips").add(newTrip)
+        return newTrip.id
+    }
+
+    override suspend fun updateName(tripId: String, newName: String) {
+        firestore.document("/trips/$tripId").update("name", newName)
+    }
 
     override suspend fun addFlight(tripId: String, flight: Flight) {
         val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
