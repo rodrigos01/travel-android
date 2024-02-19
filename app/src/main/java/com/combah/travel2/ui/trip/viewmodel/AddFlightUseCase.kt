@@ -162,7 +162,7 @@ class AddFlightUseCase(
         }
     }
 
-    override fun airportFromSearchTextChanged(
+    override suspend fun airportFromSearchTextChanged(
         itemId: String, content: CharSequence
     ) {
         inputUseCaseStore.get(itemId)?.airportFromAutoCompleteUseCase?.setQuery(content.toString())

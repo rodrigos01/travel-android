@@ -3,6 +3,7 @@ package com.combah.travel2.ui.trip.viewmodel
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Place
+import com.combah.travel2.model.data.SimplePlace
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandler
@@ -45,11 +46,11 @@ class AddLodgingUseCase(
         val address: String? = null,
         val city: Place? = null,
         val checkOut: Time,
-        val lodgingSearchResults: List<Lodging> = emptyList(),
+        val lodgingSearchResults: List<SimplePlace> = emptyList(),
     ) : AddPlanItemStore.AddPlanData
 
     class InputUseCaseSet(
-        val lodgingAutoCompleteUseCase: AutoCompleteUseCase<Lodging>,
+        val lodgingAutoCompleteUseCase: AutoCompleteUseCase<SimplePlace>,
     ) : InputUseCaseStore.UseCaseSet<InputState> {
 
         override val state: Flow<InputState> = lodgingAutoCompleteUseCase.state.map {
@@ -58,7 +59,7 @@ class AddLodgingUseCase(
     }
 
     data class InputState(
-        val lodgingSearchResults: List<Lodging>,
+        val lodgingSearchResults: List<SimplePlace>,
     )
 
     private val itemStore: AddPlanItemStore<PendingLodging, AddLodgingItem> =
@@ -94,7 +95,9 @@ class AddLodgingUseCase(
         checkOutDayOfMonth = timeFormatter.dayOfMonthString(data.checkOut),
         checkOutDayOfWeek = timeFormatter.dayOfWeekString(data.checkOut),
         checkOutTime = timeFormatter.timeString(data.checkOut),
-    )
+    ).also {
+        inputUseCaseStore.register(it.id)
+    }
 
     override fun addItem(time: Time) = itemStore.addItem(time)
 

@@ -48,3 +48,9 @@ data class Place(
     val externalId: String,
     val source: String,
 )
+
+data class SimplePlace(
+    val name: String?,
+    val address: String,
+    val city: Place,
+)

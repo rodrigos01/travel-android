@@ -1,12 +1,16 @@
 package com.combah.travel2.model.network
 
-import com.combah.travel2.model.data.Place
 import kotlinx.serialization.Serializable
 
 interface ApiResponse {
     @Serializable
     data class AirportAutoComplete(
         val data: List<ApiData.Airport>,
+    )
+
+    @Serializable
+    data class PlaceAutoComplete(
+        val data: List<ApiData.SimplePlace>
     )
 }
 
@@ -29,5 +33,12 @@ interface ApiData {
         val coverImage: String?,
         val externalId: String,
         val source: String,
+    )
+
+    @Serializable
+    data class SimplePlace(
+        val name: String?,
+        val address: String,
+        val city: Place
     )
 }

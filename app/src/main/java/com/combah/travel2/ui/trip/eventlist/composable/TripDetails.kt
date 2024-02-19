@@ -3,7 +3,6 @@ package com.combah.travel2.ui.trip.eventlist.composable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -12,8 +11,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.repository.AddFlightRepository
 import com.combah.travel2.model.repository.AddLodgingRepository
@@ -34,11 +31,9 @@ import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.MonthItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.PlaceItem
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripDetails(
     viewModel: TripViewModel,
-    navController: NavController,
 ) {
     val state by viewModel.viewState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
@@ -175,6 +170,7 @@ fun TripDetails(
                                 )
                             }
                         },
+                        lodgingSearchResults = event.lodgingSearchResults,
                         lodgingSearchResultTapped = {
                             viewModel.lodgingSearchResultTapped(
                                 event.id,
@@ -220,7 +216,7 @@ fun TripDetailsPreview() {
                     AddLodgingUseCase(AddLodgingRepository(), TimeFormatter()),
                 ),
                 TimeFormatter(),
-            ), rememberNavController()
+            )
         )
     }
 }

@@ -2,8 +2,8 @@ package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.extensions.get
-import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Place
+import com.combah.travel2.model.data.SimplePlace
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.test.Captor.getUpdateResult
@@ -44,7 +44,7 @@ class AddLodgingUseCaseTest {
         mock<AddPlanItemStore<PendingLodging, AddLodgingItem>> {
             on { items } doReturn itemFlow
         }
-    private val autoCompleteUseCase: AutoCompleteUseCase<Lodging> = mock()
+    private val autoCompleteUseCase: AutoCompleteUseCase<SimplePlace> = mock()
     private val inputUseCaseSet = InputUseCaseSet(autoCompleteUseCase)
     private val inputUseCaseStates =
         MutableStateFlow<Map<String, InputState>>(emptyMap())
@@ -134,7 +134,7 @@ class AddLodgingUseCaseTest {
             minCheckOutTimeMillis = 0L,
         )
         itemFlow.value = mapOf("lodging_id" to item)
-        val results = listOf<Lodging>(
+        val results = listOf<SimplePlace>(
             mock { on { name } doReturn "Hotel Novotel Paris Les Halles" },
             mock { on { name } doReturn "Romantik Istanbul Hotel" },
             mock { on { name } doReturn "Hotel Romantik Schwaizerhoff Grindewald" },
@@ -199,7 +199,7 @@ class AddLodgingUseCaseTest {
     @Test
     fun `lodging search result tapped should update item with selected lodging`() {
         val paris = mock<Place>()
-        val expected: Lodging = mock {
+        val expected: SimplePlace = mock {
             on { name } doReturn "Hotel Novotel Paris Les Halles"
             on { address } doReturn "Blvd Les Halles, 45"
             on { city } doReturn paris

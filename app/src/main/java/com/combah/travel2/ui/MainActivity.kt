@@ -2,7 +2,6 @@ package com.combah.travel2.ui
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
@@ -57,7 +56,7 @@ class MainActivity : AppCompatActivity() {
                             serviceLocator, tripId
                         )
                     }
-                    TripDetails(viewModel = viewModel, navController = navController)
+                    TripDetails(viewModel = viewModel)
                 }
             }
         }
