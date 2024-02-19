@@ -1,25 +1,30 @@
 package com.combah.travel2.ui.trip.viewmodel
 
-import com.combah.travel2.extensions.MutableMapStateFlow
 import com.combah.travel2.extensions.TimeFormatter
-import com.combah.travel2.extensions.get
-import com.combah.travel2.extensions.remove
-import com.combah.travel2.extensions.set
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandler
-import kotlinx.coroutines.flow.StateFlow
+import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
+import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase
+import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseFactory
+import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseStore
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 class AddLodgingUseCase(
     private val repository: AddLodgingRepository,
     private val timeFormatter: TimeFormatter,
-) :
-    AddPlanUseCase.AddItemUseCase<Lodging, AddLodgingUseCase.AddLodgingItem>,
-    AddLodgingItemActionHandler {
-    private val pendingLodging: MutableMap<String, PendingLodging> = mutableMapOf()
+    itemStoreFactory: AddPlanItemStore.Factory<PendingLodging, AddLodgingItem> = AddPlanItemStore.Factory(),
+    inputUseCaseStoreFactory: InputUseCaseStore.Factory<InputUseCaseSet, InputState> = InputUseCaseStore.Factory()
+) : AddPlanUseCase.AddItemUseCase<Lodging, AddLodgingUseCase.AddLodgingItem>,
+    AddLodgingItemActionHandler, AddPlanItemStore.DataFactory<AddLodgingUseCase.PendingLodging>,
+    AddPlanItemStore.ItemFactory<AddLodgingUseCase.AddLodgingItem, AddLodgingUseCase.PendingLodging>,
+    InputUseCaseStore.UseCaseSetFactory<AddLodgingUseCase.InputUseCaseSet, AddLodgingUseCase.InputState> {
 
     data class AddLodgingItem(
         override val id: String,
@@ -34,86 +39,129 @@ class AddLodgingUseCase(
     ) : AddPlanUseCase.AddPlanItem
 
     data class PendingLodging(
+        override val id: String,
         val checkIn: Time,
         val name: String? = null,
         val address: String? = null,
         val city: Place? = null,
-        val checkOut: Time? = null,
+        val checkOut: Time,
         val lodgingSearchResults: List<Lodging> = emptyList(),
-    ) : AddPlanUseCase.PendingData({ checkIn })
+    ) : AddPlanItemStore.AddPlanData
 
-    private val _items: MutableMapStateFlow<String, AddLodgingItem> = MutableMapStateFlow()
-    override val items: StateFlow<Map<String, AddLodgingItem>>
-        get() = _items
+    class InputUseCaseSet(
+        val lodgingAutoCompleteUseCase: AutoCompleteUseCase<Lodging>,
+    ) : InputUseCaseStore.UseCaseSet<InputState> {
 
-    override fun createItem(time: Time) =
-        AddLodgingItem(
-            id = UUID.randomUUID().toString(),
-            timestamp = time,
-            checkInTime = timeFormatter.timeString(time),
-            minCheckOutTimeMillis = time.timeInMillis,
-            checkOutDayOfMonth = timeFormatter.dayOfMonthString(time),
-            checkOutDayOfWeek = timeFormatter.dayOfWeekString(time),
-        ).also {
-            _items[it.id] = it
-            pendingLodging[it.id] = createPendingData(it.id, time)
+        override val state: Flow<InputState> = lodgingAutoCompleteUseCase.state.map {
+            InputState(lodgingSearchResults = it.searchResults)
+        }
+    }
+
+    data class InputState(
+        val lodgingSearchResults: List<Lodging>,
+    )
+
+    private val itemStore: AddPlanItemStore<PendingLodging, AddLodgingItem> =
+        itemStoreFactory.create(
+            dataFactory = this,
+            itemFactory = this,
+        )
+
+    private val inputUseCaseStore = inputUseCaseStoreFactory.create(setFactory = this)
+    override val items: Flow<Map<String, AddLodgingItem>>
+        get() = combine(itemStore.items, inputUseCaseStore.inputStates) { itemMap, inputStateMap ->
+            itemMap.entries.associate { (key, value) ->
+                key to value.copy(lodgingSearchResults = inputStateMap[key]?.lodgingSearchResults?.map {
+                    it.name ?: it.address
+                } ?: emptyList())
+            }
         }
 
-    override fun setCheckInTime(itemId: String, hour: Int, minute: Int) = Unit
 
-    override fun setCheckOutDate(itemId: String, date: Time) = Unit
+    override fun createData(time: Time) = PendingLodging(
+        id = UUID.randomUUID().toString(),
+        checkIn = time,
+        checkOut = time.midnightTime() + TimeUnit.DAYS.toMillis(1)
+    )
 
-    override fun setCheckoutTime(itemId: String, hour: Int, minute: Int) = Unit
+    override fun createItem(data: PendingLodging): AddLodgingItem = AddLodgingItem(
+        id = data.id,
+        timestamp = data.checkIn,
+        name = data.name ?: data.address,
+        lodgingSearchResults = data.lodgingSearchResults.map { it.name ?: it.address },
+        checkInTime = timeFormatter.timeString(data.checkIn),
+        minCheckOutTimeMillis = data.checkIn.timeInMillis,
+        checkOutDayOfMonth = timeFormatter.dayOfMonthString(data.checkOut),
+        checkOutDayOfWeek = timeFormatter.dayOfWeekString(data.checkOut),
+        checkOutTime = timeFormatter.timeString(data.checkOut),
+    )
+
+    override fun addItem(time: Time) = itemStore.addItem(time)
+
+    override fun remove(item: AddLodgingItem) {
+        itemStore.remove(item)
+    }
+
+    override fun createUseCaseSet(useCaseFactory: InputUseCaseFactory) = InputUseCaseSet(
+        useCaseFactory.createAutoCompleteUseCase(repository)
+    )
+
+    override fun setCheckInTime(itemId: String, hour: Int, minute: Int) {
+        itemStore.update(itemId) {
+            it.copy(
+                checkIn = it.checkIn.copy(hour = hour, minute = minute)
+            )
+        }
+    }
+
+    override fun setCheckOutDate(itemId: String, date: Time) {
+        itemStore.update(itemId) {
+            it.copy(
+                checkOut = it.checkOut.copy(
+                    dayOfMonth = date.dayOfMonth,
+                    month = date.month,
+                    year = date.year,
+                )
+            )
+        }
+    }
+
+    override fun setCheckoutTime(itemId: String, hour: Int, minute: Int) {
+        itemStore.update(itemId) {
+            it.copy(
+                checkOut = it.checkOut.copy(hour = hour, minute = minute)
+            )
+        }
+    }
 
     override suspend fun lodgingTextChanged(itemId: String, content: CharSequence) {
-        val (item, pending) = findItem(itemId)
-        val results = repository.autocomplete(content.toString())
-        _items[itemId] = item.copy(
-            lodgingSearchResults = results.map { it.name ?: it.address }
-        )
-        pendingLodging[itemId] = pending.copy(
-            lodgingSearchResults = results
-        )
+        inputUseCaseStore.get(itemId)?.lodgingAutoCompleteUseCase?.setQuery(content.toString())
     }
 
     override fun lodgingSearchResultTapped(itemId: String, index: Int) {
-        val (item, pending) = findItem(itemId)
-        val selected = pending.lodgingSearchResults[index]
-        _items[itemId] = item.copy(
-            name = selected.name ?: selected.address,
-        )
-        pendingLodging[itemId] = pending.copy(
-            name = selected.name,
-            address = selected.address,
-            city = selected.city,
-        )
+        itemStore.update(itemId) {
+            it.lodgingSearchResults[index].let { selected ->
+                it.copy(
+                    name = selected.name,
+                    address = selected.address,
+                    city = selected.city,
+                    lodgingSearchResults = emptyList()
+                )
+            }
+        }
     }
 
-    override fun save(item: AddLodgingItem): Lodging {
-        val pending = pendingLodging[item.id] ?: error("provided Id is not from this Use Case")
+    override fun createAppData(item: AddLodgingItem): Lodging {
+        val pending = itemStore.get(item.id) ?: error("provided Id is not from this Use Case")
         pending.address ?: error("address from is not set")
         pending.city ?: error("city from is not set")
-        pending.checkOut ?: error("check out from is not set")
+        pending.checkOut
         return Lodging(
-            item.id,
+            item.name,
             pending.address,
             pending.city,
             pending.checkIn,
             pending.checkOut,
         )
-    }
-
-    override fun remove(item: AddLodgingItem) {
-        _items.remove(item.id)
-        pendingLodging.remove(item.id)
-    }
-
-    private fun createPendingData(id: String, time: Time) =
-        PendingLodging(checkIn = time).also { pendingLodging[id] = it }
-
-    private fun findItem(itemId: String): Pair<AddLodgingItem, PendingLodging> {
-        val item = _items[itemId] ?: error("provided Id is not from this Use Case")
-        val pending = pendingLodging[itemId] ?: error("provided Id is not from this Use Case")
-        return item to pending
     }
 }

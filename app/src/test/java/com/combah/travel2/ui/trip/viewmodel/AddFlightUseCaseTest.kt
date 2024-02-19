@@ -4,6 +4,8 @@ import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.data.Airport
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddFlightRepository
+import com.combah.travel2.test.Captor
+import com.combah.travel2.test.Mocks.mockTime
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase
@@ -20,11 +22,8 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.kotlin.KStubbing
 import org.mockito.kotlin.any
-import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
@@ -333,15 +332,6 @@ class AddFlightUseCaseTest {
     }
 
     private fun getUpdateResult(originalData: PendingFlight): PendingFlight {
-        val updaterCaptor = argumentCaptor<(PendingFlight) -> PendingFlight>()
-        verify(itemStore).update(eq(originalData.id), updaterCaptor.capture())
-        return updaterCaptor.lastValue(originalData)
-    }
-
-    private fun mockTime(stubbing: KStubbing<Time>.(Time) -> Unit = {}): Time = mock {
-        on { midnightTime() } doReturn it
-        on { minus(any()) } doReturn it
-        on { timeInMillis } doReturn 0L
-        stubbing(it)
+        return Captor.getUpdateResult(itemStore, originalData)
     }
 }
