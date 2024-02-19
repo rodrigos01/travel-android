@@ -14,13 +14,15 @@ class AddPlanUseCase(
 ) : AddPlanItemActionHandler, AddFlightItemActionHandler by addFlightUseCase,
     AddLodgingItemActionHandler by addLodgingUseCase {
 
-    interface AddItemUseCase<E : TripEntity, T : AddPlanItem> {
-
-        val items: Flow<Map<String, AddPlanItem>>
-        fun createItem(time: Time): AddPlanItem
+    interface ItemStore<T : AddPlanItem> {
+        val items: Flow<Map<String, T>>
+        fun addItem(time: Time): T
         fun remove(item: T)
+    }
 
-        fun save(item: T): E
+
+    interface AddItemUseCase<E : TripEntity, T : AddPlanItem> : ItemStore<T> {
+        fun createAppData(item: T): E
     }
 
     sealed interface AddPlanItem : TripViewModel.TripItem, TripViewModel.TripItem.Identifiable,
@@ -33,12 +35,6 @@ class AddPlanUseCase(
         }
     }
 
-    sealed class PendingData(private val getTimestamp: () -> Time) {
-        val timestamp
-            get() = getTimestamp()
-
-    }
-
     val items: Flow<Map<String, AddPlanItem>> = combine(
         addFlightUseCase.items, addLodgingUseCase.items
     ) { (addFlightItems, addLodgingItems) ->
@@ -48,7 +44,7 @@ class AddPlanUseCase(
     fun createAddPlanItem(
         time: Time, type: AddPlanItem.Type = AddPlanItem.Type.Flight
     ): AddPlanItem {
-        return type.useCase.createItem(time)
+        return type.useCase.addItem(time)
     }
 
     fun typeChanged(addPlanItem: AddPlanItem, newType: AddPlanItem.Type): AddPlanItem {
@@ -60,8 +56,8 @@ class AddPlanUseCase(
     }
 
     fun saveItem(addPlanItem: AddPlanItem): TripEntity = when (addPlanItem) {
-        is AddFlightUseCase.AddFlightItem -> addFlightUseCase.save(addPlanItem)
-        is AddLodgingUseCase.AddLodgingItem -> addLodgingUseCase.save(addPlanItem)
+        is AddFlightUseCase.AddFlightItem -> addFlightUseCase.createAppData(addPlanItem)
+        is AddLodgingUseCase.AddLodgingItem -> addLodgingUseCase.createAppData(addPlanItem)
     }
 
     private fun removeItem(addPlanItem: AddPlanItem) {

@@ -44,7 +44,7 @@ class AddPlanUseCaseTest {
     fun `added plan item should be initialized as Flight`() {
         val original = mock<AddFlightUseCase.AddFlightItem>()
         addFlightUseCase.stub {
-            on { createItem(any()) } doReturn original
+            on { addItem(any()) } doReturn original
         }
         val addedItem = subject.createAddPlanItem(mock())
         assertType<AddFlightUseCase.AddFlightItem>(addedItem)
@@ -69,7 +69,7 @@ class AddPlanUseCaseTest {
     fun `added flight item should be initialized with initial time as departure`() {
         val expected: AddFlightUseCase.AddFlightItem = mock()
         val initialTime: Time = mock()
-        addFlightUseCase.stub { on { createItem(initialTime) } doReturn expected }
+        addFlightUseCase.stub { on { addItem(initialTime) } doReturn expected }
         val addedItem = subject.createAddPlanItem(initialTime)
         assertThat(addedItem).isEqualTo(expected)
     }
@@ -83,9 +83,9 @@ class AddPlanUseCaseTest {
             on { timestamp } doReturn initialTime
         }
         addFlightUseCase.stub {
-            on { createItem(initialTime) } doReturn original
+            on { addItem(initialTime) } doReturn original
         }
-        addLodgingUseCase.stub { on { createItem(initialTime) } doReturn expected }
+        addLodgingUseCase.stub { on { addItem(initialTime) } doReturn expected }
         val item = subject.createAddPlanItem(initialTime)
         val newItem = subject.typeChanged(item, AddPlanItem.Type.Lodging)
         assertThat(newItem).isEqualTo(expected)
@@ -102,9 +102,9 @@ class AddPlanUseCaseTest {
             on { timestamp } doReturn initialTime
         }
         addFlightUseCase.stub {
-            on { createItem(initialTime) } doReturn original
+            on { addItem(initialTime) } doReturn original
         }
-        addLodgingUseCase.stub { on { createItem(initialTime) } doReturn expected }
+        addLodgingUseCase.stub { on { addItem(initialTime) } doReturn expected }
         val addedItem = subject.createAddPlanItem(initialTime)
         val newItem = subject.typeChanged(addedItem, AddPlanItem.Type.Lodging)
         assertType<AddLodgingUseCase.AddLodgingItem>(newItem)
@@ -119,9 +119,9 @@ class AddPlanUseCaseTest {
             on { id } doReturn "originalId"
         }
         addFlightUseCase.stub {
-            on { createItem(initialTime) } doReturn original
+            on { addItem(initialTime) } doReturn original
         }
-        addLodgingUseCase.stub { on { createItem(initialTime) } doReturn expected }
+        addLodgingUseCase.stub { on { addItem(initialTime) } doReturn expected }
         val item = subject.createAddPlanItem(initialTime)
         val newItem = subject.typeChanged(item, AddPlanItem.Type.Flight)
         assertThat(newItem).isEqualTo(item)
@@ -151,7 +151,7 @@ class AddPlanUseCaseTest {
         }
         val expected: Flight = mock()
         addFlightUseCase.stub {
-            on { save(original) } doReturn expected
+            on { createAppData(original) } doReturn expected
         }
         val entity = subject.saveItem(original)
         assertThat(entity).isEqualTo(expected)
@@ -164,7 +164,7 @@ class AddPlanUseCaseTest {
         }
         val expected: Lodging = mock()
         addLodgingUseCase.stub {
-            on { save(original) } doReturn expected
+            on { createAppData(original) } doReturn expected
         }
         val entity = subject.saveItem(original)
         assertThat(entity).isEqualTo(expected)
