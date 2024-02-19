@@ -1,105 +1,230 @@
 package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.TimeFormatter
+import com.combah.travel2.extensions.get
 import com.combah.travel2.model.data.Lodging
+import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddLodgingRepository
-import com.combah.travel2.test.Assertions.assertType
-import kotlinx.coroutines.test.runTest
-import org.assertj.core.api.Assertions
+import com.combah.travel2.test.Captor.getUpdateResult
+import com.combah.travel2.test.Mocks.mockTime
+import com.combah.travel2.test.UnconfinedDispatcherTestRule
+import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
+import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase
+import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseStore
+import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase.AddLodgingItem
+import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase.InputState
+import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase.InputUseCaseSet
+import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase.PendingLodging
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.test.TestScope
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
-import kotlin.contracts.ExperimentalContracts
+import java.util.concurrent.TimeUnit
 
-@OptIn(ExperimentalContracts::class)
 class AddLodgingUseCaseTest {
+    @get:Rule
+    val rule = UnconfinedDispatcherTestRule()
+
+    private val repository: AddLodgingRepository = mock()
     private val formatter: TimeFormatter = mock {
         on { dayOfMonthString(any()) } doReturn ""
         on { dayOfWeekString(any()) } doReturn ""
     }
-    private val repository: AddLodgingRepository = mock()
-    private val subject = AddLodgingUseCase(repository, formatter)
-
-    @Test
-    fun `created item should be initialized empty`() {
-        val addedItem = subject.createItem(mock())
-        assertType<AddLodgingUseCase.AddLodgingItem>(addedItem)
-        assertThat(addedItem.name).isNull()
-        assertThat(addedItem.checkOutTime).isNull()
-    }
-
-    @Test
-    fun `created item should be initialized with initial time as check-in`() {
-        val initialTime: Time = mock()
-        formatter.stub {
-            on { timeString(initialTime) } doReturn "6:15"
-            on { dayOfWeekString(initialTime) } doReturn "Fri"
-            on { dayOfMonthString(initialTime) } doReturn "16"
+    private val itemFlow = MutableStateFlow(mapOf<String, AddLodgingItem>())
+    private val itemStore =
+        mock<AddPlanItemStore<PendingLodging, AddLodgingItem>> {
+            on { items } doReturn itemFlow
         }
-        val addedItem = subject.createItem(initialTime)
-        assertType<AddLodgingUseCase.AddLodgingItem>(addedItem)
-        assertThat(addedItem.checkInTime).isEqualTo("6:15")
-        assertThat(addedItem.checkOutDayOfMonth).isEqualTo("16")
-        assertThat(addedItem.checkOutDayOfWeek).isEqualTo("Fri")
-    }
-
-    @Test
-    fun `lodging text changed should trigger repository autocomplete`() = runTest {
-        repository.stub {
-            onBlocking { autocomplete("hil") } doReturn emptyList()
+    private val autoCompleteUseCase: AutoCompleteUseCase<Lodging> = mock()
+    private val inputUseCaseSet = InputUseCaseSet(autoCompleteUseCase)
+    private val inputUseCaseStates =
+        MutableStateFlow<Map<String, InputState>>(emptyMap())
+    private val inputUseCaseStore =
+        mock<InputUseCaseStore<InputUseCaseSet, InputState>> {
+            on { get(any()) } doReturn inputUseCaseSet
+            on { inputStates } doReturn inputUseCaseStates
         }
-        val original = subject.createItem(mock())
-        subject.lodgingTextChanged(original.id, "hil")
-        verify(repository).autocomplete("hil")
-    }
+    private val subject = AddLodgingUseCase(
+        repository, formatter,
+        itemStoreFactory = mock {
+            on { create(any(), any()) } doReturn itemStore
+        },
+        inputUseCaseStoreFactory = mock {
+            on { create(any()) } doReturn inputUseCaseStore
+        },
+    )
+
+    private val items = subject.items.stateIn(
+        TestScope(rule.dispatcher), started = SharingStarted.Eagerly, initialValue = emptyMap()
+    )
 
     @Test
-    fun `airport from search text changed should update item with repository results`() = runTest {
-        val expected = listOf(
-            "Hilton NYC",
-            "Hilton New Jersey",
-            "Paris Hilton",
+    fun `itemStore items updated should update items`() {
+        val item = AddLodgingItem(
+            "lodging_id",
+            timestamp = mock(),
+            checkOutDayOfMonth = "",
+            checkOutDayOfWeek = "",
+            minCheckOutTimeMillis = 0L,
         )
-        val results = expected.map { lodgingName ->
-            mock<Lodging> {
-                on { name } doReturn lodgingName
-            }
-        }
-        repository.stub {
-            onBlocking { autocomplete("hil") } doReturn results
-        }
-        val original = subject.createItem(mock())
-        subject.lodgingTextChanged(original.id, "hil")
-        val newItem = subject.items.value[original.id]
-        assertThat(newItem?.lodgingSearchResults).isEqualTo(expected)
+        itemFlow.value = mapOf("lodging_id" to item)
+        assertThat(items.value["lodging_id"]).isEqualTo(item)
     }
 
     @Test
-    fun `airport from search result tapped should update item with selected airport`() = runTest {
-        val expected = listOf(
-            "Hilton NYC",
-            "Hilton New Jersey",
-            "Paris Hilton",
+    fun `created data should be initialized empty`() {
+        val data = subject.createData(mockTime())
+        assertThat(data.name).isNull()
+        assertThat(data.address).isNull()
+        assertThat(data.city).isNull()
+        assertThat(data.lodgingSearchResults).isEmpty()
+    }
+
+    @Test
+    fun `created data should be initialized with initial time as check-in`() {
+        val initialTime = mockTime()
+        val data = subject.createData(initialTime)
+        assertThat(data.checkIn).isEqualTo(initialTime)
+    }
+
+    @Test
+    fun `created data should be initialized with day after initial time as check-out`() {
+        val expected = mockTime()
+        val midnightTime = mockTime {
+            on { plus(TimeUnit.DAYS.toMillis(1)) } doReturn expected
+        }
+        val initialTime = mockTime {
+            on { midnightTime() } doReturn midnightTime
+        }
+        val data = subject.createData(initialTime)
+        assertThat(data.checkOut).isEqualTo(expected)
+    }
+
+    @Test
+    fun `addItem should return itemStore item`() {
+        val time = mock<Time>()
+        val item = mock<AddLodgingItem>()
+        itemStore.stub { on { addItem(time) } doReturn item }
+        assertThat(subject.addItem(time)).isEqualTo(item)
+    }
+
+    @Test
+    fun `remove should call itemStore remove`() {
+        val item = mock<AddLodgingItem>()
+        subject.remove(item)
+        verify(itemStore).remove(item)
+    }
+
+    @Test
+    fun `InputState updated should update items`() {
+        val item = AddLodgingItem(
+            "lodging_id",
+            timestamp = mock(),
+            checkOutDayOfMonth = "",
+            checkOutDayOfWeek = "",
+            minCheckOutTimeMillis = 0L,
         )
-        val results = expected.map { lodgingName ->
-            mock<Lodging> {
-                on { name } doReturn lodgingName
-            }
+        itemFlow.value = mapOf("lodging_id" to item)
+        val results = listOf<Lodging>(
+            mock { on { name } doReturn "Hotel Novotel Paris Les Halles" },
+            mock { on { name } doReturn "Romantik Istanbul Hotel" },
+            mock { on { name } doReturn "Hotel Romantik Schwaizerhoff Grindewald" },
+        )
+        val expected = listOf(
+            "Hotel Novotel Paris Les Halles",
+            "Romantik Istanbul Hotel",
+            "Hotel Romantik Schwaizerhoff Grindewald",
+        )
+        inputUseCaseStates.value = mapOf(
+            "lodging_id" to InputState(
+                lodgingSearchResults = results
+            )
+        )
+        assertThat(items["lodging_id"]?.lodgingSearchResults).hasSameElementsAs(expected)
+    }
+
+    @Test
+    fun `set check-in time should update departure time`() {
+        val newTime = mockTime()
+        val originalTime = mockTime {
+            on { copy(hour = 10, minute = 52) } doReturn newTime
         }
-        repository.stub {
-            onBlocking { autocomplete("hil") } doReturn results
+        val originalData =
+            PendingLodging(id = "lodging_id", checkIn = originalTime, checkOut = mock())
+        subject.setCheckInTime("lodging_id", hour = 10, minute = 52)
+        val result = getUpdateResult(originalData)
+        assertThat(result.checkIn).isEqualTo(newTime)
+    }
+
+    @Test
+    fun `set arrival day should update arrival day`() {
+        val newTime = mockTime()
+        val originalTime = mockTime {
+            on { copy(dayOfMonth = 21, month = 4, year = 2024) } doReturn newTime
         }
-        val original = subject.createItem(mock())
-        subject.lodgingTextChanged(original.id, "hil")
-        val newItem =
-            subject.items.value[original.id] ?: Assertions.fail("no item after search text changed")
-        subject.lodgingSearchResultTapped(newItem.id, 1)
-        val selectedItem = subject.items.value[original.id]
-        assertThat(selectedItem?.name).isEqualTo("Hilton New Jersey")
+        val receivedTime = mockTime {
+            on { dayOfMonth } doReturn 21
+            on { month } doReturn 4
+            on { year } doReturn 2024
+        }
+        val originalData =
+            PendingLodging(id = "lodging_id", checkIn = mockTime(), checkOut = originalTime)
+        subject.setCheckOutDate("lodging_id", receivedTime)
+        val result = getUpdateResult(originalData)
+        assertThat(result.checkOut).isEqualTo(newTime)
+    }
+
+    @Test
+    fun `set arrival time should update arrival time`() {
+        val newTime = mockTime()
+        val originalTime = mockTime {
+            on { copy(hour = 11, minute = 43) } doReturn newTime
+        }
+        val originalData =
+            PendingLodging(id = "lodging_id", checkIn = mockTime(), checkOut = originalTime)
+        subject.setCheckoutTime("lodging_id", hour = 11, minute = 43)
+        val result = getUpdateResult(originalData)
+        assertThat(result.checkOut).isEqualTo(newTime)
+    }
+
+    @Test
+    fun `lodging search result tapped should update item with selected lodging`() {
+        val paris = mock<Place>()
+        val expected: Lodging = mock {
+            on { name } doReturn "Hotel Novotel Paris Les Halles"
+            on { address } doReturn "Blvd Les Halles, 45"
+            on { city } doReturn paris
+        }
+        val results = listOf(
+            mock(),
+            expected,
+            mock(),
+        )
+        val originalData =
+            PendingLodging(
+                id = "lodging_id",
+                checkIn = mock(),
+                checkOut = mock(),
+                lodgingSearchResults = results
+            )
+        subject.lodgingSearchResultTapped("lodging_id", 1)
+        val result = getUpdateResult(originalData)
+        assertThat(result.name).isEqualTo("Hotel Novotel Paris Les Halles")
+        assertThat(result.address).isEqualTo("Blvd Les Halles, 45")
+        assertThat(result.city).isEqualTo(paris)
+        assertThat(result.lodgingSearchResults).isEmpty()
+    }
+
+    private fun getUpdateResult(originalData: PendingLodging): PendingLodging {
+        return getUpdateResult(itemStore, originalData)
     }
 }
