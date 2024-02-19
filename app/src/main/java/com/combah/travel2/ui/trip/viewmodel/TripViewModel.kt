@@ -18,11 +18,13 @@ import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -138,8 +140,7 @@ class TripViewModel(
             override val id: String,
             override val timestamp: Time,
             val showDivider: Boolean,
-        ) :
-            Timeable, Identifiable, TripItem
+        ) : Timeable, Identifiable, TripItem
     }
 
     private val eventsFromTrip = repository.findTripById(tripId).map {
@@ -147,23 +148,25 @@ class TripViewModel(
             items = genItems(it),
         )
     }.onEach { localState.value = it }
+    private val addPlanItems = addPlanUseCase.items.stateIn(
+        viewModelScope,
+        started = SharingStarted.WhileSubscribed(),
+        initialValue = emptyMap(),
+    )
     private val localState = MutableStateFlow(ViewState(items = emptyList()))
     val viewState: StateFlow<ViewState> =
-        merge(eventsFromTrip, localState)
-            .combine(addPlanUseCase.items) { state, addPlanItems ->
-                state.updateItems {
-                    addPlanItems.forEach { (id, addPlanItem) ->
-                        indexOfFirst { it is TripItem.Identifiable && it.id == id }.takeIf { it != -1 }
-                            ?.let {
-                                set(
-                                    it,
-                                    addPlanItem
-                                )
-                            }
-                    }
+        merge(eventsFromTrip, localState).combine(addPlanItems) { state, addPlanItems ->
+            state.updateItems {
+                addPlanItems.forEach { (id, addPlanItem) ->
+                    indexOfFirst { it is TripItem.Identifiable && it.id == id }.takeIf { it != -1 }
+                        ?.let {
+                            set(
+                                it, addPlanItem
+                            )
+                        }
                 }
             }
-            .asStateFlow(initialValue = ViewState(emptyList()))
+        }.asStateFlow(initialValue = ViewState(emptyList()))
 
     fun addButtonTapped(itemId: String) {
         val tapped =
@@ -177,8 +180,7 @@ class TripViewModel(
 
     fun addPlanTypeChanged(itemId: String, newType: AddPlanUseCase.AddPlanItem.Type) {
         val item =
-            viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
-                ?: return
+            viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId } ?: return
         val index = viewState.value.items.indexOf(item)
         updateItems {
             this[index] = addPlanUseCase.typeChanged(item as AddPlanUseCase.AddPlanItem, newType)
@@ -215,13 +217,11 @@ class TripViewModel(
             listOf(
                 it.checkIn to it, it.checkout to it
             )
-        } + trip.flights.flatMap { it.segments }
-            .flatMap {
-                listOf(
-                    it.departure to it,
-                    it.arrival to it
-                )
-            }).sortedBy { (time, event) -> EventComparable(time, event) }
+        } + trip.flights.flatMap { it.segments }.flatMap {
+            listOf(
+                it.departure to it, it.arrival to it
+            )
+        }).sortedBy { (time, event) -> EventComparable(time, event) }
         pairs.forEachIndexed { index, (timestamp, event) ->
             val previousEventItem = (items.lastOrNull() as? TripItem.EventItem)
             val day = timestamp.toMidnight()
@@ -285,8 +285,7 @@ class TripViewModel(
                 if (firstInSection) previousEventItem?.timestamp else item.timestamp
             if (emptyAddPlanItemIndex != null && emptyAddPlanItemTimestamp != null) {
                 items.add(
-                    emptyAddPlanItemIndex,
-                    TripItem.EmptyAddPlanItem(
+                    emptyAddPlanItemIndex, TripItem.EmptyAddPlanItem(
                         UUID.randomUUID().toString(),
                         emptyAddPlanItemTimestamp,
                         showDivider = !firstInPlace,
@@ -316,8 +315,7 @@ class TripViewModel(
     }
 
     private fun genDateRangeItem(
-        start: Time,
-        end: Time
+        start: Time, end: Time
     ) = TripItem.DateRangeItem(
         timestamp = start,
         dayOfMonthStart = start.dayOfMonthString,
@@ -398,8 +396,7 @@ class TripViewModel(
         }
     }
 
-    private fun Time.toMidnight(): Time =
-        copy(hour = 0, minute = 0, second = 0)
+    private fun Time.toMidnight(): Time = copy(hour = 0, minute = 0, second = 0)
 
     private val Time.dayOfMonthString: String
         get() = timeFormatter.dayOfMonthString(this)
@@ -443,10 +440,8 @@ private fun TripViewModel.ViewState.updateItems(updater: MutableList<TripViewMod
 }
 
 private class EventComparable(
-    private val time: Time, private
-    val event: Any
-) :
-    Comparable<EventComparable> {
+    private val time: Time, private val event: Any
+) : Comparable<EventComparable> {
     override fun compareTo(other: EventComparable): Int {
         val timeCompare = time.compareTo(other.time)
         if (!time.isWithin24Hours(other.time)) {
@@ -455,16 +450,14 @@ private class EventComparable(
         return when (type) {
             EventType.CHECKIN -> when (other.type) {
                 EventType.CHECKOUT -> 1
-                EventType.ARRIVAL,
-                EventType.DEPARTURE -> if ((other.event as FlightSegment).airportTo.city == (event as Lodging).city) 1 else timeCompare
+                EventType.ARRIVAL, EventType.DEPARTURE -> if ((other.event as FlightSegment).airportTo.city == (event as Lodging).city) 1 else timeCompare
 
                 else -> timeCompare
             }
 
             EventType.CHECKOUT -> when (other.type) {
                 EventType.CHECKIN -> -1
-                EventType.ARRIVAL,
-                EventType.DEPARTURE -> if ((other.event as FlightSegment).airportFrom.city == (event as Lodging).city) 1 else timeCompare
+                EventType.ARRIVAL, EventType.DEPARTURE -> if ((other.event as FlightSegment).airportFrom.city == (event as Lodging).city) 1 else timeCompare
 
                 else -> timeCompare
             }
@@ -499,11 +492,7 @@ private class EventComparable(
         }
 
     enum class EventType {
-        CHECKOUT,
-        CHECKIN,
-        ARRIVAL,
-        DEPARTURE,
-        UNKNOWN,
+        CHECKOUT, CHECKIN, ARRIVAL, DEPARTURE, UNKNOWN,
     }
 
     override fun toString(): String {

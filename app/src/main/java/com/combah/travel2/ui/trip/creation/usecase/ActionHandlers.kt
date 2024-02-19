@@ -19,7 +19,7 @@ interface AddFlightItemActionHandler {
     fun setArrivalDate(itemId: String, date: Time)
     fun setArrivalTime(itemId: String, hour: Int, minute: Int)
 
-    fun airportFromSearchTextChanged(
+    suspend fun airportFromSearchTextChanged(
         itemId: String, content: CharSequence
     )
 
