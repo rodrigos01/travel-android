@@ -46,7 +46,6 @@ class AddLodgingUseCase(
         val address: String? = null,
         val city: Place? = null,
         val checkOut: Time,
-        val lodgingSearchResults: List<SimplePlace> = emptyList(),
     ) : AddPlanItemStore.AddPlanData
 
     class InputUseCaseSet(
@@ -89,7 +88,6 @@ class AddLodgingUseCase(
         id = data.id,
         timestamp = data.checkIn,
         name = data.name ?: data.address,
-        lodgingSearchResults = data.lodgingSearchResults.map { it.name ?: it.address },
         checkInTime = timeFormatter.timeString(data.checkIn),
         minCheckOutTimeMillis = data.checkIn.timeInMillis,
         checkOutDayOfMonth = timeFormatter.dayOfMonthString(data.checkOut),
@@ -142,15 +140,19 @@ class AddLodgingUseCase(
     }
 
     override fun lodgingSearchResultTapped(itemId: String, index: Int) {
+        val useCase = inputUseCaseStore.get(itemId)
+            ?.lodgingAutoCompleteUseCase
+        val selected = useCase?.state
+            ?.value?.searchResults?.getOrNull(index)
+        useCase?.clearResults()
         itemStore.update(itemId) {
-            it.lodgingSearchResults[index].let { selected ->
+            selected?.let { selected ->
                 it.copy(
                     name = selected.name,
                     address = selected.address,
                     city = selected.city,
-                    lodgingSearchResults = emptyList()
                 )
-            }
+            } ?: it
         }
     }
 
