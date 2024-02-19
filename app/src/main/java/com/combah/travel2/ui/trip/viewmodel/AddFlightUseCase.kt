@@ -45,9 +45,7 @@ class AddFlightUseCase(
     data class PendingFlight(
         override val id: String,
         val departure: Time,
-        val airportFromSearchResults: List<Airport> = emptyList(),
         val airportFrom: Airport? = null,
-        val airportToSearchResults: List<Airport> = emptyList(),
         val airportTo: Airport? = null,
         val arrival: Time? = null,
     ) : AddPlanItemStore.AddPlanData
@@ -108,10 +106,8 @@ class AddFlightUseCase(
             airportFromName = data.airportFrom?.name,
             arrivalDayOfWeek = timeFormatter.dayOfWeekString(arrivalTime),
             arrivalDayOfMonth = timeFormatter.dayOfMonthString(arrivalTime),
-            airportFromSearchResults = data.airportFromSearchResults.map { it.name },
             arrivalTime = data.arrival?.let { timeFormatter.timeString(it) },
             airportToName = data.airportTo?.name,
-            airportToSearchResults = data.airportToSearchResults.map { it.name },
         )
         inputUseCaseStore.register(item.id)
         return item
@@ -169,10 +165,14 @@ class AddFlightUseCase(
     }
 
     override fun airportFromSearchResultTapped(itemId: String, index: Int) {
+        val useCase = inputUseCaseStore.get(itemId)
+            ?.airportFromAutoCompleteUseCase
+        val selected = useCase?.state
+            ?.value?.searchResults?.getOrNull(index)
+        useCase?.clearResults()
         itemStore.update(itemId) {
             it.copy(
-                airportFromSearchResults = emptyList(),
-                airportFrom = it.airportFromSearchResults[index]
+                airportFrom = selected
             )
         }
     }
@@ -184,10 +184,14 @@ class AddFlightUseCase(
     }
 
     override fun airportToSearchResultTapped(itemId: String, index: Int) {
+        val useCase = inputUseCaseStore.get(itemId)
+            ?.airportToAutoCompleteUseCase
+        val selected = useCase?.state
+            ?.value?.searchResults?.getOrNull(index)
+        useCase?.clearResults()
         itemStore.update(itemId) {
             it.copy(
-                airportToSearchResults = emptyList(),
-                airportTo = it.airportToSearchResults[index]
+                airportTo = selected
             )
         }
     }
