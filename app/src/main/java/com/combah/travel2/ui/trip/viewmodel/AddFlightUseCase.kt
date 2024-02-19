@@ -1,33 +1,32 @@
 package com.combah.travel2.ui.trip.viewmodel
 
-import com.combah.travel2.extensions.MutableMapStateFlow
 import com.combah.travel2.extensions.TimeFormatter
-import com.combah.travel2.extensions.get
-import com.combah.travel2.extensions.remove
-import com.combah.travel2.extensions.set
 import com.combah.travel2.model.data.Airport
 import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddFlightRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddFlightItemActionHandler
+import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase
 import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseFactory
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseStore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapMerge
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import kotlin.collections.component1
+import kotlin.collections.component2
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class AddFlightUseCase(
     private val addFlightRepository: AddFlightRepository,
     private val timeFormatter: TimeFormatter,
-    private val inputUseCaseFactory: InputUseCaseFactory,
+    itemStoreFactory: AddPlanItemStore.Factory<PendingFlight, AddFlightItem> = AddPlanItemStore.Factory(),
+    inputUseCaseStoreFactory: InputUseCaseStore.Factory<InputUseCaseSet, InputState> = InputUseCaseStore.Factory()
 ) : AddPlanUseCase.AddItemUseCase<Flight, AddFlightUseCase.AddFlightItem>,
-    AddFlightItemActionHandler {
+    AddFlightItemActionHandler, AddPlanItemStore.DataFactory<AddFlightUseCase.PendingFlight>,
+    AddPlanItemStore.ItemFactory<AddFlightUseCase.AddFlightItem, AddFlightUseCase.PendingFlight>,
+    InputUseCaseStore.UseCaseSetFactory<AddFlightUseCase.InputUseCaseSet, AddFlightUseCase.InputState> {
 
     data class AddFlightItem(
         override val id: String,
@@ -44,19 +43,27 @@ class AddFlightUseCase(
     ) : AddPlanUseCase.AddPlanItem
 
     data class PendingFlight(
+        override val id: String,
         val departure: Time,
         val airportFromSearchResults: List<Airport> = emptyList(),
         val airportFrom: Airport? = null,
         val airportToSearchResults: List<Airport> = emptyList(),
         val airportTo: Airport? = null,
         val arrival: Time? = null,
-    ) : AddPlanUseCase.PendingData({ departure })
+    ) : AddPlanItemStore.AddPlanData
 
-    class InputUseCaseSet(factory: InputUseCaseFactory, repository: AddFlightRepository) {
-        val airportFromAutoCompleteUseCase: AutoCompleteUseCase<Airport> =
-            factory.createAutoCompleteUseCase(repository)
-        val airportToAutoCompleteUseCase: AutoCompleteUseCase<Airport> =
-            factory.createAutoCompleteUseCase(repository)
+    class InputUseCaseSet(
+        val airportFromAutoCompleteUseCase: AutoCompleteUseCase<Airport>,
+        val airportToAutoCompleteUseCase: AutoCompleteUseCase<Airport>,
+    ) :
+        InputUseCaseStore.UseCaseSet<InputState> {
+
+        override val state = combine(
+            airportFromAutoCompleteUseCase.state,
+            airportToAutoCompleteUseCase.state
+        ) { from, to ->
+            InputState(from.searchResults, to.searchResults)
+        }
     }
 
     data class InputState(
@@ -64,21 +71,15 @@ class AddFlightUseCase(
         val airportToSearchResults: List<Airport>,
     )
 
-    private val inputUseCaseSets = MutableMapStateFlow<String, InputUseCaseSet>()
-    private val inputStates = inputUseCaseSets.flatMapMerge { inputUseCaseSetMap ->
-        combine(inputUseCaseSetMap.entries.map { (key, value) ->
-            combine(
-                value.airportFromAutoCompleteUseCase.state,
-                value.airportToAutoCompleteUseCase.state,
-            ) { from, to ->
-                key to InputState(from.searchResults, to.searchResults)
-            }
-        }) { it.toMap() }
-    }
+    private val itemStore: AddPlanItemStore<PendingFlight, AddFlightItem> = itemStoreFactory.create(
+        dataFactory = this,
+        itemFactory = this,
+    )
 
-    private val _items: MutableStateFlow<Map<String, AddFlightItem>> = MutableMapStateFlow()
+    private val inputUseCaseStore = inputUseCaseStoreFactory.create(setFactory = this)
+
     override val items: Flow<Map<String, AddFlightItem>> =
-        combine(_items, inputStates) { itemMap, inputStateMap ->
+        combine(itemStore.items, inputUseCaseStore.inputStates) { itemMap, inputStateMap ->
             itemMap.map { (id, item) ->
                 id to item.copy(
                     airportFromSearchResults = inputStateMap[id]?.airportFromSearchResults?.map { it.name }
@@ -89,106 +90,111 @@ class AddFlightUseCase(
             }.toMap()
         }
 
-    private val pendingFlights: MutableMap<String, PendingFlight> = mutableMapOf()
-
-    override fun createItem(time: Time) = AddFlightItem(
-        minArrivalTimeMillis = time.midnightTime()
-            .minus(TimeUnit.MINUTES.toMillis(1L)).timeInMillis,
-        id = UUID.randomUUID().toString(),
-        timestamp = time,
-        arrivalDayOfWeek = timeFormatter.dayOfWeekString(time),
-        arrivalDayOfMonth = timeFormatter.dayOfMonthString(time),
-    ).also {
-        _items[it.id] = it
-        pendingFlights[it.id] = createPendingData(it.id, time)
-        inputUseCaseSets[it.id] = InputUseCaseSet(inputUseCaseFactory, addFlightRepository)
+    override fun createData(time: Time): PendingFlight {
+        return PendingFlight(
+            id = UUID.randomUUID().toString(),
+            departure = time,
+        )
     }
 
-    private fun createPendingData(id: String, time: Time) =
-        PendingFlight(departure = time).also { pendingFlights[id] = it }
+    override fun createItem(data: PendingFlight): AddFlightItem {
+        val arrivalTime = data.arrival ?: data.departure
+        val item = AddFlightItem(
+            id = data.id,
+            timestamp = data.departure,
+            minArrivalTimeMillis = data.departure.midnightTime()
+                .minus(TimeUnit.MINUTES.toMillis(1L)).timeInMillis,
+            departureTime = timeFormatter.timeString(data.departure),
+            airportFromName = data.airportFrom?.name,
+            arrivalDayOfWeek = timeFormatter.dayOfWeekString(arrivalTime),
+            arrivalDayOfMonth = timeFormatter.dayOfMonthString(arrivalTime),
+            airportFromSearchResults = data.airportFromSearchResults.map { it.name },
+            arrivalTime = data.arrival?.let { timeFormatter.timeString(it) },
+            airportToName = data.airportTo?.name,
+            airportToSearchResults = data.airportToSearchResults.map { it.name },
+        )
+        inputUseCaseStore.register(item.id)
+        return item
+    }
+
+    override fun addItem(time: Time): AddFlightItem {
+        return itemStore.addItem(time)
+    }
 
     override fun remove(item: AddFlightItem) {
-        _items.remove(item.id)
-        pendingFlights.remove(item.id)
+        itemStore.remove(item)
+    }
+
+    override fun createUseCaseSet(useCaseFactory: InputUseCaseFactory): InputUseCaseSet {
+        return InputUseCaseSet(
+            airportFromAutoCompleteUseCase = useCaseFactory.createAutoCompleteUseCase(
+                addFlightRepository
+            ),
+            airportToAutoCompleteUseCase = useCaseFactory.createAutoCompleteUseCase(
+                addFlightRepository
+            ),
+        )
     }
 
     override fun setDepartureTime(itemId: String, hour: Int, minute: Int) {
-        val (item, pending) = findItem(itemId)
-        val newTime = pending.departure.copy(hour = hour, minute = minute)
-        pendingFlights[itemId] = pending.copy(departure = newTime)
-        _items[itemId] = item.copy(departureTime = timeFormatter.timeString(newTime))
+        itemStore.update(itemId) {
+            it.copy(departure = it.departure.copy(hour = hour, minute = minute))
+        }
     }
 
     override fun setArrivalDate(itemId: String, date: Time) {
-        val (item, pending) = findItem(itemId)
-        val oldTime = pending.arrival ?: pending.departure
-        val newTime = oldTime.copy(
-            dayOfMonth = date.dayOfMonth,
-            month = date.month,
-            year = date.year,
-        )
-        pendingFlights[itemId] = pending.copy(arrival = newTime)
-        _items[itemId] = item.copy(
-            arrivalDayOfMonth = timeFormatter.dayOfMonthString(newTime),
-            arrivalDayOfWeek = timeFormatter.dayOfWeekString(newTime),
-        )
+        itemStore.update(itemId) {
+            it.copy(
+                arrival = (it.arrival ?: it.departure).copy(
+                    dayOfMonth = date.dayOfMonth,
+                    month = date.month,
+                    year = date.year,
+                )
+            )
+        }
     }
 
     override fun setArrivalTime(itemId: String, hour: Int, minute: Int) {
-        val (item, pending) = findItem(itemId)
-        val oldTime = pending.arrival ?: pending.departure
-        val newTime = oldTime.copy(hour = hour, minute = minute)
-        pendingFlights[itemId] = pending.copy(arrival = newTime)
-        _items[itemId] = item.copy(arrivalTime = timeFormatter.timeString(newTime))
+        itemStore.update(itemId) {
+            it.copy(
+                arrival = (it.arrival ?: it.departure).copy(hour = hour, minute = minute)
+            )
+        }
     }
 
     override fun airportFromSearchTextChanged(
         itemId: String, content: CharSequence
     ) {
-        inputUseCaseSets[itemId]?.airportFromAutoCompleteUseCase?.setQuery(content.toString())
+        inputUseCaseStore.get(itemId)?.airportFromAutoCompleteUseCase?.setQuery(content.toString())
     }
 
     override fun airportFromSearchResultTapped(itemId: String, index: Int) {
-        val (item, pending) = findItem(itemId)
-        val selectedAirport = pending.airportFromSearchResults[index]
-        pendingFlights[itemId] = pending.copy(
-            airportFromSearchResults = emptyList(),
-            airportFrom = selectedAirport,
-        )
-        _items[itemId] = item.copy(
-            airportFromName = selectedAirport.name
-        )
+        itemStore.update(itemId) {
+            it.copy(
+                airportFromSearchResults = emptyList(),
+                airportFrom = it.airportFromSearchResults[index]
+            )
+        }
     }
 
     override suspend fun airportToSearchTextChanged(
         itemId: String, content: CharSequence
     ) {
-        val (item, pending) = findItem(itemId)
-        val results = addFlightRepository.autocomplete(content.toString())
-        pendingFlights[itemId] = pending.copy(
-            airportToSearchResults = results,
-        )
-        _items[itemId] = item.copy(
-            airportToName = content.toString(),
-            airportToSearchResults = results.map { it.name }
-        )
+        inputUseCaseStore.get(itemId)?.airportToAutoCompleteUseCase?.setQuery(content.toString())
     }
 
     override fun airportToSearchResultTapped(itemId: String, index: Int) {
-        val (item, pending) = findItem(itemId)
-        val selectedAirport = pending.airportToSearchResults[index]
-        pendingFlights[itemId] = pending.copy(
-            airportToSearchResults = emptyList(),
-            airportTo = selectedAirport,
-        )
-        _items[itemId] = item.copy(
-            airportToName = selectedAirport.name
-        )
+        itemStore.update(itemId) {
+            it.copy(
+                airportToSearchResults = emptyList(),
+                airportTo = it.airportToSearchResults[index]
+            )
+        }
     }
 
-    override fun save(item: AddFlightItem): Flight {
+    override fun createAppData(item: AddFlightItem): Flight {
         val pending =
-            pendingFlights[item.id] ?: error("provided Id is not from this Use Case")
+            itemStore.get(item.id) ?: error("provided Id is not from this Use Case")
         pending.airportFrom ?: error("airport from is not set")
         pending.airportTo ?: error("airport to is not set")
         pending.arrival ?: error("arival time is not set")
@@ -205,12 +211,5 @@ class AddFlightUseCase(
             ),
             0.0,
         )
-    }
-
-    private fun findItem(itemId: String): Pair<AddFlightItem, PendingFlight> {
-        val item = _items[itemId] ?: error("provided Id is not from this Use Case")
-        val pending =
-            pendingFlights[itemId] ?: error("provided Id is not from this Use Case")
-        return item to pending
     }
 }

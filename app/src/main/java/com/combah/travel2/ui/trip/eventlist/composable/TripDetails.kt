@@ -20,7 +20,6 @@ import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.model.repository.mock.MockTripRepository
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.AddPlanType
-import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseFactory
 import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase
 import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase
@@ -217,7 +216,7 @@ fun TripDetailsPreview() {
                 MockTripRepository(),
                 "minhaTrip",
                 AddPlanUseCase(
-                    AddFlightUseCase(AddFlightRepository(), TimeFormatter(), InputUseCaseFactory()),
+                    AddFlightUseCase(AddFlightRepository(), TimeFormatter()),
                     AddLodgingUseCase(AddLodgingRepository(), TimeFormatter()),
                 ),
                 TimeFormatter(),
