@@ -99,10 +99,9 @@ fun AddFlightListItem(
                 }
                 .width(96.dp),
         )
-        AutoCompleteTextField(
-            state = rememberAutoCompleteTextFieldState(
-                airportFromName, airportFromSearchResults,
-            ),
+        AutoCompleteTextField(state = rememberAutoCompleteTextFieldState(
+            airportFromName, airportFromSearchResults,
+        ),
             label = "from",
             placeHolder = "Enter City or Airport",
             onAirportFromTextChanged,
@@ -114,23 +113,20 @@ fun AddFlightListItem(
                     end.linkTo(parent.end, margin = 16.dp)
                     width = Dimension.fillToConstraints
                 }
-                .wrapContentSize(Alignment.TopStart)
-        )
+                .wrapContentSize(Alignment.TopStart))
         Text(text = "Arrival",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.constrainAs(arrivalLabel) {
                 top.linkTo(typeSelector.bottom, margin = 8.dp)
                 start.linkTo(parent.start, margin = 16.dp)
             })
-        TimePickerTextButton(
-            text = arrivalTime ?: "Choose Arrival Time",
+        TimePickerTextButton(text = arrivalTime ?: "Choose Arrival Time",
             onArrivalTimeChanged,
             modifier = Modifier.constrainAs(arrivalTimeSelector) {
                 top.linkTo(arrivalLabel.top)
                 bottom.linkTo(arrivalLabel.bottom)
                 start.linkTo(airportTo.start)
-            }
-        )
+            })
         DatePickerButton(
             minArrivalTimeMillis,
             arrivalDayOfMonth,
@@ -145,11 +141,10 @@ fun AddFlightListItem(
                 .width(96.dp)
                 .wrapContentHeight(),
         )
-        AutoCompleteTextField(
-            state = rememberAutoCompleteTextFieldState(
-                airportToName,
-                airportToSearchResults,
-            ),
+        AutoCompleteTextField(state = rememberAutoCompleteTextFieldState(
+            airportToName,
+            airportToSearchResults,
+        ),
             label = "To",
             placeHolder = "Enter City or Airport",
             onAirportToTextChanged,
@@ -159,26 +154,20 @@ fun AddFlightListItem(
                 top.linkTo(arrivalTimeSelector.bottom)
                 end.linkTo(parent.end, margin = 16.dp)
                 width = Dimension.fillToConstraints
-            }
-        )
-        OutlinedButton(
-            onClick = { onSaveButtonTapped() },
+            })
+        OutlinedButton(onClick = { onCancelButtonTapped() },
             modifier = Modifier.constrainAs(cancelButton) {
                 top.linkTo(saveButton.top)
                 bottom.linkTo(saveButton.bottom)
                 end.linkTo(saveButton.start, margin = 8.dp)
-            }
-        ) {
+            }) {
             Text("Cancel")
         }
-        Button(
-            onClick = { onCancelButtonTapped() },
-            modifier = Modifier.constrainAs(saveButton) {
-                top.linkTo(arrivalDaySelector.bottom, margin = 8.dp)
-                bottom.linkTo(parent.bottom, margin = 16.dp)
-                end.linkTo(parent.end, margin = 16.dp)
-            }
-        ) {
+        Button(onClick = { onSaveButtonTapped() }, modifier = Modifier.constrainAs(saveButton) {
+            top.linkTo(arrivalDaySelector.bottom, margin = 8.dp)
+            bottom.linkTo(parent.bottom, margin = 16.dp)
+            end.linkTo(parent.end, margin = 16.dp)
+        }) {
             Text("Save")
         }
     }

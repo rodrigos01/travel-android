@@ -163,7 +163,7 @@ fun AddLodgingListItem(
             )
         }
         OutlinedButton(
-            onClick = { onSaveButtonTapped() },
+            onClick = { onCancelButtonTapped() },
             modifier = Modifier.constrainAs(cancelButton) {
                 top.linkTo(saveButton.top)
                 bottom.linkTo(saveButton.bottom)
@@ -173,7 +173,7 @@ fun AddLodgingListItem(
             Text("Cancel")
         }
         Button(
-            onClick = { onCancelButtonTapped() },
+            onClick = { onSaveButtonTapped() },
             modifier = Modifier.constrainAs(saveButton) {
                 top.linkTo(checkOutDaySelector.bottom, margin = 8.dp)
                 bottom.linkTo(parent.bottom, margin = 16.dp)
