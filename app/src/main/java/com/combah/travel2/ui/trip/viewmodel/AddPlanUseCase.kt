@@ -60,7 +60,7 @@ class AddPlanUseCase(
         is AddLodgingUseCase.AddLodgingItem -> addLodgingUseCase.createAppData(addPlanItem)
     }
 
-    private fun removeItem(addPlanItem: AddPlanItem) {
+    fun removeItem(addPlanItem: AddPlanItem) {
         when (addPlanItem) {
             is AddFlightUseCase.AddFlightItem -> addFlightUseCase.remove(addPlanItem)
             is AddLodgingUseCase.AddLodgingItem -> addLodgingUseCase.remove(addPlanItem)

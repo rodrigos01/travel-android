@@ -44,7 +44,13 @@ class FirebaseTripRepository(private val firestore: FirebaseFirestore) : TripRep
         }.toList())
     }
 
-    override suspend fun addLodging(tripId: String, lodging: Lodging) = Unit
+    override suspend fun addLodging(tripId: String, lodging: Lodging) {
+        val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
+        firestore.document("/trips/$tripId")
+            .update("lodgings", trip.lodgings.toMutableList().apply {
+                add(lodging.toFirebaseDataModel())
+            }.toList())
+    }
 
     private suspend fun getTrip(tripId: String) = firestore.document("/trips/$tripId").get().await()
 }

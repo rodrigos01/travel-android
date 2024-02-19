@@ -200,7 +200,12 @@ class TripViewModel(
         }
     }
 
-    fun cancelEdit(itemId: String) = Unit
+    fun cancelEdit(itemId: String) {
+        val item =
+            viewState.value.items.find { it is AddPlanUseCase.AddPlanItem && it.id == itemId } as? AddPlanUseCase.AddPlanItem
+                ?: return
+        addPlanUseCase.removeItem(item)
+    }
 
     private fun updateItems(updater: MutableList<TripItem>.() -> Unit) {
         localState.value = localState.value.updateItems(updater)
