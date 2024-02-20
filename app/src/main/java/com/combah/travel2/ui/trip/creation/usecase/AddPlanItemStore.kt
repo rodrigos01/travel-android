@@ -17,6 +17,7 @@ class AddPlanItemStore<Data : AddPlanItemStore.AddPlanData, Item : AddPlanUseCas
 
     interface AddPlanData {
         val id: String
+        val isFirstItem: Boolean
     }
 
     fun interface ItemFactory<Item, Data : AddPlanData> {
@@ -24,7 +25,7 @@ class AddPlanItemStore<Data : AddPlanItemStore.AddPlanData, Item : AddPlanUseCas
     }
 
     fun interface DataFactory<Data : AddPlanData> {
-        fun createData(time: Time): Data
+        fun createData(time: Time, isFirstItem: Boolean): Data
     }
 
     data class ItemStoreData<Item, Data>(
@@ -38,8 +39,8 @@ class AddPlanItemStore<Data : AddPlanItemStore.AddPlanData, Item : AddPlanUseCas
     override val items: Flow<Map<String, Item>>
         get() = _items.map { it.entries.associate { (key, value) -> key to value.item } }
 
-    override fun addItem(time: Time): Item {
-        val data = dataFactory.createData(time)
+    override fun addItem(time: Time, isFirstItem: Boolean): Item {
+        val data = dataFactory.createData(time, isFirstItem)
         val item = itemFactory.createItem(data)
         _items[data.id] = ItemStoreData(item, data)
         return item

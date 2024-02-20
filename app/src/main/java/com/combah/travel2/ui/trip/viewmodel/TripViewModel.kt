@@ -27,6 +27,8 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.Date
+import java.util.TimeZone
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.contracts.ExperimentalContracts
@@ -177,21 +179,29 @@ class TripViewModel(
     }
 
     fun addButtonTapped(itemId: String) {
+        val items = viewState.value.items
         val tapped =
-            viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId } as TripItem.EmptyAddPlanItem
+            items.find { it is TripItem.Identifiable && it.id == itemId } as TripItem.EmptyAddPlanItem
+        val isFirst = items.size == 1
         val index = viewState.value.items.indexOf(tapped)
         updateItems {
             removeAt(index)
-            add(index, addPlanUseCase.createAddPlanItem(tapped.timestamp))
+            add(
+                index,
+                addPlanUseCase.createAddPlanItem(tapped.timestamp, isFirstItem = isFirst)
+            )
         }
     }
 
     fun addPlanTypeChanged(itemId: String, newType: AddPlanUseCase.AddPlanItem.Type) {
+        val items = viewState.value.items
         val item =
-            viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId } ?: return
+            items.find { it is TripItem.Identifiable && it.id == itemId } ?: return
+        val isFirst = items.size == 1
         val index = viewState.value.items.indexOf(item)
         updateItems {
-            this[index] = addPlanUseCase.typeChanged(item as AddPlanUseCase.AddPlanItem, newType)
+            this[index] =
+                addPlanUseCase.typeChanged(item as AddPlanUseCase.AddPlanItem, newType, isFirst)
         }
     }
 
@@ -227,7 +237,7 @@ class TripViewModel(
                 is Lodging -> listOf(event.checkIn to event, event.checkout to event)
             }
         }.sortedBy { (time, event) -> EventComparable(time, event) }
-        return pairs.foldIndexed(listOf<TripItem>()) { index, items, (time, event) ->
+        val items = pairs.foldIndexed(listOf<TripItem>()) { index, items, (time, event) ->
             val isLastItem = index == pairs.lastIndex
             val lastEventIndex = items.indexOfLast { it is TripItem.EventItem }
             val lastEvent = items.getOrNull(lastEventIndex) as? TripItem.EventItem
@@ -295,6 +305,16 @@ class TripViewModel(
                 placeForRemoval?.let { remove(it) }
             }
         }
+        if (items.isEmpty()) {
+            return listOf(
+                TripItem.EmptyAddPlanItem(
+                    UUID.randomUUID().toString(),
+                    Time(Date().time, TimeZone.getDefault()),
+                    showDivider = false,
+                )
+            )
+        }
+        return items
     }
 
     private fun TripItem.PlaceItem.isOrigin(items: List<TripItem>): Boolean {

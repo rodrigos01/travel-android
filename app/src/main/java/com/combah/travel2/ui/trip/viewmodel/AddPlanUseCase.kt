@@ -16,7 +16,7 @@ class AddPlanUseCase(
 
     interface ItemStore<T : AddPlanItem> {
         val items: Flow<Map<String, T>>
-        fun addItem(time: Time): T
+        fun addItem(time: Time, isFirstItem: Boolean): T
         fun remove(item: T)
     }
 
@@ -42,17 +42,21 @@ class AddPlanUseCase(
     }
 
     fun createAddPlanItem(
-        time: Time, type: AddPlanItem.Type = AddPlanItem.Type.Flight
+        time: Time, type: AddPlanItem.Type = AddPlanItem.Type.Flight, isFirstItem: Boolean = false,
     ): AddPlanItem {
-        return type.useCase.addItem(time)
+        return type.useCase.addItem(time, isFirstItem)
     }
 
-    fun typeChanged(addPlanItem: AddPlanItem, newType: AddPlanItem.Type): AddPlanItem {
+    fun typeChanged(
+        addPlanItem: AddPlanItem,
+        newType: AddPlanItem.Type,
+        isFirstItem: Boolean = false
+    ): AddPlanItem {
         if (addPlanItem.type == newType) {
             return addPlanItem
         }
         removeItem(addPlanItem)
-        return createAddPlanItem(addPlanItem.timestamp, newType)
+        return createAddPlanItem(addPlanItem.timestamp, newType, isFirstItem)
     }
 
     fun saveItem(addPlanItem: AddPlanItem): TripEntity = when (addPlanItem) {
