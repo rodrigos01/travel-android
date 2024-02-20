@@ -42,6 +42,7 @@ class AddLodgingUseCase(
 
     data class PendingLodging(
         override val id: String,
+        override val isFirstItem: Boolean,
         val checkIn: Time,
         val name: String? = null,
         val address: String? = null,
@@ -79,8 +80,9 @@ class AddLodgingUseCase(
         }
 
 
-    override fun createData(time: Time) = PendingLodging(
+    override fun createData(time: Time, isFirstItem: Boolean) = PendingLodging(
         id = UUID.randomUUID().toString(),
+        isFirstItem = isFirstItem,
         checkIn = time,
         checkOut = time.toMidnight() + TimeUnit.DAYS.toMillis(1)
     )
@@ -98,7 +100,7 @@ class AddLodgingUseCase(
         inputUseCaseStore.register(it.id)
     }
 
-    override fun addItem(time: Time) = itemStore.addItem(time)
+    override fun addItem(time: Time, isFirstItem: Boolean) = itemStore.addItem(time, isFirstItem)
 
     override fun remove(item: AddLodgingItem) {
         itemStore.remove(item)

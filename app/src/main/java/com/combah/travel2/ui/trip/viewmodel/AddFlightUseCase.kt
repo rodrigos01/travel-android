@@ -34,6 +34,9 @@ class AddFlightUseCase(
         override val timestamp: Time,
         val minArrivalTimeMillis: Long,
         val departureTime: String? = null,
+        val showDepartureDate: Boolean = false,
+        val departureDayOfMonth: String,
+        val departureDayOfWeek: String,
         val airportFromName: String? = null,
         val airportFromSearchResults: List<String> = emptyList(),
         val arrivalTime: String? = null,
@@ -45,6 +48,7 @@ class AddFlightUseCase(
 
     data class PendingFlight(
         override val id: String,
+        override val isFirstItem: Boolean,
         val departure: Time,
         val airportFrom: Airport? = null,
         val airportTo: Airport? = null,
@@ -87,9 +91,10 @@ class AddFlightUseCase(
             }.toMap()
         }
 
-    override fun createData(time: Time): PendingFlight {
+    override fun createData(time: Time, isFirstItem: Boolean): PendingFlight {
         return PendingFlight(
             id = UUID.randomUUID().toString(),
+            isFirstItem = isFirstItem,
             departure = time,
         )
     }
@@ -102,6 +107,9 @@ class AddFlightUseCase(
             minArrivalTimeMillis = data.departure.toMidnight()
                 .minus(TimeUnit.MINUTES.toMillis(1L)).timeInMillis,
             departureTime = timeFormatter.timeString(data.departure),
+            showDepartureDate = data.isFirstItem,
+            departureDayOfWeek = timeFormatter.dayOfWeekString(data.departure),
+            departureDayOfMonth = timeFormatter.dayOfMonthString(data.departure),
             airportFromName = data.airportFrom?.name,
             arrivalDayOfWeek = timeFormatter.dayOfWeekString(arrivalTime),
             arrivalDayOfMonth = timeFormatter.dayOfMonthString(arrivalTime),
@@ -112,8 +120,8 @@ class AddFlightUseCase(
         return item
     }
 
-    override fun addItem(time: Time): AddFlightItem {
-        return itemStore.addItem(time)
+    override fun addItem(time: Time, isFirstItem: Boolean): AddFlightItem {
+        return itemStore.addItem(time, isFirstItem)
     }
 
     override fun remove(item: AddFlightItem) {
