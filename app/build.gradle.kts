@@ -42,7 +42,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = compose_version
+        kotlinCompilerExtensionVersion = "1.5.9"
     }
 }
 
@@ -72,7 +72,7 @@ dependencies {
     // Coroutines)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     // Compose)
-    implementation("androidx.compose.compiler:compiler:$compose_version")
+    implementation("androidx.compose.compiler:compiler:1.5.9")
     implementation("androidx.compose.ui:ui:$compose_version")
     implementation("androidx.compose.ui:ui-tooling:$compose_version")
     implementation("androidx.compose.foundation:foundation:$compose_version")
