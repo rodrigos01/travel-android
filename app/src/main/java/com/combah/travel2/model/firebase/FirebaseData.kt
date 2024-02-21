@@ -1,7 +1,6 @@
 package com.combah.travel2.model.firebase
 
 import com.google.firebase.firestore.Exclude
-import java.util.Date
 
 sealed interface FirebaseData {
     data class Trip(
@@ -22,9 +21,9 @@ sealed interface FirebaseData {
 
     data class FlightSegment(
         val airportFrom: Airport? = null,
-        val departure: Date = Date(),
+        val departure: String = "",
         val airportTo: Airport? = null,
-        val arrival: Date = Date(),
+        val arrival: String = "",
         val cityFrom: Place? = null,
         val cityTo: Place? = null,
     ) : FirebaseData
@@ -39,8 +38,8 @@ sealed interface FirebaseData {
         val name: String? = null,
         val address: String? = null,
         val city: Place? = null,
-        val checkIn: Date? = null,
-        val checkout: Date? = null,
+        val checkIn: String? = null,
+        val checkout: String? = null,
     ) : FirebaseData
 
     data class Place(

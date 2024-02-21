@@ -6,10 +6,6 @@ import com.combah.travel2.model.firebase.FirebaseData.FlightSegment
 import com.combah.travel2.model.firebase.FirebaseData.Lodging
 import com.combah.travel2.model.firebase.FirebaseData.Place
 import com.combah.travel2.model.firebase.FirebaseData.Trip
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
 
 private const val EAST_DAYLIGHT = "GMT-04:00"
 private const val WESTERN_EUROPEAN_SUMMER = "GMT+01:00"
@@ -129,9 +125,9 @@ private fun FlightSegment(
 ): FlightSegment {
     return FlightSegment(
         airportFrom,
-        dateFromString(departure, airportFrom.city?.timeZone),
+        departure,
         airportTo,
-        dateFromString(arrival, airportTo.city?.timeZone)
+        arrival,
     )
 }
 
@@ -145,18 +141,6 @@ private fun Lodging(
     name,
     address,
     city,
-    checkIn?.let { dateFromString(it, city?.timeZone) },
-    checkout?.let { dateFromString(it, city?.timeZone) }
+    checkIn,
+    checkout,
 )
-
-fun dateFromString(
-    value: String,
-    timeZoneId: String?,
-    pattern: String? = "yyyy-MM-dd'T'HH:mm"
-): Date {
-    val timeInMillis = SimpleDateFormat(pattern, Locale.getDefault()).apply {
-        timeZoneId?.let { TimeZone.getTimeZone(it) }?.let { timeZone = it }
-    }.parse(value)?.time
-        ?: error("Null return from parsing")
-    return Date(timeInMillis)
-}

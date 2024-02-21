@@ -5,79 +5,46 @@ import java.util.Calendar
 import java.util.Date
 import java.util.TimeZone
 
-class Time private constructor(
-    private val calendar: Calendar,
+/**
+ * Immutable Representation of an instant in time with a timezone
+ */
+data class Time(
+    val timeInMillis: Long,
+    val dayOfMonth: Int,
+    val dayOfWeek: Int,
+    val month: Int,
+    val year: Int,
+    val hour: Int,
+    val minute: Int,
+    val second: Int,
+    val timeZone: TimeZone,
 ) : Comparable<Time> {
 
-    constructor(
-        timeInMillis: Long,
-        timeZone: TimeZone,
-    ) : this(Calendar.getInstance(timeZone).also {
-        it.timeInMillis = timeInMillis
-        it[Calendar.MILLISECOND] = 0
-    })
+    constructor(timeInMillis: Long, timeZone: TimeZone) : this(
+        Calendar.getInstance(timeZone).also { it.timeInMillis = timeInMillis })
 
-    val timeInMillis: Long
-        get() = calendar.timeInMillis
-
-    val timeZone: TimeZone
-        get() = calendar.timeZone
-
-    val dayOfMonth: Int
-        get() = calendar[Calendar.DAY_OF_MONTH]
-
-    val dayOfWeek: Int
-        get() = calendar[Calendar.DAY_OF_WEEK]
-    val month: Int
-        get() = calendar[Calendar.MONTH]
-    val year: Int
-        get() = calendar[Calendar.YEAR]
-    val hour: Int
-        get() = calendar[Calendar.HOUR]
-
-    val minute: Int
-        get() = calendar[Calendar.MINUTE]
-
-    val second: Int
-        get() = calendar[Calendar.SECOND]
+    private constructor(calendar: Calendar) : this(
+        calendar.timeInMillis,
+        calendar[Calendar.DAY_OF_MONTH],
+        calendar[Calendar.DAY_OF_WEEK],
+        calendar[Calendar.MONTH],
+        calendar[Calendar.YEAR],
+        calendar[Calendar.HOUR_OF_DAY],
+        calendar[Calendar.MINUTE],
+        calendar[Calendar.SECOND],
+        calendar.timeZone,
+    )
 
     operator fun plus(other: Long): Time = copy(timeInMillis = timeInMillis + other)
 
-    operator fun minus(other: Long): Time = copy(timeInMillis = timeInMillis - other)
     operator fun plus(other: Time): Time = this + other.timeInMillis
+    operator fun minus(other: Long): Time = copy(timeInMillis = timeInMillis - other)
     override operator fun compareTo(other: Time): Int {
         return timeInMillis.compareTo(other.timeInMillis)
     }
-
-    fun copy(timeInMillis: Long = this.timeInMillis, timeZone: TimeZone = this.timeZone) =
-        Time(timeInMillis, timeZone)
-
-    fun copy(
-        dayOfMonth: Int = this.dayOfMonth,
-        month: Int = this.month,
-        year: Int = this.year,
-        hour: Int = this.hour,
-        minute: Int = this.minute,
-        second: Int = this.second,
-    ): Time {
-        return Calendar.getInstance(timeZone).apply {
-            set(Calendar.DAY_OF_MONTH, dayOfMonth)
-            set(Calendar.MONTH, month)
-            set(Calendar.YEAR, year)
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, second)
-        }.let { Time(it) }
-    }
-
-    fun midnightTime() = copy(hour = 0, minute = 0)
 
     override fun toString(): String =
         SimpleDateFormat.getDateTimeInstance().also { it.timeZone = this.timeZone }.format(
             Date(this.timeInMillis)
         )
-
-    override fun equals(other: Any?): Boolean {
-        return other is Time && calendar == other.calendar
-    }
 }
