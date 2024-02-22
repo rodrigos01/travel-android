@@ -12,7 +12,7 @@ data class Trip(
 data class Flight(
     val id: String,
     val segments: List<FlightSegment>,
-    val price: Double?,
+    val price: Double? = null,
 )
 
 data class FlightSegment(
