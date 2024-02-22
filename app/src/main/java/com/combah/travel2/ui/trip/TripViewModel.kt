@@ -6,12 +6,11 @@ import androidx.lifecycle.ViewModel
 import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.asStateFlow
 import com.combah.travel2.extensions.update
-import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Lodging
-import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.Trip
+import com.combah.travel2.model.data.TripEvent
 import com.combah.travel2.model.repository.TripRepository
 import kotlinx.coroutines.flow.map
 import java.text.DateFormat
@@ -23,7 +22,6 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
-import kotlin.math.abs
 
 class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
 
@@ -123,246 +121,164 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
 
     val viewState = trip.map {
         ViewState(
-            items = genItemsNew(it),
+            items = genItems(it),
         )
     }.asStateFlow(initialValue = ViewState(emptyList()))
 
-    private fun genItemsNew(trip: Trip): List<TripItem> {
-        val maps =
-            (trip.flights + trip.lodgings).fold(mapOf<Place, Map<String, List<TripItem.EventItem>>>()) { map, event ->
-                when (event) {
-                    is Flight -> {
-                        event.segments.fold(map) { flightMap, segment ->
-                            flightMap.toMutableMap().also { placeMap ->
-                                placeMap[segment.airportFrom.city] =
-                                    (placeMap[segment.airportFrom.city] ?: mapOf()).toMutableMap()
-                                        .also {
-                                            it[segment.departure.dateString] =
-                                                (it[segment.departure.dateString]
-                                                    ?: emptyList()).plus(
-                                                    listOf(
-                                                        createFlightDepartureItem(segment)
-                                                    )
-                                                )
-                                        }
-                                placeMap[segment.airportTo.city] =
-                                    (placeMap[segment.airportTo.city] ?: mapOf()).toMutableMap()
-                                        .also {
-                                            it[segment.arrival.dateString] =
-                                                (it[segment.arrival.dateString]
-                                                    ?: emptyList()).plus(
-                                                    listOf(
-                                                        createFlightArrivalEvent(segment)
-                                                    )
-                                                )
-                                        }
-                            }
-                        }
-                    }
-
-                    is Lodging -> {
-                        map.toMutableMap().also { placeMap ->
-                            placeMap[event.city] =
-                                (placeMap[event.city] ?: mapOf()).toMutableMap().also {
-                                    it[event.checkIn.dateString] =
-                                        (it[event.checkIn.dateString] ?: emptyList()) + listOf(
-                                            createLodgingCheckInItem(event)
-                                        )
-                                    it[event.checkout.dateString] =
-                                        (it[event.checkout.dateString] ?: emptyList()) + listOf(
-                                            createLodgingCheckOutItem(event)
-                                        )
-                                }
-                        }
-                    }
-
-                    else -> map
-                }
+    private fun genItems(trip: Trip): List<TripItem> {
+        val events = trip.flights.flatMap { it.segments } + trip.lodgings
+        val pairs = events.flatMap { event ->
+            when (event) {
+                is FlightSegment -> listOf(event.departure to event, event.arrival to event)
+                is Lodging -> listOf(event.checkIn to event, event.checkout to event)
             }
-
-        val items = maps.entries.flatMap { (place, dateToItems) ->
-            val items = dateToItems.entries.flatMap { (_, items) ->
-                items.mapIndexed { index, item ->
-                    if (index == 0) {
-                        when (item) {
-                            is TripItem.FlightDepartureItem -> item.copy(showDate = true)
-                            is TripItem.FlightArrivalItem -> item.copy(showDate = true)
-                            is TripItem.HotelCheckInItem -> item.copy(showDate = true)
-                            is TripItem.HotelCheckOutItem -> item.copy(showDate = true)
-                        }
-                    } else {
-                        item
-                    }
-                }
+        }.sortedBy { (time, event) -> EventComparable(time, event) }
+        return pairs.foldIndexed(listOf<TripItem>()) { index, items, (time, event) ->
+            val isLastItem = index == pairs.lastIndex
+            val lastEventIndex = items.indexOfLast { it is TripItem.EventItem }
+            val lastEvent = items.getOrNull(lastEventIndex)
+            val lastTime = lastEvent?.timestamp?.takeIf { time.dateString != it.dateString }
+            val eventPlace = event.getPlace(time)
+            val existingPlaceIndex =
+                items.indexOfLast { it is TripItem.PlaceItem && it.placeName == eventPlace.name }
+            val existingPlace = items.getOrNull(existingPlaceIndex) as? TripItem.PlaceItem
+            val addPlace =
+                existingPlace == null && (!isLastItem || !(event is FlightSegment && event.arrival == time))
+            val firstInMonth =
+                !items.contains { it is TripItem.MonthItem && it.month == time.monthString }
+            val firstInDay =
+                !items.contains { it is TripItem.EventItem && it.timestamp.dateString == time.dateString }
+            val placeForRemoval = items.find {
+                it is TripItem.PlaceItem && it.placeName != eventPlace.name && it.isOrigin(items)
             }
-            val timestamp = items.first().timestamp
-            listOf(
-                TripItem.PlaceItem(
-                    timestamp = timestamp,
-                    placeName = place.name,
-                    imageUrl = place.coverImage ?: "",
-                    dateStart = timestamp.dayAndMonthString,
-                    dateEnd = timestamp.dayAndMonthString,
-                )
-            ) + items
+            items.toMutableList().apply {
+                existingPlace?.let {
+                    set(
+                        existingPlaceIndex, it.copy(dateEnd = time.dayAndMonthString)
+                    )
+                }
+                if (firstInDay && lastEvent != null) {
+                    val updatedLastEvent = when (lastEvent) {
+                        is TripItem.FlightDepartureItem -> lastEvent.copy(showDivider = true)
+                        is TripItem.FlightArrivalItem -> lastEvent.copy(showDivider = true)
+                        is TripItem.HotelCheckInItem -> lastEvent.copy(showDivider = true)
+                        is TripItem.HotelCheckOutItem -> lastEvent.copy(showDivider = true)
+                        else -> lastEvent
+                    }
+                    set(lastEventIndex, updatedLastEvent)
+                }
+                lastTime?.let { add(genDateRangeItem(from = it, to = time)) }
+                if (addPlace) {
+                    add(
+                        TripItem.PlaceItem(
+                            timestamp = time,
+                            placeName = eventPlace.name,
+                            imageUrl = eventPlace.coverImage ?: "",
+                            dateStart = time.dayAndMonthString,
+                            dateEnd = time.dayAndMonthString,
+                        )
+                    )
+                }
+                if (firstInMonth) {
+                    add(
+                        TripItem.MonthItem(
+                            timestamp = time,
+                            month = time.monthString,
+                            year = time.asCalendar()[Calendar.YEAR].toString(),
+                        )
+                    )
+                }
+                add(genItem(time, event, firstInDay))
+                placeForRemoval?.let { remove(it) }
+            }
         }
-        return items
-    }
-
-    private fun createLodgingCheckInItem(event: Lodging) =
-        TripViewModel.TripItem.HotelCheckInItem(
-            timestamp = event.checkIn,
-            showDate = false,
-            dayOfWeek = event.checkIn.dayOfWeekString(),
-            dayOfMonth = event.checkIn.dayOfMonthString(),
-            time = event.checkIn.timeString(),
-            hotelName = event.name ?: "",
-            hotelAddress = event.address,
-            showDivider = false,
-        )
-
-    private fun createLodgingCheckOutItem(event: Lodging) =
-        TripViewModel.TripItem.HotelCheckOutItem(
-            timestamp = event.checkout,
-            showDate = false,
-            dayOfWeek = event.checkout.dayOfWeekString(),
-            dayOfMonth = event.checkout.dayOfMonthString(),
-            time = event.checkout.timeString(),
-            hotelName = event.name ?: event.address,
-            showDivider = false,
-        )
-
-    private fun createFlightArrivalEvent(event: FlightSegment) =
-        TripItem.FlightArrivalItem(
-            timestamp = event.arrival,
-            showDate = false,
-            dayOfMonth = event.arrival.dayOfMonthString(),
-            dayOfWeek = event.arrival.dayOfWeekString(),
-            time = event.arrival.timeString(),
-            airport = event.airportTo.name,
-            showDivider = false,
-        )
-
-    private fun createFlightDepartureItem(event: FlightSegment) =
-        TripViewModel.TripItem.FlightDepartureItem(
-            timestamp = event.departure,
-            showDate = false,
-            dayOfMonth = event.departure.dayOfMonthString(),
-            dayOfWeek = event.departure.dayOfWeekString(),
-            time = event.departure.timeString(),
-            destination = event.airportTo.city.name,
-            airport = event.airportFrom.name,
-            showDivider = false,
-        )
-
-    private fun genItems(trip: Trip): List<TripViewModel.TripItem> {
-        val items = mutableListOf<TripItem>()
-        var currentDay: String? = null
-        var currentMonth: String? = null
-        var currentPlace: Place? = null
-        var currentPlaceItem: TripItem.PlaceItem? = null
-        var lastTimestamp: Time? = null
-        val pairs = (trip.lodgings.flatMap {
-            listOf(
-                it.checkIn to it, it.checkout to it
-            )
-        } + trip.flights.flatMap { it.segments }
-            .flatMap {
-                listOf(
-                    it.departure to it,
-                    it.arrival to it
-                )
-            }).sortedBy { (time, event) -> EventComparable(time, event) }
-        pairs.forEach { (timestamp, event) ->
-            val previousEventItem = (items.lastOrNull() as? TripItem.EventItem)
-            val day = timestamp.run { "$year-$month-$dayOfMonth" }
-            val firstInDay = day != currentDay
-            val item = genItem(items, event, showDate = firstInDay)
-            currentDay = day
-            lastTimestamp?.let {
-                val start = (it + TimeUnit.DAYS.toMillis(1))
-                val end = timestamp.toMidnight() - TimeUnit.MINUTES.toMillis(1)
-                if (end > start) {
-                    items.add(genDateRangeItem(start, end))
-                }
-            }
-            lastTimestamp = timestamp
-            val month = timestamp.monthString
-            if (month != currentMonth) {
-                val monthItem = TripItem.MonthItem(
-                    timestamp = timestamp.toMidnight().update(dayOfMonth = 1),
-                    month = timestamp.monthString,
-                    year = timestamp.asCalendar()[Calendar.YEAR].toString(),
-                )
-                items.add(monthItem)
-                currentMonth = month
-            }
-            val place = getPlace(items, event)
-            if (place != currentPlace) {
-                val lastPlaceItem = currentPlaceItem
-                if (lastPlaceItem?.isOrigin(items) == true) {
-                    items.remove(lastPlaceItem)
-                }
-                val placeItem = TripItem.PlaceItem(
-                    timestamp = timestamp,
-                    placeName = place.name,
-                    imageUrl = place.coverImage ?: "",
-                    dateStart = timestamp.dayAndMonthString,
-                    dateEnd = timestamp.dayAndMonthString,
-                )
-                items.add(placeItem)
-                currentPlaceItem = placeItem
-                currentPlace = place
-            } else {
-                currentPlaceItem?.let {
-                    val newPlaceItem = it.copy(dateEnd = timestamp.dayAndMonthString)
-                    items[items.indexOf(it)] = newPlaceItem
-                    currentPlaceItem = newPlaceItem
-                }
-                if (firstInDay) {
-                    previousEventItem?.let {
-                        items[items.indexOf(it)] = when (it) {
-                            is TripItem.FlightDepartureItem -> it.copy(showDivider = true)
-                            is TripItem.FlightArrivalItem -> it.copy(showDivider = true)
-                            is TripItem.HotelCheckInItem -> it.copy(showDivider = true)
-                            is TripItem.HotelCheckOutItem -> it.copy(showDivider = true)
-                        }
-                    }
-                }
-            }
-            items.add(item)
-        }
-        val lastPlaceItem = currentPlaceItem
-        if (lastPlaceItem?.isOrigin(items) == true) {
-            items.remove(lastPlaceItem)
-        }
-        return items
     }
 
     private fun TripItem.PlaceItem.isOrigin(items: List<TripItem>): Boolean {
         val isFirstPlace = this == items.first { it is TripItem.PlaceItem }
-        val isLastPlace = this == items.last { it is TripItem.PlaceItem }
+        val index = items.indexOf(this)
+        if (index == -1) return false
         val eventsAfter = items.subList(
             items.indexOf(this),
             items.size,
-        )
-        val hasSingleDepartureAfter = eventsAfter.filterIsInstance<TripItem.EventItem>()
-            .run { size == 1 && first() is TripItem.FlightDepartureItem }
-        val hasSingleArrivalAfter = eventsAfter.filterIsInstance<TripItem.EventItem>()
-            .run { size == 1 && first() is TripItem.FlightArrivalItem }
-        return (isFirstPlace && hasSingleDepartureAfter) || (isLastPlace && hasSingleArrivalAfter)
+        ).filterIsInstance<TripItem.EventItem>()
+        val hasSingleDepartureAfter =
+            eventsAfter.let { it.size == 1 && it.first() is TripItem.FlightDepartureItem }
+        return isFirstPlace && hasSingleDepartureAfter
     }
 
     private fun genDateRangeItem(
-        start: Time,
-        end: Time
-    ) = TripItem.DateRangeItem(
-        timestamp = start,
-        dayOfMonthStart = start.dayOfMonthString(),
-        dayOfWeekStart = start.dayOfWeekString(),
-        dayOfMonthEnd = end.dayOfMonthString(),
-        dayOfWeekEnd = end.dayOfWeekString(),
-    )
+        from: Time, to: Time
+    ): TripItem.DateRangeItem {
+        val start = (from + TimeUnit.DAYS.toMillis(1))
+        val end = to.toMidnight() - TimeUnit.MINUTES.toMillis(1)
+        return TripItem.DateRangeItem(
+            timestamp = start,
+            dayOfMonthStart = start.dayOfMonthString(),
+            dayOfWeekStart = start.dayOfWeekString(),
+            dayOfMonthEnd = end.dayOfMonthString(),
+            dayOfWeekEnd = end.dayOfWeekString(),
+        )
+    }
+
+    private fun genItem(
+        timestamp: Time,
+        event: TripEvent,
+        showDate: Boolean,
+    ): TripItem.EventItem {
+        contract { returns() implies (event is FlightSegment || event is Lodging) }
+        return when (event) {
+            is FlightSegment -> {
+                if (timestamp == event.departure) {
+                    TripItem.FlightDepartureItem(
+                        timestamp = event.departure,
+                        showDate = showDate,
+                        dayOfMonth = event.departure.dayOfMonthString(),
+                        dayOfWeek = event.departure.dayOfWeekString(),
+                        time = event.departure.timeString(),
+                        destination = event.airportTo.city.name,
+                        airport = event.airportFrom.name,
+                        showDivider = false,
+                    )
+                } else {
+                    TripItem.FlightArrivalItem(
+                        timestamp = event.arrival,
+                        showDate = showDate,
+                        dayOfMonth = event.arrival.dayOfMonthString(),
+                        dayOfWeek = event.arrival.dayOfWeekString(),
+                        time = event.arrival.timeString(),
+                        airport = event.airportTo.name,
+                        showDivider = false,
+                    )
+                }
+            }
+
+            is Lodging -> {
+                if (timestamp == event.checkIn) {
+                    TripItem.HotelCheckInItem(
+                        timestamp = event.checkIn,
+                        showDate = showDate,
+                        dayOfWeek = event.checkIn.dayOfWeekString(),
+                        dayOfMonth = event.checkIn.dayOfMonthString(),
+                        time = event.checkIn.timeString(),
+                        hotelName = event.name ?: "",
+                        hotelAddress = event.address,
+                        showDivider = false,
+                    )
+                } else {
+                    TripItem.HotelCheckOutItem(
+                        timestamp = event.checkout,
+                        showDate = showDate,
+                        dayOfWeek = event.checkout.dayOfWeekString(),
+                        dayOfMonth = event.checkout.dayOfMonthString(),
+                        time = event.checkout.timeString(),
+                        hotelName = event.name ?: event.address,
+                        showDivider = false,
+                    )
+                }
+            }
+        }
+    }
 }
 
 fun TripViewModel(
@@ -373,76 +289,14 @@ fun TripViewModel(
     tripId,
 )
 
-private fun genItem(
-    items: List<TripViewModel.TripItem>,
-    event: Any,
-    showDate: Boolean,
-): TripViewModel.TripItem.EventItem {
-    contract { returns() implies (event is FlightSegment || event is Lodging) }
-    val item = if (event is FlightSegment) {
-        if (!items.contains { it is TripViewModel.TripItem.FlightDepartureItem && it.timestamp == event.departure }) {
-            TripViewModel.TripItem.FlightDepartureItem(
-                timestamp = event.departure,
-                showDate = showDate,
-                dayOfMonth = event.departure.dayOfMonthString(),
-                dayOfWeek = event.departure.dayOfWeekString(),
-                time = event.departure.timeString(),
-                destination = event.airportTo.city.name,
-                airport = event.airportFrom.name,
-                showDivider = false,
-            )
-        } else {
-            TripViewModel.TripItem.FlightArrivalItem(
-                timestamp = event.arrival,
-                showDate = showDate,
-                dayOfMonth = event.arrival.dayOfMonthString(),
-                dayOfWeek = event.arrival.dayOfWeekString(),
-                time = event.arrival.timeString(),
-                airport = event.airportTo.name,
-                showDivider = false,
-            )
-        }
-    } else if (event is Lodging) {
-        if (!items.contains { it is TripViewModel.TripItem.HotelCheckInItem && it.timestamp == event.checkIn }) {
-            TripViewModel.TripItem.HotelCheckInItem(
-                timestamp = event.checkIn,
-                showDate = showDate,
-                dayOfWeek = event.checkIn.dayOfWeekString(),
-                dayOfMonth = event.checkIn.dayOfMonthString(),
-                time = event.checkIn.timeString(),
-                hotelName = event.name ?: "",
-                hotelAddress = event.address,
-                showDivider = false,
-            )
-        } else {
-            TripViewModel.TripItem.HotelCheckOutItem(
-                timestamp = event.checkout,
-                showDate = showDate,
-                dayOfWeek = event.checkout.dayOfWeekString(),
-                dayOfMonth = event.checkout.dayOfMonthString(),
-                time = event.checkout.timeString(),
-                hotelName = event.name ?: event.address,
-                showDivider = false,
-            )
-        }
+private fun TripEvent.getPlace(referenceTime: Time) = when (this) {
+    is FlightSegment -> if (referenceTime == departure) {
+        airportFrom.city
     } else {
-        error("event must be FlightSegment or Lodging")
+        airportTo.city
     }
-    return item
-}
 
-fun getPlace(items: List<TripViewModel.TripItem>, event: Any): Place {
-    return if (event is FlightSegment) {
-        if (!items.contains { it is TripViewModel.TripItem.FlightDepartureItem && it.timestamp == event.departure }) {
-            event.airportFrom.city
-        } else {
-            event.airportTo.city
-        }
-    } else if (event is Lodging) {
-        event.city
-    } else {
-        error("event must be FlightSegment or Lodging")
-    }
+    is Lodging -> city
 }
 
 private val Time.dateString
@@ -476,54 +330,20 @@ private val Time.monthString: String
 
 private fun Time.toMidnight(): Time = update(hour = 0, minute = 0, second = 0)
 
-private fun Time.isWithin24Hours(other: Time): Boolean {
-    return abs(timeInMillis - other.timeInMillis) <= TimeUnit.DAYS.toMillis(1)
-}
-
 private fun <T> List<T>.contains(predicate: (T) -> Boolean) = find(predicate) != null
 
 private class EventComparable(
-    private val time: Time, private
-    val event: Any
-) :
-    Comparable<EventComparable> {
+    private val time: Time, private val event: Any
+) : Comparable<EventComparable> {
     override fun compareTo(other: EventComparable): Int {
-        val timeCompare = time.compareTo(other.time)
-        if (!time.isWithin24Hours(other.time)) {
-            return timeCompare
+        if (time.dateString != other.time.dateString) {
+            return time.compareTo(other.time)
         }
-        return when (type) {
-            EventType.CHECKIN -> when (other.type) {
-                EventType.CHECKOUT -> 1
-                EventType.ARRIVAL,
-                EventType.DEPARTURE -> if ((other.event as FlightSegment).airportTo.city == (event as Lodging).city) 1 else timeCompare
-
-                else -> timeCompare
-            }
-
-            EventType.CHECKOUT -> when (other.type) {
-                EventType.CHECKIN -> -1
-                EventType.ARRIVAL,
-                EventType.DEPARTURE -> if ((other.event as FlightSegment).airportFrom.city == (event as Lodging).city) 1 else timeCompare
-
-                else -> timeCompare
-            }
-
-            EventType.DEPARTURE -> when (other.type) {
-                EventType.ARRIVAL -> if (other.event == event) -1 else timeCompare
-                EventType.CHECKIN -> if ((other.event as Lodging).city == (event as FlightSegment).airportTo.city) -1 else timeCompare
-                EventType.CHECKOUT -> if ((other.event as Lodging).city == (event as FlightSegment).airportFrom.city) 1 else timeCompare
-                else -> timeCompare
-            }
-
-            EventType.ARRIVAL -> when (other.type) {
-                EventType.DEPARTURE -> if (other.event == event) 1 else timeCompare
-                EventType.CHECKIN -> if ((other.event as Lodging).city == (event as FlightSegment).airportTo.city) -1 else timeCompare
-                EventType.CHECKOUT -> if ((other.event as Lodging).city == (event as FlightSegment).airportFrom.city) 1 else timeCompare
-                else -> timeCompare
-            }
-
-            else -> timeCompare
+        val comparison = type.priority - other.type.priority
+        return if (comparison != 0) {
+            comparison
+        } else {
+            time.compareTo(other.time)
         }
     }
 
@@ -538,12 +358,8 @@ private class EventComparable(
             }
         }
 
-    enum class EventType {
-        CHECKOUT,
-        CHECKIN,
-        ARRIVAL,
-        DEPARTURE,
-        UNKNOWN,
+    enum class EventType(val priority: Int) {
+        UNKNOWN(0), CHECKOUT(0), DEPARTURE(1), ARRIVAL(1), CHECKIN(2),
     }
 
     override fun toString(): String {
