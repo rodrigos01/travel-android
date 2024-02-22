@@ -2,27 +2,15 @@
 
 package com.combah.travel2.ui
 
-import com.combah.travel2.model.firebase.toAppDataModel
+import com.combah.travel2.extensions.Time
+import com.combah.travel2.model.data.Airport
+import com.combah.travel2.model.data.Flight
+import com.combah.travel2.model.data.FlightSegment
+import com.combah.travel2.model.data.Lodging
+import com.combah.travel2.model.data.Place
+import com.combah.travel2.model.data.Time
+import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
-import com.combah.travel2.model.repository.mock.MockData.jfk
-import com.combah.travel2.model.repository.mock.MockData.lis
-import com.combah.travel2.model.repository.mock.MockData.lisbon
-import com.combah.travel2.model.repository.mock.MockData.lisbonAirBnB
-import com.combah.travel2.model.repository.mock.MockData.milan
-import com.combah.travel2.model.repository.mock.MockData.milanHotel
-import com.combah.travel2.model.repository.mock.MockData.nap
-import com.combah.travel2.model.repository.mock.MockData.nice
-import com.combah.travel2.model.repository.mock.MockData.niceHotel
-import com.combah.travel2.model.repository.mock.MockData.nyc
-import com.combah.travel2.model.repository.mock.MockData.opo
-import com.combah.travel2.model.repository.mock.MockData.ory
-import com.combah.travel2.model.repository.mock.MockData.paris
-import com.combah.travel2.model.repository.mock.MockData.parisAirBnB
-import com.combah.travel2.model.repository.mock.MockData.porto
-import com.combah.travel2.model.repository.mock.MockData.portoHotel
-import com.combah.travel2.model.repository.mock.MockData.sorento
-import com.combah.travel2.model.repository.mock.MockData.sorentoHotel
-import com.combah.travel2.model.repository.mock.MockData.trip
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
 import com.combah.travel2.ui.trip.TripViewModel
 import com.combah.travel2.ui.trip.TripViewModel.TripItem.DateRangeItem
@@ -32,312 +20,499 @@ import com.combah.travel2.ui.trip.TripViewModel.TripItem.HotelCheckInItem
 import com.combah.travel2.ui.trip.TripViewModel.TripItem.HotelCheckOutItem
 import com.combah.travel2.ui.trip.TripViewModel.TripItem.MonthItem
 import com.combah.travel2.ui.trip.TripViewModel.TripItem.PlaceItem
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+import java.util.TimeZone
 import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 
-@OptIn(ExperimentalContracts::class)
 class TripViewModelTest {
 
     @get:Rule
     val rule = UnconfinedDispatcherTestRule()
 
+    private val tripFlow = MutableStateFlow<Trip>(mock())
     private val repository = mock<TripRepository> {
-        on { findTripById(any()) } doAnswer {
-            flowOf(trip.toAppDataModel())
-        }
+        on { findTripById("tripId") } doReturn tripFlow
     }
-    private val subject = TripViewModel(repository, "minhaTrip")
+    private val subject = TripViewModel(repository, "tripId")
 
-    /*
-    Expected List:
-    *  May, 2024
-    *  May 10 - Flight to Lisbon
-    *  Lison
-    *  May 11 - Arrival in Lisbon
-    *  May 12 - May 18
-    *  Porto
-    *  May 19 - Check-in Porto
-    *  May 20
-    *  May 21 - Check-out Porto
-    *           Flight to Paris
-    *  Paris
-    *  May 21 - Arrival in Paris
-    *  May 22 - May 28
-    *  Nice
-    *  May 29 - Check-in Nice
-    *  May 30 - May - 31
-    *  June, 2024
-    *  Jun  1
-    *  Jun  2 - Check-out Nice
-    *  Milan
-    *  Jun  2 - Check-in Milan
-    *  Jun  3
-    *  Jun  4 - Check-out Milan
-    *  Jun  5 - Jun 11
-    *  Sorento
-    *  Jun 12 - Check-in Sorento
-    *  Jun 13
-    *  Jun 14 - Check-out Sorento
-    *           Flight to Lisbon
-    *           Arrival in Lisbon
-    *           Flight to NYC
-    *           Arrival in NYC
-     */
+    private fun String?.asTime(): Time =
+        this?.let { Time(this) } ?: Time(0L, TimeZone.getDefault())
 
     @Test
     fun `events should have one departure event per flight`() {
-        subject.viewState.value.items.find { it is FlightDepartureItem && it.destination == lisbon.name }
-            .let {
-                val item = it as FlightDepartureItem
-                assertThat(item.airport).isEqualTo(jfk.name)
+        tripFlow.value = Trip(
+            flights = listOf(
+                Flight(
+                    id = "jfk-lis",
+                    airportFromName = "John F. Kennedy Intl. Airport",
+                    departure = "2024-05-10T22:05 -0400",
+                ),
+                Flight(
+                    id = "opo-par",
+                    airportFromName = "Francisco Sá Carneiro Airport",
+                    departure = "2024-05-21T16:50 +0100",
+                ),
+                Flight(
+                    id = "lis-jfk",
+                    airportFromName = "Humberto Delgado International Airport",
+                    departure = "2024-06-14T17:05 +0100",
+                ),
+            )
+        )
+        val departures =
+            subject.viewState.value.items.filterIsInstance(FlightDepartureItem::class.java)
+        assertThat(departures).satisfiesExactly(
+            { item ->
+                assertThat(item.airport).isEqualTo("John F. Kennedy Intl. Airport")
                 assertThat(item.dayOfMonth).isEqualTo("10")
                 assertThat(item.time).isEqualTo("10:05 PM")
-            }
-        subject.viewState.value.items.find { it is FlightDepartureItem && it.destination == paris.name }
-            .let {
-                val item = it as FlightDepartureItem
-                assertThat(item.airport).isEqualTo(opo.name)
+            },
+            { item ->
+                assertThat(item.airport).isEqualTo("Francisco Sá Carneiro Airport")
                 assertThat(item.dayOfMonth).isEqualTo("21")
                 assertThat(item.time).isEqualTo("4:50 PM")
-            }
-        subject.viewState.value.items.find { it is FlightDepartureItem && it.airport == nap.name && it.destination == lisbon.name }
-            .let {
-                val item = it as FlightDepartureItem
-                assertThat(item.airport).isEqualTo(nap.name)
-                assertThat(item.dayOfMonth).isEqualTo("14")
-                assertThat(item.time).isEqualTo("12:30 PM")
-            }
-        subject.viewState.value.items.find { it is FlightDepartureItem && it.destination == nyc.name }
-            .let {
-                val item = it as FlightDepartureItem
-                assertThat(item.airport).isEqualTo(lis.name)
+            },
+            { item ->
+                assertThat(item.airport).isEqualTo("Humberto Delgado International Airport")
                 assertThat(item.dayOfMonth).isEqualTo("14")
                 assertThat(item.time).isEqualTo("5:05 PM")
-            }
+            },
+        )
     }
 
     @Test
     fun `events should have one arrival event per flight`() {
-        subject.viewState.value.items.find { it is FlightArrivalItem && it.airport == lis.name }
-            .let {
-                val item = it as FlightArrivalItem
+        tripFlow.value = Trip(
+            flights = listOf(
+                Flight(
+                    id = "jfk-lis",
+                    departure = "2024-05-10T22:05 -0400",
+                    airportToName = "Humberto Delgado International Airport",
+                    arrival = "2024-05-11T10:00 +0100",
+                ),
+                Flight(
+                    id = "opo-par",
+                    departure = "2024-05-21T16:50 +0100",
+                    airportToName = "Orly International Airport",
+                    arrival = "2024-05-21T20:15 +0200",
+                ),
+                Flight(
+                    id = "lis-jfk",
+                    departure = "2024-06-14T17:05 +0100",
+                    airportToName = "John F. Kennedy Intl. Airport",
+                    arrival = "2024-06-14T20:05 -0400",
+                ),
+            )
+        )
+        val arrivals =
+            subject.viewState.value.items.filterIsInstance(FlightArrivalItem::class.java)
+        assertThat(arrivals).satisfiesExactly(
+            { item ->
                 assertThat(item.dayOfMonth).isEqualTo("11")
                 assertThat(item.time).isEqualTo("10:00 AM")
-            }
-        subject.viewState.value.items.find { it is FlightArrivalItem && it.airport == ory.name }
-            .let {
-                val item = it as FlightArrivalItem
+            },
+            { item ->
                 assertThat(item.dayOfMonth).isEqualTo("21")
                 assertThat(item.time).isEqualTo("8:15 PM")
-            }
-        subject.viewState.value.items.filter { it is FlightArrivalItem && it.airport == lis.name }[1]
-            .let {
-                val item = it as FlightArrivalItem
-                assertThat(item.dayOfMonth).isEqualTo("14")
-                assertThat(item.time).isEqualTo("2:50 PM")
-            }
-        subject.viewState.value.items.find { it is FlightArrivalItem && it.airport == jfk.name }
-            .let {
-                val item = it as FlightArrivalItem
+            },
+            { item ->
                 assertThat(item.dayOfMonth).isEqualTo("14")
                 assertThat(item.time).isEqualTo("8:05 PM")
             }
+        )
     }
 
     @Test
     fun `events should have one check-in event per hotel`() {
-        subject.viewState.value.items.find { it is HotelCheckInItem && it.hotelName == portoHotel.name }
-            .let {
-                val item = it as HotelCheckInItem
-                assertThat(item.hotelAddress).isEqualTo(portoHotel.address)
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
+                    checkIn = "2024-05-19T13:00 +0100",
+                    checkout = "2024-05-21T11:00 +0100",
+                ),
+                Lodging(
+                    name = "Hôtel La Villa Nice Victor Hugo",
+                    address = "19 Bis Bd Victor Hugo, 06000 Nice, France",
+                    checkIn = "2024-05-29T13:00 +0200",
+                    checkout = "2024-06-02T11:00 +0200",
+                ),
+                Lodging(
+                    name = "Hotel Conca Park",
+                    address = "Via degli Aranci, 13\\bis, 80067 Sorrento NA, Italy",
+                    checkIn = "2024-06-12T13:00 +0200",
+                    checkout = "2024-06-14T11:00 +0200",
+                )
+            )
+        )
+        val lodgings =
+            subject.viewState.value.items.filterIsInstance<HotelCheckInItem>()
+        assertThat(lodgings).satisfiesExactly(
+            { item ->
+                assertThat(item.hotelName).isEqualTo("Pestana Porto - A Brasileira")
+                assertThat(item.hotelAddress).isEqualTo("R. de Sá da Bandeira 91, 4000-427 Porto, Portugal")
                 assertThat(item.dayOfMonth).isEqualTo("19")
                 assertThat(item.time).isEqualTo("1:00 PM")
-            }
-        subject.viewState.value.items.find { it is HotelCheckInItem && it.hotelName == niceHotel.name }
-            .let {
-                val item = it as HotelCheckInItem
-                assertThat(item.hotelAddress).isEqualTo(niceHotel.address)
+            },
+            { item ->
+                assertThat(item.hotelName).isEqualTo("Hôtel La Villa Nice Victor Hugo")
+                assertThat(item.hotelAddress).isEqualTo("19 Bis Bd Victor Hugo, 06000 Nice, France")
                 assertThat(item.dayOfMonth).isEqualTo("29")
                 assertThat(item.time).isEqualTo("1:00 PM")
-            }
-        subject.viewState.value.items.find { it is HotelCheckInItem && it.hotelName == milanHotel.name }
-            .let {
-                val item = it as HotelCheckInItem
-                assertThat(item.hotelAddress).isEqualTo(milanHotel.address)
-                assertThat(item.dayOfMonth).isEqualTo("2")
-                assertThat(item.time).isEqualTo("1:00 PM")
-            }
-        subject.viewState.value.items.find { it is HotelCheckInItem && it.hotelName == sorentoHotel.name }
-            .let {
-                val item = it as HotelCheckInItem
-                assertThat(item.hotelAddress).isEqualTo(sorentoHotel.address)
+            },
+            { item ->
+                assertThat(item.hotelName).isEqualTo("Hotel Conca Park")
+                assertThat(item.hotelAddress).isEqualTo("Via degli Aranci, 13\\bis, 80067 Sorrento NA, Italy")
                 assertThat(item.dayOfMonth).isEqualTo("12")
                 assertThat(item.time).isEqualTo("1:00 PM")
             }
+        )
     }
 
     @Test
     fun `events should have one checkout event per hotel`() {
-        subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == portoHotel.name }
-            .let {
-                val item = it as HotelCheckOutItem
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
+                    checkIn = "2024-05-19T13:00 +0100",
+                    checkout = "2024-05-21T11:00 +0100",
+                ),
+                Lodging(
+                    name = "Hôtel La Villa Nice Victor Hugo",
+                    address = "19 Bis Bd Victor Hugo, 06000 Nice, France",
+                    checkIn = "2024-05-29T13:00 +0200",
+                    checkout = "2024-06-02T11:00 +0200",
+                ),
+                Lodging(
+                    name = "Hotel Conca Park",
+                    address = "Via degli Aranci, 13\\bis, 80067 Sorrento NA, Italy",
+                    checkIn = "2024-06-12T13:00 +0200",
+                    checkout = "2024-06-14T11:00 +0200",
+                )
+            )
+        )
+        val lodgings =
+            subject.viewState.value.items.filterIsInstance<HotelCheckOutItem>()
+        assertThat(lodgings).satisfiesExactly(
+            { item ->
+                assertThat(item.hotelName).isEqualTo("Pestana Porto - A Brasileira")
                 assertThat(item.dayOfMonth).isEqualTo("21")
                 assertThat(item.time).isEqualTo("11:00 AM")
-            }
-        subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == niceHotel.name }
-            .let {
-                val item = it as HotelCheckOutItem
+            },
+            { item ->
+                assertThat(item.hotelName).isEqualTo("Hôtel La Villa Nice Victor Hugo")
                 assertThat(item.dayOfMonth).isEqualTo("2")
                 assertThat(item.time).isEqualTo("11:00 AM")
-            }
-        subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name }
-            .let {
-                val item = it as HotelCheckOutItem
-                assertThat(item.dayOfMonth).isEqualTo("4")
-                assertThat(item.time).isEqualTo("11:00 AM")
-            }
-        subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == sorentoHotel.name }
-            .let {
-                val item = it as HotelCheckOutItem
+            },
+            { item ->
+                assertThat(item.hotelName).isEqualTo("Hotel Conca Park")
                 assertThat(item.dayOfMonth).isEqualTo("14")
                 assertThat(item.time).isEqualTo("11:00 AM")
             }
+        )
     }
 
     @Test
     fun `events should have one place event for each place`() {
-        subject.viewState.value.items.find { it is PlaceItem && it.placeName == lisbon.name }.let {
-            val item = it as PlaceItem
-            assertThat(item.dateStart).isEqualTo("May 11")
-            assertThat(item.dateEnd).isEqualTo("May 19")
-        }
-        subject.viewState.value.items.find { it is PlaceItem && it.placeName == porto.name }.let {
-            val item = it as PlaceItem
-            assertThat(item.dateStart).isEqualTo("May 19")
-            assertThat(item.dateEnd).isEqualTo("May 21")
-        }
-        subject.viewState.value.items.find { it is PlaceItem && it.placeName == paris.name }.let {
-            val item = it as PlaceItem
-            assertThat(item.dateStart).isEqualTo("May 21")
-            assertThat(item.dateEnd).isEqualTo("May 29")
-        }
-        subject.viewState.value.items.find { it is PlaceItem && it.placeName == nice.name }.let {
-            val item = it as PlaceItem
-            assertThat(item.dateStart).isEqualTo("May 29")
-            assertThat(item.dateEnd).isEqualTo("Jun 2")
-        }
-        subject.viewState.value.items.find { it is PlaceItem && it.placeName == milan.name }.let {
-            val item = it as PlaceItem
-            assertThat(item.dateStart).isEqualTo("Jun 2")
-            assertThat(item.dateEnd).isEqualTo("Jun 4")
-        }
-        subject.viewState.value.items.find { it is PlaceItem && it.placeName == sorento.name }.let {
-            val item = it as PlaceItem
-            assertThat(item.dateStart).isEqualTo("Jun 12")
-            assertThat(item.dateEnd).isEqualTo("Jun 14")
-        }
+        tripFlow.value = Trip(
+            flights = listOf(
+                Flight(
+                    id = "jfk-lis",
+                    departure = "2024-05-10T22:05 -0400",
+                    airportToName = "Humberto Delgado International Airport",
+                    arrival = "2024-05-11T10:00 +0100",
+                    cityFromName = "New York",
+                    cityToName = "Porto",
+                ),
+                Flight(
+                    id = "opo-par",
+                    departure = "2024-05-21T16:50 +0100",
+                    airportToName = "Orly International Airport",
+                    arrival = "2024-05-21T20:15 +0200",
+                    cityFromName = "Porto",
+                    cityToName = "Nice",
+                ),
+                Flight(
+                    id = "lis-jfk",
+                    departure = "2024-06-14T17:05 +0100",
+                    airportToName = "John F. Kennedy Intl. Airport",
+                    arrival = "2024-06-14T20:05 -0400",
+                    cityFromName = "Sorrento",
+                    cityToName = "New York",
+                ),
+            ),
+            lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
+                    checkIn = "2024-05-19T13:00 +0100",
+                    checkout = "2024-05-21T11:00 +0100",
+                    cityName = "Porto"
+                ),
+                Lodging(
+                    name = "Hôtel La Villa Nice Victor Hugo",
+                    address = "19 Bis Bd Victor Hugo, 06000 Nice, France",
+                    checkIn = "2024-05-29T13:00 +0200",
+                    checkout = "2024-06-02T11:00 +0200",
+                    cityName = "Nice"
+                ),
+                Lodging(
+                    name = "Hotel Conca Park",
+                    address = "Via degli Aranci, 13\\bis, 80067 Sorrento NA, Italy",
+                    checkIn = "2024-06-12T13:00 +0200",
+                    checkout = "2024-06-14T11:00 +0200",
+                    cityName = "Sorrento"
+                )
+            )
+        )
+        val places = subject.viewState.value.items.filterIsInstance<PlaceItem>()
+        assertThat(places).satisfiesExactly(
+            { item ->
+                assertThat(item.placeName).isEqualTo("Porto")
+                assertThat(item.dateStart).isEqualTo("May 11")
+                assertThat(item.dateEnd).isEqualTo("May 21")
+            },
+            { item ->
+                assertThat(item.placeName).isEqualTo("Nice")
+                assertThat(item.dateStart).isEqualTo("May 21")
+                assertThat(item.dateEnd).isEqualTo("Jun 2")
+            },
+            { item ->
+                assertThat(item.placeName).isEqualTo("Sorrento")
+                assertThat(item.dateStart).isEqualTo("Jun 12")
+                assertThat(item.dateEnd).isEqualTo("Jun 14")
+            }
+        )
     }
 
     @Test
     fun `events should not have place item for origin`() {
-        assertThat(subject.viewState.value.items).noneSatisfy {
-            assertType<PlaceItem>(it)
+        tripFlow.value = Trip(
+            flights = listOf(
+                Flight(
+                    id = "jfk-lis",
+                    departure = "2024-05-10T22:05 -0400",
+                    airportToName = "Humberto Delgado International Airport",
+                    arrival = "2024-05-11T10:00 +0100",
+                    cityFromName = "New York",
+                    cityToName = "Porto",
+                ),
+                Flight(
+                    id = "lis-jfk",
+                    departure = "2024-06-14T17:05 +0100",
+                    airportToName = "John F. Kennedy Intl. Airport",
+                    arrival = "2024-06-14T20:05 -0400",
+                    cityFromName = "Sorrento",
+                    cityToName = "New York",
+                ),
+            ),
+            lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
+                    checkIn = "2024-05-19T13:00 +0100",
+                    checkout = "2024-05-21T11:00 +0100",
+                    cityName = "Lisbon"
+                ),
+            )
+        )
+        val places = subject.viewState.value.items.filterIsInstance<PlaceItem>()
+        assertThat(places).noneSatisfy {
             assertThat(it.placeName).isEqualTo("New York")
         }
     }
 
     @Test
     fun `events should have one month event for each month`() {
-        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-            assertType<MonthItem>(item)
-            assertThat(item.month).isEqualTo("May")
-            assertThat(item.year).isEqualTo("2024")
-        }
-        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-            assertType<MonthItem>(item)
-            assertThat(item.month).isEqualTo("June")
-            assertThat(item.year).isEqualTo("2024")
-        }
+        tripFlow.value = Trip(
+            flights = listOf(
+                Flight(
+                    id = "jfk-lis",
+                    departure = "2024-05-10T22:05 -0400",
+                    airportToName = "Humberto Delgado International Airport",
+                    arrival = "2024-05-11T10:00 +0100",
+                    cityFromName = "New York",
+                    cityToName = "Porto",
+                ),
+                Flight(
+                    id = "lis-jfk",
+                    departure = "2024-06-14T17:05 +0100",
+                    airportToName = "John F. Kennedy Intl. Airport",
+                    arrival = "2024-06-14T20:05 -0400",
+                    cityFromName = "Sorrento",
+                    cityToName = "New York",
+                ),
+            ),
+        )
+        val months = subject.viewState.value.items.filterIsInstance<MonthItem>()
+        assertThat(months).satisfiesExactly(
+            { item ->
+                assertThat(item.month).isEqualTo("May")
+                assertThat(item.year).isEqualTo("2024")
+            },
+            { item ->
+                assertThat(item.month).isEqualTo("June")
+                assertThat(item.year).isEqualTo("2024")
+            }
+        )
     }
 
     @Test
     fun `first events should be first of each day`() {
-        subject.viewState.value.items.find { it is FlightDepartureItem && it.destination == lisbon.name }
-            .let {
-                val item = it as TripViewModel.TripItem.EventItem
+        tripFlow.value = Trip(
+            flights = listOf(
+                Flight(
+                    id = "jfk-lis",
+                    departure = "2024-05-10T22:05 -0400",
+                    airportFromName = "John F. Kennedy Intl. Airport",
+                    airportToName = "Humberto Delgado International Airport",
+                    arrival = "2024-05-11T10:25 +0100",
+                ),
+                Flight(
+                    id = "lis-jfk",
+                    departure = "2024-06-14T17:05 +0100",
+                    airportFromName = "Humberto Delgado International Airport",
+                    airportToName = "John F. Kennedy Intl. Airport",
+                    arrival = "2024-06-14T20:15 -0400",
+                ),
+            ),
+            lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    checkIn = "2024-05-11T13:00 +0100",
+                    checkout = "2024-06-14T11:00 +0100",
+                ),
+            )
+        )
+        val eventItems =
+            subject.viewState.value.items.filterIsInstance<TripViewModel.TripItem.EventItem>()
+        assertThat(eventItems).satisfiesExactly(
+            {
+                val item = it as FlightDepartureItem
+                assertThat(item.airport).isEqualTo("John F. Kennedy Intl. Airport")
                 assertThat(item.showDate).isTrue
-            }
-        subject.viewState.value.items.find { it is FlightArrivalItem && it.airport == lis.name }
-            .let {
-                val item = it as TripViewModel.TripItem.EventItem
+            },
+            {
+                val item = it as FlightArrivalItem
+                assertThat(item.airport).isEqualTo("Humberto Delgado International Airport")
                 assertThat(item.showDate).isTrue
-            }
-        subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == lisbonAirBnB.address }
-            .let {
-                val item = it as TripViewModel.TripItem.EventItem
+            },
+            {
+                val item = it as HotelCheckInItem
+                assertThat(item.hotelName).isEqualTo("Pestana Porto - A Brasileira")
+                assertThat(item.showDate).isFalse
+            },
+            {
+                val item = it as HotelCheckOutItem
+                assertThat(item.hotelName).isEqualTo("Pestana Porto - A Brasileira")
                 assertThat(item.showDate).isTrue
-            }
-        subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == portoHotel.name }
-            .let {
-                val item = it as TripViewModel.TripItem.EventItem
-                assertThat(item.showDate).isTrue
-            }
-        subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == parisAirBnB.address }
-            .let {
-                val item = it as TripViewModel.TripItem.EventItem
-                assertThat(item.showDate).isTrue
-            }
-        subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == niceHotel.name }
-            .let {
-                val item = it as TripViewModel.TripItem.EventItem
-                assertThat(item.showDate).isTrue
-            }
-        subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == milanHotel.name }
-            .let {
-                val item = it as TripViewModel.TripItem.EventItem
-                assertThat(item.showDate).isTrue
-            }
-        subject.viewState.value.items.find { it is HotelCheckInItem && it.hotelName == sorentoHotel.name }
-            .let {
-                val item = it as TripViewModel.TripItem.EventItem
-                assertThat(item.showDate).isTrue
-            }
-        subject.viewState.value.items.find { it is HotelCheckOutItem && it.hotelName == sorentoHotel.name }
-            .let {
-                val item = it as TripViewModel.TripItem.EventItem
-                assertThat(item.showDate).isTrue
-            }
+            },
+            {
+                val item = it as FlightDepartureItem
+                assertThat(item.airport).isEqualTo("Humberto Delgado International Airport")
+                assertThat(item.showDate).isFalse
+            },
+            {
+                val item = it as FlightArrivalItem
+                assertThat(item.airport).isEqualTo("John F. Kennedy Intl. Airport")
+                assertThat(item.showDate).isFalse
+            },
+        )
     }
 
     @Test
     fun `events should have empty date range for all dates without events`() {
-        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-            assertType<DateRangeItem>(item)
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    checkIn = "2024-05-11T13:00 +0100",
+                    checkout = "2024-05-19T11:00 +0100",
+                ),
+            )
+        )
+        val dateRanges = subject.viewState.value.items.filterIsInstance<DateRangeItem>()
+        assertThat(dateRanges).satisfiesExactly({ item ->
             assertThat(item.dayOfMonthStart).isEqualTo("12")
             assertThat(item.dayOfMonthEnd).isEqualTo("18")
-        }
-        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-            assertType<DateRangeItem>(item)
-            assertThat(item.dayOfMonthStart).isEqualTo("22")
-            assertThat(item.dayOfMonthEnd).isEqualTo("28")
-        }
-        assertThat(subject.viewState.value.items).satisfiesOnlyOnce { item ->
-            assertType<DateRangeItem>(item)
-            assertThat(item.dayOfMonthStart).isEqualTo("30")
-            assertThat(item.dayOfMonthEnd).isEqualTo("1")
-        }
+        })
     }
-}
 
-@ExperimentalContracts
-private inline fun <reified T> assertType(obj: Any?) {
-    contract { returns() implies (obj is T) }
-    assertThat(obj).isInstanceOf(T::class.java)
+
+    private fun Trip(
+        id: String = "tripId",
+        flights: List<Flight> = emptyList(),
+        lodgings: List<Lodging> = emptyList(),
+        places: List<Place> = emptyList(),
+    ) = Trip(
+        id = id,
+        name = null,
+        coverImage = null,
+        flights = flights,
+        lodgings = lodgings,
+        places = places,
+    )
+
+    private fun Flight(
+        id: String = "flightId",
+        departure: String? = null,
+        airportFromIata: String = "",
+        airportFromName: String = "",
+        cityFromName: String = "",
+        arrival: String? = null,
+        airportToIata: String = "",
+        airportToName: String = "",
+        cityToName: String = "",
+    ) = Flight(
+        id = id,
+        segments = listOf(
+            FlightSegment(
+                airportFrom = Airport(
+                    iata = airportFromIata,
+                    name = airportFromName,
+                    city = Place(cityFromName),
+                ),
+                departure = departure.asTime(),
+                airportTo = Airport(
+                    iata = airportToIata,
+                    name = airportToName,
+                    city = Place(cityToName),
+                ),
+                arrival = arrival.asTime(),
+            )
+        ),
+    )
+
+    private fun Lodging(
+        name: String? = null,
+        address: String = "",
+        checkIn: String? = null,
+        checkout: String? = null,
+        cityName: String = ""
+    ) = Lodging(
+        name = name,
+        address = address,
+        checkIn = checkIn.asTime(),
+        checkout = checkout.asTime(),
+        city = Place(cityName),
+    )
+
+    private fun Place(name: String) = Place(
+        id = name,
+        name = name,
+        address = "",
+        latitude = 0.0,
+        longitude = 0.0,
+        coverImage = null,
+        externalId = "",
+        source = "",
+    )
 }

@@ -5,6 +5,8 @@ package com.combah.travel2.ui.trip
 import androidx.lifecycle.ViewModel
 import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.asStateFlow
+import com.combah.travel2.extensions.update
+import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Place
@@ -121,13 +123,141 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
 
     val viewState = trip.map {
         ViewState(
-            items = genItems(it),
+            items = genItemsNew(it),
         )
     }.asStateFlow(initialValue = ViewState(emptyList()))
 
-    private fun genItems(trip: Trip): List<TripItem> {
+    private fun genItemsNew(trip: Trip): List<TripItem> {
+        val maps =
+            (trip.flights + trip.lodgings).fold(mapOf<Place, Map<String, List<TripItem.EventItem>>>()) { map, event ->
+                when (event) {
+                    is Flight -> {
+                        event.segments.fold(map) { flightMap, segment ->
+                            flightMap.toMutableMap().also { placeMap ->
+                                placeMap[segment.airportFrom.city] =
+                                    (placeMap[segment.airportFrom.city] ?: mapOf()).toMutableMap()
+                                        .also {
+                                            it[segment.departure.dateString] =
+                                                (it[segment.departure.dateString]
+                                                    ?: emptyList()).plus(
+                                                    listOf(
+                                                        createFlightDepartureItem(segment)
+                                                    )
+                                                )
+                                        }
+                                placeMap[segment.airportTo.city] =
+                                    (placeMap[segment.airportTo.city] ?: mapOf()).toMutableMap()
+                                        .also {
+                                            it[segment.arrival.dateString] =
+                                                (it[segment.arrival.dateString]
+                                                    ?: emptyList()).plus(
+                                                    listOf(
+                                                        createFlightArrivalEvent(segment)
+                                                    )
+                                                )
+                                        }
+                            }
+                        }
+                    }
+
+                    is Lodging -> {
+                        map.toMutableMap().also { placeMap ->
+                            placeMap[event.city] =
+                                (placeMap[event.city] ?: mapOf()).toMutableMap().also {
+                                    it[event.checkIn.dateString] =
+                                        (it[event.checkIn.dateString] ?: emptyList()) + listOf(
+                                            createLodgingCheckInItem(event)
+                                        )
+                                    it[event.checkout.dateString] =
+                                        (it[event.checkout.dateString] ?: emptyList()) + listOf(
+                                            createLodgingCheckOutItem(event)
+                                        )
+                                }
+                        }
+                    }
+
+                    else -> map
+                }
+            }
+
+        val items = maps.entries.flatMap { (place, dateToItems) ->
+            val items = dateToItems.entries.flatMap { (_, items) ->
+                items.mapIndexed { index, item ->
+                    if (index == 0) {
+                        when (item) {
+                            is TripItem.FlightDepartureItem -> item.copy(showDate = true)
+                            is TripItem.FlightArrivalItem -> item.copy(showDate = true)
+                            is TripItem.HotelCheckInItem -> item.copy(showDate = true)
+                            is TripItem.HotelCheckOutItem -> item.copy(showDate = true)
+                        }
+                    } else {
+                        item
+                    }
+                }
+            }
+            val timestamp = items.first().timestamp
+            listOf(
+                TripItem.PlaceItem(
+                    timestamp = timestamp,
+                    placeName = place.name,
+                    imageUrl = place.coverImage ?: "",
+                    dateStart = timestamp.dayAndMonthString,
+                    dateEnd = timestamp.dayAndMonthString,
+                )
+            ) + items
+        }
+        return items
+    }
+
+    private fun createLodgingCheckInItem(event: Lodging) =
+        TripViewModel.TripItem.HotelCheckInItem(
+            timestamp = event.checkIn,
+            showDate = false,
+            dayOfWeek = event.checkIn.dayOfWeekString(),
+            dayOfMonth = event.checkIn.dayOfMonthString(),
+            time = event.checkIn.timeString(),
+            hotelName = event.name ?: "",
+            hotelAddress = event.address,
+            showDivider = false,
+        )
+
+    private fun createLodgingCheckOutItem(event: Lodging) =
+        TripViewModel.TripItem.HotelCheckOutItem(
+            timestamp = event.checkout,
+            showDate = false,
+            dayOfWeek = event.checkout.dayOfWeekString(),
+            dayOfMonth = event.checkout.dayOfMonthString(),
+            time = event.checkout.timeString(),
+            hotelName = event.name ?: event.address,
+            showDivider = false,
+        )
+
+    private fun createFlightArrivalEvent(event: FlightSegment) =
+        TripItem.FlightArrivalItem(
+            timestamp = event.arrival,
+            showDate = false,
+            dayOfMonth = event.arrival.dayOfMonthString(),
+            dayOfWeek = event.arrival.dayOfWeekString(),
+            time = event.arrival.timeString(),
+            airport = event.airportTo.name,
+            showDivider = false,
+        )
+
+    private fun createFlightDepartureItem(event: FlightSegment) =
+        TripViewModel.TripItem.FlightDepartureItem(
+            timestamp = event.departure,
+            showDate = false,
+            dayOfMonth = event.departure.dayOfMonthString(),
+            dayOfWeek = event.departure.dayOfWeekString(),
+            time = event.departure.timeString(),
+            destination = event.airportTo.city.name,
+            airport = event.airportFrom.name,
+            showDivider = false,
+        )
+
+    private fun genItems(trip: Trip): List<TripViewModel.TripItem> {
         val items = mutableListOf<TripItem>()
-        var currentDay: Time? = null
+        var currentDay: String? = null
         var currentMonth: String? = null
         var currentPlace: Place? = null
         var currentPlaceItem: TripItem.PlaceItem? = null
@@ -145,7 +275,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
             }).sortedBy { (time, event) -> EventComparable(time, event) }
         pairs.forEach { (timestamp, event) ->
             val previousEventItem = (items.lastOrNull() as? TripItem.EventItem)
-            val day = timestamp.toMidnight()
+            val day = timestamp.run { "$year-$month-$dayOfMonth" }
             val firstInDay = day != currentDay
             val item = genItem(items, event, showDate = firstInDay)
             currentDay = day
@@ -160,11 +290,7 @@ class TripViewModel(repository: TripRepository, tripId: String) : ViewModel() {
             val month = timestamp.monthString
             if (month != currentMonth) {
                 val monthItem = TripItem.MonthItem(
-                    timestamp = timestamp.copy(
-                        timeInMillis = timestamp.toMidnight().asCalendar().apply {
-                            set(Calendar.DAY_OF_MONTH, 1)
-                        }.timeInMillis
-                    ),
+                    timestamp = timestamp.toMidnight().update(dayOfMonth = 1),
                     month = timestamp.monthString,
                     year = timestamp.asCalendar()[Calendar.YEAR].toString(),
                 )
@@ -319,6 +445,9 @@ fun getPlace(items: List<TripViewModel.TripItem>, event: Any): Place {
     }
 }
 
+private val Time.dateString
+    get() = "$year=$month-$dayOfMonth"
+
 private fun Time.asCalendar(): Calendar = Calendar.getInstance().also {
     it.timeInMillis = timeInMillis
     it.timeZone = timeZone
@@ -345,11 +474,7 @@ private fun Time.timeString(): String {
 private val Time.monthString: String
     get() = DateFormatSymbols.getInstance().months[asCalendar().get(Calendar.MONTH)]
 
-private fun Time.toMidnight(): Time = copy(timeInMillis = asCalendar().apply {
-    set(Calendar.HOUR, 0)
-    set(Calendar.MINUTE, 0)
-    set(Calendar.SECOND, 0)
-}.timeInMillis)
+private fun Time.toMidnight(): Time = update(hour = 0, minute = 0, second = 0)
 
 private fun Time.isWithin24Hours(other: Time): Boolean {
     return abs(timeInMillis - other.timeInMillis) <= TimeUnit.DAYS.toMillis(1)
