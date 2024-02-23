@@ -1,6 +1,7 @@
 package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.TimeFormatter
+import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.SimplePlace
@@ -81,7 +82,7 @@ class AddLodgingUseCase(
     override fun createData(time: Time) = PendingLodging(
         id = UUID.randomUUID().toString(),
         checkIn = time,
-        checkOut = time.midnightTime() + TimeUnit.DAYS.toMillis(1)
+        checkOut = time.toMidnight() + TimeUnit.DAYS.toMillis(1)
     )
 
     override fun createItem(data: PendingLodging): AddLodgingItem = AddLodgingItem(

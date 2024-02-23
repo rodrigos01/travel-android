@@ -1,5 +1,6 @@
 package com.combah.travel2.model.firebase
 
+import com.combah.travel2.extensions.Time
 import com.combah.travel2.model.data.Airport
 import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
@@ -7,8 +8,9 @@ import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.Trip
+import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.TimeZone
+import java.util.Locale
 
 fun FirebaseData.Trip.toAppDataModel() = Trip(
     id = id,
@@ -27,13 +29,9 @@ fun FirebaseData.Flight.toAppDataModel() = Flight(
 
 fun FirebaseData.FlightSegment.toAppDataModel() = FlightSegment(
     airportFrom = airportFrom?.toAppDataModel(cityFrom) ?: error("airportFrom is required"),
-    departure = departure.toTimestamp(
-        TimeZone.getTimeZone(
-            (airportFrom.city ?: cityFrom)?.timeZone
-        )
-    ),
+    departure = departure.toTime(),
     airportTo = airportTo?.toAppDataModel(cityTo) ?: error("address is required"),
-    arrival = arrival.toTimestamp(TimeZone.getTimeZone((airportTo.city ?: cityTo)?.timeZone)),
+    arrival = arrival.toTime(),
 )
 
 fun FirebaseData.Airport.toAppDataModel(city: FirebaseData.Place? = null) = Airport(
@@ -46,9 +44,9 @@ fun FirebaseData.Lodging.toAppDataModel() = Lodging(
     name = name,
     address = address ?: error("address is required"),
     city = city?.toAppDataModel() ?: error("city is required"),
-    checkIn = checkIn?.toTimestamp(TimeZone.getTimeZone(city.timeZone))
+    checkIn = checkIn?.toTime()
         ?: error("checkin is required"),
-    checkout = checkout?.toTimestamp(TimeZone.getTimeZone(city.timeZone))
+    checkout = checkout?.toTime()
         ?: error("checkout is required"),
 )
 
@@ -71,9 +69,9 @@ fun Flight.toFirebaseDataModel() = FirebaseData.Flight(
 
 fun FlightSegment.toFirebaseDataModel() = FirebaseData.FlightSegment(
     airportFrom = airportFrom.toFirebaseDataModel(),
-    departure = Date(departure.timeInMillis),
+    departure = departure.toFirebaseDataModel(),
     airportTo = airportTo.toFirebaseDataModel(),
-    arrival = Date(arrival.timeInMillis),
+    arrival = arrival.toFirebaseDataModel(),
 )
 
 fun Airport.toFirebaseDataModel() = FirebaseData.Airport(
@@ -86,8 +84,8 @@ fun Lodging.toFirebaseDataModel() = FirebaseData.Lodging(
     name = name,
     address = address,
     city = city.toFirebaseDataModel(),
-    checkIn = Date(checkIn.timeInMillis),
-    checkout = Date(checkout.timeInMillis),
+    checkIn = checkIn.toFirebaseDataModel(),
+    checkout = checkout.toFirebaseDataModel(),
 )
 
 fun Place.toFirebaseDataModel() = FirebaseData.Place(
@@ -101,7 +99,9 @@ fun Place.toFirebaseDataModel() = FirebaseData.Place(
     source = source,
 )
 
-private fun Date.toTimestamp(timeZone: TimeZone?): Time {
-    val timeInMillis = time
-    return Time(timeInMillis, timeZone ?: TimeZone.getDefault())
-}
+fun String.toTime(): Time = Time(this)
+
+fun Time.toFirebaseDataModel() =
+    SimpleDateFormat("yyyy-MM-dd'T'HH:mm Z", Locale.getDefault()).also {
+        it.timeZone = timeZone
+    }.format(Date(timeInMillis))

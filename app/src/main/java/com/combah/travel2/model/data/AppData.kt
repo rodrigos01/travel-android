@@ -11,10 +11,12 @@ data class Trip(
 
 sealed interface TripEntity
 
+sealed interface TripEvent
+
 data class Flight(
     val id: String,
     val segments: List<FlightSegment>,
-    val price: Double?,
+    val price: Double? = null,
 ) : TripEntity
 
 data class FlightSegment(
@@ -22,7 +24,7 @@ data class FlightSegment(
     val departure: Time,
     val airportTo: Airport,
     val arrival: Time,
-)
+) : TripEvent
 
 data class Airport(
     val iata: String,
@@ -36,7 +38,7 @@ data class Lodging(
     val city: Place,
     val checkIn: Time,
     val checkout: Time,
-) : TripEntity
+) : TripEntity, TripEvent
 
 data class Place(
     val id: String,
