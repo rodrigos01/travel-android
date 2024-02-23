@@ -21,15 +21,15 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.combah.travel2.model.repository.mock.MockTripRepository
 import com.combah.travel2.ui.theme.AppTheme
-import com.combah.travel2.ui.trip.TripViewModel
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.DateRangeItem
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.FlightArrivalItem
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.FlightDepartureItem
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.HotelCheckInItem
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.HotelCheckOutItem
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.MonthItem
-import com.combah.travel2.ui.trip.TripViewModel.TripItem.PlaceItem
 import com.combah.travel2.ui.trip.creation.composable.TransportationSetupDestination
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.DateRangeItem
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightArrivalItem
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightDepartureItem
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckInItem
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckOutItem
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.MonthItem
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.PlaceItem
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
