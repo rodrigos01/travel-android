@@ -2,6 +2,7 @@ package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.extensions.get
+import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.SimplePlace
 import com.combah.travel2.model.data.Time
@@ -11,11 +12,15 @@ import com.combah.travel2.test.Mocks.mockTime
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase
+import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase.AutoCompleteState
 import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseStore
 import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase.AddLodgingItem
 import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase.InputState
 import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase.InputUseCaseSet
 import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase.PendingLodging
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -44,7 +49,13 @@ class AddLodgingUseCaseTest {
         mock<AddPlanItemStore<PendingLodging, AddLodgingItem>> {
             on { items } doReturn itemFlow
         }
-    private val autoCompleteUseCase: AutoCompleteUseCase<SimplePlace> = mock()
+    private val autoCompleteState =
+        MutableStateFlow<AutoCompleteState<SimplePlace>>(mock {
+            on { searchResults } doReturn emptyList()
+        })
+    private val autoCompleteUseCase: AutoCompleteUseCase<SimplePlace> = mock {
+        on { state } doReturn autoCompleteState
+    }
     private val inputUseCaseSet = InputUseCaseSet(autoCompleteUseCase)
     private val inputUseCaseStates =
         MutableStateFlow<Map<String, InputState>>(emptyMap())
@@ -86,7 +97,6 @@ class AddLodgingUseCaseTest {
         assertThat(data.name).isNull()
         assertThat(data.address).isNull()
         assertThat(data.city).isNull()
-        assertThat(data.lodgingSearchResults).isEmpty()
     }
 
     @Test
@@ -102,9 +112,9 @@ class AddLodgingUseCaseTest {
         val midnightTime = mockTime {
             on { plus(TimeUnit.DAYS.toMillis(1)) } doReturn expected
         }
-        val initialTime = mockTime {
-            on { midnightTime() } doReturn midnightTime
-        }
+        mockkStatic("com.combah.travel2.extensions.TimeKt")
+        val initialTime = mockk<Time>()
+        every { initialTime.toMidnight() } returns midnightTime
         val data = subject.createData(initialTime)
         assertThat(data.checkOut).isEqualTo(expected)
     }
@@ -204,24 +214,24 @@ class AddLodgingUseCaseTest {
             on { address } doReturn "Blvd Les Halles, 45"
             on { city } doReturn paris
         }
-        val results = listOf(
-            mock(),
-            expected,
-            mock(),
-        )
+        autoCompleteState.value = mock {
+            on { searchResults } doReturn listOf(
+                mock(),
+                expected,
+                mock(),
+            )
+        }
         val originalData =
             PendingLodging(
                 id = "lodging_id",
                 checkIn = mock(),
                 checkOut = mock(),
-                lodgingSearchResults = results
             )
         subject.lodgingSearchResultTapped("lodging_id", 1)
         val result = getUpdateResult(originalData)
         assertThat(result.name).isEqualTo("Hotel Novotel Paris Les Halles")
         assertThat(result.address).isEqualTo("Blvd Les Halles, 45")
         assertThat(result.city).isEqualTo(paris)
-        assertThat(result.lodgingSearchResults).isEmpty()
     }
 
     private fun getUpdateResult(originalData: PendingLodging): PendingLodging {

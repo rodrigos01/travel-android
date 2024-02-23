@@ -1,6 +1,7 @@
 package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.TimeFormatter
+import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.model.data.Airport
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddFlightRepository
@@ -14,6 +15,9 @@ import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase.AddFlightItem
 import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase.InputState
 import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase.InputUseCaseSet
 import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase.PendingFlight
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -42,8 +46,20 @@ class AddFlightUseCaseTest {
     private val itemStore = mock<AddPlanItemStore<PendingFlight, AddFlightItem>> {
         on { items } doReturn itemFlow
     }
-    private val airportFromAutoCompleteUseCase: AutoCompleteUseCase<Airport> = mock()
-    private val airportToAutoCompleteUseCase: AutoCompleteUseCase<Airport> = mock()
+    private val airportFromAutoCompleteState =
+        MutableStateFlow<AutoCompleteUseCase.AutoCompleteState<Airport>>(mock {
+            on { searchResults } doReturn emptyList()
+        })
+    private val airportFromAutoCompleteUseCase: AutoCompleteUseCase<Airport> = mock {
+        on { state } doReturn airportFromAutoCompleteState
+    }
+    private val airportToAutoCompleteState =
+        MutableStateFlow<AutoCompleteUseCase.AutoCompleteState<Airport>>(mock {
+            on { searchResults } doReturn emptyList()
+        })
+    private val airportToAutoCompleteUseCase: AutoCompleteUseCase<Airport> = mock {
+        on { state } doReturn airportToAutoCompleteState
+    }
     private val inputUseCaseSet = InputUseCaseSet(
         airportFromAutoCompleteUseCase = airportFromAutoCompleteUseCase,
         airportToAutoCompleteUseCase = airportToAutoCompleteUseCase,
@@ -84,10 +100,8 @@ class AddFlightUseCaseTest {
     fun `created data should be initialized empty`() {
         val data = subject.createData(mockTime())
         assertThat(data.airportFrom).isNull()
-        assertThat(data.airportFromSearchResults).isEmpty()
         assertThat(data.arrival).isNull()
         assertThat(data.airportTo).isNull()
-        assertThat(data.airportToSearchResults).isEmpty()
     }
 
     @Test
@@ -120,26 +134,18 @@ class AddFlightUseCaseTest {
         val midnightTime: Time = mock {
             on { minus(60000) } doReturn oneToMidnightTime
         }
-        val departure = mock<Time> {
-            on { midnightTime() } doReturn midnightTime
-        }
+
+        mockkStatic("com.combah.travel2.extensions.TimeKt")
+        val departure = mockk<Time>()
+        every { departure.toMidnight() } returns midnightTime
+
         val arrival = mock<Time>()
         val data = PendingFlight(
             id = "flight_id",
             departure = departure,
             airportFrom = mock<Airport> { on { name } doReturn "Airport 15" },
-            airportFromSearchResults = listOf(
-                mock<Airport> { on { name } doReturn "Charles de Gaule" },
-                mock<Airport> { on { name } doReturn "John F. Kennedy" },
-                mock<Airport> { on { name } doReturn "Heathrow" },
-            ),
             arrival = arrival,
             airportTo = mock<Airport> { on { name } doReturn "Airport 16" },
-            airportToSearchResults = listOf(
-                mock<Airport> { on { name } doReturn "Orly" },
-                mock<Airport> { on { name } doReturn "LaGuardia" },
-                mock<Airport> { on { name } doReturn "Fiumiccino" },
-            ),
         )
         formatter.stub {
             on { timeString(departure) } doReturn "9:15"
@@ -153,20 +159,10 @@ class AddFlightUseCaseTest {
         assertThat(item.minArrivalTimeMillis).isEqualTo(1259L)
         assertThat(item.departureTime).isEqualTo("9:15")
         assertThat(item.airportFromName).isEqualTo("Airport 15")
-        assertThat(item.airportFromSearchResults).containsExactly(
-            "Charles de Gaule",
-            "John F. Kennedy",
-            "Heathrow",
-        )
         assertThat(item.arrivalDayOfMonth).isEqualTo("21")
         assertThat(item.arrivalDayOfWeek).isEqualTo("Wed")
         assertThat(item.arrivalTime).isEqualTo("16:15")
         assertThat(item.airportToName).isEqualTo("Airport 16")
-        assertThat(item.airportToSearchResults).containsExactly(
-            "Orly",
-            "LaGuardia",
-            "Fiumiccino",
-        )
     }
 
     @Test
@@ -213,13 +209,15 @@ class AddFlightUseCaseTest {
     @Test
     fun `airport from search result tapped should update item with selected airport`() {
         val expected: Airport = mock()
-        val results = listOf(
-            mock(),
-            expected,
-            mock(),
-        )
+        airportFromAutoCompleteState.value = mock {
+            on { searchResults } doReturn listOf(
+                mock(),
+                expected,
+                mock(),
+            )
+        }
         val originalData =
-            PendingFlight(id = "flight_id", departure = mock(), airportFromSearchResults = results)
+            PendingFlight(id = "flight_id", departure = mock())
         subject.airportFromSearchResultTapped("flight_id", 1)
         val result = getUpdateResult(originalData)
         assertThat(result.airportFrom).isEqualTo(expected)
@@ -228,13 +226,15 @@ class AddFlightUseCaseTest {
     @Test
     fun `airport to search result tapped should update item with selected airport`() {
         val expected: Airport = mock()
-        val results = listOf(
-            mock(),
-            expected,
-            mock(),
-        )
+        airportToAutoCompleteState.value = mock {
+            on { searchResults } doReturn listOf(
+                mock(),
+                expected,
+                mock(),
+            )
+        }
         val originalData =
-            PendingFlight(id = "flight_id", departure = mock(), airportToSearchResults = results)
+            PendingFlight(id = "flight_id", departure = mock())
         subject.airportToSearchResultTapped("flight_id", 1)
         val result = getUpdateResult(originalData)
         assertThat(result.airportTo).isEqualTo(expected)
@@ -304,10 +304,8 @@ class AddFlightUseCaseTest {
             id = "flight_id",
             departure = mock(),
             airportFrom = mock(),
-            airportFromSearchResults = listOf(),
             arrival = mock(),
             airportTo = mock(),
-            airportToSearchResults = listOf(),
         )
         itemStore.stub { on { get("flight_id") } doReturn data }
         val result = subject.createAppData(item = mock { on { id } doReturn "flight_id" })
