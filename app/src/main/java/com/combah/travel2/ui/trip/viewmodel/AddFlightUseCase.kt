@@ -1,6 +1,7 @@
 package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.TimeFormatter
+import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.model.data.Airport
 import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
@@ -53,12 +54,10 @@ class AddFlightUseCase(
     class InputUseCaseSet(
         val airportFromAutoCompleteUseCase: AutoCompleteUseCase<Airport>,
         val airportToAutoCompleteUseCase: AutoCompleteUseCase<Airport>,
-    ) :
-        InputUseCaseStore.UseCaseSet<InputState> {
+    ) : InputUseCaseStore.UseCaseSet<InputState> {
 
         override val state = combine(
-            airportFromAutoCompleteUseCase.state,
-            airportToAutoCompleteUseCase.state
+            airportFromAutoCompleteUseCase.state, airportToAutoCompleteUseCase.state
         ) { from, to ->
             InputState(from.searchResults, to.searchResults)
         }
@@ -100,7 +99,7 @@ class AddFlightUseCase(
         val item = AddFlightItem(
             id = data.id,
             timestamp = data.departure,
-            minArrivalTimeMillis = data.departure.midnightTime()
+            minArrivalTimeMillis = data.departure.toMidnight()
                 .minus(TimeUnit.MINUTES.toMillis(1L)).timeInMillis,
             departureTime = timeFormatter.timeString(data.departure),
             airportFromName = data.airportFrom?.name,
@@ -165,10 +164,8 @@ class AddFlightUseCase(
     }
 
     override fun airportFromSearchResultTapped(itemId: String, index: Int) {
-        val useCase = inputUseCaseStore.get(itemId)
-            ?.airportFromAutoCompleteUseCase
-        val selected = useCase?.state
-            ?.value?.searchResults?.getOrNull(index)
+        val useCase = inputUseCaseStore.get(itemId)?.airportFromAutoCompleteUseCase
+        val selected = useCase?.state?.value?.searchResults?.getOrNull(index)
         useCase?.clearResults()
         itemStore.update(itemId) {
             it.copy(
@@ -184,10 +181,8 @@ class AddFlightUseCase(
     }
 
     override fun airportToSearchResultTapped(itemId: String, index: Int) {
-        val useCase = inputUseCaseStore.get(itemId)
-            ?.airportToAutoCompleteUseCase
-        val selected = useCase?.state
-            ?.value?.searchResults?.getOrNull(index)
+        val useCase = inputUseCaseStore.get(itemId)?.airportToAutoCompleteUseCase
+        val selected = useCase?.state?.value?.searchResults?.getOrNull(index)
         useCase?.clearResults()
         itemStore.update(itemId) {
             it.copy(
@@ -197,8 +192,7 @@ class AddFlightUseCase(
     }
 
     override fun createAppData(item: AddFlightItem): Flight {
-        val pending =
-            itemStore.get(item.id) ?: error("provided Id is not from this Use Case")
+        val pending = itemStore.get(item.id) ?: error("provided Id is not from this Use Case")
         pending.airportFrom ?: error("airport from is not set")
         pending.airportTo ?: error("airport to is not set")
         pending.arrival ?: error("arival time is not set")

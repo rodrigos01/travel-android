@@ -7,11 +7,12 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 
 object Mocks {
-    fun mockTime(stubbing: KStubbing<Time>.(Time) -> Unit = {}): Time = mock {
-        on { midnightTime() } doReturn it
-        on { minus(any()) } doReturn it
-        on { plus(any<Long>()) } doReturn it
-        on { timeInMillis } doReturn 0L
-        stubbing(it)
+    fun mockTime(stubbing: KStubbing<Time>.(Time) -> Unit = {}): Time {
+        return mock {
+            on { minus(any()) } doReturn it
+            on { plus(any<Long>()) } doReturn it
+            on { timeInMillis } doReturn 0L
+            stubbing(it)
+        }
     }
 }
