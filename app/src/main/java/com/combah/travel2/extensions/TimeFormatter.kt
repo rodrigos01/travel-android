@@ -8,8 +8,7 @@ import java.util.Date
 import java.util.Locale
 
 class TimeFormatter {
-    fun dayOfMonthString(time: Time): String =
-        time.dayOfMonth.toString()
+    fun dayOfMonthString(time: Time): String = time.dayOfMonth.toString()
 
     fun dayAndMonthString(time: Time): String =
         SimpleDateFormat("MMM d", Locale.getDefault()).apply {
@@ -27,6 +26,5 @@ class TimeFormatter {
         return formatter.format(date)
     }
 
-    fun monthString(time: Time): String =
-        DateFormatSymbols.getInstance().months[time.month]
+    fun monthString(time: Time): String = DateFormatSymbols.getInstance().months[time.month - 1]
 }

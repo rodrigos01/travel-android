@@ -223,7 +223,7 @@ class TripViewModel(
             val isLastItem = index == pairs.lastIndex
             val lastEventIndex = items.indexOfLast { it is TripItem.EventItem }
             val lastEvent = items.getOrNull(lastEventIndex) as? TripItem.EventItem
-            val lastTime = lastEvent?.timestamp?.takeIf { time.dateString != it.dateString }
+            val dateRangeItem = lastEvent?.timestamp?.let { genDateRangeItem(it, time) }
             val eventPlace = event.getPlace(time)
             val existingPlaceIndex =
                 items.indexOfLast { it is TripItem.PlaceItem && it.placeName == eventPlace.name }
@@ -253,7 +253,7 @@ class TripViewModel(
                         existingPlaceIndex, it.copy(dateEnd = time.dayAndMonthString)
                     )
                 }
-                lastTime?.let { add(genDateRangeItem(from = it, to = time)) }
+                dateRangeItem?.let { add(it) }
                 if (firstInPlace) {
                     add(
                         TripItem.PlaceItem(
@@ -304,9 +304,12 @@ class TripViewModel(
 
     private fun genDateRangeItem(
         from: Time, to: Time
-    ): TripItem.DateRangeItem {
+    ): TripItem.DateRangeItem? {
         val start = (from + TimeUnit.DAYS.toMillis(1))
         val end = to.toMidnight() - TimeUnit.MINUTES.toMillis(1)
+        if (end <= start) {
+            return null
+        }
         return TripItem.DateRangeItem(
             timestamp = start,
             dayOfMonthStart = start.dayOfMonthString,

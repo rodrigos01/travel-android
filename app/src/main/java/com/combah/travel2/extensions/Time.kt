@@ -27,7 +27,7 @@ fun Time.update(
     timeInMillis = this@update.timeInMillis
     set(Calendar.DAY_OF_MONTH, dayOfMonth)
     set(Calendar.DAY_OF_WEEK, dayOfWeek)
-    set(Calendar.MONTH, month)
+    set(Calendar.MONTH, month - 1)
     set(Calendar.YEAR, year)
     set(Calendar.HOUR_OF_DAY, hour)
     set(Calendar.MINUTE, minute)

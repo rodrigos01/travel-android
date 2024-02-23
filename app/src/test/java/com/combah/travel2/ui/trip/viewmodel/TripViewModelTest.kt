@@ -458,6 +458,27 @@ class TripViewModelTest {
     }
 
     @Test
+    fun `empty date range should not have start before end`() {
+        tripFlow.value = Trip(
+            flights = listOf(
+                Flight(
+                    id = "jfk-lis",
+                    departure = "2024-05-10T22:05 -0400",
+                    airportToName = "Humberto Delgado International Airport",
+                    arrival = "2024-05-11T10:00 +0100",
+                    cityFromName = "New York",
+                    cityToName = "Porto",
+                )
+            )
+        )
+        val dateRanges = subject.viewState.value.items.filterIsInstance<DateRangeItem>()
+        assertThat(dateRanges).noneSatisfy { item ->
+            assertThat(item.dayOfMonthStart).isEqualTo("11")
+            assertThat(item.dayOfMonthEnd).isEqualTo("10")
+        }
+    }
+
+    @Test
     fun `add Plan tapped should add add plan item below tapped item`() {
         tripFlow.value = Trip(
             lodgings = listOf(
