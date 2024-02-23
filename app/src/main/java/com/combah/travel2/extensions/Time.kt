@@ -33,3 +33,5 @@ fun Time.update(
     set(Calendar.MINUTE, minute)
     set(Calendar.SECOND, second)
 }.let { Time(it.timeInMillis, it.timeZone) }
+
+fun Time.toMidnight(): Time = update(hour = 0, minute = 0, second = 0)

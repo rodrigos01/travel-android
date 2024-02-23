@@ -1,11 +1,11 @@
 @file:OptIn(ExperimentalContracts::class)
 
-package com.combah.travel2.ui.trip
+package com.combah.travel2.ui.trip.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.asStateFlow
-import com.combah.travel2.extensions.update
+import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
@@ -327,8 +327,6 @@ private fun Time.timeString(): String {
 
 private val Time.monthString: String
     get() = DateFormatSymbols.getInstance().months[asCalendar().get(Calendar.MONTH)]
-
-private fun Time.toMidnight(): Time = update(hour = 0, minute = 0, second = 0)
 
 private fun <T> List<T>.contains(predicate: (T) -> Boolean) = find(predicate) != null
 
