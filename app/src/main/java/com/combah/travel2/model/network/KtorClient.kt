@@ -13,6 +13,7 @@ fun httpClient() = HttpClient {
         json(Json {
             ignoreUnknownKeys = true
             namingStrategy = JsonNamingStrategy.SnakeCase
+            explicitNulls = false
         })
     }
 }
