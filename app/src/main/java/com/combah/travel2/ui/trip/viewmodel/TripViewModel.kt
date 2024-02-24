@@ -19,13 +19,11 @@ import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -149,14 +147,9 @@ class TripViewModel(
             items = genItems(it),
         )
     }.onEach { localState.value = it }
-    private val addPlanItems = addPlanUseCase.items.stateIn(
-        viewModelScope,
-        started = SharingStarted.WhileSubscribed(),
-        initialValue = emptyMap(),
-    )
     private val localState = MutableStateFlow(ViewState(items = emptyList()))
     val viewState: StateFlow<ViewState> =
-        merge(eventsFromTrip, localState).combine(addPlanItems) { state, addPlanItems ->
+        merge(eventsFromTrip, localState).combine(addPlanUseCase.items) { state, addPlanItems ->
             state.updateItems {
                 addPlanItems.forEach { (id, addPlanItem) ->
                     indexOfFirst { it is TripItem.Identifiable && it.id == id }.takeIf { it != -1 }

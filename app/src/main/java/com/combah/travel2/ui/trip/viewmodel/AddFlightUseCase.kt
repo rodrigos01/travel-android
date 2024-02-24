@@ -2,6 +2,7 @@ package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.extensions.toMidnight
+import com.combah.travel2.extensions.update
 import com.combah.travel2.model.data.Airport
 import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
@@ -88,10 +89,12 @@ class AddFlightUseCase(
         }
 
     override fun createData(time: Time): PendingFlight {
-        return PendingFlight(
+        val data = PendingFlight(
             id = UUID.randomUUID().toString(),
             departure = time,
         )
+        inputUseCaseStore.register(data.id)
+        return data
     }
 
     override fun createItem(data: PendingFlight): AddFlightItem {
@@ -108,7 +111,6 @@ class AddFlightUseCase(
             arrivalTime = data.arrival?.let { timeFormatter.timeString(it) },
             airportToName = data.airportTo?.name,
         )
-        inputUseCaseStore.register(item.id)
         return item
     }
 
@@ -133,14 +135,14 @@ class AddFlightUseCase(
 
     override fun setDepartureTime(itemId: String, hour: Int, minute: Int) {
         itemStore.update(itemId) {
-            it.copy(departure = it.departure.copy(hour = hour, minute = minute))
+            it.copy(departure = it.departure.update(hour = hour, minute = minute))
         }
     }
 
     override fun setArrivalDate(itemId: String, date: Time) {
         itemStore.update(itemId) {
             it.copy(
-                arrival = (it.arrival ?: it.departure).copy(
+                arrival = (it.arrival ?: it.departure).update(
                     dayOfMonth = date.dayOfMonth,
                     month = date.month,
                     year = date.year,
@@ -152,7 +154,7 @@ class AddFlightUseCase(
     override fun setArrivalTime(itemId: String, hour: Int, minute: Int) {
         itemStore.update(itemId) {
             it.copy(
-                arrival = (it.arrival ?: it.departure).copy(hour = hour, minute = minute)
+                arrival = (it.arrival ?: it.departure).update(hour = hour, minute = minute)
             )
         }
     }
