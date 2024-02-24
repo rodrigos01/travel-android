@@ -49,6 +49,7 @@ fun TripDetails(
                         dayOfWeekStart = event.dayOfWeekStart,
                         dayOfMonthEnd = event.dayOfMonthEnd,
                         dayOfWeekEnd = event.dayOfWeekEnd,
+                        onAddButtonClick = { viewModel.addButtonTapped(event.id) },
                     )
 
                     is PlaceItem -> PlaceEventListItem(

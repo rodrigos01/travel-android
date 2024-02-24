@@ -53,14 +53,6 @@ class TripViewModel(
         data class MonthItem(override val timestamp: Time, val month: String, val year: String) :
             TripItem, Timeable
 
-        data class DateRangeItem(
-            override val timestamp: Time,
-            val dayOfMonthStart: String,
-            val dayOfWeekStart: String,
-            val dayOfMonthEnd: String,
-            val dayOfWeekEnd: String,
-        ) : TripItem, Timeable
-
         data class PlaceItem(
             override val timestamp: Time,
             val placeName: String,
@@ -72,6 +64,15 @@ class TripViewModel(
         interface Identifiable {
             val id: String
         }
+
+        data class DateRangeItem(
+            override val id: String,
+            override val timestamp: Time,
+            val dayOfMonthStart: String,
+            val dayOfWeekStart: String,
+            val dayOfMonthEnd: String,
+            val dayOfWeekEnd: String,
+        ) : TripItem, Timeable, Identifiable
 
         sealed interface EventItem : TripItem, Timeable, Identifiable {
             val showDate: Boolean
@@ -170,11 +171,17 @@ class TripViewModel(
 
     fun addButtonTapped(itemId: String) {
         val tapped =
-            viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId } as TripItem.EmptyAddPlanItem
+            viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
         val index = viewState.value.items.indexOf(tapped)
         updateItems {
-            removeAt(index)
-            add(index, addPlanUseCase.createAddPlanItem(tapped.timestamp))
+            val addPlanItem =
+                addPlanUseCase.createAddPlanItem((tapped as TripItem.Timeable).timestamp)
+            if (tapped is TripItem.EmptyAddPlanItem) {
+                removeAt(index)
+                add(index, addPlanItem)
+            } else if (tapped is TripItem.DateRangeItem) {
+                add(index + 1, addPlanItem)
+            }
         }
     }
 
@@ -235,7 +242,7 @@ class TripViewModel(
             val firstInDay =
                 !items.contains { it is TripItem.EventItem && it.timestamp.dateString == time.dateString }
             val firstInSection = firstInDay || firstInPlace
-            val emptyAddPlanItemIndex = if (firstInSection) {
+            val emptyAddPlanItemIndex = if (firstInSection && dateRangeItem == null) {
                 lastEvent?.let { items.indexOf(it) + 1 }
             } else {
                 null
@@ -317,6 +324,7 @@ class TripViewModel(
             return null
         }
         return TripItem.DateRangeItem(
+            id = UUID.randomUUID().toString(),
             timestamp = start,
             dayOfMonthStart = start.dayOfMonthString,
             dayOfWeekStart = start.dayOfWeekString,
