@@ -479,6 +479,65 @@ class TripViewModelTest {
     }
 
     @Test
+    fun `last item on day should have empty add item after it`() {
+        val lodgingName = "Best Western Premier Hotel Montfleuri"
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = lodgingName,
+                    checkIn = "2024-05-29T13:00 +0200",
+                    checkout = "2024-05-30T11:00 +0200",
+                ),
+            )
+        )
+        val checkInItemIndex =
+            subject.viewState.value.items.indexOfFirst { it is HotelCheckInItem && it.hotelName == lodgingName }
+        val addPlanItem = subject.viewState.value.items[checkInItemIndex + 1]
+        assertThat(addPlanItem).isInstanceOf(TripViewModel.TripItem.EmptyAddPlanItem::class.java)
+    }
+
+    @Test
+    fun `last item in place should have empty add item after it`() {
+        val lodgingName = "Best Western Premier Hotel Montfleuri"
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = lodgingName,
+                    checkIn = "2024-05-29T13:00 +0200",
+                    checkout = "2024-05-30T11:00 +0200",
+                    cityName = "Montfleuri"
+                ),
+                Lodging(
+                    name = "Hôtel La Villa Nice Victor Hugo",
+                    checkIn = "2024-05-30T13:00 +0200",
+                    checkout = "2024-06-1T11:00 +0200",
+                    cityName = "Nice"
+                ),
+            )
+        )
+        val checkOutItemIndex =
+            subject.viewState.value.items.indexOfFirst { it is HotelCheckOutItem && it.hotelName == lodgingName }
+        val addPlanItem = subject.viewState.value.items[checkOutItemIndex + 1]
+        assertThat(addPlanItem).isInstanceOf(TripViewModel.TripItem.EmptyAddPlanItem::class.java)
+    }
+
+    @Test
+    fun `last item in list should be empty add item`() {
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = "Hôtel La Villa Nice Victor Hugo",
+                    checkIn = "2024-05-30T13:00 +0200",
+                    checkout = "2024-06-1T11:00 +0200",
+                    cityName = "Nice"
+                ),
+            )
+        )
+        val addPlanItem = subject.viewState.value.items.last()
+        assertThat(addPlanItem).isInstanceOf(TripViewModel.TripItem.EmptyAddPlanItem::class.java)
+    }
+
+    @Test
     fun `add Plan tapped should add add plan item below tapped item`() {
         tripFlow.value = Trip(
             lodgings = listOf(
