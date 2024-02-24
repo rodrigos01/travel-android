@@ -2,6 +2,7 @@ package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.extensions.toMidnight
+import com.combah.travel2.extensions.update
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.SimplePlace
@@ -111,7 +112,7 @@ class AddLodgingUseCase(
     override fun setCheckInTime(itemId: String, hour: Int, minute: Int) {
         itemStore.update(itemId) {
             it.copy(
-                checkIn = it.checkIn.copy(hour = hour, minute = minute)
+                checkIn = it.checkIn.update(hour = hour, minute = minute)
             )
         }
     }
@@ -119,7 +120,7 @@ class AddLodgingUseCase(
     override fun setCheckOutDate(itemId: String, date: Time) {
         itemStore.update(itemId) {
             it.copy(
-                checkOut = it.checkOut.copy(
+                checkOut = it.checkOut.update(
                     dayOfMonth = date.dayOfMonth,
                     month = date.month,
                     year = date.year,
@@ -131,7 +132,7 @@ class AddLodgingUseCase(
     override fun setCheckoutTime(itemId: String, hour: Int, minute: Int) {
         itemStore.update(itemId) {
             it.copy(
-                checkOut = it.checkOut.copy(hour = hour, minute = minute)
+                checkOut = it.checkOut.update(hour = hour, minute = minute)
             )
         }
     }
