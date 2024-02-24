@@ -237,13 +237,11 @@ class TripViewModel(
             val firstInSection = firstInDay || firstInPlace
             val emptyAddPlanItemIndex = if (firstInSection) {
                 lastEvent?.let { items.indexOf(it) + 1 }
-            } else if (index == pairs.lastIndex) {
-                items.size + 1
             } else {
                 null
             }
             val emptyAddPlanItemTimestamp =
-                if (firstInSection) lastEvent?.timestamp else time
+                if (firstInSection && lastEvent != null) lastEvent.timestamp else time
             val placeForRemoval = items.find {
                 it is TripItem.PlaceItem && it.placeName != eventPlace.name && it.isOrigin(items)
             }
@@ -251,6 +249,12 @@ class TripViewModel(
                 existingPlace?.let {
                     set(
                         existingPlaceIndex, it.copy(dateEnd = time.dayAndMonthString)
+                    )
+                }
+                emptyAddPlanItemIndex?.let {
+                    add(
+                        it,
+                        genEmptyAddPlanItem(emptyAddPlanItemTimestamp, showDivider = !firstInPlace)
                     )
                 }
                 dateRangeItem?.let { add(it) }
@@ -275,19 +279,21 @@ class TripViewModel(
                     )
                 }
                 add(genItem(time, event, firstInDay))
-                if (emptyAddPlanItemIndex != null && emptyAddPlanItemTimestamp != null) {
-                    add(
-                        emptyAddPlanItemIndex, TripItem.EmptyAddPlanItem(
-                            UUID.randomUUID().toString(),
-                            emptyAddPlanItemTimestamp,
-                            showDivider = !firstInPlace,
-                        )
-                    )
-                }
                 placeForRemoval?.let { remove(it) }
+                if (isLastItem) {
+                    add(genEmptyAddPlanItem(emptyAddPlanItemTimestamp, showDivider = false))
+                }
             }
         }
     }
+
+    private fun genEmptyAddPlanItem(
+        emptyAddPlanItemTimestamp: Time, showDivider: Boolean
+    ) = TripItem.EmptyAddPlanItem(
+        UUID.randomUUID().toString(),
+        emptyAddPlanItemTimestamp,
+        showDivider = showDivider,
+    )
 
     private fun TripItem.PlaceItem.isOrigin(items: List<TripItem>): Boolean {
         val isFirstPlace = this == items.first { it is TripItem.PlaceItem }
