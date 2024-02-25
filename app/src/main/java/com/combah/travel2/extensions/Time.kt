@@ -16,7 +16,6 @@ fun Time(source: String): Time {
 
 fun Time.update(
     dayOfMonth: Int = this.dayOfMonth,
-    dayOfWeek: Int = this.dayOfWeek,
     month: Int = this.month,
     year: Int = this.year,
     hour: Int = this.hour,
@@ -25,13 +24,7 @@ fun Time.update(
     timeZone: TimeZone = this.timeZone,
 ): Time = Calendar.getInstance(timeZone).apply {
     timeInMillis = this@update.timeInMillis
-    set(Calendar.DAY_OF_MONTH, dayOfMonth)
-    set(Calendar.DAY_OF_WEEK, dayOfWeek)
-    set(Calendar.MONTH, month - 1)
-    set(Calendar.YEAR, year)
-    set(Calendar.HOUR_OF_DAY, hour)
-    set(Calendar.MINUTE, minute)
-    set(Calendar.SECOND, second)
+    set(year, month - 1, dayOfMonth, hour, minute, second)
 }.let { Time(it.timeInMillis, it.timeZone) }
 
 fun Time.toMidnight(): Time = update(hour = 0, minute = 0, second = 0)
