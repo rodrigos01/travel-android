@@ -738,12 +738,14 @@ class TripViewModelTest {
                 airportFrom = Airport(
                     iata = airportFromIata,
                     name = airportFromName,
+                    timeZone = null,
                     city = Place(cityFromName),
                 ),
                 departure = departure.asTime(),
                 airportTo = Airport(
                     iata = airportToIata,
                     name = airportToName,
+                    timeZone = null,
                     city = Place(cityToName),
                 ),
                 arrival = arrival.asTime(),

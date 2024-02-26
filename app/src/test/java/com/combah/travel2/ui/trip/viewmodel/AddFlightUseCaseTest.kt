@@ -1,5 +1,6 @@
 package com.combah.travel2.ui.trip.viewmodel
 
+import com.combah.travel2.extensions.Time
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.model.data.Airport
@@ -31,6 +32,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
+import java.util.TimeZone
 
 class AddFlightUseCaseTest {
 
@@ -238,6 +240,30 @@ class AddFlightUseCaseTest {
         subject.airportToSearchResultTapped("flight_id", 1)
         val result = getUpdateResult(originalData)
         assertThat(result.airportTo).isEqualTo(expected)
+    }
+
+    @Test
+    fun `airport to search result tapped should update item with new airport's timezone`() {
+        val airportTimeZone: TimeZone = mock()
+        val expected: Airport = mock {
+            on { timeZone } doReturn airportTimeZone
+        }
+        airportToAutoCompleteState.value = mock {
+            on { searchResults } doReturn listOf(
+                mock(),
+                expected,
+                mock(),
+            )
+        }
+        val originalData =
+            PendingFlight(
+                id = "flight_id",
+                departure = mock(),
+                arrival = Time("2024-5-17T10:55 +0200")
+            )
+        subject.airportToSearchResultTapped("flight_id", 1)
+        val result = getUpdateResult(originalData)
+        assertThat(result.arrival?.timeZone).isEqualTo(airportTimeZone)
     }
 
     @Test
