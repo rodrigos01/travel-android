@@ -548,6 +548,38 @@ class TripViewModelTest {
     }
 
     @Test
+    fun `add plan tapped on last item in place should add add plan item with last item time`() {
+        val lodgingName = "Best Western Premier Hotel Montfleuri"
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = lodgingName,
+                    checkIn = "2024-05-29T13:00 +0200",
+                    checkout = "2024-05-30T11:00 +0200",
+                    cityName = "Montfleuri"
+                ),
+                Lodging(
+                    name = "Hôtel La Villa Nice Victor Hugo",
+                    checkIn = "2024-05-30T13:00 +0200",
+                    checkout = "2024-06-1T11:00 +0200",
+                    cityName = "Nice"
+                ),
+            )
+        )
+        val addPlanItemId = "originalItemId"
+        val expected: AddPlanItem = mock {
+            on { id } doReturn addPlanItemId
+        }
+        addPlanUseCase.stub {
+            on { createAddPlanItem(any(), any()) } doReturn expected
+        }
+        val checkOutItem =
+            subject.viewState.value.items.first { it is HotelCheckOutItem && it.hotelName == lodgingName } as TripViewModel.TripItem.EventItem
+        subject.addButtonTapped(checkOutItem.id)
+        verify(addPlanUseCase).createAddPlanItem(Time("2024-05-30T11:00 +0200"))
+    }
+
+    @Test
     fun `add Plan tapped on date range should add add plan item below tapped item`() {
         tripFlow.value = Trip(
             lodgings = listOf(
@@ -571,6 +603,30 @@ class TripViewModelTest {
         subject.addButtonTapped(originalItem.id)
         val addedItem = subject.viewState.value.items[originalItemIndex + 1]
         assertThat(addedItem).isEqualTo(expected)
+    }
+
+    @Test
+    fun `add Plan tapped on date range should add add plan item with start date`() {
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    checkIn = "2024-05-11T13:00 +0100",
+                    checkout = "2024-05-19T11:00 +0100",
+                ),
+            )
+        )
+        val addPlanItemId = "originalItemId"
+        val expected: AddPlanItem = mock {
+            on { id } doReturn addPlanItemId
+        }
+        addPlanUseCase.stub {
+            on { createAddPlanItem(any(), any()) } doReturn expected
+        }
+        val originalItem =
+            subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
+        subject.addButtonTapped(originalItem.id)
+        verify(addPlanUseCase).createAddPlanItem(Time("2024-05-11T13:00 +0100"))
     }
 
     @Test
