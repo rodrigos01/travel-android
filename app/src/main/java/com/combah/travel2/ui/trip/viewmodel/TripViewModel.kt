@@ -281,7 +281,7 @@ class TripViewModel(
                 add(genItem(time, event, firstInDay))
                 placeForRemoval?.let { remove(it) }
                 if (isLastItem) {
-                    add(genEmptyAddPlanItem(emptyAddPlanItemTimestamp, showDivider = false))
+                    add(genEmptyAddPlanItem(time, showDivider = false))
                 }
             }
         }
@@ -318,7 +318,7 @@ class TripViewModel(
         }
         return TripItem.DateRangeItem(
             id = UUID.randomUUID().toString(),
-            timestamp = start,
+            timestamp = from,
             dayOfMonthStart = start.dayOfMonthString,
             dayOfWeekStart = start.dayOfWeekString,
             dayOfMonthEnd = end.dayOfMonthString,
