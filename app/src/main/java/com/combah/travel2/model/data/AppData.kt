@@ -1,5 +1,7 @@
 package com.combah.travel2.model.data
 
+import java.util.TimeZone
+
 data class Trip(
     val id: String,
     val name: String?,
@@ -29,6 +31,7 @@ data class FlightSegment(
 data class Airport(
     val iata: String,
     val name: String,
+    val timeZone: TimeZone?,
     val city: Place,
 )
 
@@ -49,6 +52,13 @@ data class Place(
     val coverImage: String?,
     val externalId: String,
     val source: String,
+)
+
+data class AirportSearchResult(
+    val iata: String,
+    val name: String,
+    val timeZone: TimeZone,
+    val city: Place,
 )
 
 data class SimplePlace(

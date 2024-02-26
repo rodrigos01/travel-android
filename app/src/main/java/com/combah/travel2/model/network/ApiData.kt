@@ -20,6 +20,7 @@ interface ApiData {
     data class Airport(
         val iata: String,
         val name: String,
+        val timeZone: String?,
         val city: Place,
     )
 

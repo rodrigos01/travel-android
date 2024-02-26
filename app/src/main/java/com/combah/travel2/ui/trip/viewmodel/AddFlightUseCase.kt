@@ -186,9 +186,11 @@ class AddFlightUseCase(
         val useCase = inputUseCaseStore.get(itemId)?.airportToAutoCompleteUseCase
         val selected = useCase?.state?.value?.searchResults?.getOrNull(index)
         useCase?.clearResults()
-        itemStore.update(itemId) {
-            it.copy(
-                airportTo = selected
+        itemStore.update(itemId) { data ->
+            data.copy(
+                airportTo = selected,
+                arrival = selected?.timeZone?.let { data.arrival?.update(timeZone = it) }
+                    ?: data.arrival
             )
         }
     }
