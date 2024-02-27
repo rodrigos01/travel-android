@@ -8,7 +8,7 @@ import java.util.TimeZone
 fun ApiData.Airport.toAppDataModel() = Airport(
     iata = iata,
     name = name,
-    timeZone = timeZone?.let { TimeZone.getTimeZone(it) },
+    timeZone = timezone?.let { TimeZone.getTimeZone(it) },
     city = city.toAppDataModel(),
 )
 

@@ -153,8 +153,13 @@ class AddFlightUseCase(
 
     override fun setArrivalTime(itemId: String, hour: Int, minute: Int) {
         itemStore.update(itemId) {
+            val baseTime = it.arrival ?: it.departure
             it.copy(
-                arrival = (it.arrival ?: it.departure).update(hour = hour, minute = minute)
+                arrival = baseTime.update(
+                    hour = hour,
+                    minute = minute,
+                    timeZone = it.airportTo?.timeZone ?: baseTime.timeZone,
+                )
             )
         }
     }

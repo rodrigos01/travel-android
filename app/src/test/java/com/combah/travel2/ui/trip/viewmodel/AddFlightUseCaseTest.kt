@@ -169,22 +169,16 @@ class AddFlightUseCaseTest {
 
     @Test
     fun `set departure time should update departure time`() {
-        val newTime = mockTime()
-        val originalTime = mockTime {
-            on { copy(hour = 9, minute = 15) } doReturn newTime
-        }
+        val originalTime = Time("2024-10-16T18:25 +0200")
         val originalData = PendingFlight(id = "itemId", departure = originalTime)
         subject.setDepartureTime("itemId", hour = 9, minute = 15)
         val result = getUpdateResult(originalData)
-        assertThat(result.departure).isEqualTo(newTime)
+        assertThat(result.departure).isEqualTo(Time("2024-10-16T9:15 +0200"))
     }
 
     @Test
     fun `set arrival day should update arrival day`() {
-        val newTime = mockTime()
-        val originalTime = mockTime {
-            on { copy(dayOfMonth = 21, month = 4, year = 2024) } doReturn newTime
-        }
+        val originalTime = Time("2023-10-16T18:25 +0200")
         val receivedTime = mockTime {
             on { dayOfMonth } doReturn 21
             on { month } doReturn 4
@@ -193,19 +187,33 @@ class AddFlightUseCaseTest {
         val originalData = PendingFlight(id = "itemId", departure = mock(), arrival = originalTime)
         subject.setArrivalDate("itemId", receivedTime)
         val result = getUpdateResult(originalData)
-        assertThat(result.arrival).isEqualTo(newTime)
+        assertThat(result.arrival).isEqualTo(Time("2024-4-21T18:25 +0200"))
     }
 
     @Test
     fun `set arrival time should update arrival time`() {
-        val newTime = mockTime()
-        val originalTime = mockTime {
-            on { copy(hour = 16, minute = 15) } doReturn newTime
-        }
+        val originalTime = Time("2024-10-16T18:25 +0200")
         val originalData = PendingFlight(id = "itemId", departure = mock(), arrival = originalTime)
         subject.setArrivalTime("itemId", hour = 16, minute = 15)
         val result = getUpdateResult(originalData)
-        assertThat(result.arrival).isEqualTo(newTime)
+        assertThat(result.arrival).isEqualTo(Time("2024-10-16T16:15 +0200"))
+    }
+
+    @Test
+    fun `set arrival time should update arrival time with airportTo timezone`() {
+        val originalTime = Time("2024-10-16T18:25 -0400")
+        val airportTo: Airport = mock {
+            on { timeZone } doReturn TimeZone.getTimeZone("GMT+2:00")
+        }
+        val originalData = PendingFlight(
+            id = "itemId",
+            departure = mock(),
+            arrival = originalTime,
+            airportTo = airportTo
+        )
+        subject.setArrivalTime("itemId", hour = 16, minute = 15)
+        val result = getUpdateResult(originalData)
+        assertThat(result.arrival).isEqualTo(Time("2024-10-16T16:15 +0200"))
     }
 
     @Test
