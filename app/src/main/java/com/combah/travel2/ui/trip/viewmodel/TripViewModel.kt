@@ -151,13 +151,18 @@ class TripViewModel(
     val viewState: StateFlow<ViewState> =
         merge(eventsFromTrip, localState).combine(addPlanUseCase.items) { state, addPlanItems ->
             state.updateItems {
-                addPlanItems.forEach { (id, addPlanItem) ->
-                    indexOfFirst { it is TripItem.Identifiable && it.id == id }.takeIf { it != -1 }
-                        ?.let {
-                            set(
-                                it, addPlanItem
-                            )
+                replaceAll { item ->
+                    (item as? TripItem.Identifiable)?.id?.let { addPlanItems[it] }
+                        ?: if (item is AddPlanUseCase.AddPlanItem && item.reversible) {
+                            genEmptyAddPlanItem(item.timestamp, false)
+                        } else {
+                            item
                         }
+                }
+                removeIf {
+                    it is AddPlanUseCase.AddPlanItem && !it.reversible && !addPlanItems.containsKey(
+                        it.id
+                    )
                 }
             }
         }.asStateFlow(initialValue = ViewState(emptyList()))

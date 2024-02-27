@@ -27,6 +27,7 @@ class AddPlanUseCase(
 
     sealed interface AddPlanItem : TripViewModel.TripItem, TripViewModel.TripItem.Identifiable,
         TripViewModel.TripItem.Timeable {
+        val reversible: Boolean
         val types: List<Type>
             get() = Type.entries
 

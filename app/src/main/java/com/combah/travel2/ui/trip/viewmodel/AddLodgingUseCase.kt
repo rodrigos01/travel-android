@@ -32,6 +32,7 @@ class AddLodgingUseCase(
     data class AddLodgingItem(
         override val id: String,
         override val timestamp: Time,
+        override val reversible: Boolean = false,
         val name: String? = null,
         val lodgingSearchResults: List<String> = emptyList(),
         val checkInTime: String? = null,
