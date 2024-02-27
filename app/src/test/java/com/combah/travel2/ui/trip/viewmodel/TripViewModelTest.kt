@@ -14,6 +14,7 @@ import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase.AddPlanItem
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.DateRangeItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightArrivalItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightDepartureItem
@@ -27,6 +28,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
@@ -372,7 +374,7 @@ class TripViewModelTest {
             )
         )
         val eventItems =
-            subject.viewState.value.items.filterIsInstance<TripViewModel.TripItem.EventItem>()
+            subject.viewState.value.items.filterIsInstance<TripItem.EventItem>()
         assertThat(eventItems).satisfiesExactly(
             {
                 val item = it as FlightDepartureItem
@@ -461,7 +463,7 @@ class TripViewModelTest {
         val checkInItemIndex =
             subject.viewState.value.items.indexOfFirst { it is HotelCheckInItem && it.hotelName == lodgingName }
         val addPlanItem = subject.viewState.value.items[checkInItemIndex + 1]
-        assertThat(addPlanItem).isInstanceOf(TripViewModel.TripItem.EmptyAddPlanItem::class.java)
+        assertThat(addPlanItem).isInstanceOf(TripItem.EmptyAddPlanItem::class.java)
     }
 
     @Test
@@ -486,7 +488,7 @@ class TripViewModelTest {
         val checkOutItemIndex =
             subject.viewState.value.items.indexOfFirst { it is HotelCheckOutItem && it.hotelName == lodgingName }
         val addPlanItem = subject.viewState.value.items[checkOutItemIndex + 1]
-        assertThat(addPlanItem).isInstanceOf(TripViewModel.TripItem.EmptyAddPlanItem::class.java)
+        assertThat(addPlanItem).isInstanceOf(TripItem.EmptyAddPlanItem::class.java)
     }
 
     @Test
@@ -502,7 +504,7 @@ class TripViewModelTest {
             )
         )
         val addPlanItem = subject.viewState.value.items.last()
-        assertThat(addPlanItem).isInstanceOf(TripViewModel.TripItem.EmptyAddPlanItem::class.java)
+        assertThat(addPlanItem).isInstanceOf(TripItem.EmptyAddPlanItem::class.java)
     }
 
     @Test
@@ -518,7 +520,7 @@ class TripViewModelTest {
         )
         val dateRangeItemIndex = subject.viewState.value.items.indexOfFirst { it is DateRangeItem }
         val itemBefore = subject.viewState.value.items[dateRangeItemIndex - 1]
-        assertThat(itemBefore).isNotInstanceOf(TripViewModel.TripItem.EmptyAddPlanItem::class.java)
+        assertThat(itemBefore).isNotInstanceOf(TripItem.EmptyAddPlanItem::class.java)
     }
 
     @Test
@@ -536,11 +538,9 @@ class TripViewModelTest {
         val expected: AddPlanItem = mock {
             on { id } doReturn addPlanItemId
         }
-        addPlanUseCase.stub {
-            on { createAddPlanItem(any(), any()) } doReturn expected
-        }
+        mockAddPlanItem(expected)
         val originalItem =
-            subject.viewState.value.items.first { it is TripViewModel.TripItem.EmptyAddPlanItem } as TripViewModel.TripItem.EmptyAddPlanItem
+            subject.viewState.value.items.first { it is TripItem.EmptyAddPlanItem } as TripItem.EmptyAddPlanItem
         val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
         subject.addButtonTapped(originalItem.id)
         val addedItem = subject.viewState.value.items[originalItemIndex]
@@ -570,11 +570,9 @@ class TripViewModelTest {
         val expected: AddPlanItem = mock {
             on { id } doReturn addPlanItemId
         }
-        addPlanUseCase.stub {
-            on { createAddPlanItem(any(), any()) } doReturn expected
-        }
+        mockAddPlanItem(expected)
         val checkOutItem =
-            subject.viewState.value.items.first { it is HotelCheckOutItem && it.hotelName == lodgingName } as TripViewModel.TripItem.EventItem
+            subject.viewState.value.items.first { it is HotelCheckOutItem && it.hotelName == lodgingName } as TripItem.EventItem
         subject.addButtonTapped(checkOutItem.id)
         verify(addPlanUseCase).createAddPlanItem(Time("2024-05-30T11:00 +0200"))
     }
@@ -594,9 +592,7 @@ class TripViewModelTest {
         val expected: AddPlanItem = mock {
             on { id } doReturn addPlanItemId
         }
-        addPlanUseCase.stub {
-            on { createAddPlanItem(any(), any()) } doReturn expected
-        }
+        mockAddPlanItem(expected)
         val originalItem =
             subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
         val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
@@ -620,9 +616,7 @@ class TripViewModelTest {
         val expected: AddPlanItem = mock {
             on { id } doReturn addPlanItemId
         }
-        addPlanUseCase.stub {
-            on { createAddPlanItem(any(), any()) } doReturn expected
-        }
+        mockAddPlanItem(expected)
         val originalItem =
             subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
         subject.addButtonTapped(originalItem.id)
@@ -644,13 +638,18 @@ class TripViewModelTest {
         val addPlanItem: AddPlanItem = mock {
             on { id } doReturn addPlanItemId
         }
-        val expected: AddPlanItem = mock()
+        val expected: AddPlanItem = mock {
+            on { id } doReturn "newId"
+        }
+        mockAddPlanItem(addPlanItem)
         addPlanUseCase.stub {
-            on { createAddPlanItem(any(), any()) } doReturn addPlanItem
-            on { typeChanged(eq(addPlanItem), any()) } doReturn expected
+            on { typeChanged(eq(addPlanItem), any()) } doAnswer {
+                addPlanItems.value = mapOf(expected.id to expected)
+                expected
+            }
         }
         val originalItem =
-            subject.viewState.value.items.first { it is TripViewModel.TripItem.EmptyAddPlanItem } as TripViewModel.TripItem.EmptyAddPlanItem
+            subject.viewState.value.items.first { it is TripItem.EmptyAddPlanItem } as TripItem.EmptyAddPlanItem
         val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
         subject.addButtonTapped(originalItem.id)
         subject.addPlanTypeChanged("originalItemId", AddPlanItem.Type.Lodging)
@@ -674,65 +673,16 @@ class TripViewModelTest {
             on { id } doReturn addPlanItemId
         }
         val entity: Flight = mock()
+        mockAddPlanItem(addPlanItem)
         addPlanUseCase.stub {
-            on { createAddPlanItem(any(), any()) } doReturn addPlanItem
             on { saveItem(addPlanItem) } doReturn entity
         }
         val originalItem =
-            subject.viewState.value.items.first { it is TripViewModel.TripItem.EmptyAddPlanItem } as TripViewModel.TripItem.EmptyAddPlanItem
+            subject.viewState.value.items.first { it is TripItem.EmptyAddPlanItem } as TripItem.EmptyAddPlanItem
         subject.addButtonTapped(originalItem.id)
         subject.save(addPlanItemId)
         verify(addPlanUseCase).saveItem(addPlanItem)
         verify(repository).addFlight("tripId", entity)
-    }
-
-    @Test
-    fun `addPlanUseCase items changed should update existing item`() = runTest {
-        tripFlow.value = Trip(
-            lodgings = listOf(
-                Lodging(
-                    name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-19T11:00 +0100",
-                ),
-            )
-        )
-        val addPlanItemId = "originalItemId"
-        val addPlanItem: AddPlanItem = mock {
-            on { id } doReturn addPlanItemId
-        }
-        addPlanUseCase.stub {
-            on { createAddPlanItem(any(), any()) } doReturn addPlanItem
-        }
-        val originalItem =
-            subject.viewState.value.items.first { it is TripViewModel.TripItem.EmptyAddPlanItem } as TripViewModel.TripItem.EmptyAddPlanItem
-        val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
-        subject.addButtonTapped(originalItem.id)
-        val newAddPlanItem = mock<AddFlightUseCase.AddFlightItem> {
-            on { id } doReturn addPlanItemId
-        }
-        addPlanItems.value = mapOf(addPlanItemId to newAddPlanItem)
-        val resultAddPlanItem = subject.viewState.value.items[originalItemIndex]
-        assertThat(resultAddPlanItem).isEqualTo(newAddPlanItem)
-    }
-
-    @Test
-    fun `addPlanUseCase items changed invalid item should ignore`() = runTest {
-        tripFlow.value = Trip(
-            lodgings = listOf(
-                Lodging(
-                    name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-19T11:00 +0100",
-                ),
-            )
-        )
-        val newItemId = "originalItemId"
-        val newAddPlanItem = mock<AddFlightUseCase.AddFlightItem> {
-            on { id } doReturn newItemId
-        }
-        addPlanItems.value = mapOf(newItemId to newAddPlanItem)
-        assertThat(subject.viewState.value.items).doesNotContain(newAddPlanItem)
     }
 
     @Test
@@ -751,16 +701,123 @@ class TripViewModelTest {
             on { id } doReturn addPlanItemId
         }
         val entity: Lodging = mock()
+        mockAddPlanItem(addPlanItem)
         addPlanUseCase.stub {
-            on { createAddPlanItem(any(), any()) } doReturn addPlanItem
             on { saveItem(addPlanItem) } doReturn entity
         }
         val originalItem =
-            subject.viewState.value.items.first { it is TripViewModel.TripItem.EmptyAddPlanItem } as TripViewModel.TripItem.EmptyAddPlanItem
+            subject.viewState.value.items.first { it is TripItem.EmptyAddPlanItem } as TripItem.EmptyAddPlanItem
         subject.addButtonTapped(originalItem.id)
         subject.save(addPlanItemId)
         verify(addPlanUseCase).saveItem(addPlanItem)
         verify(repository).addLodging("tripId", entity)
+    }
+
+    @Test
+    fun `addPlanUseCase items changed should update existing item`() {
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    checkIn = "2024-05-11T13:00 +0100",
+                    checkout = "2024-05-19T11:00 +0100",
+                ),
+            )
+        )
+        val addPlanItemId = "originalItemId"
+        val addPlanItem: AddPlanItem = mock {
+            on { id } doReturn addPlanItemId
+        }
+        mockAddPlanItem(addPlanItem)
+        val originalItem =
+            subject.viewState.value.items.first { it is TripItem.EmptyAddPlanItem } as TripItem.EmptyAddPlanItem
+        val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
+        subject.addButtonTapped(originalItem.id)
+        val newAddPlanItem = mock<AddFlightUseCase.AddFlightItem> {
+            on { id } doReturn addPlanItemId
+        }
+        addPlanItems.value = mapOf(addPlanItemId to newAddPlanItem)
+        val resultAddPlanItem = subject.viewState.value.items[originalItemIndex]
+        assertThat(resultAddPlanItem).isEqualTo(newAddPlanItem)
+    }
+
+    @Test
+    fun `addPlanUseCase items changed invalid item should ignore`() {
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    checkIn = "2024-05-11T13:00 +0100",
+                    checkout = "2024-05-19T11:00 +0100",
+                ),
+            )
+        )
+        val newItemId = "originalItemId"
+        val newAddPlanItem = mock<AddFlightUseCase.AddFlightItem> {
+            on { id } doReturn newItemId
+        }
+        addPlanItems.value = mapOf(newItemId to newAddPlanItem)
+        assertThat(subject.viewState.value.items).doesNotContain(newAddPlanItem)
+    }
+
+    @Test
+    fun `item removed from addPlanUseCase should be removed from items`() {
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    checkIn = "2024-05-11T13:00 +0100",
+                    checkout = "2024-05-19T11:00 +0100",
+                ),
+            )
+        )
+        val addPlanItemId = "originalItemId"
+        val expected: AddPlanItem = mock {
+            on { id } doReturn addPlanItemId
+        }
+        mockAddPlanItem(expected)
+        val originalItem =
+            subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
+        subject.addButtonTapped(originalItem.id)
+        addPlanItems.value = emptyMap()
+        assertThat(subject.viewState.value.items).doesNotContain(expected)
+    }
+
+    @Test
+    fun `reversible item removed from addPlanUseCase should be reverted back to empty add plan item`() {
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    checkIn = "2024-05-11T13:00 +0100",
+                    checkout = "2024-05-19T11:00 +0100",
+                ),
+            )
+        )
+        val addPlanItemId = "originalItemId"
+        val addPlanItemTimestamp: Time = mock()
+        val addPlanItem: AddPlanItem = mock {
+            on { id } doReturn addPlanItemId
+            on { timestamp } doReturn addPlanItemTimestamp
+            on { reversible } doReturn true
+        }
+        mockAddPlanItem(addPlanItem)
+        val originalItem =
+            subject.viewState.value.items.first { it is TripItem.EmptyAddPlanItem } as TripItem.EmptyAddPlanItem
+        val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
+        subject.addButtonTapped(originalItem.id)
+        addPlanItems.value = emptyMap()
+        val resultAddPlanItem = subject.viewState.value.items[originalItemIndex]
+        assertThat(resultAddPlanItem).isInstanceOf(TripItem.EmptyAddPlanItem::class.java)
+    }
+
+    private fun mockAddPlanItem(addPlanItem: AddPlanItem) {
+        addPlanUseCase.stub {
+            on { createAddPlanItem(any(), any()) } doAnswer {
+                addPlanItems.value = mapOf(addPlanItem.id to addPlanItem)
+                addPlanItem
+            }
+        }
     }
 
     private fun Trip(
