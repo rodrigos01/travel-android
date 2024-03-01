@@ -248,8 +248,12 @@ class TripViewModel(
             val emptyAddPlanItemTimestamp =
                 if (firstInSection && lastEvent != null) lastEvent.timestamp else time
             val placeForRemoval = items.find {
-                it is TripItem.PlaceItem && it.placeName != eventPlace.name && it.isOrigin(items)
+                it is TripItem.PlaceItem && it.placeName != eventPlace.name && it.hasOnlySingleDepartureAfter(
+                    items
+                )
             }
+            val addPlanItemForRemoval =
+                items.getOrNull(items.indexOf(placeForRemoval) - 1) as? TripItem.EmptyAddPlanItem
             items.toMutableList().apply {
                 existingPlace?.let {
                     set(
@@ -285,6 +289,7 @@ class TripViewModel(
                 }
                 add(genItem(time, event, firstInDay))
                 placeForRemoval?.let { remove(it) }
+                addPlanItemForRemoval?.let { remove(it) }
                 if (isLastItem) {
                     add(genEmptyAddPlanItem(time, showDivider = false))
                 }
@@ -300,17 +305,16 @@ class TripViewModel(
         showDivider = showDivider,
     )
 
-    private fun TripItem.PlaceItem.isOrigin(items: List<TripItem>): Boolean {
-        val isFirstPlace = this == items.first { it is TripItem.PlaceItem }
+    private fun TripItem.PlaceItem.hasOnlySingleDepartureAfter(items: List<TripItem>): Boolean {
         val index = items.indexOf(this)
         if (index == -1) return false
         val eventsAfter = items.subList(
-            items.indexOf(this),
+            index,
             items.size,
         ).filterIsInstance<TripItem.EventItem>()
         val hasSingleDepartureAfter =
             eventsAfter.let { it.size == 1 && it.first() is TripItem.FlightDepartureItem }
-        return isFirstPlace && hasSingleDepartureAfter
+        return hasSingleDepartureAfter
     }
 
     private fun genDateRangeItem(
