@@ -316,6 +316,42 @@ class TripViewModelTest {
     }
 
     @Test
+    fun `events should not have place item for places with only departure event`() {
+        tripFlow.value = Trip(
+            flights = listOf(
+                Flight(
+                    id = "jfk-lis",
+                    departure = "2024-05-10T22:05 -0400",
+                    airportToName = "Humberto Delgado International Airport",
+                    arrival = "2024-05-11T10:00 +0100",
+                    cityFromName = "New York",
+                    cityToName = "Porto",
+                ),
+                Flight(
+                    id = "lis-jfk",
+                    departure = "2024-06-14T17:05 +0100",
+                    airportToName = "John F. Kennedy Intl. Airport",
+                    arrival = "2024-06-14T20:05 -0400",
+                    cityFromName = "Lisbon",
+                    cityToName = "New York",
+                ),
+            ), lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
+                    checkIn = "2024-05-19T13:00 +0100",
+                    checkout = "2024-05-21T11:00 +0100",
+                    cityName = "Porto"
+                ),
+            )
+        )
+        val places = subject.viewState.value.items.filterIsInstance<PlaceItem>()
+        assertThat(places).noneSatisfy {
+            assertThat(it.placeName).isEqualTo("Lisbon")
+        }
+    }
+
+    @Test
     fun `events should have one month event for each month`() {
         tripFlow.value = Trip(
             flights = listOf(
@@ -505,6 +541,51 @@ class TripViewModelTest {
         )
         val addPlanItem = subject.viewState.value.items.last()
         assertThat(addPlanItem).isInstanceOf(TripItem.EmptyAddPlanItem::class.java)
+    }
+
+    @Test
+    fun `last item before single departure event should not have empty add item after it`() {
+        tripFlow.value = Trip(
+            flights = listOf(
+                Flight(
+                    id = "jfk-lis",
+                    departure = "2024-05-10T22:05 -0400",
+                    airportToName = "Humberto Delgado International Airport",
+                    arrival = "2024-05-11T10:00 +0100",
+                    cityFromName = "New York",
+                    cityToName = "Lisbon",
+                ),
+                Flight(
+                    id = "por-par",
+                    departure = "2024-05-21T17:05 +0100",
+                    airportToName = "Orly Airport",
+                    arrival = "2024-05-21T19:25 +0200",
+                    cityFromName = "Porto",
+                    cityToName = "Paris",
+                ),
+                Flight(
+                    id = "par-jfk",
+                    departure = "2024-06-14T17:05 +0100",
+                    airportToName = "John F. Kennedy Intl. Airport",
+                    arrival = "2024-06-14T20:05 -0400",
+                    cityFromName = "Porto",
+                    cityToName = "New York",
+                ),
+            ), lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
+                    checkIn = "2024-05-21T13:00 +0100",
+                    checkout = "2024-06-14T11:00 +0100",
+                    cityName = "Paris"
+                ),
+            )
+        )
+        val departureItemIndex = subject.viewState.value.items.indexOfFirst {
+            it is FlightDepartureItem && it.destination == "New York"
+        }
+        val itemBefore = subject.viewState.value.items[departureItemIndex - 1]
+        assertThat(itemBefore).isNotInstanceOf(TripItem.EmptyAddPlanItem::class.java)
     }
 
     @Test
