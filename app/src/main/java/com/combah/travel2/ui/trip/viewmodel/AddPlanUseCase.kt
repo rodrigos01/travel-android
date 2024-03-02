@@ -16,7 +16,7 @@ class AddPlanUseCase(
 
     interface ItemStore<T : AddPlanItem> {
         val items: Flow<Map<String, T>>
-        fun addItem(time: Time): T
+        fun addItem(time: Time, startDateSelectionEnabled: Boolean = false): T
         fun remove(item: T)
     }
 
@@ -27,6 +27,8 @@ class AddPlanUseCase(
 
     sealed interface AddPlanItem : TripViewModel.TripItem, TripViewModel.TripItem.Identifiable,
         TripViewModel.TripItem.Timeable {
+
+        val startDateSelectionEnabled: Boolean
         val types: List<Type>
             get() = Type.entries
 
@@ -42,9 +44,11 @@ class AddPlanUseCase(
     }
 
     fun createAddPlanItem(
-        time: Time, type: AddPlanItem.Type = AddPlanItem.Type.Flight
+        time: Time,
+        startDateSelectionEnabled: Boolean = false,
+        type: AddPlanItem.Type = AddPlanItem.Type.Flight
     ): AddPlanItem {
-        return type.useCase.addItem(time)
+        return type.useCase.addItem(time, startDateSelectionEnabled)
     }
 
     fun typeChanged(addPlanItem: AddPlanItem, newType: AddPlanItem.Type): AddPlanItem {
@@ -52,7 +56,11 @@ class AddPlanUseCase(
             return addPlanItem
         }
         removeItem(addPlanItem)
-        return createAddPlanItem(addPlanItem.timestamp, newType)
+        return createAddPlanItem(
+            addPlanItem.timestamp,
+            addPlanItem.startDateSelectionEnabled,
+            newType,
+        )
     }
 
     fun saveItem(addPlanItem: AddPlanItem): TripEntity = when (addPlanItem) {

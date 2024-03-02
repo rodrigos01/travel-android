@@ -33,6 +33,7 @@ import com.combah.travel2.ui.trip.creation.composable.TimePickerButton
 import com.combah.travel2.ui.trip.creation.composable.TimePickerTextButton
 import com.combah.travel2.ui.trip.creation.composable.TypeSelectorButton
 import com.combah.travel2.ui.trip.creation.composable.rememberAutoCompleteTextFieldState
+import java.util.TimeZone
 
 @Composable
 fun AddLodgingListItem(
@@ -45,7 +46,7 @@ fun AddLodgingListItem(
     lodgingSearchResultTapped: (Int) -> Unit,
     checkOutDayOfMonth: String,
     checkOutDayOfWeek: String,
-    minCheckoutDateMillis: Long,
+    minCheckoutDate: Time,
     onCheckOutDateChanged: (Time) -> Unit,
     checkOutTime: String? = null,
     onCheckOutTimeChanged: (hour: Int, minute: Int) -> Unit,
@@ -120,7 +121,7 @@ fun AddLodgingListItem(
                 start.linkTo(parent.start, margin = 16.dp)
             })
         DatePickerButton(
-            minCheckoutDateMillis,
+            minCheckoutDate,
             checkOutDayOfMonth,
             checkOutDayOfWeek,
             onCheckOutDateChanged,
@@ -198,7 +199,7 @@ fun AddLodgingListItemPreview() {
             checkOutDayOfWeek = "Wed",
             onCheckOutDateChanged = {},
             checkOutTime = null,
-            minCheckoutDateMillis = 0L,
+            minCheckoutDate = Time(0L, TimeZone.getDefault()),
             onCheckOutTimeChanged = { _, _ -> },
             onSaveButtonTapped = {},
             onCancelButtonTapped = {},

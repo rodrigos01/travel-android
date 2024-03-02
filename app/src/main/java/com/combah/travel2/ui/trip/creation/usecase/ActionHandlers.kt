@@ -15,6 +15,7 @@ interface AddLodgingItemActionHandler {
 }
 
 interface AddFlightItemActionHandler {
+    fun setDepartureDate(itemId: String, date: Time)
     fun setDepartureTime(itemId: String, hour: Int, minute: Int)
     fun setArrivalDate(itemId: String, date: Time)
     fun setArrivalTime(itemId: String, hour: Int, minute: Int)

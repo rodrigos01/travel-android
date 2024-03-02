@@ -144,8 +144,6 @@ class TripViewModel(
     }
 
     private val reversibleItems = mutableMapOf<String, TripItem.EmptyAddPlanItem>()
-    private val TripItem.Identifiable.reversible: Boolean
-        get() = reversibleItems.containsKey(id)
 
     private var TripItem.Identifiable.original: TripItem.EmptyAddPlanItem?
         get() = reversibleItems[id]
@@ -173,14 +171,18 @@ class TripViewModel(
             viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
         val index = viewState.value.items.indexOf(tapped)
         updateItems {
+            val isDateRange = tapped is TripItem.DateRangeItem
             val addPlanItem =
-                addPlanUseCase.createAddPlanItem((tapped as TripItem.Timeable).timestamp)
-            if (tapped is TripItem.EmptyAddPlanItem) {
+                addPlanUseCase.createAddPlanItem(
+                    (tapped as TripItem.Timeable).timestamp,
+                    startDateSelectionEnabled = isDateRange,
+                )
+            if (isDateRange) {
+                add(index + 1, addPlanItem)
+            } else if (tapped is TripItem.EmptyAddPlanItem) {
                 addPlanItem.original = tapped
                 removeAt(index)
                 add(index, addPlanItem)
-            } else if (tapped is TripItem.DateRangeItem) {
-                add(index + 1, addPlanItem)
             }
         }
     }
