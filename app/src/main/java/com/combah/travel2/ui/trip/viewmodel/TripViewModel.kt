@@ -11,6 +11,7 @@ import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Lodging
+import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.data.TripEvent
@@ -224,60 +225,24 @@ class TripViewModel(
                 is Lodging -> listOf(event.checkIn to event, event.checkout to event)
             }
         }.sortedBy { (time, event) -> EventComparable(time, event) }
-        return pairs.foldIndexed(listOf<TripItem>()) { index, items, (time, event) ->
-            val isLastItem = index == pairs.lastIndex
-            val lastEventIndex = items.indexOfLast { it is TripItem.EventItem }
-            val lastEvent = items.getOrNull(lastEventIndex) as? TripItem.EventItem
-            val dateRangeItem = lastEvent?.timestamp?.let { genDateRangeItem(it, time) }
-            val eventPlace = event.getPlace(time)
-            val existingPlaceIndex =
-                items.indexOfLast { it is TripItem.PlaceItem && it.placeName == eventPlace.name }
-            val existingPlace = items.getOrNull(existingPlaceIndex) as? TripItem.PlaceItem
-            val firstInPlace =
-                existingPlace == null && (!isLastItem || !(event is FlightSegment && event.arrival == time))
+        return pairs.flatMapIndexed { index, (time, event) ->
+            val placeItem =
+                genPlaceItem(index, pairs)
             val firstInMonth =
-                !items.contains { it is TripItem.MonthItem && it.month == time.monthString }
+                pairs.subList(0, index)
+                    .lastOrNull { it.first.monthString == time.monthString } == null
             val firstInDay =
-                !items.contains { it is TripItem.EventItem && it.timestamp.dateString == time.dateString }
-            val firstInSection = firstInDay || firstInPlace
-            val emptyAddPlanItemIndex = if (firstInSection && dateRangeItem == null) {
-                lastEvent?.let { items.indexOf(it) + 1 }
-            } else {
-                null
-            }
-            val emptyAddPlanItemTimestamp =
-                if (firstInSection && lastEvent != null) lastEvent.timestamp else time
-            val placeForRemoval = items.find {
-                it is TripItem.PlaceItem && it.placeName != eventPlace.name && it.hasOnlySingleDepartureAfter(
-                    items
-                )
-            }
-            val addPlanItemForRemoval =
-                items.getOrNull(items.indexOf(placeForRemoval) - 1) as? TripItem.EmptyAddPlanItem
-            items.toMutableList().apply {
-                existingPlace?.let {
-                    set(
-                        existingPlaceIndex, it.copy(dateEnd = time.dayAndMonthString)
-                    )
-                }
-                emptyAddPlanItemIndex?.let {
-                    add(
-                        it,
-                        genEmptyAddPlanItem(emptyAddPlanItemTimestamp, showDivider = !firstInPlace)
-                    )
-                }
-                dateRangeItem?.let { add(it) }
-                if (firstInPlace) {
-                    add(
-                        TripItem.PlaceItem(
-                            timestamp = time,
-                            placeName = eventPlace.name,
-                            imageUrl = eventPlace.coverImage ?: "",
-                            dateStart = time.dayAndMonthString,
-                            dateEnd = time.dayAndMonthString,
-                        )
-                    )
-                }
+                pairs.subList(0, index)
+                    .lastOrNull { it.first.dateString == time.dateString } == null
+            val dateRangeItem =
+                pairs.getOrNull(index + 1)?.let { genDateRangeItem(time, it.first) }
+            val place = event.getPlace(time)
+            val lastInPlace = pairs.getOrNull(index + 1)?.isDeparture == false &&
+                    pairs.subList(index, pairs.size).takeWhile { it.place == place }.size == 1
+            val lastInSection =
+                index == pairs.lastIndex || pairs[index + 1].first.dateString != time.dateString || lastInPlace
+            mutableListOf<TripItem>().apply {
+                placeItem?.let { add(it) }
                 if (firstInMonth) {
                     add(
                         TripItem.MonthItem(
@@ -287,15 +252,57 @@ class TripViewModel(
                         )
                     )
                 }
-                add(genItem(time, event, firstInDay))
-                placeForRemoval?.let { remove(it) }
-                addPlanItemForRemoval?.let { remove(it) }
-                if (isLastItem) {
-                    add(genEmptyAddPlanItem(time, showDivider = false))
+                add(genItem(time, event, showDate = firstInDay))
+                if (dateRangeItem != null) {
+                    add(dateRangeItem)
+                } else if (lastInSection) {
+                    add(genEmptyAddPlanItem(time, showDivider = !lastInPlace))
                 }
             }
         }
     }
+
+    private fun genPlaceItem(
+        index: Int,
+        pairs: List<Pair<Time, TripEvent>>
+    ): TripItem.PlaceItem? {
+        val (time, event) = pairs[index]
+
+        val place = event.getPlace(time)
+
+        // Exclude return to origin
+        if (index == pairs.lastIndex && event is FlightSegment && event.arrival == time && place == pairs.originPlace) return null
+
+        // Exclude if previous adjacent events had same place
+        val eventsBefore = pairs.subList(0, index).takeLastWhile { it.place == place }
+        if (eventsBefore.isNotEmpty()) return null
+
+        val placeEntries = pairs.subList(index, pairs.size).takeWhile { it.place == place }
+        val lastEntry = placeEntries.last()
+        // Exclude if only event in place is a departure
+        if (placeEntries.size == 1 && lastEntry.isDeparture) return null
+
+        return TripItem.PlaceItem(
+            timestamp = time,
+            placeName = place.name,
+            imageUrl = place.coverImage ?: "",
+            dateStart = time.dayAndMonthString,
+            dateEnd = lastEntry.first.dayAndMonthString,
+        )
+    }
+
+    private val List<Pair<Time, TripEvent>>.originPlace: Place?
+        get() {
+            return first()
+                .takeIf { it.isDeparture }?.place
+        }
+
+    private val Pair<Time, TripEvent>.place: Place
+        get() = second.getPlace(first)
+
+    private val Pair<Time, TripEvent>.isDeparture: Boolean
+        get() = (second as? FlightSegment)?.departure == first
+
 
     private fun genEmptyAddPlanItem(
         emptyAddPlanItemTimestamp: Time, showDivider: Boolean
@@ -304,18 +311,6 @@ class TripViewModel(
         emptyAddPlanItemTimestamp,
         showDivider = showDivider,
     )
-
-    private fun TripItem.PlaceItem.hasOnlySingleDepartureAfter(items: List<TripItem>): Boolean {
-        val index = items.indexOf(this)
-        if (index == -1) return false
-        val eventsAfter = items.subList(
-            index,
-            items.size,
-        ).filterIsInstance<TripItem.EventItem>()
-        val hasSingleDepartureAfter =
-            eventsAfter.let { it.size == 1 && it.first() is TripItem.FlightDepartureItem }
-        return hasSingleDepartureAfter
-    }
 
     private fun genDateRangeItem(
         from: Time, to: Time
@@ -439,8 +434,6 @@ private fun TripEvent.getPlace(referenceTime: Time) = when (this) {
 
 private val Time.dateString
     get() = "$year=$month-$dayOfMonth"
-
-private fun <T> List<T>.contains(predicate: (T) -> Boolean) = find(predicate) != null
 
 private fun TripViewModel.ViewState.updateItems(updater: MutableList<TripViewModel.TripItem>.() -> Unit): TripViewModel.ViewState {
     return TripViewModel.ViewState(
