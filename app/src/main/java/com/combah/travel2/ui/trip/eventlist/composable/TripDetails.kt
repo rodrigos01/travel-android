@@ -99,7 +99,12 @@ fun TripDetails(
 
                     is AddFlightUseCase.AddFlightItem -> AddFlightListItem(
                         onTypeSelected = { viewModel.typeSelected(event.id, it) },
-                        minArrivalTimeMillis = event.minArrivalTimeMillis,
+                        minDepartureTime = event.minDepartureTime,
+                        minArrivalTime = event.minArrivalTime,
+                        departureDateSelectionEnabled = event.startDateSelectionEnabled,
+                        departureDayOfMonth = event.departureDayOfMonth,
+                        departureDayOfWeek = event.departureDayOfWeek,
+                        onDepartureDateChanged = { viewModel.setDepartureDate(event.id, it) },
                         event.departureTime,
                         onDepartureTimeChanged = { hour, minute ->
                             viewModel.setDepartureTime(
@@ -182,7 +187,7 @@ fun TripDetails(
                         checkOutDayOfWeek = event.checkOutDayOfWeek,
                         onCheckOutDateChanged = { viewModel.setCheckOutDate(event.id, it) },
                         checkOutTime = event.checkOutTime,
-                        minCheckoutDateMillis = event.minCheckOutTimeMillis,
+                        minCheckoutDate = event.timestamp,
                         onCheckOutTimeChanged = { hour, minute ->
                             viewModel.setCheckoutTime(
                                 event.id,

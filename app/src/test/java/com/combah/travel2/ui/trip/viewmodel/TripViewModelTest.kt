@@ -629,7 +629,7 @@ class TripViewModelTest {
     }
 
     @Test
-    fun `add plan tapped on last item in place should add add plan item with last item time`() {
+    fun `add plan tapped on last item in place should add add plan item with last item time and start date selection disabled`() {
         val lodgingName = "Best Western Premier Hotel Montfleuri"
         tripFlow.value = Trip(
             lodgings = listOf(
@@ -655,7 +655,11 @@ class TripViewModelTest {
         val checkOutItem =
             subject.viewState.value.items.first { it is HotelCheckOutItem && it.hotelName == lodgingName } as TripItem.EventItem
         subject.addButtonTapped(checkOutItem.id)
-        verify(addPlanUseCase).createAddPlanItem(Time("2024-05-30T11:00 +0200"))
+        verify(addPlanUseCase).createAddPlanItem(
+            eq(Time("2024-05-30T11:00 +0200")),
+            startDateSelectionEnabled = eq(false),
+            type = any()
+        )
     }
 
     @Test
@@ -683,7 +687,7 @@ class TripViewModelTest {
     }
 
     @Test
-    fun `add Plan tapped on date range should add add plan item with start date`() {
+    fun `add Plan tapped on date range should add add plan item with start date and start date selection enabled`() {
         tripFlow.value = Trip(
             lodgings = listOf(
                 Lodging(
@@ -701,7 +705,11 @@ class TripViewModelTest {
         val originalItem =
             subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
         subject.addButtonTapped(originalItem.id)
-        verify(addPlanUseCase).createAddPlanItem(Time("2024-05-11T13:00 +0100"))
+        verify(addPlanUseCase).createAddPlanItem(
+            time = any(),
+            startDateSelectionEnabled = eq(true),
+            type = any()
+        )
     }
 
     @Test
@@ -916,7 +924,7 @@ class TripViewModelTest {
 
     private fun mockAddPlanItem(addPlanItem: AddPlanItem) {
         addPlanUseCase.stub {
-            on { createAddPlanItem(any(), any()) } doAnswer {
+            on { createAddPlanItem(any(), any(), any()) } doAnswer {
                 addPlanItems.value = mapOf(addPlanItem.id to addPlanItem)
                 addPlanItem
             }

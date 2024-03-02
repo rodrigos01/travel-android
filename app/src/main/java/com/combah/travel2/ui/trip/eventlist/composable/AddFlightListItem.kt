@@ -2,16 +2,12 @@ package com.combah.travel2.ui.trip.eventlist.composable
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
@@ -29,12 +25,18 @@ import com.combah.travel2.ui.trip.creation.composable.DatePickerButton
 import com.combah.travel2.ui.trip.creation.composable.TimePickerTextButton
 import com.combah.travel2.ui.trip.creation.composable.TypeSelectorButton
 import com.combah.travel2.ui.trip.creation.composable.rememberAutoCompleteTextFieldState
+import java.util.TimeZone
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AddFlightListItem(
     onTypeSelected: (AddPlanType) -> Unit,
-    minArrivalTimeMillis: Long,
+    minDepartureTime: Time,
+    minArrivalTime: Time,
+    departureDateSelectionEnabled: Boolean = false,
+    departureDayOfMonth: String,
+    departureDayOfWeek: String,
+    onDepartureDateChanged: (Time) -> Unit,
     departureTime: String? = null,
     onDepartureTimeChanged: (hour: Int, minute: Int) -> Unit,
     airportFromName: String? = null,
@@ -60,6 +62,7 @@ fun AddFlightListItem(
     ) {
         val (
             departureLabel,
+            departureDaySelector,
             departureTimeSelector,
             typeSelector,
             airportFrom,
@@ -70,10 +73,19 @@ fun AddFlightListItem(
             cancelButton,
             saveButton,
         ) = createRefs()
+        TypeSelectorButton(
+            initialType = AddPlanType.Flight,
+            onOptionSelected = onTypeSelected,
+            modifier = Modifier
+                .constrainAs(typeSelector) {
+                    top.linkTo(parent.top, margin = 8.dp)
+                    start.linkTo(parent.start, margin = 16.dp)
+                },
+        )
         Text(text = "Departure",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.constrainAs(departureLabel) {
-                top.linkTo(parent.top, margin = 16.dp)
+                top.linkTo(typeSelector.bottom, margin = 8.dp)
                 start.linkTo(parent.start, margin = 16.dp)
             })
         TimePickerTextButton(
@@ -87,37 +99,52 @@ fun AddFlightListItem(
                     start.linkTo(airportFrom.start)
                 },
         )
-        TypeSelectorButton(
-            initialType = AddPlanType.Flight,
-            onOptionSelected = onTypeSelected,
-            modifier = Modifier
-                .constrainAs(typeSelector) {
-                    top.linkTo(airportFrom.top, margin = 8.dp)
-                    bottom.linkTo(airportFrom.bottom)
-                    start.linkTo(parent.start, margin = 16.dp)
-                    height = Dimension.fillToConstraints
-                }
-                .width(96.dp),
-        )
-        AutoCompleteTextField(state = rememberAutoCompleteTextFieldState(
-            airportFromName, airportFromSearchResults,
-        ),
+        if (departureDateSelectionEnabled) {
+            DatePickerButton(
+                minDepartureTime,
+                departureDayOfMonth,
+                departureDayOfWeek,
+                onDepartureDateChanged,
+                modifier = Modifier
+                    .constrainAs(departureDaySelector) {
+                        top.linkTo(airportFrom.top)
+                        bottom.linkTo(airportFrom.bottom)
+                        start.linkTo(parent.start, margin = 16.dp)
+                    }
+            )
+        } else {
+            LeadingDate(
+                departureDayOfMonth, departureDayOfWeek,
+                modifier = Modifier
+                    .constrainAs(departureDaySelector) {
+                        top.linkTo(airportFrom.top)
+                        bottom.linkTo(airportFrom.bottom)
+                        start.linkTo(parent.start, margin = 16.dp)
+                        end.linkTo(arrivalDaySelector.end)
+                        width = Dimension.fillToConstraints
+                    },
+            )
+        }
+        AutoCompleteTextField(
+            state = rememberAutoCompleteTextFieldState(
+                airportFromName, airportFromSearchResults,
+            ),
             label = "from",
             placeHolder = "Enter City or Airport",
             onAirportFromTextChanged,
             airportFromSearchResultTapped,
             modifier = Modifier
                 .constrainAs(airportFrom) {
-                    start.linkTo(typeSelector.end, margin = 8.dp)
+                    start.linkTo(departureDaySelector.end, margin = 8.dp)
                     top.linkTo(departureTimeSelector.bottom)
                     end.linkTo(parent.end, margin = 16.dp)
                     width = Dimension.fillToConstraints
-                }
-                .wrapContentSize(Alignment.TopStart))
+                },
+        )
         Text(text = "Arrival",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.constrainAs(arrivalLabel) {
-                top.linkTo(typeSelector.bottom, margin = 8.dp)
+                top.linkTo(departureDaySelector.bottom, margin = 8.dp)
                 start.linkTo(parent.start, margin = 16.dp)
             })
         TimePickerTextButton(text = arrivalTime ?: "Choose Arrival Time",
@@ -128,7 +155,7 @@ fun AddFlightListItem(
                 start.linkTo(airportTo.start)
             })
         DatePickerButton(
-            minArrivalTimeMillis,
+            minArrivalTime,
             arrivalDayOfMonth,
             arrivalDayOfWeek,
             onArrivalDateChanged,
@@ -137,14 +164,13 @@ fun AddFlightListItem(
                     top.linkTo(airportTo.top, margin = 8.dp)
                     bottom.linkTo(airportTo.bottom)
                     start.linkTo(parent.start, margin = 16.dp)
-                }
-                .width(96.dp)
-                .wrapContentHeight(),
+                },
         )
-        AutoCompleteTextField(state = rememberAutoCompleteTextFieldState(
-            airportToName,
-            airportToSearchResults,
-        ),
+        AutoCompleteTextField(
+            state = rememberAutoCompleteTextFieldState(
+                airportToName,
+                airportToSearchResults,
+            ),
             label = "To",
             placeHolder = "Enter City or Airport",
             onAirportToTextChanged,
@@ -180,11 +206,16 @@ fun AddFlightListItemPreview() {
     AppTheme {
         AddFlightListItem(
             onTypeSelected = {},
-            minArrivalTimeMillis = 0L,
+            minDepartureTime = Time(0L, TimeZone.getDefault()),
+            minArrivalTime = Time(0L, TimeZone.getDefault()),
             onDepartureTimeChanged = { _, _ -> },
+            departureDateSelectionEnabled = true,
+            departureDayOfMonth = "14",
+            departureDayOfWeek = "Tue",
+            onDepartureDateChanged = {},
             onAirportFromTextChanged = {},
             airportFromSearchResultTapped = {},
-            arrivalDayOfMonth = "15",
+            arrivalDayOfMonth = "2",
             arrivalDayOfWeek = "Wed",
             onArrivalDateChanged = {},
             onArrivalTimeChanged = { _, _ -> },

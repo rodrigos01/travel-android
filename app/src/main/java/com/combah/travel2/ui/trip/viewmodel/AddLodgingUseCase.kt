@@ -39,6 +39,7 @@ class AddLodgingUseCase(
         val checkOutDayOfMonth: String,
         val checkOutDayOfWeek: String,
         val checkOutTime: String? = null,
+        override val startDateSelectionEnabled: Boolean = false,
     ) : AddPlanUseCase.AddPlanItem
 
     data class PendingLodging(
@@ -86,7 +87,10 @@ class AddLodgingUseCase(
         checkOut = time.toMidnight() + TimeUnit.DAYS.toMillis(1)
     )
 
-    override fun createItem(data: PendingLodging): AddLodgingItem = AddLodgingItem(
+    override fun createItem(
+        data: PendingLodging,
+        startDateSelectionEnabled: Boolean,
+    ): AddLodgingItem = AddLodgingItem(
         id = data.id,
         timestamp = data.checkIn,
         name = data.name ?: data.address,
@@ -95,11 +99,13 @@ class AddLodgingUseCase(
         checkOutDayOfMonth = timeFormatter.dayOfMonthString(data.checkOut),
         checkOutDayOfWeek = timeFormatter.dayOfWeekString(data.checkOut),
         checkOutTime = timeFormatter.timeString(data.checkOut),
+        startDateSelectionEnabled = startDateSelectionEnabled,
     ).also {
         inputUseCaseStore.register(it.id)
     }
 
-    override fun addItem(time: Time) = itemStore.addItem(time)
+    override fun addItem(time: Time, startDateSelectionEnabled: Boolean) =
+        itemStore.addItem(time, startDateSelectionEnabled)
 
     override fun remove(item: AddLodgingItem) {
         itemStore.remove(item)

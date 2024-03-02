@@ -87,14 +87,7 @@ class AddFlightUseCaseTest {
 
     @Test
     fun `itemStore items updated should update items`() {
-        val item = AddFlightItem(
-            "flight_id",
-            timestamp = mock(),
-            minArrivalTimeMillis = 0L,
-            arrivalDayOfMonth = "",
-            arrivalDayOfWeek = "",
-        )
-        itemFlow.value = mapOf("flight_id" to item)
+        val item = mockItem("flight_id")
         assertThat(items.value["flight_id"]).isEqualTo(item)
     }
 
@@ -130,13 +123,7 @@ class AddFlightUseCaseTest {
 
     @Test
     fun `create item should return item with pending flight data`() {
-        val oneToMidnightTime: Time = mock {
-            on { timeInMillis } doReturn 1259L
-        }
-        val midnightTime: Time = mock {
-            on { minus(60000) } doReturn oneToMidnightTime
-        }
-
+        val midnightTime: Time = mock()
         mockkStatic("com.combah.travel2.extensions.TimeKt")
         val departure = mockk<Time>()
         every { departure.toMidnight() } returns midnightTime
@@ -151,20 +138,39 @@ class AddFlightUseCaseTest {
         )
         formatter.stub {
             on { timeString(departure) } doReturn "9:15"
+            on { dayOfMonthString(departure) } doReturn "20"
+            on { dayOfWeekString(departure) } doReturn "Tue"
             on { dayOfMonthString(arrival) } doReturn "21"
             on { dayOfWeekString(arrival) } doReturn "Wed"
             on { timeString(arrival) } doReturn "16:15"
         }
-        val item = subject.createItem(data)
+        val item = subject.createItem(data, false)
         assertThat(item.id).isEqualTo("flight_id")
         assertThat(item.timestamp).isEqualTo(departure)
-        assertThat(item.minArrivalTimeMillis).isEqualTo(1259L)
+        assertThat(item.minDepartureTime).isEqualTo(midnightTime)
+        assertThat(item.minArrivalTime).isEqualTo(midnightTime)
+        assertThat(item.departureDayOfMonth).isEqualTo("20")
+        assertThat(item.departureDayOfWeek).isEqualTo("Tue")
         assertThat(item.departureTime).isEqualTo("9:15")
         assertThat(item.airportFromName).isEqualTo("Airport 15")
         assertThat(item.arrivalDayOfMonth).isEqualTo("21")
         assertThat(item.arrivalDayOfWeek).isEqualTo("Wed")
         assertThat(item.arrivalTime).isEqualTo("16:15")
         assertThat(item.airportToName).isEqualTo("Airport 16")
+    }
+
+    @Test
+    fun `set departure day should update arrival day`() {
+        val originalTime = Time("2023-10-16T18:25 +0200")
+        val receivedTime = mockTime {
+            on { dayOfMonth } doReturn 21
+            on { month } doReturn 4
+            on { year } doReturn 2024
+        }
+        val originalData = PendingFlight(id = "itemId", departure = originalTime)
+        subject.setDepartureDate("itemId", receivedTime)
+        val result = getUpdateResult(originalData)
+        assertThat(result.departure).isEqualTo(Time("2024-4-21T18:25 +0200"))
     }
 
     @Test
@@ -352,15 +358,19 @@ class AddFlightUseCaseTest {
         assertThat(segment.airportTo).isEqualTo(data.airportTo)
     }
 
-    private fun mockItem(id: String) {
+    private fun mockItem(id: String): AddFlightItem {
         val item = AddFlightItem(
             id,
             timestamp = mock(),
-            minArrivalTimeMillis = 0L,
+            minDepartureTime = mock(),
+            minArrivalTime = mock(),
+            departureDayOfMonth = "",
+            departureDayOfWeek = "",
             arrivalDayOfMonth = "",
             arrivalDayOfWeek = "",
         )
         itemFlow.value = mapOf(id to item)
+        return item
     }
 
     private fun getUpdateResult(originalData: PendingFlight): PendingFlight {
