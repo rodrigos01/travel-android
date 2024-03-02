@@ -143,6 +143,16 @@ class TripViewModel(
         ) : Timeable, Identifiable, TripItem
     }
 
+    private val reversibleItems = mutableMapOf<String, TripItem.EmptyAddPlanItem>()
+    private val TripItem.Identifiable.reversible: Boolean
+        get() = reversibleItems.containsKey(id)
+
+    private var TripItem.Identifiable.original: TripItem.EmptyAddPlanItem?
+        get() = reversibleItems[id]
+        set(value) {
+            value?.let { reversibleItems[id] = it } ?: reversibleItems.remove(id)
+        }
+
     private val eventsFromTrip = repository.findTripById(tripId).map {
         ViewState(
             items = genItems(it),
@@ -153,17 +163,7 @@ class TripViewModel(
         merge(eventsFromTrip, localState).combine(addPlanUseCase.items) { state, addPlanItems ->
             state.updateItems {
                 replaceAll { item ->
-                    (item as? TripItem.Identifiable)?.id?.let { addPlanItems[it] }
-                        ?: if (item is AddPlanUseCase.AddPlanItem && item.reversible) {
-                            genEmptyAddPlanItem(item.timestamp, false)
-                        } else {
-                            item
-                        }
-                }
-                removeIf {
-                    it is AddPlanUseCase.AddPlanItem && !it.reversible && !addPlanItems.containsKey(
-                        it.id
-                    )
+                    (item as? TripItem.Identifiable)?.id?.let { addPlanItems[it] } ?: item
                 }
             }
         }.asStateFlow(initialValue = ViewState(emptyList()))
@@ -176,6 +176,7 @@ class TripViewModel(
             val addPlanItem =
                 addPlanUseCase.createAddPlanItem((tapped as TripItem.Timeable).timestamp)
             if (tapped is TripItem.EmptyAddPlanItem) {
+                addPlanItem.original = tapped
                 removeAt(index)
                 add(index, addPlanItem)
             } else if (tapped is TripItem.DateRangeItem) {
@@ -210,7 +211,12 @@ class TripViewModel(
         val item =
             viewState.value.items.find { it is AddPlanUseCase.AddPlanItem && it.id == itemId } as? AddPlanUseCase.AddPlanItem
                 ?: return
+        val itemIndex = viewState.value.items.indexOf(item)
         addPlanUseCase.removeItem(item)
+        updateItems {
+            remove(item)
+            item.original?.let { add(itemIndex, it) }
+        }
     }
 
     private fun updateItems(updater: MutableList<TripItem>.() -> Unit) {
