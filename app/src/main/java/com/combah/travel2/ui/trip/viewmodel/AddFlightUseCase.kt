@@ -34,7 +34,6 @@ class AddFlightUseCase(
         override val id: String,
         override val timestamp: Time,
         val minArrivalTimeMillis: Long,
-        override val reversible: Boolean = false,
         val departureTime: String? = null,
         val airportFromName: String? = null,
         val airportFromSearchResults: List<String> = emptyList(),

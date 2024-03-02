@@ -842,7 +842,7 @@ class TripViewModelTest {
     }
 
     @Test
-    fun `item removed from addPlanUseCase should be removed from items`() {
+    fun `cancel should remove item from addPlanUseCase`() {
         tripFlow.value = Trip(
             lodgings = listOf(
                 Lodging(
@@ -860,12 +860,35 @@ class TripViewModelTest {
         val originalItem =
             subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
         subject.addButtonTapped(originalItem.id)
-        addPlanItems.value = emptyMap()
+        subject.cancelEdit(addPlanItemId)
+        verify(addPlanUseCase).removeItem(expected)
+    }
+
+    @Test
+    fun `cancel should remove item from items`() {
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    checkIn = "2024-05-11T13:00 +0100",
+                    checkout = "2024-05-19T11:00 +0100",
+                ),
+            )
+        )
+        val addPlanItemId = "originalItemId"
+        val expected: AddPlanItem = mock {
+            on { id } doReturn addPlanItemId
+        }
+        mockAddPlanItem(expected)
+        val originalItem =
+            subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
+        subject.addButtonTapped(originalItem.id)
+        subject.cancelEdit(addPlanItemId)
         assertThat(subject.viewState.value.items).doesNotContain(expected)
     }
 
     @Test
-    fun `reversible item removed from addPlanUseCase should be reverted back to empty add plan item`() {
+    fun `cancel should reinsert empty add plan item`() {
         tripFlow.value = Trip(
             lodgings = listOf(
                 Lodging(
@@ -880,16 +903,15 @@ class TripViewModelTest {
         val addPlanItem: AddPlanItem = mock {
             on { id } doReturn addPlanItemId
             on { timestamp } doReturn addPlanItemTimestamp
-            on { reversible } doReturn true
         }
         mockAddPlanItem(addPlanItem)
         val originalItem =
             subject.viewState.value.items.first { it is TripItem.EmptyAddPlanItem } as TripItem.EmptyAddPlanItem
         val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
         subject.addButtonTapped(originalItem.id)
-        addPlanItems.value = emptyMap()
+        subject.cancelEdit(addPlanItemId)
         val resultAddPlanItem = subject.viewState.value.items[originalItemIndex]
-        assertThat(resultAddPlanItem).isInstanceOf(TripItem.EmptyAddPlanItem::class.java)
+        assertThat(resultAddPlanItem).isEqualTo(originalItem)
     }
 
     private fun mockAddPlanItem(addPlanItem: AddPlanItem) {
