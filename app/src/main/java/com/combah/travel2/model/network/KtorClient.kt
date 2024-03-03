@@ -1,7 +1,15 @@
 package com.combah.travel2.model.network
 
+import android.util.Log
+import io.grpc.android.BuildConfig
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.path
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -13,6 +21,25 @@ fun httpClient() = HttpClient {
         json(Json {
             ignoreUnknownKeys = true
             namingStrategy = JsonNamingStrategy.SnakeCase
+            explicitNulls = false
         })
+    }
+}
+
+const val SERVER_URL = "http://10.0.2.2:8080"
+
+suspend inline fun <reified T> request(path: String, builder: HttpRequestBuilder.() -> Unit): T? {
+    val response =
+        httpClient().get(SERVER_URL) {
+            url { path(path) }
+            builder()
+        }
+    return if (response.status == HttpStatusCode.OK) {
+        response.body<T>()
+    } else {
+        if (BuildConfig.DEBUG) {
+            Log.d("AddLodgingRepository", response.bodyAsText())
+        }
+        null
     }
 }

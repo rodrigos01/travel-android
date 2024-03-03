@@ -27,8 +27,8 @@ import com.combah.travel2.R
 @Composable
 fun TimePickerButton(
     onTimeSelected: (hour: Int, minute: Int) -> Unit,
+    modifier: Modifier = Modifier,
     showTimePickerState: MutableState<Boolean> = remember { mutableStateOf(false) },
-    modifier: Modifier,
     content: @Composable () -> Unit,
 ) {
     var showTimePicker: Boolean by showTimePickerState
