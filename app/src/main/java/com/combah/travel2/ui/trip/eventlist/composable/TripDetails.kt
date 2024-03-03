@@ -62,6 +62,7 @@ fun TripDetails(
         mutableStateOf(state.title)
     }
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             TopAppBar(
                 title = {
@@ -149,6 +150,11 @@ fun TripDetails(
                         event.dayOfWeek,
                         event.time,
                         event.hotelName,
+                    )
+
+                    is TripViewModel.TripItem.InitialAddPlanItem -> EmptyAddPlanListItem(
+                        showDivider = false,
+                        onAddButtonClick = { viewModel.addButtonTapped(event.id) }
                     )
 
                     is TripViewModel.TripItem.EmptyAddPlanItem -> EmptyAddPlanListItem(
