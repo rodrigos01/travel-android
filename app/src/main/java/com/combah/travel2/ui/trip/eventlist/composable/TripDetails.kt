@@ -160,6 +160,11 @@ fun TripDetails(
 
                     is AddLodgingUseCase.AddLodgingItem -> AddLodgingListItem(
                         onTypeSelected = { viewModel.typeSelected(event.id, it) },
+                        minCheckInTime = event.minCheckInTime,
+                        checkInDateSelectionEnabled = event.startDateSelectionEnabled,
+                        checkInDayOfMonth = event.checkInDayOfMonth,
+                        checkInDayOfWeek = event.checkInDayOfWeek,
+                        onCheckInDateChanged = { viewModel.setCheckInDate(event.id, it) },
                         checkInTime = event.checkInTime,
                         onCheckInTimeChanged = { hour, minute ->
                             viewModel.setCheckInTime(
@@ -187,7 +192,7 @@ fun TripDetails(
                         checkOutDayOfWeek = event.checkOutDayOfWeek,
                         onCheckOutDateChanged = { viewModel.setCheckOutDate(event.id, it) },
                         checkOutTime = event.checkOutTime,
-                        minCheckoutDate = event.timestamp,
+                        minCheckOutTime = event.timestamp,
                         onCheckOutTimeChanged = { hour, minute ->
                             viewModel.setCheckoutTime(
                                 event.id,

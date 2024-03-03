@@ -39,6 +39,7 @@ fun AddFlightListItem(
     onCancelButtonTapped: () -> Unit,
 ) {
     StartEndAddPlanListItem(
+        initialType = AddPlanType.Flight,
         onTypeSelected,
         startTitle = { Text("Departure") },
         minStartTime = minDepartureTime,

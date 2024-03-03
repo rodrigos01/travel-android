@@ -25,6 +25,7 @@ import java.util.TimeZone
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun StartEndAddPlanListItem(
+    initialType: AddPlanType,
     onTypeSelected: (AddPlanType) -> Unit,
     startTitle: @Composable () -> Unit,
     minStartTime: Time,
@@ -49,12 +50,13 @@ fun StartEndAddPlanListItem(
     endDayOfWeek: String,
     onEndDateChanged: (Time) -> Unit,
     onEndTimeChanged: (hour: Int, minute: Int) -> Unit,
+    showEndTextField: Boolean = true,
     endLabelText: String? = null,
     endPlaceHolder: String? = null,
     endText: String? = null,
-    onEndTextChanged: (CharSequence) -> Unit,
+    onEndTextChanged: (CharSequence) -> Unit = {},
     endSearchResults: List<String> = emptyList(),
-    endSearchResultTapped: (Int) -> Unit,
+    endSearchResultTapped: (Int) -> Unit = {},
     onSaveButtonTapped: () -> Unit,
     onCancelButtonTapped: () -> Unit,
 ) {
@@ -64,7 +66,7 @@ fun StartEndAddPlanListItem(
             .padding(top = 8.dp, bottom = 16.dp)
     ) {
         TypeSelectorButton(
-            initialType = AddPlanType.Flight,
+            initialType = initialType,
             onOptionSelected = onTypeSelected,
         )
         AddPlanRow(
@@ -93,6 +95,7 @@ fun StartEndAddPlanListItem(
             dayOfMonth = endDayOfMonth,
             dayOfWeek = endDayOfWeek,
             onDateChanged = onEndDateChanged,
+            showTextField = showEndTextField,
             placeHolder = endPlaceHolder,
             labelText = endLabelText,
             text = endText,
@@ -120,6 +123,7 @@ fun StartEndAddPlanListItem(
 fun StartEndAddPlanListItemPreview() {
     AppTheme {
         StartEndAddPlanListItem(
+            initialType = AddPlanType.Flight,
             onTypeSelected = {},
             startTitle = { Text("Start") },
             minStartTime = Time(0L, TimeZone.getDefault()),
