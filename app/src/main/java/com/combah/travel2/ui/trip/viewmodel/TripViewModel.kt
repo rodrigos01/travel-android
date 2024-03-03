@@ -216,7 +216,7 @@ class TripViewModel(
         val itemIndex = viewState.value.items.indexOf(item)
         addPlanUseCase.removeItem(item)
         updateItems {
-            remove(item)
+            removeIf { it is TripItem.Identifiable && item.id == it.id }
             item.original?.let { add(itemIndex, it) }
         }
     }
