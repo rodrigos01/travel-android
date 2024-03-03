@@ -12,14 +12,20 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-fun FirebaseData.Trip.toAppDataModel() = Trip(
-    id = id,
-    name = name,
-    coverImage = coverImage,
-    flights = flights.map { it.toAppDataModel() },
-    lodgings = lodgings.map { it.toAppDataModel() },
-    places = places.map { it.toAppDataModel() },
-)
+fun FirebaseData.Trip.toAppDataModel(): Trip {
+    val appFlights = flights.map { it.toAppDataModel() }
+    val appLodgings = lodgings.map { it.toAppDataModel() }
+    val image = coverImage ?: appLodgings.firstOrNull()?.city?.coverImage
+    ?: appFlights.firstOrNull()?.segments?.firstOrNull()?.airportTo?.city?.coverImage
+    return Trip(
+        id = id,
+        name = name,
+        coverImage = image,
+        flights = appFlights,
+        lodgings = appLodgings,
+        places = places.map { it.toAppDataModel() },
+    )
+}
 
 fun FirebaseData.Flight.toAppDataModel() = Flight(
     id = id,

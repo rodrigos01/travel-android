@@ -23,4 +23,8 @@ class MockTripRepository : TripRepository {
     override suspend fun addFlight(tripId: String, flight: Flight) = Unit
 
     override suspend fun addLodging(tripId: String, lodging: Lodging) = Unit
+
+    override suspend fun addTrip(): String = ""
+
+    override suspend fun updateName(tripId: String, newName: String) = Unit
 }

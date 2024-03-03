@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.util.TimeZone
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.contracts.ExperimentalContracts
@@ -142,11 +143,16 @@ class TripViewModel(
             override val timestamp: Time,
             val showDivider: Boolean,
         ) : Timeable, Identifiable, TripItem
+
+        data class InitialAddPlanItem(
+            override val id: String,
+            override val timestamp: Time,
+        ) : Timeable, Identifiable, TripItem
     }
 
-    private val reversibleItems = mutableMapOf<String, TripItem.EmptyAddPlanItem>()
+    private val reversibleItems = mutableMapOf<String, TripItem>()
 
-    private var TripItem.Identifiable.original: TripItem.EmptyAddPlanItem?
+    private var TripItem.Identifiable.original: TripItem?
         get() = reversibleItems[id]
         set(value) {
             value?.let { reversibleItems[id] = it } ?: reversibleItems.remove(id)
@@ -179,15 +185,16 @@ class TripViewModel(
             viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
         val index = viewState.value.items.indexOf(tapped)
         updateItems {
+            val isInitialAddPlanItem = tapped is TripItem.InitialAddPlanItem
             val isDateRange = tapped is TripItem.DateRangeItem
             val addPlanItem =
                 addPlanUseCase.createAddPlanItem(
                     (tapped as TripItem.Timeable).timestamp,
-                    startDateSelectionEnabled = isDateRange,
+                    startDateSelectionEnabled = isDateRange || isInitialAddPlanItem,
                 )
             if (isDateRange) {
                 add(index + 1, addPlanItem)
-            } else if (tapped is TripItem.EmptyAddPlanItem) {
+            } else if (isInitialAddPlanItem || tapped is TripItem.EmptyAddPlanItem) {
                 addPlanItem.original = tapped
                 removeAt(index)
                 add(index, addPlanItem)
@@ -241,7 +248,7 @@ class TripViewModel(
                 is Lodging -> listOf(event.checkIn to event, event.checkout to event)
             }
         }.sortedBy { (time, event) -> EventComparable(time, event) }
-        return pairs.flatMapIndexed { index, (time, event) ->
+        val items = pairs.flatMapIndexed { index, (time, event) ->
             val placeItem =
                 genPlaceItem(index, pairs)
             val firstInMonth =
@@ -275,6 +282,16 @@ class TripViewModel(
                     add(genEmptyAddPlanItem(time, showDivider = !lastInPlace))
                 }
             }
+        }
+        return if (items.isNotEmpty()) {
+            items
+        } else {
+            listOf(
+                TripItem.InitialAddPlanItem(
+                    UUID.randomUUID().toString(),
+                    Time(0L, TimeZone.getDefault()),
+                )
+            )
         }
     }
 
