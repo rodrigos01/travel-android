@@ -8,11 +8,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -22,6 +28,7 @@ import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.AutoCompleteTextField
 import com.combah.travel2.ui.trip.creation.composable.DatePickerButton
+import com.combah.travel2.ui.trip.creation.composable.TimePickerButton
 import com.combah.travel2.ui.trip.creation.composable.TimePickerTextButton
 import com.combah.travel2.ui.trip.creation.composable.rememberAutoCompleteTextFieldState
 import java.util.TimeZone
@@ -37,12 +44,13 @@ fun AddPlanRow(
     timeSelectorLabel: String,
     time: String? = null,
     onTimeChanged: (hour: Int, minute: Int) -> Unit,
+    showTextField: Boolean = true,
     labelText: String? = null,
     placeHolder: String? = null,
     text: String? = null,
-    onTextChanged: (CharSequence) -> Unit,
+    onTextChanged: (CharSequence) -> Unit = {},
     searchResults: List<String> = emptyList(),
-    searchResultTapped: (Int) -> Unit,
+    searchResultTapped: (Int) -> Unit = {},
 ) {
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
@@ -50,6 +58,7 @@ fun AddPlanRow(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.minimumInteractiveComponentSize(),
         ) {
             Box(
                 modifier =
@@ -57,12 +66,14 @@ fun AddPlanRow(
             ) {
                 ProvideTextStyle(MaterialTheme.typography.titleMedium, title)
             }
-            TimePickerTextButton(
-                text = time ?: timeSelectorLabel,
-                onTimeChanged,
-                modifier = Modifier
-                    .semantics { role = Role.Button },
-            )
+            if (showTextField) {
+                TimePickerTextButton(
+                    text = time ?: timeSelectorLabel,
+                    onTimeChanged,
+                    modifier = Modifier
+                        .semantics { role = Role.Button },
+                )
+            }
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -81,15 +92,41 @@ fun AddPlanRow(
                     dayOfMonth, dayOfWeek, modifier = Modifier.width(80.dp),
                 )
             }
-            AutoCompleteTextField(
-                state = rememberAutoCompleteTextFieldState(
-                    text, searchResults,
-                ),
-                label = labelText,
-                placeHolder = placeHolder,
-                onTextChanged,
-                searchResultTapped,
-            )
+            if (showTextField) {
+                AutoCompleteTextField(
+                    state = rememberAutoCompleteTextFieldState(
+                        text, searchResults,
+                    ),
+                    label = labelText,
+                    placeHolder = placeHolder,
+                    onTextChanged,
+                    searchResultTapped,
+                )
+            } else {
+                val timePickerButtonState = remember {
+                    mutableStateOf(false)
+                }
+                val focusManager = LocalFocusManager.current
+                TimePickerButton(
+                    onTimeSelected = { hour, minute ->
+                        onTimeChanged(hour, minute)
+                        focusManager.clearFocus()
+                    },
+                    showTimePickerState = timePickerButtonState,
+                ) {
+                    OutlinedTextField(
+                        value = time.orEmpty(),
+                        label = { labelText?.let { Text(it) } },
+                        placeholder = { placeHolder?.let { Text(it) } },
+                        onValueChange = {},
+                        modifier = Modifier.onFocusChanged {
+                            if (it.hasFocus) {
+                                timePickerButtonState.value = true
+                            }
+                        }
+                    )
+                }
+            }
         }
     }
 
@@ -109,6 +146,7 @@ fun AddPlanRowPreview() {
                 dayOfMonth = "14",
                 dayOfWeek = "Tue",
                 onDateChanged = {},
+                showTextField = false,
                 placeHolder = "PlaceHolder",
                 labelText = "Label",
                 onTextChanged = {},

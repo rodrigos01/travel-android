@@ -32,6 +32,9 @@ class AddLodgingUseCase(
     data class AddLodgingItem(
         override val id: String,
         override val timestamp: Time,
+        val minCheckInTime: Time,
+        val checkInDayOfMonth: String,
+        val checkInDayOfWeek: String,
         val name: String? = null,
         val lodgingSearchResults: List<String> = emptyList(),
         val checkInTime: String? = null,
@@ -93,6 +96,9 @@ class AddLodgingUseCase(
     ): AddLodgingItem = AddLodgingItem(
         id = data.id,
         timestamp = data.checkIn,
+        minCheckInTime = data.checkIn.toMidnight(),
+        checkInDayOfWeek = timeFormatter.dayOfWeekString(data.checkIn),
+        checkInDayOfMonth = timeFormatter.dayOfMonthString(data.checkIn),
         name = data.name ?: data.address,
         checkInTime = timeFormatter.timeString(data.checkIn),
         minCheckOutTimeMillis = data.checkIn.timeInMillis,
@@ -114,6 +120,8 @@ class AddLodgingUseCase(
     override fun createUseCaseSet(useCaseFactory: InputUseCaseFactory) = InputUseCaseSet(
         useCaseFactory.createAutoCompleteUseCase(repository)
     )
+
+    override fun setCheckInDate(itemId: String, date: Time) = Unit
 
     override fun setCheckInTime(itemId: String, hour: Int, minute: Int) {
         itemStore.update(itemId) {

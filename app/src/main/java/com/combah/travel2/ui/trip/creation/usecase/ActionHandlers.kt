@@ -5,6 +5,7 @@ import com.combah.travel2.model.data.Time
 interface AddPlanItemActionHandler : AddLodgingItemActionHandler, AddFlightItemActionHandler
 
 interface AddLodgingItemActionHandler {
+    fun setCheckInDate(itemId: String, date: Time)
     fun setCheckInTime(itemId: String, hour: Int, minute: Int)
     fun setCheckOutDate(itemId: String, date: Time)
     fun setCheckoutTime(itemId: String, hour: Int, minute: Int)
