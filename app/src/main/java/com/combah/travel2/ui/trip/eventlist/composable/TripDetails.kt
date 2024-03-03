@@ -108,6 +108,7 @@ fun TripDetails(
                         dayOfWeekStart = event.dayOfWeekStart,
                         dayOfMonthEnd = event.dayOfMonthEnd,
                         dayOfWeekEnd = event.dayOfWeekEnd,
+                        onAddButtonClick = { viewModel.addButtonTapped(event.id) },
                     )
 
                     is PlaceItem -> PlaceEventListItem(
@@ -157,7 +158,12 @@ fun TripDetails(
 
                     is AddFlightUseCase.AddFlightItem -> AddFlightListItem(
                         onTypeSelected = { viewModel.typeSelected(event.id, it) },
-                        minArrivalTimeMillis = event.minArrivalTimeMillis,
+                        minDepartureTime = event.minDepartureTime,
+                        minArrivalTime = event.minArrivalTime,
+                        departureDateSelectionEnabled = event.startDateSelectionEnabled,
+                        departureDayOfMonth = event.departureDayOfMonth,
+                        departureDayOfWeek = event.departureDayOfWeek,
+                        onDepartureDateChanged = { viewModel.setDepartureDate(event.id, it) },
                         event.departureTime,
                         onDepartureTimeChanged = { hour, minute ->
                             viewModel.setDepartureTime(
@@ -213,6 +219,11 @@ fun TripDetails(
 
                     is AddLodgingUseCase.AddLodgingItem -> AddLodgingListItem(
                         onTypeSelected = { viewModel.typeSelected(event.id, it) },
+                        minCheckInTime = event.minCheckInTime,
+                        checkInDateSelectionEnabled = event.startDateSelectionEnabled,
+                        checkInDayOfMonth = event.checkInDayOfMonth,
+                        checkInDayOfWeek = event.checkInDayOfWeek,
+                        onCheckInDateChanged = { viewModel.setCheckInDate(event.id, it) },
                         checkInTime = event.checkInTime,
                         onCheckInTimeChanged = { hour, minute ->
                             viewModel.setCheckInTime(
@@ -240,7 +251,7 @@ fun TripDetails(
                         checkOutDayOfWeek = event.checkOutDayOfWeek,
                         onCheckOutDateChanged = { viewModel.setCheckOutDate(event.id, it) },
                         checkOutTime = event.checkOutTime,
-                        minCheckoutDateMillis = event.minCheckOutTimeMillis,
+                        minCheckOutTime = event.timestamp,
                         onCheckOutTimeChanged = { hour, minute ->
                             viewModel.setCheckoutTime(
                                 event.id,

@@ -1,12 +1,12 @@
 package com.combah.travel2.ui.trip.viewmodel
 
+import com.combah.travel2.extensions.combineWithoutWaiting
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.TripEntity
 import com.combah.travel2.ui.trip.creation.usecase.AddFlightItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 
 class AddPlanUseCase(
     private val addFlightUseCase: AddFlightUseCase,
@@ -16,7 +16,7 @@ class AddPlanUseCase(
 
     interface ItemStore<T : AddPlanItem> {
         val items: Flow<Map<String, T>>
-        fun addItem(time: Time): T
+        fun addItem(time: Time, startDateSelectionEnabled: Boolean = false): T
         fun remove(item: T)
     }
 
@@ -27,6 +27,8 @@ class AddPlanUseCase(
 
     sealed interface AddPlanItem : TripViewModel.TripItem, TripViewModel.TripItem.Identifiable,
         TripViewModel.TripItem.Timeable {
+
+        val startDateSelectionEnabled: Boolean
         val types: List<Type>
             get() = Type.entries
 
@@ -35,16 +37,18 @@ class AddPlanUseCase(
         }
     }
 
-    val items: Flow<Map<String, AddPlanItem>> = combine(
-        addFlightUseCase.items, addLodgingUseCase.items
-    ) { (addFlightItems, addLodgingItems) ->
+    val items = combineWithoutWaiting(
+        addFlightUseCase.items, emptyMap(), addLodgingUseCase.items, emptyMap(),
+    ) { addFlightItems, addLodgingItems ->
         addFlightItems + addLodgingItems
     }
 
     fun createAddPlanItem(
-        time: Time, type: AddPlanItem.Type = AddPlanItem.Type.Flight
+        time: Time,
+        startDateSelectionEnabled: Boolean = false,
+        type: AddPlanItem.Type = AddPlanItem.Type.Flight
     ): AddPlanItem {
-        return type.useCase.addItem(time)
+        return type.useCase.addItem(time, startDateSelectionEnabled)
     }
 
     fun typeChanged(addPlanItem: AddPlanItem, newType: AddPlanItem.Type): AddPlanItem {
@@ -52,7 +56,11 @@ class AddPlanUseCase(
             return addPlanItem
         }
         removeItem(addPlanItem)
-        return createAddPlanItem(addPlanItem.timestamp, newType)
+        return createAddPlanItem(
+            addPlanItem.timestamp,
+            addPlanItem.startDateSelectionEnabled,
+            newType,
+        )
     }
 
     fun saveItem(addPlanItem: AddPlanItem): TripEntity = when (addPlanItem) {

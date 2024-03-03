@@ -2,6 +2,7 @@ package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.extensions.toMidnight
+import com.combah.travel2.extensions.update
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.SimplePlace
@@ -31,6 +32,9 @@ class AddLodgingUseCase(
     data class AddLodgingItem(
         override val id: String,
         override val timestamp: Time,
+        val minCheckInTime: Time,
+        val checkInDayOfMonth: String,
+        val checkInDayOfWeek: String,
         val name: String? = null,
         val lodgingSearchResults: List<String> = emptyList(),
         val checkInTime: String? = null,
@@ -38,6 +42,7 @@ class AddLodgingUseCase(
         val checkOutDayOfMonth: String,
         val checkOutDayOfWeek: String,
         val checkOutTime: String? = null,
+        override val startDateSelectionEnabled: Boolean = false,
     ) : AddPlanUseCase.AddPlanItem
 
     data class PendingLodging(
@@ -85,20 +90,28 @@ class AddLodgingUseCase(
         checkOut = time.toMidnight() + TimeUnit.DAYS.toMillis(1)
     )
 
-    override fun createItem(data: PendingLodging): AddLodgingItem = AddLodgingItem(
+    override fun createItem(
+        data: PendingLodging,
+        startDateSelectionEnabled: Boolean,
+    ): AddLodgingItem = AddLodgingItem(
         id = data.id,
         timestamp = data.checkIn,
+        minCheckInTime = data.checkIn.toMidnight(),
+        checkInDayOfWeek = timeFormatter.dayOfWeekString(data.checkIn),
+        checkInDayOfMonth = timeFormatter.dayOfMonthString(data.checkIn),
         name = data.name ?: data.address,
         checkInTime = timeFormatter.timeString(data.checkIn),
         minCheckOutTimeMillis = data.checkIn.timeInMillis,
         checkOutDayOfMonth = timeFormatter.dayOfMonthString(data.checkOut),
         checkOutDayOfWeek = timeFormatter.dayOfWeekString(data.checkOut),
         checkOutTime = timeFormatter.timeString(data.checkOut),
+        startDateSelectionEnabled = startDateSelectionEnabled,
     ).also {
         inputUseCaseStore.register(it.id)
     }
 
-    override fun addItem(time: Time) = itemStore.addItem(time)
+    override fun addItem(time: Time, startDateSelectionEnabled: Boolean) =
+        itemStore.addItem(time, startDateSelectionEnabled)
 
     override fun remove(item: AddLodgingItem) {
         itemStore.remove(item)
@@ -108,10 +121,12 @@ class AddLodgingUseCase(
         useCaseFactory.createAutoCompleteUseCase(repository)
     )
 
+    override fun setCheckInDate(itemId: String, date: Time) = Unit
+
     override fun setCheckInTime(itemId: String, hour: Int, minute: Int) {
         itemStore.update(itemId) {
             it.copy(
-                checkIn = it.checkIn.copy(hour = hour, minute = minute)
+                checkIn = it.checkIn.update(hour = hour, minute = minute)
             )
         }
     }
@@ -119,7 +134,7 @@ class AddLodgingUseCase(
     override fun setCheckOutDate(itemId: String, date: Time) {
         itemStore.update(itemId) {
             it.copy(
-                checkOut = it.checkOut.copy(
+                checkOut = it.checkOut.update(
                     dayOfMonth = date.dayOfMonth,
                     month = date.month,
                     year = date.year,
@@ -131,7 +146,7 @@ class AddLodgingUseCase(
     override fun setCheckoutTime(itemId: String, hour: Int, minute: Int) {
         itemStore.update(itemId) {
             it.copy(
-                checkOut = it.checkOut.copy(hour = hour, minute = minute)
+                checkOut = it.checkOut.update(hour = hour, minute = minute)
             )
         }
     }

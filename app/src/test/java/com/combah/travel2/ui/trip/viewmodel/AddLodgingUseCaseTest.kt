@@ -83,6 +83,9 @@ class AddLodgingUseCaseTest {
         val item = AddLodgingItem(
             "lodging_id",
             timestamp = mock(),
+            minCheckInTime = mock(),
+            checkInDayOfMonth = "",
+            checkInDayOfWeek = "",
             checkOutDayOfMonth = "",
             checkOutDayOfWeek = "",
             minCheckOutTimeMillis = 0L,
@@ -139,6 +142,9 @@ class AddLodgingUseCaseTest {
         val item = AddLodgingItem(
             "lodging_id",
             timestamp = mock(),
+            minCheckInTime = mock(),
+            checkInDayOfMonth = "",
+            checkInDayOfWeek = "",
             checkOutDayOfMonth = "",
             checkOutDayOfWeek = "",
             minCheckOutTimeMillis = 0L,

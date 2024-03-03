@@ -2,6 +2,7 @@ package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.extensions.toMidnight
+import com.combah.travel2.extensions.update
 import com.combah.travel2.model.data.Airport
 import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
@@ -15,7 +16,6 @@ import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 import kotlin.collections.component1
 import kotlin.collections.component2
 
@@ -32,8 +32,11 @@ class AddFlightUseCase(
     data class AddFlightItem(
         override val id: String,
         override val timestamp: Time,
-        val minArrivalTimeMillis: Long,
+        val minDepartureTime: Time,
+        val minArrivalTime: Time,
         val departureTime: String? = null,
+        val departureDayOfMonth: String,
+        val departureDayOfWeek: String,
         val airportFromName: String? = null,
         val airportFromSearchResults: List<String> = emptyList(),
         val arrivalTime: String? = null,
@@ -41,6 +44,7 @@ class AddFlightUseCase(
         val arrivalDayOfWeek: String,
         val airportToName: String? = null,
         val airportToSearchResults: List<String> = emptyList(),
+        override val startDateSelectionEnabled: Boolean = false,
     ) : AddPlanUseCase.AddPlanItem
 
     data class PendingFlight(
@@ -88,32 +92,39 @@ class AddFlightUseCase(
         }
 
     override fun createData(time: Time): PendingFlight {
-        return PendingFlight(
+        val data = PendingFlight(
             id = UUID.randomUUID().toString(),
             departure = time,
         )
+        inputUseCaseStore.register(data.id)
+        return data
     }
 
-    override fun createItem(data: PendingFlight): AddFlightItem {
+    override fun createItem(
+        data: PendingFlight,
+        startDateSelectionEnabled: Boolean,
+    ): AddFlightItem {
         val arrivalTime = data.arrival ?: data.departure
         val item = AddFlightItem(
             id = data.id,
             timestamp = data.departure,
-            minArrivalTimeMillis = data.departure.toMidnight()
-                .minus(TimeUnit.MINUTES.toMillis(1L)).timeInMillis,
+            minDepartureTime = data.departure.toMidnight(),
+            minArrivalTime = data.departure.toMidnight(),
             departureTime = timeFormatter.timeString(data.departure),
+            departureDayOfWeek = timeFormatter.dayOfWeekString(data.departure),
+            departureDayOfMonth = timeFormatter.dayOfMonthString(data.departure),
             airportFromName = data.airportFrom?.name,
             arrivalDayOfWeek = timeFormatter.dayOfWeekString(arrivalTime),
             arrivalDayOfMonth = timeFormatter.dayOfMonthString(arrivalTime),
             arrivalTime = data.arrival?.let { timeFormatter.timeString(it) },
             airportToName = data.airportTo?.name,
+            startDateSelectionEnabled = startDateSelectionEnabled,
         )
-        inputUseCaseStore.register(item.id)
         return item
     }
 
-    override fun addItem(time: Time): AddFlightItem {
-        return itemStore.addItem(time)
+    override fun addItem(time: Time, startDateSelectionEnabled: Boolean): AddFlightItem {
+        return itemStore.addItem(time, startDateSelectionEnabled)
     }
 
     override fun remove(item: AddFlightItem) {
@@ -131,16 +142,28 @@ class AddFlightUseCase(
         )
     }
 
+    override fun setDepartureDate(itemId: String, date: Time) {
+        itemStore.update(itemId) {
+            it.copy(
+                departure = it.departure.update(
+                    dayOfMonth = date.dayOfMonth,
+                    month = date.month,
+                    year = date.year,
+                )
+            )
+        }
+    }
+
     override fun setDepartureTime(itemId: String, hour: Int, minute: Int) {
         itemStore.update(itemId) {
-            it.copy(departure = it.departure.copy(hour = hour, minute = minute))
+            it.copy(departure = it.departure.update(hour = hour, minute = minute))
         }
     }
 
     override fun setArrivalDate(itemId: String, date: Time) {
         itemStore.update(itemId) {
             it.copy(
-                arrival = (it.arrival ?: it.departure).copy(
+                arrival = (it.arrival ?: it.departure).update(
                     dayOfMonth = date.dayOfMonth,
                     month = date.month,
                     year = date.year,
@@ -151,8 +174,13 @@ class AddFlightUseCase(
 
     override fun setArrivalTime(itemId: String, hour: Int, minute: Int) {
         itemStore.update(itemId) {
+            val baseTime = it.arrival ?: it.departure
             it.copy(
-                arrival = (it.arrival ?: it.departure).copy(hour = hour, minute = minute)
+                arrival = baseTime.update(
+                    hour = hour,
+                    minute = minute,
+                    timeZone = it.airportTo?.timeZone ?: baseTime.timeZone,
+                )
             )
         }
     }
@@ -184,9 +212,11 @@ class AddFlightUseCase(
         val useCase = inputUseCaseStore.get(itemId)?.airportToAutoCompleteUseCase
         val selected = useCase?.state?.value?.searchResults?.getOrNull(index)
         useCase?.clearResults()
-        itemStore.update(itemId) {
-            it.copy(
-                airportTo = selected
+        itemStore.update(itemId) { data ->
+            data.copy(
+                airportTo = selected,
+                arrival = selected?.timeZone?.let { data.arrival?.update(timeZone = it) }
+                    ?: data.arrival
             )
         }
     }

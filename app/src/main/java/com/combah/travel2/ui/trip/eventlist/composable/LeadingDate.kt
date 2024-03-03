@@ -10,8 +10,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.combah.travel2.ui.theme.AppTheme
 
 @Composable
-fun LeadingDate(dayOfMonth: String, dayOfWeek: String, showSmall: Boolean = false) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+fun LeadingDate(
+    dayOfMonth: String,
+    dayOfWeek: String,
+    modifier: Modifier = Modifier,
+    showSmall: Boolean = false
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
         Text(
             text = dayOfMonth,
             style = if (showSmall) MaterialTheme.typography.labelLarge else MaterialTheme.typography.headlineSmall,

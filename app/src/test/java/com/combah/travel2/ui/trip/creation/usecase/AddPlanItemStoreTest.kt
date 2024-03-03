@@ -64,7 +64,7 @@ class AddPlanItemStoreTest {
 
         val newData = mock<AddPlanData>()
         val newItem = mock<AddPlanUseCase.AddPlanItem>()
-        itemFactory.stub { on { createItem(newData) } doReturn newItem }
+        itemFactory.stub { on { createItem(newData, false) } doReturn newItem }
         subject.update("item") { newData }
         assertThat(items.value["item"]).isEqualTo(newItem)
     }
@@ -88,7 +88,7 @@ class AddPlanItemStoreTest {
             on { id } doReturn itemId
         }
         dataFactory.stub { on { createData(time) } doReturn data }
-        itemFactory.stub { on { createItem(data) } doReturn item }
+        itemFactory.stub { on { createItem(data, false) } doReturn item }
         return item
     }
 }
