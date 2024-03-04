@@ -52,7 +52,12 @@ data class Place(
     val coverImage: String?,
     val externalId: String,
     val source: String,
-)
+) {
+    override fun equals(other: Any?): Boolean = other is Place && other.id == this.id
+    override fun hashCode(): Int {
+        return super.hashCode()
+    }
+}
 
 data class AirportSearchResult(
     val iata: String,
