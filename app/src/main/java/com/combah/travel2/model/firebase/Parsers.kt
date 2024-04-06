@@ -11,15 +11,22 @@ import com.combah.travel2.model.data.Trip
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
-fun FirebaseData.Trip.toAppDataModel() = Trip(
-    id = id,
-    name = name,
-    coverImage = coverImage,
-    flights = flights.map { it.toAppDataModel() },
-    lodgings = lodgings.map { it.toAppDataModel() },
-    places = places.map { it.toAppDataModel() },
-)
+fun FirebaseData.Trip.toAppDataModel(): Trip {
+    val appFlights = flights.map { it.toAppDataModel() }
+    val appLodgings = lodgings.map { it.toAppDataModel() }
+    val image = coverImage ?: appLodgings.firstOrNull()?.city?.coverImage
+    ?: appFlights.firstOrNull()?.segments?.firstOrNull()?.airportTo?.city?.coverImage
+    return Trip(
+        id = id,
+        name = name,
+        coverImage = image,
+        flights = appFlights,
+        lodgings = appLodgings,
+        places = places.map { it.toAppDataModel() },
+    )
+}
 
 fun FirebaseData.Flight.toAppDataModel() = Flight(
     id = id,
@@ -37,6 +44,7 @@ fun FirebaseData.FlightSegment.toAppDataModel() = FlightSegment(
 fun FirebaseData.Airport.toAppDataModel(city: FirebaseData.Place? = null) = Airport(
     iata = iata ?: error("iata is required"),
     name = name ?: error("name is required"),
+    timeZone = (timezone ?: city?.timeZone)?.let { TimeZone.getTimeZone(it) },
     city = this.city?.toAppDataModel() ?: city?.toAppDataModel() ?: error("city is required"),
 )
 
@@ -51,7 +59,7 @@ fun FirebaseData.Lodging.toAppDataModel() = Lodging(
 )
 
 fun FirebaseData.Place.toAppDataModel() = Place(
-    id = id,
+    id = externalId,
     name = name,
     address = address,
     latitude = latitude,
@@ -77,6 +85,7 @@ fun FlightSegment.toFirebaseDataModel() = FirebaseData.FlightSegment(
 fun Airport.toFirebaseDataModel() = FirebaseData.Airport(
     iata = iata,
     name = name,
+    timezone = timeZone?.id,
     city = city.toFirebaseDataModel(),
 )
 

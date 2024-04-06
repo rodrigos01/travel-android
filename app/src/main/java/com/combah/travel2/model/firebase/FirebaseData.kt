@@ -31,6 +31,7 @@ sealed interface FirebaseData {
     data class Airport(
         val iata: String? = null,
         val name: String? = null,
+        val timezone: String? = null,
         val city: Place? = null,
     )
 

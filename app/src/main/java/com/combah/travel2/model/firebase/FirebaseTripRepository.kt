@@ -12,7 +12,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
-import java.util.UUID
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FirebaseTripRepository(private val firestore: FirebaseFirestore) : TripRepository {
@@ -37,15 +36,15 @@ class FirebaseTripRepository(private val firestore: FirebaseFirestore) : TripRep
 
     override suspend fun addTrip(): String {
         val newTrip = Trip(
-            id = UUID.randomUUID().toString(),
-            null,
-            null,
-            emptyList(),
-            emptyList(),
-            emptyList(),
+            id = "",
+            name = null,
+            coverImage = null,
+            flights = emptyList(),
+            lodgings = emptyList(),
+            places = emptyList(),
         )
-        firestore.collection("/trips").add(newTrip)
-        return newTrip.id
+        val reference = firestore.collection("/trips").add(newTrip).await()
+        return reference.id
     }
 
     override suspend fun updateName(tripId: String, newName: String) {

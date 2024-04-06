@@ -1,5 +1,6 @@
 package com.combah.travel2.ui.trip.creation.composable
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -14,7 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.PopupProperties
+import com.combah.travel2.ui.theme.AppTheme
 
 class AutoCompleteTextFieldState(
     val initialValue: String?,
@@ -32,7 +35,7 @@ fun AutoCompleteTextField(
     placeHolder: String?,
     onTextChanged: (String) -> Unit,
     onOptionSelected: (Int) -> Unit,
-    modifier: Modifier
+    modifier: Modifier = Modifier,
 ) {
     val focusManager = LocalFocusManager.current
     Box(
@@ -81,6 +84,22 @@ fun AutoCompleteTextField(
                     colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.onSecondaryContainer),
                 )
             }
+        }
+    }
+}
+
+@Composable
+@Preview
+fun AutoCompleteTextFieldPreview() {
+    AppTheme {
+        Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
+            AutoCompleteTextField(
+                state = rememberAutoCompleteTextFieldState(null, emptyList()),
+                label = "label",
+                placeHolder = null,
+                onTextChanged = {},
+                onOptionSelected = {},
+            )
         }
     }
 }

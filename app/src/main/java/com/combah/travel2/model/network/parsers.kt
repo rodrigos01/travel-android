@@ -3,10 +3,12 @@ package com.combah.travel2.model.network
 import com.combah.travel2.model.data.Airport
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.SimplePlace
+import java.util.TimeZone
 
 fun ApiData.Airport.toAppDataModel() = Airport(
     iata = iata,
     name = name,
+    timeZone = timezone?.let { TimeZone.getTimeZone(it) },
     city = city.toAppDataModel(),
 )
 
