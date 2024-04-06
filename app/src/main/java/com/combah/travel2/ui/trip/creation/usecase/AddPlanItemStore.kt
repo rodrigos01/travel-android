@@ -17,15 +17,14 @@ class AddPlanItemStore<Data : AddPlanItemStore.AddPlanData, Item : AddPlanUseCas
 
     interface AddPlanData {
         val id: String
-        val isFirstItem: Boolean
     }
 
     fun interface ItemFactory<Item, Data : AddPlanData> {
-        fun createItem(data: Data): Item
+        fun createItem(data: Data, startDateSelectionEnabled: Boolean): Item
     }
 
     fun interface DataFactory<Data : AddPlanData> {
-        fun createData(time: Time, isFirstItem: Boolean): Data
+        fun createData(time: Time): Data
     }
 
     data class ItemStoreData<Item, Data>(
@@ -39,9 +38,9 @@ class AddPlanItemStore<Data : AddPlanItemStore.AddPlanData, Item : AddPlanUseCas
     override val items: Flow<Map<String, Item>>
         get() = _items.map { it.entries.associate { (key, value) -> key to value.item } }
 
-    override fun addItem(time: Time, isFirstItem: Boolean): Item {
-        val data = dataFactory.createData(time, isFirstItem)
-        val item = itemFactory.createItem(data)
+    override fun addItem(time: Time, startDateSelectionEnabled: Boolean): Item {
+        val data = dataFactory.createData(time)
+        val item = itemFactory.createItem(data, startDateSelectionEnabled)
         _items[data.id] = ItemStoreData(item, data)
         return item
     }
@@ -54,7 +53,12 @@ class AddPlanItemStore<Data : AddPlanItemStore.AddPlanData, Item : AddPlanUseCas
     ) {
         val data = findItem(itemId) ?: error("Item with id $itemId not found in store")
         _items[itemId] = updater(data.data)
-            .let { ItemStoreData(itemFactory.createItem(it), it) }
+            .let {
+                ItemStoreData(
+                    itemFactory.createItem(it, data.item.startDateSelectionEnabled),
+                    it,
+                )
+            }
     }
 
     override fun remove(item: Item) {

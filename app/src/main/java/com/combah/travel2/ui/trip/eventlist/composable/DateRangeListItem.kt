@@ -2,12 +2,15 @@ package com.combah.travel2.ui.trip.eventlist.composable
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,8 +24,16 @@ fun DateRangeListItem(
     dayOfWeekStart: String,
     dayOfMonthEnd: String,
     dayOfWeekEnd: String,
+    onAddButtonClick: () -> Unit,
 ) {
     Column {
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outlineVariant,
+            thickness = 1.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+        )
         ListItem(
             headlineContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -31,7 +42,7 @@ fun DateRangeListItem(
                         dayOfWeek = dayOfWeekStart,
                         showSmall = true,
                     )
-                    Divider(
+                    HorizontalDivider(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         thickness = 1.dp,
                         modifier = Modifier
@@ -43,9 +54,15 @@ fun DateRangeListItem(
                         dayOfWeek = dayOfWeekEnd,
                         showSmall = true,
                     )
+                    Spacer(modifier = Modifier.weight(1F))
+                    TextButton(
+                        onClick = { onAddButtonClick() },
+                    ) {
+                        Text(text = "Add Plans")
+                    }
                 }
             })
-        Divider(
+        HorizontalDivider(
             color = MaterialTheme.colorScheme.outlineVariant,
             thickness = 1.dp,
             modifier = Modifier
@@ -59,6 +76,6 @@ fun DateRangeListItem(
 @Preview
 fun DateRangeListItemPreview() {
     AppTheme {
-        DateRangeListItem("12", "Sat", "20", "Mon")
+        DateRangeListItem("12", "Sat", "20", "Mon", {})
     }
 }

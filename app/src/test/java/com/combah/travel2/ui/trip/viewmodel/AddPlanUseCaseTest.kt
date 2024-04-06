@@ -55,7 +55,10 @@ class AddPlanUseCaseTest {
         val original = AddFlightUseCase.AddFlightItem(
             id = "originalItem",
             timestamp = mock(),
-            minArrivalTimeMillis = 0L,
+            minDepartureTime = mock(),
+            minArrivalTime = mock(),
+            departureDayOfMonth = "",
+            departureDayOfWeek = "",
             arrivalDayOfMonth = "15",
             arrivalDayOfWeek = "Wed",
         )
