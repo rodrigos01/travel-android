@@ -89,6 +89,7 @@ fun TypeSelectorButton(
                         Image(
                             painter = painterResource(id = option.drawableId),
                             contentDescription = null,
+                            colorFilter = ColorFilter.tint(LocalContentColor.current),
                         )
                     },
                     onClick = {
