@@ -8,7 +8,7 @@ plugins {
 }
 
 val kotlin_version = "1.9.22"
-val compose_version = "1.6.1"
+val compose_version = "1.7.0-beta06"
 val ktor_version = "2.3.8"
 
 android {

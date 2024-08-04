@@ -1,6 +1,10 @@
 package com.combah.travel2.ui.trip.eventlist.composable
 
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -24,6 +28,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -46,9 +51,10 @@ import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckInI
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckOutItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.MonthItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.PlaceItem
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TripDetails(
     viewModel: TripViewModel,
@@ -65,219 +71,215 @@ fun TripDetails(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
-            TopAppBar(
-                title = {
-                    if (isInEditMode) {
-                        TextField(value = enteredName, onValueChange = { enteredName = it })
-                    } else {
-                        Text(text = state.title)
+            TopAppBar(title = {
+                if (isInEditMode) {
+                    TextField(value = enteredName, onValueChange = { enteredName = it })
+                } else {
+                    Text(text = state.title)
+                }
+            }, navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = ""
+                    )
+                }
+            }, actions = {
+                if (isInEditMode) {
+                    IconButton(onClick = { isInEditMode = false }) {
+                        Icon(imageVector = Icons.Filled.Close, contentDescription = "")
                     }
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = ""
-                        )
+                    IconButton(onClick = {
+                        isInEditMode = false
+                        viewModel.tripNameChanged(enteredName)
+                    }) {
+                        Icon(imageVector = Icons.Filled.Check, contentDescription = "")
                     }
-                },
-                actions = {
-                    if (isInEditMode) {
-                        IconButton(onClick = { isInEditMode = false }) {
-                            Icon(imageVector = Icons.Filled.Close, contentDescription = "")
-                        }
-                        IconButton(onClick = {
-                            isInEditMode = false
-                            viewModel.tripNameChanged(enteredName)
-                        }) {
-                            Icon(imageVector = Icons.Filled.Check, contentDescription = "")
-                        }
-                    } else {
-                        IconButton(onClick = { isInEditMode = true }) {
-                            Icon(imageVector = Icons.Filled.Edit, contentDescription = "")
-                        }
+                } else {
+                    IconButton(onClick = { isInEditMode = true }) {
+                        Icon(imageVector = Icons.Filled.Edit, contentDescription = "")
                     }
-                })
+                }
+            })
         },
         modifier = Modifier.background(MaterialTheme.colorScheme.surface),
     ) { paddingValues ->
         LazyColumn(contentPadding = paddingValues) {
-            items(state.items) { event ->
-                when (event) {
-                    is MonthItem -> MonthEventListItem(event.month, event.year)
-                    is DateRangeItem -> DateRangeListItem(
-                        dayOfMonthStart = event.dayOfMonthStart,
-                        dayOfWeekStart = event.dayOfWeekStart,
-                        dayOfMonthEnd = event.dayOfMonthEnd,
-                        dayOfWeekEnd = event.dayOfWeekEnd,
-                        onAddButtonClick = { viewModel.addButtonTapped(event.id) },
+            items(state.items, key = { it.hashCode() }) { event ->
+                Box(
+                    modifier = Modifier.animateItem(
+                        placementSpec = spring(
+                            visibilityThreshold = IntOffset.VisibilityThreshold
+                        )
                     )
-
-                    is EmptyDateItem -> EmptyDateListItem(
-                        dayOfMonth = event.dayOfMonth,
-                        dayOfWeek = event.dayOfWeek,
-                        onTap = { viewModel.emptyDateRowTapped(event.id) },
-                    )
-
-                    is PlaceItem -> PlaceEventListItem(
-                        event.imageUrl,
-                        event.placeName,
-                        event.dateStart,
-                        event.dateEnd
-                    )
-
-                    is FlightDepartureItem -> FlightEventListItem(
-                        event.showDate,
-                        event.dayOfMonth,
-                        event.dayOfWeek,
-                        event.time,
-                        event.destination,
-                        event.airport,
-                    )
-
-                    is FlightArrivalItem -> ArrivalEventListItem(
-                        event.showDate,
-                        event.dayOfMonth,
-                        event.dayOfWeek,
-                        event.time,
-                        event.airport,
-                    )
-
-                    is HotelCheckInItem -> CheckinListItem(
-                        event.showDate,
-                        event.dayOfMonth,
-                        event.dayOfWeek,
-                        event.time,
-                        event.hotelName,
-                    )
-
-                    is HotelCheckOutItem -> CheckoutListItem(
-                        event.showDate,
-                        event.dayOfMonth,
-                        event.dayOfWeek,
-                        event.time,
-                        event.hotelName,
-                    )
-
-                    is TripViewModel.TripItem.InitialAddPlanItem -> EmptyAddPlanListItem(
-                        showDivider = false,
-                        onAddButtonClick = { viewModel.addButtonTapped(event.id) }
-                    )
-
-                    is TripViewModel.TripItem.EmptyAddPlanItem -> EmptyAddPlanListItem(
-                        showDivider = event.showDivider,
-                        onAddButtonClick = { viewModel.addButtonTapped(event.id) }
-                    )
-
-                    is AddFlightUseCase.AddFlightItem -> AddFlightListItem(
-                        onTypeSelected = { viewModel.typeSelected(event.id, it) },
-                        minDepartureTime = event.minDepartureTime,
-                        minArrivalTime = event.minArrivalTime,
-                        departureDateSelectionEnabled = event.startDateSelectionEnabled,
-                        departureDayOfMonth = event.departureDayOfMonth,
-                        departureDayOfWeek = event.departureDayOfWeek,
-                        onDepartureDateChanged = { viewModel.setDepartureDate(event.id, it) },
-                        event.departureTime,
-                        onDepartureTimeChanged = { hour, minute ->
-                            viewModel.setDepartureTime(
-                                event.id,
-                                hour,
-                                minute
-                            )
-                        },
-                        event.airportFromName,
-                        onAirportFromTextChanged = {
-                            scope.launch {
-                                viewModel.airportFromSearchTextChanged(event.id, it)
-                            }
-                        },
-                        event.airportFromSearchResults,
-                        airportFromSearchResultTapped = {
-                            viewModel.airportFromSearchResultTapped(
-                                event.id,
-                                it
-                            )
-                        },
-                        event.arrivalTime,
-                        event.arrivalDayOfMonth,
-                        event.arrivalDayOfWeek,
-                        onArrivalTimeChanged = { hour, minute ->
-                            viewModel.setArrivalTime(
-                                event.id,
-                                hour,
-                                minute
-                            )
-                        },
-                        onArrivalDateChanged = { viewModel.setArrivalDate(event.id, it) },
-                        airportToName = event.airportToName,
-                        onAirportToTextChanged = {
-                            scope.launch {
-                                viewModel.airportToSearchTextChanged(event.id, it)
-                            }
-                        },
-                        airportToSearchResults = event.airportToSearchResults,
-                        airportToSearchResultTapped = {
-                            viewModel.airportToSearchResultTapped(
-                                event.id,
-                                it
-                            )
-                        },
-                        onSaveButtonTapped = {
-                            viewModel.save(event.id)
-                        },
-                        onCancelButtonTapped = {
-                            viewModel.cancelEdit(event.id)
-                        }
-                    )
-
-                    is AddLodgingUseCase.AddLodgingItem -> AddLodgingListItem(
-                        onTypeSelected = { viewModel.typeSelected(event.id, it) },
-                        minCheckInTime = event.minCheckInTime,
-                        checkInDateSelectionEnabled = event.startDateSelectionEnabled,
-                        checkInDayOfMonth = event.checkInDayOfMonth,
-                        checkInDayOfWeek = event.checkInDayOfWeek,
-                        onCheckInDateChanged = { viewModel.setCheckInDate(event.id, it) },
-                        checkInTime = event.checkInTime,
-                        onCheckInTimeChanged = { hour, minute ->
-                            viewModel.setCheckInTime(
-                                event.id,
-                                hour,
-                                minute
-                            )
-                        },
-                        onLodgingTextChanged = {
-                            scope.launch {
-                                viewModel.lodgingTextChanged(
-                                    event.id,
-                                    it
-                                )
-                            }
-                        },
-                        lodgingSearchResults = event.lodgingSearchResults,
-                        lodgingSearchResultTapped = {
-                            viewModel.lodgingSearchResultTapped(
-                                event.id,
-                                it
-                            )
-                        },
-                        checkOutDayOfMonth = event.checkOutDayOfMonth,
-                        checkOutDayOfWeek = event.checkOutDayOfWeek,
-                        onCheckOutDateChanged = { viewModel.setCheckOutDate(event.id, it) },
-                        checkOutTime = event.checkOutTime,
-                        minCheckOutTime = event.timestamp,
-                        onCheckOutTimeChanged = { hour, minute ->
-                            viewModel.setCheckoutTime(
-                                event.id,
-                                hour,
-                                minute
-                            )
-                        },
-                        onSaveButtonTapped = { viewModel.save(event.id) },
-                        onCancelButtonTapped = { viewModel.cancelEdit(event.id) },
-                    )
+                ) {
+                    TripDetailItem(event, viewModel, scope)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun TripDetailItem(
+    event: TripViewModel.TripItem, viewModel: TripViewModel, scope: CoroutineScope
+) {
+    when (event) {
+        is MonthItem -> MonthEventListItem(event.month, event.year)
+        is DateRangeItem -> DateRangeListItem(
+            dayOfMonthStart = event.dayOfMonthStart,
+            dayOfWeekStart = event.dayOfWeekStart,
+            dayOfMonthEnd = event.dayOfMonthEnd,
+            dayOfWeekEnd = event.dayOfWeekEnd,
+            onAddButtonClick = { viewModel.addButtonTapped(event.id) },
+        )
+
+        is EmptyDateItem -> EmptyDateListItem(
+            dayOfMonth = event.dayOfMonth,
+            dayOfWeek = event.dayOfWeek,
+            onTap = { viewModel.emptyDateRowTapped(event.id) },
+        )
+
+        is PlaceItem -> PlaceEventListItem(
+            event.imageUrl, event.placeName, event.dateStart, event.dateEnd
+        )
+
+        is FlightDepartureItem -> FlightEventListItem(
+            event.showDate,
+            event.dayOfMonth,
+            event.dayOfWeek,
+            event.time,
+            event.destination,
+            event.airport,
+        )
+
+        is FlightArrivalItem -> ArrivalEventListItem(
+            event.showDate,
+            event.dayOfMonth,
+            event.dayOfWeek,
+            event.time,
+            event.airport,
+        )
+
+        is HotelCheckInItem -> CheckinListItem(
+            event.showDate,
+            event.dayOfMonth,
+            event.dayOfWeek,
+            event.time,
+            event.hotelName,
+        )
+
+        is HotelCheckOutItem -> CheckoutListItem(
+            event.showDate,
+            event.dayOfMonth,
+            event.dayOfWeek,
+            event.time,
+            event.hotelName,
+        )
+
+        is TripViewModel.TripItem.InitialAddPlanItem -> EmptyAddPlanListItem(showDivider = false,
+            onAddButtonClick = { viewModel.addButtonTapped(event.id) })
+
+        is TripViewModel.TripItem.EmptyAddPlanItem -> EmptyAddPlanListItem(showDivider = event.showDivider,
+            onAddButtonClick = { viewModel.addButtonTapped(event.id) })
+
+        is AddFlightUseCase.AddFlightItem -> AddFlightListItem(onTypeSelected = {
+            viewModel.typeSelected(
+                event.id,
+                it
+            )
+        },
+            minDepartureTime = event.minDepartureTime,
+            minArrivalTime = event.minArrivalTime,
+            departureDateSelectionEnabled = event.startDateSelectionEnabled,
+            departureDayOfMonth = event.departureDayOfMonth,
+            departureDayOfWeek = event.departureDayOfWeek,
+            onDepartureDateChanged = { viewModel.setDepartureDate(event.id, it) },
+            event.departureTime,
+            onDepartureTimeChanged = { hour, minute ->
+                viewModel.setDepartureTime(
+                    event.id, hour, minute
+                )
+            },
+            event.airportFromName,
+            onAirportFromTextChanged = {
+                scope.launch {
+                    viewModel.airportFromSearchTextChanged(event.id, it)
+                }
+            },
+            event.airportFromSearchResults,
+            airportFromSearchResultTapped = {
+                viewModel.airportFromSearchResultTapped(
+                    event.id, it
+                )
+            },
+            event.arrivalTime,
+            event.arrivalDayOfMonth,
+            event.arrivalDayOfWeek,
+            onArrivalTimeChanged = { hour, minute ->
+                viewModel.setArrivalTime(
+                    event.id, hour, minute
+                )
+            },
+            onArrivalDateChanged = { viewModel.setArrivalDate(event.id, it) },
+            airportToName = event.airportToName,
+            onAirportToTextChanged = {
+                scope.launch {
+                    viewModel.airportToSearchTextChanged(event.id, it)
+                }
+            },
+            airportToSearchResults = event.airportToSearchResults,
+            airportToSearchResultTapped = {
+                viewModel.airportToSearchResultTapped(
+                    event.id, it
+                )
+            },
+            onSaveButtonTapped = {
+                viewModel.save(event.id)
+            },
+            onCancelButtonTapped = {
+                viewModel.cancelEdit(event.id)
+            })
+
+        is AddLodgingUseCase.AddLodgingItem -> AddLodgingListItem(
+            onTypeSelected = { viewModel.typeSelected(event.id, it) },
+            minCheckInTime = event.minCheckInTime,
+            checkInDateSelectionEnabled = event.startDateSelectionEnabled,
+            checkInDayOfMonth = event.checkInDayOfMonth,
+            checkInDayOfWeek = event.checkInDayOfWeek,
+            onCheckInDateChanged = { viewModel.setCheckInDate(event.id, it) },
+            checkInTime = event.checkInTime,
+            onCheckInTimeChanged = { hour, minute ->
+                viewModel.setCheckInTime(
+                    event.id, hour, minute
+                )
+            },
+            onLodgingTextChanged = {
+                scope.launch {
+                    viewModel.lodgingTextChanged(
+                        event.id, it
+                    )
+                }
+            },
+            lodgingSearchResults = event.lodgingSearchResults,
+            lodgingSearchResultTapped = {
+                viewModel.lodgingSearchResultTapped(
+                    event.id, it
+                )
+            },
+            checkOutDayOfMonth = event.checkOutDayOfMonth,
+            checkOutDayOfWeek = event.checkOutDayOfWeek,
+            onCheckOutDateChanged = { viewModel.setCheckOutDate(event.id, it) },
+            checkOutTime = event.checkOutTime,
+            minCheckOutTime = event.timestamp,
+            onCheckOutTimeChanged = { hour, minute ->
+                viewModel.setCheckoutTime(
+                    event.id, hour, minute
+                )
+            },
+            onSaveButtonTapped = { viewModel.save(event.id) },
+            onCancelButtonTapped = { viewModel.cancelEdit(event.id) },
+        )
     }
 }
 
