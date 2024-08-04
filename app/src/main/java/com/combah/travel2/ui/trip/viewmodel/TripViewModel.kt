@@ -28,9 +28,10 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.TimeZone
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalContracts::class)
 class TripViewModel(
@@ -74,6 +75,15 @@ class TripViewModel(
             val dayOfMonthEnd: String,
             val dayOfWeekEnd: String,
         ) : TripItem, Timeable, Identifiable
+
+        interface Replaceable
+
+        data class EmptyDateItem(
+            override val id: String,
+            override val timestamp: Time,
+            val dayOfMonth: String,
+            val dayOfWeek: String,
+        ) : TripItem, Timeable, Identifiable, Replaceable
 
         sealed interface EventItem : TripItem, Timeable, Identifiable {
             val showDate: Boolean
@@ -142,12 +152,12 @@ class TripViewModel(
             override val id: String,
             override val timestamp: Time,
             val showDivider: Boolean,
-        ) : Timeable, Identifiable, TripItem
+        ) : Replaceable, Timeable, Identifiable, TripItem
 
         data class InitialAddPlanItem(
             override val id: String,
             override val timestamp: Time,
-        ) : Timeable, Identifiable, TripItem
+        ) : Replaceable, Timeable, Identifiable, TripItem
     }
 
     private val reversibleItems = mutableMapOf<String, TripItem>()
@@ -185,20 +195,36 @@ class TripViewModel(
             viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
         val index = viewState.value.items.indexOf(tapped)
         updateItems {
-            val isInitialAddPlanItem = tapped is TripItem.InitialAddPlanItem
-            val isDateRange = tapped is TripItem.DateRangeItem
+            val allowStartDateSelection =
+                tapped is TripItem.DateRangeItem || tapped is TripItem.InitialAddPlanItem
             val addPlanItem =
                 addPlanUseCase.createAddPlanItem(
                     (tapped as TripItem.Timeable).timestamp,
-                    startDateSelectionEnabled = isDateRange || isInitialAddPlanItem,
+                    startDateSelectionEnabled = allowStartDateSelection,
                 )
-            if (isDateRange) {
-                add(index + 1, addPlanItem)
-            } else if (isInitialAddPlanItem || tapped is TripItem.EmptyAddPlanItem) {
+            if (tapped is TripItem.Replaceable) {
                 addPlanItem.original = tapped
                 removeAt(index)
                 add(index, addPlanItem)
+            } else {
+                add(index + 1, addPlanItem)
             }
+        }
+    }
+
+    fun emptyDateRowTapped(itemId: String) {
+        val tapped =
+            viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
+        val index = viewState.value.items.indexOf(tapped)
+        updateItems {
+            val addPlanItem =
+                addPlanUseCase.createAddPlanItem(
+                    (tapped as TripItem.Timeable).timestamp,
+                    startDateSelectionEnabled = false,
+                )
+            addPlanItem.original = tapped
+            removeAt(index)
+            add(index, addPlanItem)
         }
     }
 
@@ -347,20 +373,28 @@ class TripViewModel(
 
     private fun genDateRangeItem(
         from: Time, to: Time
-    ): TripItem.DateRangeItem? {
-        val start = (from + TimeUnit.DAYS.toMillis(1))
-        val end = to.toMidnight() - TimeUnit.MINUTES.toMillis(1)
-        if (end <= start) {
-            return null
+    ): TripItem? {
+        val start = from + 1.days
+        val end = to.toMidnight() - 1.minutes
+        return if (end <= start) {
+            null
+        } else if (end - 1.days >= start) {
+            TripItem.DateRangeItem(
+                id = UUID.randomUUID().toString(),
+                timestamp = from,
+                dayOfMonthStart = start.dayOfMonthString,
+                dayOfWeekStart = start.dayOfWeekString,
+                dayOfMonthEnd = end.dayOfMonthString,
+                dayOfWeekEnd = end.dayOfWeekString,
+            )
+        } else {
+            TripItem.EmptyDateItem(
+                id = UUID.randomUUID().toString(),
+                timestamp = from,
+                dayOfMonth = start.dayOfMonthString,
+                dayOfWeek = start.dayOfWeekString,
+            )
         }
-        return TripItem.DateRangeItem(
-            id = UUID.randomUUID().toString(),
-            timestamp = from,
-            dayOfMonthStart = start.dayOfMonthString,
-            dayOfWeekStart = start.dayOfWeekString,
-            dayOfMonthEnd = end.dayOfMonthString,
-            dayOfWeekEnd = end.dayOfWeekString,
-        )
     }
 
     private fun genItem(

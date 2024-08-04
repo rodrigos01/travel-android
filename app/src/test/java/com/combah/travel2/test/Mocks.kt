@@ -12,7 +12,7 @@ object Mocks {
         val timeZoneMock: TimeZone = mock()
         return mock {
             on { timeZone } doReturn timeZoneMock
-            on { minus(any()) } doReturn it
+            on { minus(any<Long>()) } doReturn it
             on { plus(any<Long>()) } doReturn it
             on { timeInMillis } doReturn 0L
             stubbing(it)

@@ -39,6 +39,7 @@ import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase.AddPlanItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.DateRangeItem
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.EmptyDateItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightArrivalItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightDepartureItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckInItem
@@ -110,6 +111,12 @@ fun TripDetails(
                         dayOfMonthEnd = event.dayOfMonthEnd,
                         dayOfWeekEnd = event.dayOfWeekEnd,
                         onAddButtonClick = { viewModel.addButtonTapped(event.id) },
+                    )
+
+                    is EmptyDateItem -> EmptyDateListItem(
+                        dayOfMonth = event.dayOfMonth,
+                        dayOfWeek = event.dayOfWeek,
+                        onTap = { viewModel.emptyDateRowTapped(event.id) },
                     )
 
                     is PlaceItem -> PlaceEventListItem(

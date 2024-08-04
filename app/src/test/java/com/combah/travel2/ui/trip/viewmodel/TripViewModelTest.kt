@@ -16,6 +16,7 @@ import com.combah.travel2.test.UnconfinedDispatcherTestRule
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase.AddPlanItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.DateRangeItem
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.EmptyDateItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightArrivalItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightDepartureItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckInItem
@@ -409,8 +410,7 @@ class TripViewModelTest {
                 ),
             )
         )
-        val eventItems =
-            subject.viewState.value.items.filterIsInstance<TripItem.EventItem>()
+        val eventItems = subject.viewState.value.items.filterIsInstance<TripItem.EventItem>()
         assertThat(eventItems).satisfiesExactly(
             {
                 val item = it as FlightDepartureItem
@@ -482,6 +482,41 @@ class TripViewModelTest {
             assertThat(item.dayOfMonthStart).isEqualTo("11")
             assertThat(item.dayOfMonthEnd).isEqualTo("10")
         }
+    }
+
+    @Test
+    fun `empty date range must have at least 2 days`() {
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    checkIn = "2024-05-11T13:00 +0100",
+                    checkout = "2024-05-13T11:00 +0100",
+                ),
+            )
+        )
+        val dateRanges = subject.viewState.value.items.filterIsInstance<DateRangeItem>()
+        assertThat(dateRanges).noneSatisfy { item ->
+            assertThat(item.dayOfMonthStart).isEqualTo("12")
+            assertThat(item.dayOfMonthEnd).isEqualTo("12")
+        }
+    }
+
+    @Test
+    fun `events should have single empty date item`() {
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    checkIn = "2024-05-11T13:00 +0100",
+                    checkout = "2024-05-13T11:00 +0100",
+                ),
+            )
+        )
+        val dateRanges = subject.viewState.value.items.filterIsInstance<EmptyDateItem>()
+        assertThat(dateRanges).satisfiesExactly({ item ->
+            assertThat(item.dayOfMonth).isEqualTo("12")
+        })
     }
 
     @Test
@@ -656,9 +691,7 @@ class TripViewModelTest {
             subject.viewState.value.items.first { it is HotelCheckOutItem && it.hotelName == lodgingName } as TripItem.EventItem
         subject.addButtonTapped(checkOutItem.id)
         verify(addPlanUseCase).createAddPlanItem(
-            eq(Time("2024-05-30T11:00 +0200")),
-            startDateSelectionEnabled = eq(false),
-            type = any()
+            eq(Time("2024-05-30T11:00 +0200")), startDateSelectionEnabled = eq(false), type = any()
         )
     }
 
@@ -678,8 +711,7 @@ class TripViewModelTest {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)
-        val originalItem =
-            subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
+        val originalItem = subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
         val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
         subject.addButtonTapped(originalItem.id)
         val addedItem = subject.viewState.value.items[originalItemIndex + 1]
@@ -702,14 +734,34 @@ class TripViewModelTest {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)
-        val originalItem =
-            subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
+        val originalItem = subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
         subject.addButtonTapped(originalItem.id)
         verify(addPlanUseCase).createAddPlanItem(
-            time = any(),
-            startDateSelectionEnabled = eq(true),
-            type = any()
+            time = any(), startDateSelectionEnabled = eq(true), type = any()
         )
+    }
+
+    @Test
+    fun `empty date row tapped on date range should replace tapped item with add plan item`() {
+        tripFlow.value = Trip(
+            lodgings = listOf(
+                Lodging(
+                    name = "Pestana Porto - A Brasileira",
+                    checkIn = "2024-05-11T13:00 +0100",
+                    checkout = "2024-05-13T11:00 +0100",
+                ),
+            )
+        )
+        val addPlanItemId = "originalItemId"
+        val expected: AddPlanItem = mock {
+            on { id } doReturn addPlanItemId
+        }
+        mockAddPlanItem(expected)
+        val originalItem = subject.viewState.value.items.filterIsInstance<EmptyDateItem>().first()
+        val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
+        subject.emptyDateRowTapped(originalItem.id)
+        val addedItem = subject.viewState.value.items[originalItemIndex]
+        assertThat(addedItem).isEqualTo(expected)
     }
 
     @Test
@@ -865,8 +917,7 @@ class TripViewModelTest {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)
-        val originalItem =
-            subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
+        val originalItem = subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
         subject.addButtonTapped(originalItem.id)
         subject.cancelEdit(addPlanItemId)
         verify(addPlanUseCase).removeItem(expected)
@@ -888,15 +939,14 @@ class TripViewModelTest {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)
-        val originalItem =
-            subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
+        val originalItem = subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
         subject.addButtonTapped(originalItem.id)
         subject.cancelEdit(addPlanItemId)
         assertThat(subject.viewState.value.items).doesNotContain(expected)
     }
 
     @Test
-    fun `cancel should reinsert empty add plan item`() {
+    fun `cancel should reinsert replaceable item`() {
         tripFlow.value = Trip(
             lodgings = listOf(
                 Lodging(
