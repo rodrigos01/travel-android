@@ -26,7 +26,7 @@ fun httpClient() = HttpClient {
     }
 }
 
-const val SERVER_URL = "http://10.0.2.2:8080"
+const val SERVER_URL = "https://travel-api-master-rlbhlyi7ja-uc.a.run.app"
 
 suspend inline fun <reified T> request(path: String, builder: HttpRequestBuilder.() -> Unit): T? {
     val response =
