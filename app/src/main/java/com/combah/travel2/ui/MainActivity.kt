@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         AppTheme(dynamicColor = false) {
             NavHost(navController = navController, startDestination = TripListDestination.ROUTE) {
                 composable(TripListDestination.ROUTE) {
-                    val viewModel: TripListViewModel by viewModel {
+                    val viewModel: TripListViewModel = viewModel {
                         TripListViewModel(serviceLocator.tripRepository, navController)
                     }
                     TripList(viewModel = viewModel, navController = navController)
@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
                     val tripId = it.arguments?.getString(
                         TripDetailsDestination.ARG_TRIP_ID
                     ) ?: error("tripId must be provided")
-                    val viewModel: TripViewModel by viewModel {
+                    val viewModel: TripViewModel = viewModel {
                         TripViewModel(
                             serviceLocator, tripId
                         )
