@@ -1,7 +1,7 @@
 package com.combah.travel2.model.network
 
 import android.util.Log
-import io.grpc.android.BuildConfig
+import com.google.firebase.BuildConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
