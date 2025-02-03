@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.extensions.asStateFlow
+import com.combah.travel2.extensions.now
 import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
@@ -26,7 +27,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import java.util.TimeZone
 import java.util.UUID
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -315,7 +315,7 @@ class TripViewModel(
             listOf(
                 TripItem.InitialAddPlanItem(
                     UUID.randomUUID().toString(),
-                    Time(System.currentTimeMillis(), TimeZone.getDefault()),
+                    Time.now(),
                 )
             )
         }
