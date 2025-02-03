@@ -107,7 +107,7 @@ fun TripDetails(
         LazyColumn(contentPadding = paddingValues) {
             items(state.items, key = { it.hashCode() }) { event ->
                 Box(
-                    modifier = Modifier.animateItemPlacement(spring(visibilityThreshold = IntOffset.VisibilityThreshold))
+                    modifier = Modifier.animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
                 ) {
                     TripDetailItem(event, viewModel, scope)
                 }

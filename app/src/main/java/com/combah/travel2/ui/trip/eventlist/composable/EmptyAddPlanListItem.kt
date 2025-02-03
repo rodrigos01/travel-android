@@ -1,11 +1,10 @@
 package com.combah.travel2.ui.trip.eventlist.composable
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -31,7 +30,7 @@ fun EmptyAddPlanListItem(showDivider: Boolean = true, onAddButtonClick: () -> Un
             Text(text = "Add Plans")
         }
         if (showDivider) {
-            Divider(
+            HorizontalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant,
                 thickness = 1.dp,
                 modifier = Modifier

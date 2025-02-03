@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.TimeFormatter
-import com.combah.travel2.extensions.asStateFlow
 import com.combah.travel2.extensions.now
 import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.model.data.Flight
@@ -21,11 +20,13 @@ import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 import kotlin.contracts.ExperimentalContracts
@@ -68,7 +69,7 @@ class TripViewModel(
                     (item as? TripItem.Identifiable)?.id?.let { addPlanItems[it] } ?: item
                 }
             }
-        }.asStateFlow(initialValue = localState.value)
+        }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = localState.value)
 
     fun tripNameChanged(newName: String) {
         viewModelScope.launch {

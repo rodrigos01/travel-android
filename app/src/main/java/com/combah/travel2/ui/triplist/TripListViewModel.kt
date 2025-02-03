@@ -3,11 +3,12 @@ package com.combah.travel2.ui.triplist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.combah.travel2.extensions.asStateFlow
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.ui.trip.eventlist.composable.TripDetailsDestination
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class TripListViewModel(
@@ -20,7 +21,7 @@ class TripListViewModel(
 
     val viewState = repository.trips.map {
         ViewState(trips = it)
-    }.asStateFlow(initialValue = ViewState(emptyList()))
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, initialValue = ViewState(emptyList()))
 
     fun addTrip() {
         viewModelScope.launch {
