@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.util.UUID
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.days
 
 class AddLodgingUseCase(
     private val repository: AddLodgingRepository,
@@ -51,7 +51,7 @@ class AddLodgingUseCase(
         val name: String? = null,
         val address: String? = null,
         val city: Place? = null,
-        val checkOut: Time,
+        val checkOut: Time? = null,
     ) : AddPlanItemStore.AddPlanData
 
     class InputUseCaseSet(
@@ -87,27 +87,29 @@ class AddLodgingUseCase(
     override fun createData(time: Time) = PendingLodging(
         id = UUID.randomUUID().toString(),
         checkIn = time,
-        checkOut = time.toMidnight() + TimeUnit.DAYS.toMillis(1)
     )
 
     override fun createItem(
         data: PendingLodging,
         startDateSelectionEnabled: Boolean,
-    ): AddLodgingItem = AddLodgingItem(
-        id = data.id,
-        timestamp = data.checkIn,
-        minCheckInTime = data.checkIn.toMidnight(),
-        checkInDayOfWeek = timeFormatter.dayOfWeekString(data.checkIn),
-        checkInDayOfMonth = timeFormatter.dayOfMonthString(data.checkIn),
-        name = data.name ?: data.address,
-        checkInTime = timeFormatter.timeString(data.checkIn),
-        minCheckOutTimeMillis = data.checkIn.timeInMillis,
-        checkOutDayOfMonth = timeFormatter.dayOfMonthString(data.checkOut),
-        checkOutDayOfWeek = timeFormatter.dayOfWeekString(data.checkOut),
-        checkOutTime = timeFormatter.timeString(data.checkOut),
-        startDateSelectionEnabled = startDateSelectionEnabled,
-    ).also {
-        inputUseCaseStore.register(it.id)
+    ): AddLodgingItem {
+        val checkOut = data.checkOut ?: (data.checkIn.toMidnight() + 1.days)
+        return AddLodgingItem(
+            id = data.id,
+            timestamp = data.checkIn,
+            minCheckInTime = data.checkIn.toMidnight(),
+            checkInDayOfWeek = timeFormatter.dayOfWeekString(data.checkIn),
+            checkInDayOfMonth = timeFormatter.dayOfMonthString(data.checkIn),
+            name = data.name ?: data.address,
+            checkInTime = timeFormatter.timeString(data.checkIn),
+            minCheckOutTimeMillis = data.checkIn.timeInMillis,
+            checkOutDayOfMonth = timeFormatter.dayOfMonthString(checkOut),
+            checkOutDayOfWeek = timeFormatter.dayOfWeekString(checkOut),
+            checkOutTime = timeFormatter.timeString(checkOut),
+            startDateSelectionEnabled = startDateSelectionEnabled,
+        ).also {
+            inputUseCaseStore.register(it.id)
+        }
     }
 
     override fun addItem(time: Time, startDateSelectionEnabled: Boolean) =
@@ -121,7 +123,15 @@ class AddLodgingUseCase(
         useCaseFactory.createAutoCompleteUseCase(repository)
     )
 
-    override fun setCheckInDate(itemId: String, date: Time) = Unit
+    override fun setCheckInDate(itemId: String, date: Time) = itemStore.update(itemId) {
+        it.copy(
+            checkIn = it.checkIn.update(
+                dayOfMonth = date.dayOfMonth,
+                month = date.month,
+                year = date.year,
+            )
+        )
+    }
 
     override fun setCheckInTime(itemId: String, hour: Int, minute: Int) {
         itemStore.update(itemId) {
@@ -134,7 +144,7 @@ class AddLodgingUseCase(
     override fun setCheckOutDate(itemId: String, date: Time) {
         itemStore.update(itemId) {
             it.copy(
-                checkOut = it.checkOut.update(
+                checkOut = (it.checkOut ?: it.checkIn).update(
                     dayOfMonth = date.dayOfMonth,
                     month = date.month,
                     year = date.year,
@@ -146,7 +156,7 @@ class AddLodgingUseCase(
     override fun setCheckoutTime(itemId: String, hour: Int, minute: Int) {
         itemStore.update(itemId) {
             it.copy(
-                checkOut = it.checkOut.update(hour = hour, minute = minute)
+                checkOut = (it.checkOut ?: it.checkIn).update(hour = hour, minute = minute)
             )
         }
     }
@@ -176,7 +186,7 @@ class AddLodgingUseCase(
         val pending = itemStore.get(item.id) ?: error("provided Id is not from this Use Case")
         pending.address ?: error("address from is not set")
         pending.city ?: error("city from is not set")
-        pending.checkOut
+        pending.checkOut ?: error("checkOut is not set")
         return Lodging(
             item.name,
             pending.address,
