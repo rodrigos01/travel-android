@@ -28,3 +28,5 @@ fun Time.update(
 }.let { Time(it.timeInMillis, it.timeZone) }
 
 fun Time.toMidnight(): Time = update(hour = 0, minute = 0, second = 0)
+
+fun Time.Companion.now() = Time(timeInMillis = System.currentTimeMillis(), TimeZone.getDefault())

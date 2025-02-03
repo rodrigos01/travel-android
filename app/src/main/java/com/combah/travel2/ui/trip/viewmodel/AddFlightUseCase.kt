@@ -1,6 +1,7 @@
 package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.TimeFormatter
+import com.combah.travel2.extensions.now
 import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.extensions.update
 import com.combah.travel2.model.data.Airport
@@ -108,7 +109,7 @@ class AddFlightUseCase(
         val item = AddFlightItem(
             id = data.id,
             timestamp = data.departure,
-            minDepartureTime = data.departure.toMidnight(),
+            minDepartureTime = Time.now().toMidnight(),
             minArrivalTime = data.departure.toMidnight(),
             departureTime = timeFormatter.timeString(data.departure),
             departureDayOfWeek = timeFormatter.dayOfWeekString(data.departure),

@@ -54,4 +54,6 @@ data class Time(
         SimpleDateFormat.getDateTimeInstance().also { it.timeZone = this.timeZone }.format(
             Date(this.timeInMillis)
         )
+
+    companion object
 }
