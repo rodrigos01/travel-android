@@ -23,8 +23,8 @@ fun Time.update(
     second: Int = this.second,
     timeZone: TimeZone = this.timeZone,
 ): Time = Calendar.getInstance(timeZone).apply {
-    timeInMillis = this@update.timeInMillis
     set(year, month - 1, dayOfMonth, hour, minute, second)
+    set(Calendar.MILLISECOND, 0)
 }.let { Time(it.timeInMillis, it.timeZone) }
 
 fun Time.toMidnight(): Time = update(hour = 0, minute = 0, second = 0)
