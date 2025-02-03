@@ -315,7 +315,7 @@ class TripViewModel(
             listOf(
                 TripItem.InitialAddPlanItem(
                     UUID.randomUUID().toString(),
-                    Time(0L, TimeZone.getDefault()),
+                    Time(System.currentTimeMillis(), TimeZone.getDefault()),
                 )
             )
         }
