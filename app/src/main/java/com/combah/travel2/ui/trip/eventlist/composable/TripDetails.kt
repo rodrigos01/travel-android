@@ -42,15 +42,16 @@ import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase
 import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase.AddPlanItem
+import com.combah.travel2.ui.trip.viewmodel.TripItem
+import com.combah.travel2.ui.trip.viewmodel.TripItem.DateRangeItem
+import com.combah.travel2.ui.trip.viewmodel.TripItem.EmptyDateItem
+import com.combah.travel2.ui.trip.viewmodel.TripItem.FlightArrivalItem
+import com.combah.travel2.ui.trip.viewmodel.TripItem.FlightDepartureItem
+import com.combah.travel2.ui.trip.viewmodel.TripItem.HotelCheckInItem
+import com.combah.travel2.ui.trip.viewmodel.TripItem.HotelCheckOutItem
+import com.combah.travel2.ui.trip.viewmodel.TripItem.MonthItem
+import com.combah.travel2.ui.trip.viewmodel.TripItem.PlaceItem
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel
-import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.DateRangeItem
-import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.EmptyDateItem
-import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightArrivalItem
-import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.FlightDepartureItem
-import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckInItem
-import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.HotelCheckOutItem
-import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.MonthItem
-import com.combah.travel2.ui.trip.viewmodel.TripViewModel.TripItem.PlaceItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -80,8 +81,7 @@ fun TripDetails(
             }, navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = ""
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = ""
                     )
                 }
             }, actions = {
@@ -107,11 +107,7 @@ fun TripDetails(
         LazyColumn(contentPadding = paddingValues) {
             items(state.items, key = { it.hashCode() }) { event ->
                 Box(
-                    modifier = Modifier.animateItem(
-                        placementSpec = spring(
-                            visibilityThreshold = IntOffset.VisibilityThreshold
-                        )
-                    )
+                    modifier = Modifier.animateItemPlacement(spring(visibilityThreshold = IntOffset.VisibilityThreshold))
                 ) {
                     TripDetailItem(event, viewModel, scope)
                 }
@@ -122,7 +118,7 @@ fun TripDetails(
 
 @Composable
 private fun TripDetailItem(
-    event: TripViewModel.TripItem, viewModel: TripViewModel, scope: CoroutineScope
+    event: TripItem, viewModel: TripViewModel, scope: CoroutineScope
 ) {
     when (event) {
         is MonthItem -> MonthEventListItem(event.month, event.year)
@@ -177,16 +173,17 @@ private fun TripDetailItem(
             event.hotelName,
         )
 
-        is TripViewModel.TripItem.InitialAddPlanItem -> EmptyAddPlanListItem(showDivider = false,
+        is TripItem.InitialAddPlanItem -> EmptyAddPlanListItem(
+            showDivider = false,
             onAddButtonClick = { viewModel.addButtonTapped(event.id) })
 
-        is TripViewModel.TripItem.EmptyAddPlanItem -> EmptyAddPlanListItem(showDivider = event.showDivider,
+        is TripItem.EmptyAddPlanItem -> EmptyAddPlanListItem(
+            showDivider = event.showDivider,
             onAddButtonClick = { viewModel.addButtonTapped(event.id) })
 
         is AddFlightUseCase.AddFlightItem -> AddFlightListItem(onTypeSelected = {
             viewModel.typeSelected(
-                event.id,
-                it
+                event.id, it
             )
         },
             minDepartureTime = event.minDepartureTime,
