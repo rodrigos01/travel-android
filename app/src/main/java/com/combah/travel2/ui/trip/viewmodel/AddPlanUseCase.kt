@@ -25,8 +25,8 @@ class AddPlanUseCase(
         fun createAppData(item: T): E
     }
 
-    sealed interface AddPlanItem : TripViewModel.TripItem, TripViewModel.TripItem.Identifiable,
-        TripViewModel.TripItem.Timeable {
+    sealed interface AddPlanItem : TripItem, TripItem.Identifiable,
+        TripItem.Timeable {
 
         val startDateSelectionEnabled: Boolean
         val types: List<Type>
