@@ -116,7 +116,7 @@ fun AddPlanRow(
                 ) {
                     OutlinedTextField(
                         value = time.orEmpty(),
-                        label = { labelText?.let { Text(it) } },
+                        label = { Text(timeSelectorLabel) },
                         placeholder = { placeHolder?.let { Text(it) } },
                         onValueChange = {},
                         modifier = Modifier.onFocusChanged {
