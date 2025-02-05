@@ -29,6 +29,7 @@ class AddPlanUseCase(
         TripItem.Timeable {
 
         val startDateSelectionEnabled: Boolean
+        val saveButtonEnabled: Boolean
         val types: List<Type>
             get() = Type.entries
 

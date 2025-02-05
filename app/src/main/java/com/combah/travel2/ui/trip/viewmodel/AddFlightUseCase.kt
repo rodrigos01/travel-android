@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.combine
 import java.util.UUID
 import kotlin.collections.component1
 import kotlin.collections.component2
+import kotlin.time.Duration.Companion.minutes
 
 class AddFlightUseCase(
     private val addFlightRepository: AddFlightRepository,
@@ -45,6 +46,7 @@ class AddFlightUseCase(
         val arrivalDayOfWeek: String,
         val airportToName: String? = null,
         val airportToSearchResults: List<String> = emptyList(),
+        override val saveButtonEnabled: Boolean,
         override val startDateSelectionEnabled: Boolean = false,
     ) : AddPlanUseCase.AddPlanItem
 
@@ -110,7 +112,10 @@ class AddFlightUseCase(
             id = data.id,
             timestamp = data.departure,
             minDepartureTime = Time.now().toMidnight(),
-            minArrivalTime = data.departure.toMidnight(),
+            minArrivalTime = Time(
+                data.departure.timeInMillis,
+                timeZone = data.airportTo?.timeZone ?: data.departure.timeZone,
+            ) + 1.minutes,
             departureTime = timeFormatter.timeString(data.departure),
             departureDayOfWeek = timeFormatter.dayOfWeekString(data.departure),
             departureDayOfMonth = timeFormatter.dayOfMonthString(data.departure),
@@ -119,6 +124,7 @@ class AddFlightUseCase(
             arrivalDayOfMonth = timeFormatter.dayOfMonthString(arrivalTime),
             arrivalTime = data.arrival?.let { timeFormatter.timeString(it) },
             airportToName = data.airportTo?.name,
+            saveButtonEnabled = data.arrival?.let { it > data.departure } ?: false && data.airportFrom != null && data.airportTo != null,
             startDateSelectionEnabled = startDateSelectionEnabled,
         )
         return item
