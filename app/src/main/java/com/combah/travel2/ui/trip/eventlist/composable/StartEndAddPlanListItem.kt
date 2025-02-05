@@ -57,6 +57,7 @@ fun StartEndAddPlanListItem(
     onEndTextChanged: (CharSequence) -> Unit = {},
     endSearchResults: List<String> = emptyList(),
     endSearchResultTapped: (Int) -> Unit = {},
+    saveButtonEnabled: Boolean = true,
     onSaveButtonTapped: () -> Unit,
     onCancelButtonTapped: () -> Unit,
 ) {
@@ -110,7 +111,7 @@ fun StartEndAddPlanListItem(
             OutlinedButton(onClick = { onCancelButtonTapped() }) {
                 Text("Cancel")
             }
-            Button(onClick = { onSaveButtonTapped() }) {
+            Button(onClick = { onSaveButtonTapped() }, enabled = saveButtonEnabled) {
                 Text("Save")
             }
         }

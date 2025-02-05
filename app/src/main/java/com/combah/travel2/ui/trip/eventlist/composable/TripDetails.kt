@@ -231,6 +231,7 @@ private fun TripDetailItem(
                     event.id, it
                 )
             },
+            saveButtonEnabled = event.saveButtonEnabled,
             onSaveButtonTapped = {
                 viewModel.save(event.id)
             },
@@ -274,6 +275,7 @@ private fun TripDetailItem(
                     event.id, hour, minute
                 )
             },
+            saveButtonEnabled = event.saveButtonEnabled,
             onSaveButtonTapped = { viewModel.save(event.id) },
             onCancelButtonTapped = { viewModel.cancelEdit(event.id) },
         )

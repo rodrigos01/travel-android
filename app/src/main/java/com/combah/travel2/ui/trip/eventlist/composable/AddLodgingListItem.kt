@@ -28,6 +28,7 @@ fun AddLodgingListItem(
     onCheckOutDateChanged: (Time) -> Unit,
     checkOutTime: String? = null,
     onCheckOutTimeChanged: (hour: Int, minute: Int) -> Unit,
+    saveButtonEnabled: Boolean,
     onSaveButtonTapped: () -> Unit,
     onCancelButtonTapped: () -> Unit,
 ) {
@@ -61,6 +62,7 @@ fun AddLodgingListItem(
         endLabelText = "Check-out time",
         endPlaceHolder = "Check-out time",
         endText = checkOutTime,
+        saveButtonEnabled = saveButtonEnabled,
         onCancelButtonTapped = onCancelButtonTapped,
         onSaveButtonTapped = onSaveButtonTapped,
     )
@@ -86,6 +88,7 @@ fun AddLodgingListItemPreview() {
             checkOutTime = null,
             minCheckOutTime = Time(0L, TimeZone.getDefault()),
             onCheckOutTimeChanged = { _, _ -> },
+            saveButtonEnabled = true,
             onSaveButtonTapped = {},
             onCancelButtonTapped = {},
         )

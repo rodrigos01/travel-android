@@ -24,6 +24,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.AutoCompleteTextField
@@ -31,6 +32,7 @@ import com.combah.travel2.ui.trip.creation.composable.DatePickerButton
 import com.combah.travel2.ui.trip.creation.composable.TimePickerButton
 import com.combah.travel2.ui.trip.creation.composable.TimePickerTextButton
 import com.combah.travel2.ui.trip.creation.composable.rememberAutoCompleteTextFieldState
+import com.combah.travel2.ui.trip.creation.composable.rememberTimePickerDialogState
 import java.util.TimeZone
 
 @Composable
@@ -52,6 +54,10 @@ fun AddPlanRow(
     searchResults: List<String> = emptyList(),
     searchResultTapped: (Int) -> Unit = {},
 ) {
+    val timePickerDialogState = rememberTimePickerDialogState(
+        minHour = minTime.hour,
+        minMinute = minTime.minute,
+    )
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
     ) {
@@ -72,6 +78,7 @@ fun AddPlanRow(
                     onTimeChanged,
                     modifier = Modifier
                         .semantics { role = Role.Button },
+                    timePickerDialogState = timePickerDialogState,
                 )
             }
         }
@@ -81,7 +88,7 @@ fun AddPlanRow(
         ) {
             if (dateSelectionEnabled) {
                 DatePickerButton(
-                    minTime,
+                    minTime.toMidnight(),
                     dayOfMonth,
                     dayOfWeek,
                     onDateChanged,
@@ -103,7 +110,7 @@ fun AddPlanRow(
                     searchResultTapped,
                 )
             } else {
-                val timePickerButtonState = remember {
+                val showTimePicker = remember {
                     mutableStateOf(false)
                 }
                 val focusManager = LocalFocusManager.current
@@ -112,7 +119,8 @@ fun AddPlanRow(
                         onTimeChanged(hour, minute)
                         focusManager.clearFocus()
                     },
-                    showTimePickerState = timePickerButtonState,
+                    showTimePickerState = showTimePicker,
+                    timePickerDialogState = timePickerDialogState,
                 ) {
                     OutlinedTextField(
                         value = time.orEmpty(),
@@ -121,7 +129,7 @@ fun AddPlanRow(
                         onValueChange = {},
                         modifier = Modifier.onFocusChanged {
                             if (it.hasFocus) {
-                                timePickerButtonState.value = true
+                                showTimePicker.value = true
                             }
                         }
                     )
