@@ -35,6 +35,7 @@ fun AddFlightListItem(
     onAirportToTextChanged: (CharSequence) -> Unit,
     airportToSearchResults: List<String> = emptyList(),
     airportToSearchResultTapped: (Int) -> Unit,
+    saveButtonEnabled: Boolean,
     onSaveButtonTapped: () -> Unit,
     onCancelButtonTapped: () -> Unit,
 ) {
@@ -70,6 +71,7 @@ fun AddFlightListItem(
         onEndTextChanged = onAirportToTextChanged,
         endSearchResults = airportToSearchResults,
         endSearchResultTapped = airportToSearchResultTapped,
+        saveButtonEnabled = saveButtonEnabled,
         onCancelButtonTapped = onCancelButtonTapped,
         onSaveButtonTapped = onSaveButtonTapped,
     )
@@ -96,6 +98,7 @@ fun AddFlightListItemPreview() {
             onArrivalTimeChanged = { _, _ -> },
             onAirportToTextChanged = {},
             airportToSearchResultTapped = {},
+            saveButtonEnabled = true,
             onSaveButtonTapped = {},
             onCancelButtonTapped = {},
         )

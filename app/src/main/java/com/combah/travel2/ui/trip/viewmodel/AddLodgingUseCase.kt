@@ -42,16 +42,17 @@ class AddLodgingUseCase(
         val checkOutDayOfMonth: String,
         val checkOutDayOfWeek: String,
         val checkOutTime: String? = null,
+        override val saveButtonEnabled: Boolean,
         override val startDateSelectionEnabled: Boolean = false,
     ) : AddPlanUseCase.AddPlanItem
 
     data class PendingLodging(
         override val id: String,
         val checkIn: Time,
+        val checkOut: Time,
         val name: String? = null,
         val address: String? = null,
         val city: Place? = null,
-        val checkOut: Time? = null,
     ) : AddPlanItemStore.AddPlanData
 
     class InputUseCaseSet(
@@ -87,13 +88,13 @@ class AddLodgingUseCase(
     override fun createData(time: Time) = PendingLodging(
         id = UUID.randomUUID().toString(),
         checkIn = time,
+        checkOut = time.toMidnight() + 1.days,
     )
 
     override fun createItem(
         data: PendingLodging,
         startDateSelectionEnabled: Boolean,
     ): AddLodgingItem {
-        val checkOut = data.checkOut ?: (data.checkIn.toMidnight() + 1.days)
         return AddLodgingItem(
             id = data.id,
             timestamp = data.checkIn,
@@ -103,9 +104,10 @@ class AddLodgingUseCase(
             name = data.name ?: data.address,
             checkInTime = timeFormatter.timeString(data.checkIn),
             minCheckOutTimeMillis = data.checkIn.timeInMillis,
-            checkOutDayOfMonth = timeFormatter.dayOfMonthString(checkOut),
-            checkOutDayOfWeek = timeFormatter.dayOfWeekString(checkOut),
-            checkOutTime = timeFormatter.timeString(checkOut),
+            checkOutDayOfMonth = timeFormatter.dayOfMonthString(data.checkOut),
+            checkOutDayOfWeek = timeFormatter.dayOfWeekString(data.checkOut),
+            checkOutTime = timeFormatter.timeString(data.checkOut),
+            saveButtonEnabled = data.checkOut > data.checkIn && (data.name ?: data.address) != null,
             startDateSelectionEnabled = startDateSelectionEnabled,
         ).also {
             inputUseCaseStore.register(it.id)
@@ -144,7 +146,7 @@ class AddLodgingUseCase(
     override fun setCheckOutDate(itemId: String, date: Time) {
         itemStore.update(itemId) {
             it.copy(
-                checkOut = (it.checkOut ?: it.checkIn).update(
+                checkOut = it.checkOut.update(
                     dayOfMonth = date.dayOfMonth,
                     month = date.month,
                     year = date.year,
@@ -156,7 +158,7 @@ class AddLodgingUseCase(
     override fun setCheckoutTime(itemId: String, hour: Int, minute: Int) {
         itemStore.update(itemId) {
             it.copy(
-                checkOut = (it.checkOut ?: it.checkIn).update(hour = hour, minute = minute)
+                checkOut = it.checkOut.update(hour = hour, minute = minute)
             )
         }
     }
@@ -166,10 +168,8 @@ class AddLodgingUseCase(
     }
 
     override fun lodgingSearchResultTapped(itemId: String, index: Int) {
-        val useCase = inputUseCaseStore.get(itemId)
-            ?.lodgingAutoCompleteUseCase
-        val selected = useCase?.state
-            ?.value?.searchResults?.getOrNull(index)
+        val useCase = inputUseCaseStore.get(itemId)?.lodgingAutoCompleteUseCase
+        val selected = useCase?.state?.value?.searchResults?.getOrNull(index)
         useCase?.clearResults()
         itemStore.update(itemId) {
             selected?.let { selected ->
@@ -186,7 +186,7 @@ class AddLodgingUseCase(
         val pending = itemStore.get(item.id) ?: error("provided Id is not from this Use Case")
         pending.address ?: error("address from is not set")
         pending.city ?: error("city from is not set")
-        pending.checkOut ?: error("checkOut is not set")
+        pending.checkOut
         return Lodging(
             item.name,
             pending.address,
