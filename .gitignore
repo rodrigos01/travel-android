@@ -114,3 +114,5 @@ gradle-app.setting
 # gradle/wrapper/gradle-wrapper.properties
 # Jetbrains Fleet config files
 .fleet
+# kotlin session files
+.kotlin/
