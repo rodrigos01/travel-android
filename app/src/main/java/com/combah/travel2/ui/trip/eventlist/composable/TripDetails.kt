@@ -105,7 +105,9 @@ fun TripDetails(
         modifier = Modifier.background(MaterialTheme.colorScheme.surface),
     ) { paddingValues ->
         LazyColumn(contentPadding = paddingValues) {
-            items(state.items, key = { it.hashCode() }) { event ->
+            items(
+                state.items,
+                key = { (it as? TripItem.Identifiable)?.id ?: it.hashCode() }) { event ->
                 Box(
                     modifier = Modifier.animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
                 ) {
@@ -269,7 +271,7 @@ private fun TripDetailItem(
             checkOutDayOfWeek = event.checkOutDayOfWeek,
             onCheckOutDateChanged = { viewModel.setCheckOutDate(event.id, it) },
             checkOutTime = event.checkOutTime,
-            minCheckOutTime = event.timestamp,
+            minCheckOutTime = event.minCheckOutTime,
             onCheckOutTimeChanged = { hour, minute ->
                 viewModel.setCheckoutTime(
                     event.id, hour, minute

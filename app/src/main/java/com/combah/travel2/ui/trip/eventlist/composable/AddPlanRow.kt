@@ -13,8 +13,10 @@ import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
@@ -25,6 +27,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.combah.travel2.extensions.toMidnight
+import com.combah.travel2.extensions.update
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.AutoCompleteTextField
@@ -54,9 +57,14 @@ fun AddPlanRow(
     searchResults: List<String> = emptyList(),
     searchResultTapped: (Int) -> Unit = {},
 ) {
+    var selectedTime by remember { mutableStateOf(minTime) }
+    selectedTime = selectedTime.update(timeZone = minTime.timeZone)
+    val isMinDate = selectedTime.toMidnight() == minTime.toMidnight()
     val timePickerDialogState = rememberTimePickerDialogState(
-        minHour = minTime.hour,
-        minMinute = minTime.minute,
+        minHour = if (isMinDate) minTime.hour else 0,
+        minMinute = if (isMinDate) minTime.minute else 0,
+        hour = selectedTime.hour,
+        minute = selectedTime.minute,
     )
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
@@ -75,7 +83,10 @@ fun AddPlanRow(
             if (showTextField) {
                 TimePickerTextButton(
                     text = time ?: timeSelectorLabel,
-                    onTimeChanged,
+                    onTimeSelected = { hour, minute ->
+                        selectedTime = selectedTime.update(hour = hour, minute = minute)
+                        onTimeChanged(hour, minute)
+                    },
                     modifier = Modifier
                         .semantics { role = Role.Button },
                     timePickerDialogState = timePickerDialogState,
@@ -91,7 +102,14 @@ fun AddPlanRow(
                     minTime.toMidnight(),
                     dayOfMonth,
                     dayOfWeek,
-                    onDateChanged,
+                    onDateSelected = {
+                        selectedTime = selectedTime.update(
+                            dayOfMonth = it.dayOfMonth,
+                            month = it.month,
+                            year = it.year,
+                        )
+                        onDateChanged(it)
+                    },
                     modifier = Modifier.width(80.dp),
                 )
             } else {
@@ -116,6 +134,7 @@ fun AddPlanRow(
                 val focusManager = LocalFocusManager.current
                 TimePickerButton(
                     onTimeSelected = { hour, minute ->
+                        selectedTime = selectedTime.update(hour = hour, minute = minute)
                         onTimeChanged(hour, minute)
                         focusManager.clearFocus()
                     },
