@@ -25,10 +25,22 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+    signingConfigs {
+        create("release") {
+            // You need to specify either an absolute path or include the
+            // keystore file in the same directory as the build.gradle file.
+            storeFile = file("travel-release.jks")
+            storePassword = "SZoyCEhfiC1mBX10"
+            keyAlias = "travel-release-key"
+            keyPassword = "SZoyCEhfiC1mBX10"
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = true
+            isDebuggable = false
             proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     buildFeatures {
