@@ -1,20 +1,27 @@
 package com.combah.travel2.ui.trip.creation.composable
 
 import android.text.format.DateFormat.is24HourFormat
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.combah.travel2.extensions.formatTime
@@ -62,7 +69,7 @@ fun DatePickerDialog(
     ConfirmationDialog(
         onConfirm = onConfirm,
         onDismiss = onDismiss,
-        buttonEnabled = state.dateConfirmEnabled
+        confirmButtonEnabled = state.dateConfirmEnabled
     ) {
         DatePicker(
             state = state.datePickerState,
@@ -80,20 +87,30 @@ fun TimePickerDialog(
     ConfirmationDialog(
         onConfirm = onConfirm,
         onDismiss = onDismiss,
-        buttonEnabled = state.timeConfirmEnabled,
-        errorMessage = if (state.showTimeErrorMessage) {
-            state.minDate.formatTime(
-                style = DateFormat.SHORT,
-                targetTimeZone = TimeZone.getTimeZone("UTC"),
-            )
-        } else {
-            null
-        }?.let { "Please select a time after $it" },
+        confirmButtonEnabled = state.timeConfirmEnabled,
     ) {
-        TimePicker(
-            modifier = Modifier.padding(top = 16.dp),
-            state = state.timePickerState,
-        )
+        Column {
+            TimePicker(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                state = state.timePickerState,
+            )
+            if (state.showTimeErrorMessage) {
+                Box(
+                    contentAlignment = Alignment.Center, modifier = Modifier
+                        .height(32.dp)
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        text = state.minDate.formatTime(
+                            style = DateFormat.SHORT,
+                            targetTimeZone = TimeZone.getTimeZone("UTC"),
+                        ).let { "Please select a time after $it" },
+                        color = Color.Red,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+        }
     }
 }
 
