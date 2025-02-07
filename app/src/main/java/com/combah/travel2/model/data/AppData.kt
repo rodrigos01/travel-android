@@ -36,6 +36,7 @@ data class Airport(
 )
 
 data class Lodging(
+    val id: String,
     val name: String?,
     val address: String,
     val city: Place,

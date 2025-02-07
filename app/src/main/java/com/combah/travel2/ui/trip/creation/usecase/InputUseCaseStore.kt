@@ -36,7 +36,7 @@ class InputUseCaseStore<T : InputUseCaseStore.UseCaseSet<S>, S>(
 
     fun get(key: String): T? = useCaseSets[key]
 
-    class Factory<T : InputUseCaseStore.UseCaseSet<S>, S> {
+    class Factory<T : UseCaseSet<S>, S> {
         fun create(setFactory: UseCaseSetFactory<T, S>) =
             InputUseCaseStore(setFactory, InputUseCaseFactory())
     }

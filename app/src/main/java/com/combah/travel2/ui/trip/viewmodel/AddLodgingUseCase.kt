@@ -11,7 +11,6 @@ import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase
-import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseFactory
 import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -19,15 +18,32 @@ import kotlinx.coroutines.flow.map
 import java.util.UUID
 import kotlin.time.Duration.Companion.days
 
-class AddLodgingUseCase(
-    private val repository: AddLodgingRepository,
-    private val timeFormatter: TimeFormatter,
-    itemStoreFactory: AddPlanItemStore.Factory<PendingLodging, AddLodgingItem> = AddPlanItemStore.Factory(),
-    inputUseCaseStoreFactory: InputUseCaseStore.Factory<InputUseCaseSet, InputState> = InputUseCaseStore.Factory()
+class AddLodgingUseCase private constructor(
+    private val itemStore: AddPlanItemStore<Lodging, PendingLodging, AddLodgingItem>,
+    private val inputUseCaseStore: InputUseCaseStore<InputUseCaseSet, InputState>,
 ) : AddPlanUseCase.AddItemUseCase<Lodging, AddLodgingUseCase.AddLodgingItem>,
-    AddLodgingItemActionHandler, AddPlanItemStore.DataFactory<AddLodgingUseCase.PendingLodging>,
-    AddPlanItemStore.ItemFactory<AddLodgingUseCase.AddLodgingItem, AddLodgingUseCase.PendingLodging>,
-    InputUseCaseStore.UseCaseSetFactory<AddLodgingUseCase.InputUseCaseSet, AddLodgingUseCase.InputState> {
+    AddPlanUseCase.ItemStore<Lodging, AddLodgingUseCase.AddLodgingItem> by itemStore,
+    AddLodgingItemActionHandler {
+
+    constructor(
+        repository: AddLodgingRepository,
+        timeFormatter: TimeFormatter,
+        itemStoreFactory: AddPlanItemStore.Factory<Lodging, PendingLodging, AddLodgingItem> = AddPlanItemStore.Factory(),
+        inputUseCaseStore: InputUseCaseStore<InputUseCaseSet, InputState> = InputUseCaseStore.Factory<InputUseCaseSet, InputState>()
+            .create(setFactory = {
+                InputUseCaseSet(
+                    it.createAutoCompleteUseCase(
+                        repository
+                    )
+                )
+            }),
+    ) : this(
+        itemStoreFactory.create(
+            dataFactory = DataFactory(),
+            itemFactory = ItemFactory(timeFormatter, inputUseCaseStore),
+        ),
+        inputUseCaseStore,
+    )
 
     data class AddLodgingItem(
         override val id: String,
@@ -68,13 +84,6 @@ class AddLodgingUseCase(
         val lodgingSearchResults: List<SimplePlace>,
     )
 
-    private val itemStore: AddPlanItemStore<PendingLodging, AddLodgingItem> =
-        itemStoreFactory.create(
-            dataFactory = this,
-            itemFactory = this,
-        )
-
-    private val inputUseCaseStore = inputUseCaseStoreFactory.create(setFactory = this)
     override val items: Flow<Map<String, AddLodgingItem>>
         get() = combine(itemStore.items, inputUseCaseStore.inputStates) { itemMap, inputStateMap ->
             itemMap.entries.associate { (key, value) ->
@@ -84,46 +93,53 @@ class AddLodgingUseCase(
             }
         }
 
+    private class DataFactory : AddPlanItemStore.DataFactory<Lodging, PendingLodging> {
 
-    override fun createData(time: Time) = PendingLodging(
-        id = UUID.randomUUID().toString(),
-        checkIn = time,
-        checkOut = time.toMidnight() + 1.days,
-    )
+        override fun createData(time: Time) = PendingLodging(
+            id = UUID.randomUUID().toString(),
+            checkIn = time,
+            checkOut = time.toMidnight() + 1.days,
+        )
 
-    override fun createItem(
-        data: PendingLodging,
-        startDateSelectionEnabled: Boolean,
-    ): AddLodgingItem {
-        return AddLodgingItem(
-            id = data.id,
-            timestamp = data.checkIn,
-            minCheckInTime = data.checkIn.toMidnight(),
-            checkInDayOfWeek = timeFormatter.dayOfWeekString(data.checkIn),
-            checkInDayOfMonth = timeFormatter.dayOfMonthString(data.checkIn),
-            name = data.name ?: data.address,
-            checkInTime = timeFormatter.timeString(data.checkIn),
-            minCheckOutTime = data.checkIn.toMidnight() + 1.days,
-            checkOutDayOfMonth = timeFormatter.dayOfMonthString(data.checkOut),
-            checkOutDayOfWeek = timeFormatter.dayOfWeekString(data.checkOut),
-            checkOutTime = timeFormatter.timeString(data.checkOut),
-            saveButtonEnabled = data.checkOut > data.checkIn && (data.name ?: data.address) != null,
-            startDateSelectionEnabled = startDateSelectionEnabled,
-        ).also {
-            inputUseCaseStore.register(it.id)
+        override fun createData(entity: Lodging): PendingLodging = PendingLodging(
+            id = entity.id,
+            name = entity.name,
+            address = entity.address,
+            checkIn = entity.checkIn,
+            checkOut = entity.checkout
+        )
+
+    }
+
+    private class ItemFactory(
+        private val timeFormatter: TimeFormatter,
+        private val inputUseCaseStore: InputUseCaseStore<InputUseCaseSet, InputState>,
+    ) : AddPlanItemStore.ItemFactory<AddLodgingItem, PendingLodging> {
+
+        override fun createItem(
+            data: PendingLodging,
+            startDateSelectionEnabled: Boolean,
+        ): AddLodgingItem {
+            return AddLodgingItem(
+                id = data.id,
+                timestamp = data.checkIn,
+                minCheckInTime = data.checkIn.toMidnight(),
+                checkInDayOfWeek = timeFormatter.dayOfWeekString(data.checkIn),
+                checkInDayOfMonth = timeFormatter.dayOfMonthString(data.checkIn),
+                name = data.name ?: data.address,
+                checkInTime = timeFormatter.timeString(data.checkIn),
+                minCheckOutTime = data.checkIn.toMidnight() + 1.days,
+                checkOutDayOfMonth = timeFormatter.dayOfMonthString(data.checkOut),
+                checkOutDayOfWeek = timeFormatter.dayOfWeekString(data.checkOut),
+                checkOutTime = timeFormatter.timeString(data.checkOut),
+                saveButtonEnabled = data.checkOut > data.checkIn && (data.name
+                    ?: data.address) != null,
+                startDateSelectionEnabled = startDateSelectionEnabled,
+            ).also {
+                inputUseCaseStore.register(it.id)
+            }
         }
     }
-
-    override fun addItem(time: Time, startDateSelectionEnabled: Boolean) =
-        itemStore.addItem(time, startDateSelectionEnabled)
-
-    override fun remove(item: AddLodgingItem) {
-        itemStore.remove(item)
-    }
-
-    override fun createUseCaseSet(useCaseFactory: InputUseCaseFactory) = InputUseCaseSet(
-        useCaseFactory.createAutoCompleteUseCase(repository)
-    )
 
     override fun setCheckInDate(itemId: String, date: Time) = itemStore.update(itemId) {
         it.copy(
@@ -188,6 +204,7 @@ class AddLodgingUseCase(
         pending.city ?: error("city from is not set")
         pending.checkOut
         return Lodging(
+            item.id,
             item.name,
             pending.address,
             pending.city,

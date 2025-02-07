@@ -49,6 +49,7 @@ fun FirebaseData.Airport.toAppDataModel(city: FirebaseData.Place? = null) = Airp
 )
 
 fun FirebaseData.Lodging.toAppDataModel() = Lodging(
+    id = id,
     name = name,
     address = address ?: error("address is required"),
     city = city?.toAppDataModel() ?: error("city is required"),

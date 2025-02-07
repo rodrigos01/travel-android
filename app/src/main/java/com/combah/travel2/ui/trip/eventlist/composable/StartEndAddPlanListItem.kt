@@ -4,12 +4,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -27,6 +32,7 @@ import java.util.TimeZone
 fun StartEndAddPlanListItem(
     initialType: AddPlanType,
     onTypeSelected: (AddPlanType) -> Unit,
+    typeSelectionEnabled: Boolean,
     startTitle: @Composable () -> Unit,
     minStartTime: Time,
     startDateSelectionEnabled: Boolean = true,
@@ -60,16 +66,29 @@ fun StartEndAddPlanListItem(
     saveButtonEnabled: Boolean = true,
     onSaveButtonTapped: () -> Unit,
     onCancelButtonTapped: () -> Unit,
+    deleteButtonEnabled: Boolean,
+    onDeleteButtonTapped: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.surface)
             .padding(top = 8.dp, bottom = 16.dp)
     ) {
-        TypeSelectorButton(
-            initialType = initialType,
-            onOptionSelected = onTypeSelected,
-        )
+        Row {
+            if (typeSelectionEnabled) {
+                TypeSelectorButton(
+                    initialType = initialType,
+                    onOptionSelected = onTypeSelected,
+                )
+            }
+            if (deleteButtonEnabled) {
+                Spacer(modifier = Modifier.weight(1F))
+                TextButton(onClick = onDeleteButtonTapped) {
+                    Icon(Icons.Filled.Delete, contentDescription = null)
+                    Text("Delete")
+                }
+            }
+        }
         AddPlanRow(
             title = startTitle,
             minTime = minStartTime,
@@ -125,6 +144,7 @@ fun StartEndAddPlanListItemPreview() {
     AppTheme {
         StartEndAddPlanListItem(
             initialType = AddPlanType.Flight,
+            typeSelectionEnabled = false,
             onTypeSelected = {},
             startTitle = { Text("Start") },
             minStartTime = Time(0L, TimeZone.getDefault()),
@@ -151,6 +171,8 @@ fun StartEndAddPlanListItemPreview() {
             endSearchResultTapped = {},
             onSaveButtonTapped = {},
             onCancelButtonTapped = {},
+            deleteButtonEnabled = true,
+            onDeleteButtonTapped = {},
         )
     }
 }
