@@ -14,7 +14,6 @@ fun FlightEventListItem(
     timeString: String,
     destination: String,
     airportName: String,
-    showSeparator: Boolean,
 ) {
     EventListItem(
         showDate,
@@ -24,7 +23,6 @@ fun FlightEventListItem(
         icon = R.drawable.ic_flight_takeoff_black_24dp,
         headline = stringResource(R.string.flight_event_tile, destination),
         supporting = airportName,
-        showSeparator,
     )
 }
 
@@ -39,7 +37,6 @@ fun FlightEventListItemPreview() {
             timeString = "6:15 AM",
             destination = "Paris",
             airportName = "John F Kennedy",
-            showSeparator = true,
         )
     }
 }

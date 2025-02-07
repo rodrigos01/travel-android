@@ -13,7 +13,6 @@ fun ArrivalEventListItem(
     dayOfWeekString: String?,
     timeString: String,
     airportName: String,
-    showSeparator: Boolean,
 ) {
     EventListItem(
         showDate,
@@ -23,7 +22,6 @@ fun ArrivalEventListItem(
         icon = R.drawable.ic_flight_land_black_24dp,
         headline = stringResource(R.string.flight_arrival_tile),
         supporting = airportName,
-        showSeparator
     )
 }
 
@@ -37,7 +35,6 @@ fun ArrivalEventListItemPreview() {
             dayOfWeekString = "Fri",
             timeString = "6:15 AM",
             airportName = "John F Kennedy",
-            showSeparator = true,
         )
     }
 }
