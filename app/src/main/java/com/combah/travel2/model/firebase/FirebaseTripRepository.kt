@@ -51,6 +51,10 @@ class FirebaseTripRepository(private val firestore: FirebaseFirestore) : TripRep
         firestore.document("/trips/$tripId").update("name", newName)
     }
 
+    override suspend fun deleteTrip(tripId: String) {
+        firestore.document("/trips/$tripId").delete()
+    }
+
     override suspend fun saveFlight(tripId: String, flight: Flight) {
         val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
         firestore.document("/trips/$tripId").update("flights", trip.flights.toMutableList().apply {
