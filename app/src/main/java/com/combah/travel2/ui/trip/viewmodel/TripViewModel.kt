@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
@@ -55,7 +56,9 @@ class TripViewModel(
             value?.let { reversibleItems[id] = it } ?: reversibleItems.remove(id)
         }
 
-    private val eventsFromTrip = repository.findTripById(tripId).map {
+    private val trip = repository.findTripById(tripId)
+        .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
+    private val eventsFromTrip = trip.filterNotNull().map {
         ViewState(
             title = it.name ?: "Untitled Trip",
             items = genItems(it),
@@ -78,17 +81,15 @@ class TripViewModel(
     }
 
     fun addButtonTapped(itemId: String) {
-        val tapped =
-            viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
+        val tapped = viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
         val index = viewState.value.items.indexOf(tapped)
         updateItems {
             val allowStartDateSelection =
                 tapped is TripItem.DateRangeItem || tapped is TripItem.InitialAddPlanItem
-            val addPlanItem =
-                addPlanUseCase.createAddPlanItem(
-                    (tapped as TripItem.Timeable).timestamp,
-                    startDateSelectionEnabled = allowStartDateSelection,
-                )
+            val addPlanItem = addPlanUseCase.createAddPlanItem(
+                (tapped as TripItem.Timeable).timestamp,
+                startDateSelectionEnabled = allowStartDateSelection,
+            )
             if (tapped is TripItem.Replaceable) {
                 addPlanItem.original = tapped
                 removeAt(index)
@@ -100,18 +101,46 @@ class TripViewModel(
     }
 
     fun emptyDateRowTapped(itemId: String) {
-        val tapped =
-            viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
+        val tapped = viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
         val index = viewState.value.items.indexOf(tapped)
         updateItems {
-            val addPlanItem =
-                addPlanUseCase.createAddPlanItem(
-                    (tapped as TripItem.Timeable).timestamp,
-                    startDateSelectionEnabled = false,
-                )
+            val addPlanItem = addPlanUseCase.createAddPlanItem(
+                (tapped as TripItem.Timeable).timestamp,
+                startDateSelectionEnabled = false,
+            )
             addPlanItem.original = tapped
             removeAt(index)
             add(index, addPlanItem)
+        }
+    }
+
+    fun itemTapped(itemId: String) {
+        val item =
+            viewState.value.items.filterIsInstance<TripItem.EventItem>().find { it.id == itemId }
+                ?: return
+        val entity = when (item) {
+            is TripItem.FlightDepartureItem -> trip.value?.flights?.first { flight ->
+                flight.segments.any { it.departure == item.timestamp && it.airportFrom.name == item.airport }
+            }
+
+            is TripItem.FlightArrivalItem -> trip.value?.flights?.first { flight ->
+                flight.segments.any { it.arrival == item.timestamp && it.airportTo.name == item.airport }
+            }
+
+            is TripItem.HotelCheckInItem -> trip.value?.lodgings?.first {
+                it.checkIn == item.timestamp && (it.name ?: it.address) == item.hotelName
+            }
+
+            is TripItem.HotelCheckOutItem -> trip.value?.lodgings?.first {
+                it.checkout == item.timestamp && (it.name ?: it.address) == item.hotelName
+            }
+        } ?: return
+        val index = viewState.value.items.indexOf(item)
+        val addPlanItem = addPlanUseCase.createAddPlanItem(entity)
+        updateItems {
+            addPlanItem.original = item
+            removeAt(index)
+            add(index, addPlanUseCase.createAddPlanItem(entity))
         }
     }
 
@@ -131,8 +160,8 @@ class TripViewModel(
         val entity = addPlanUseCase.saveItem(item as AddPlanUseCase.AddPlanItem)
         viewModelScope.launch {
             when (entity) {
-                is Flight -> repository.addFlight(tripId, entity)
-                is Lodging -> repository.addLodging(tripId, entity)
+                is Flight -> repository.saveFlight(tripId, entity)
+                is Lodging -> repository.saveLodging(tripId, entity)
             }
         }
     }
@@ -149,6 +178,15 @@ class TripViewModel(
         }
     }
 
+    fun delete(type: AddPlanUseCase.AddPlanItem.Type, itemId: String) {
+        viewModelScope.launch {
+            when (type) {
+                AddPlanUseCase.AddPlanItem.Type.Flight -> repository.deleteFlight(tripId, itemId)
+                AddPlanUseCase.AddPlanItem.Type.Lodging -> repository.deleteLodging(tripId, itemId)
+            }
+        }
+    }
+
     private fun updateItems(updater: MutableList<TripItem>.() -> Unit) {
         localState.value = localState.value.updateItems(updater)
     }
@@ -162,19 +200,16 @@ class TripViewModel(
             }
         }.sortedBy { (time, event) -> EventComparable(time, event) }
         val items = pairs.flatMapIndexed { index, (time, event) ->
-            val placeItem =
-                genPlaceItem(index, pairs)
-            val firstInMonth =
-                pairs.subList(0, index)
-                    .lastOrNull { it.first.monthString == time.monthString } == null
-            val firstInDay =
-                pairs.subList(0, index)
-                    .lastOrNull { it.first.dateString == time.dateString } == null
-            val dateRangeItem =
-                pairs.getOrNull(index + 1)?.let { genDateRangeItem(time, it.first) }
+            val placeItem = genPlaceItem(index, pairs)
+            val firstInMonth = pairs.subList(0, index)
+                .lastOrNull { it.first.monthString == time.monthString } == null
+            val firstInDay = pairs.subList(0, index)
+                .lastOrNull { it.first.dateString == time.dateString } == null
+            val dateRangeItem = pairs.getOrNull(index + 1)?.let { genDateRangeItem(time, it.first) }
             val place = event.getPlace(time)
-            val lastInPlace = pairs.getOrNull(index + 1)?.isDeparture == false &&
-                    pairs.subList(index, pairs.size).takeWhile { it.place == place }.size == 1
+            val lastInPlace =
+                pairs.getOrNull(index + 1)?.isDeparture == false && pairs.subList(index, pairs.size)
+                    .takeWhile { it.place == place }.size == 1
             val lastInSection =
                 index == pairs.lastIndex || pairs[index + 1].first.dateString != time.dateString || lastInPlace
             mutableListOf<TripItem>().apply {
@@ -209,8 +244,7 @@ class TripViewModel(
     }
 
     private fun genPlaceItem(
-        index: Int,
-        pairs: List<Pair<Time, TripEvent>>
+        index: Int, pairs: List<Pair<Time, TripEvent>>
     ): TripItem.PlaceItem? {
         val (time, event) = pairs[index]
 
@@ -239,8 +273,7 @@ class TripViewModel(
 
     private val List<Pair<Time, TripEvent>>.originPlace: Place?
         get() {
-            return first()
-                .takeIf { it.isDeparture }?.place
+            return first().takeIf { it.isDeparture }?.place
         }
 
     private val Pair<Time, TripEvent>.place: Place

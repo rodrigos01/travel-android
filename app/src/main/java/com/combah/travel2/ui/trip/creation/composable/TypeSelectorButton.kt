@@ -43,6 +43,7 @@ fun TypeSelectorButton(
     initialType: AddPlanType,
     onOptionSelected: (AddPlanType) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     var selection: AddPlanType? by remember {
         mutableStateOf(null)
@@ -57,6 +58,7 @@ fun TypeSelectorButton(
         TextButton(
             onClick = { showTypeSelectorMenu = true },
             shape = RoundedCornerShape(8.dp),
+            enabled = enabled,
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -69,12 +71,14 @@ fun TypeSelectorButton(
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Text(initialType.label, maxLines = 1)
-                Image(
-                    painter = painterResource(id = R.drawable.ic_arrow_drop_down_24),
-                    colorFilter = ColorFilter.tint(LocalContentColor.current),
-                    contentDescription = null,
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                )
+                if (enabled) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_arrow_drop_down_24),
+                        colorFilter = ColorFilter.tint(LocalContentColor.current),
+                        contentDescription = null,
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
+                }
             }
         }
         DropdownMenu(

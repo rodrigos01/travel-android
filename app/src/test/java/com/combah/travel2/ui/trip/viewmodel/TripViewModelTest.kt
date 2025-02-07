@@ -822,7 +822,7 @@ class TripViewModelTest {
         subject.addButtonTapped(originalItem.id)
         subject.save(addPlanItemId)
         verify(addPlanUseCase).saveItem(addPlanItem)
-        verify(repository).addFlight("tripId", entity)
+        verify(repository).saveFlight("tripId", entity)
     }
 
     @Test
@@ -850,7 +850,7 @@ class TripViewModelTest {
         subject.addButtonTapped(originalItem.id)
         subject.save(addPlanItemId)
         verify(addPlanUseCase).saveItem(addPlanItem)
-        verify(repository).addLodging("tripId", entity)
+        verify(repository).saveLodging("tripId", entity)
     }
 
     @Test
@@ -1027,12 +1027,14 @@ class TripViewModelTest {
     )
 
     private fun Lodging(
+        id: String = "",
         name: String? = null,
         address: String = "",
         checkIn: String? = null,
         checkout: String? = null,
         cityName: String = ""
     ) = Lodging(
+        id = id,
         name = name,
         address = address,
         checkIn = checkIn.asTime(),

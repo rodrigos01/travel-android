@@ -17,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
@@ -142,38 +143,44 @@ private fun TripDetailItem(
             event.imageUrl, event.placeName, event.dateStart, event.dateEnd
         )
 
-        is FlightDepartureItem -> FlightEventListItem(
-            event.showDate,
-            event.dayOfMonth,
-            event.dayOfWeek,
-            event.time,
-            event.destination,
-            event.airport,
-        )
+        is TripItem.EventItem -> Surface(
+            onClick = { viewModel.itemTapped(event.id) },
+        ) {
+            when (event) {
+                is FlightDepartureItem -> FlightEventListItem(
+                    event.showDate,
+                    event.dayOfMonth,
+                    event.dayOfWeek,
+                    event.time,
+                    event.destination,
+                    event.airport,
+                )
 
-        is FlightArrivalItem -> ArrivalEventListItem(
-            event.showDate,
-            event.dayOfMonth,
-            event.dayOfWeek,
-            event.time,
-            event.airport,
-        )
+                is FlightArrivalItem -> ArrivalEventListItem(
+                    event.showDate,
+                    event.dayOfMonth,
+                    event.dayOfWeek,
+                    event.time,
+                    event.airport,
+                )
 
-        is HotelCheckInItem -> CheckinListItem(
-            event.showDate,
-            event.dayOfMonth,
-            event.dayOfWeek,
-            event.time,
-            event.hotelName,
-        )
+                is HotelCheckInItem -> CheckinListItem(
+                    event.showDate,
+                    event.dayOfMonth,
+                    event.dayOfWeek,
+                    event.time,
+                    event.hotelName,
+                )
 
-        is HotelCheckOutItem -> CheckoutListItem(
-            event.showDate,
-            event.dayOfMonth,
-            event.dayOfWeek,
-            event.time,
-            event.hotelName,
-        )
+                is HotelCheckOutItem -> CheckoutListItem(
+                    event.showDate,
+                    event.dayOfMonth,
+                    event.dayOfWeek,
+                    event.time,
+                    event.hotelName,
+                )
+            }
+        }
 
         is TripItem.InitialAddPlanItem -> EmptyAddPlanListItem(
             showDivider = false,
@@ -189,6 +196,7 @@ private fun TripDetailItem(
                     event.id, it
                 )
             },
+            isEditing = event.isEditing,
             minDepartureTime = event.minDepartureTime,
             minArrivalTime = event.minArrivalTime,
             departureDateSelectionEnabled = event.startDateSelectionEnabled,
@@ -240,10 +248,13 @@ private fun TripDetailItem(
             },
             onCancelButtonTapped = {
                 viewModel.cancelEdit(event.id)
-            })
+            },
+            onDeleteButtonTapped = { viewModel.delete(AddPlanItem.Type.Flight, event.id) }
+        )
 
         is AddLodgingUseCase.AddLodgingItem -> AddLodgingListItem(
             onTypeSelected = { viewModel.typeSelected(event.id, it) },
+            isEditing = event.isEditing,
             minCheckInTime = event.minCheckInTime,
             checkInDateSelectionEnabled = event.startDateSelectionEnabled,
             checkInDayOfMonth = event.checkInDayOfMonth,
@@ -255,6 +266,7 @@ private fun TripDetailItem(
                     event.id, hour, minute
                 )
             },
+            lodgingLabel = event.name,
             onLodgingTextChanged = {
                 scope.launch {
                     viewModel.lodgingTextChanged(
@@ -281,6 +293,7 @@ private fun TripDetailItem(
             saveButtonEnabled = event.saveButtonEnabled,
             onSaveButtonTapped = { viewModel.save(event.id) },
             onCancelButtonTapped = { viewModel.cancelEdit(event.id) },
+            onDeleteButtonTapped = { viewModel.delete(AddPlanItem.Type.Lodging, event.id) },
         )
     }
 }

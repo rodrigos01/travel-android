@@ -51,18 +51,51 @@ class FirebaseTripRepository(private val firestore: FirebaseFirestore) : TripRep
         firestore.document("/trips/$tripId").update("name", newName)
     }
 
-    override suspend fun addFlight(tripId: String, flight: Flight) {
+    override suspend fun saveFlight(tripId: String, flight: Flight) {
         val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
         firestore.document("/trips/$tripId").update("flights", trip.flights.toMutableList().apply {
-            add(flight.toFirebaseDataModel())
+            val firebaseFlight = flight.toFirebaseDataModel()
+            // removes the previously saved lodging with same id
+            val index = indexOfFirst { it.id == flight.id }
+            if (index != -1) {
+                // update previously saved item
+                removeAt(index)
+                add(index, firebaseFlight)
+            } else {
+                add(firebaseFlight)
+            }
         }.toList())
     }
 
-    override suspend fun addLodging(tripId: String, lodging: Lodging) {
+    override suspend fun deleteFlight(tripId: String, flightId: String) {
+        val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
+        firestore.document("/trips/$tripId").update("flights", trip.flights.toMutableList().apply {
+            removeIf { it.id == flightId }
+        }.toList())
+    }
+
+    override suspend fun saveLodging(tripId: String, lodging: Lodging) {
         val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
         firestore.document("/trips/$tripId")
             .update("lodgings", trip.lodgings.toMutableList().apply {
-                add(lodging.toFirebaseDataModel())
+                val firebaseLodging = lodging.toFirebaseDataModel()
+                // removes the previously saved lodging with same id
+                val index = indexOfFirst { it.id == lodging.id }
+                if (index != -1) {
+                    // update previously saved item
+                    removeAt(index)
+                    add(index, firebaseLodging)
+                } else {
+                    add(firebaseLodging)
+                }
+            }.toList())
+    }
+
+    override suspend fun deleteLodging(tripId: String, lodgingId: String) {
+        val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
+        firestore.document("/trips/$tripId")
+            .update("lodgings", trip.lodgings.toMutableList().apply {
+                removeIf { it.id == lodgingId }
             }.toList())
     }
 

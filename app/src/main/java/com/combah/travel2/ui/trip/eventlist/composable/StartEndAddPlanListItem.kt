@@ -75,12 +75,11 @@ fun StartEndAddPlanListItem(
             .padding(top = 8.dp, bottom = 16.dp)
     ) {
         Row {
-            if (typeSelectionEnabled) {
-                TypeSelectorButton(
-                    initialType = initialType,
-                    onOptionSelected = onTypeSelected,
-                )
-            }
+            TypeSelectorButton(
+                initialType = initialType,
+                onOptionSelected = onTypeSelected,
+                enabled = typeSelectionEnabled,
+            )
             if (deleteButtonEnabled) {
                 Spacer(modifier = Modifier.weight(1F))
                 TextButton(onClick = onDeleteButtonTapped) {

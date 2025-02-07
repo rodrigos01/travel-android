@@ -91,6 +91,7 @@ fun Airport.toFirebaseDataModel() = FirebaseData.Airport(
 )
 
 fun Lodging.toFirebaseDataModel() = FirebaseData.Lodging(
+    id = id,
     name = name,
     address = address,
     city = city.toFirebaseDataModel(),

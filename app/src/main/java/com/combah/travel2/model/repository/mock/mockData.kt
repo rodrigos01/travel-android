@@ -132,12 +132,14 @@ private fun FlightSegment(
 }
 
 private fun Lodging(
+    id: String,
     name: String? = null,
     address: String? = null,
     city: Place? = null,
     checkIn: String? = null,
     checkout: String? = null,
 ) = Lodging(
+    id,
     name,
     address,
     city,

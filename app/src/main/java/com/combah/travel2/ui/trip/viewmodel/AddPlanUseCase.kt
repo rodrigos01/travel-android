@@ -31,6 +31,7 @@ class AddPlanUseCase(
     sealed interface AddPlanItem : TripItem, TripItem.Identifiable,
         TripItem.Timeable {
 
+        val isEditing: Boolean
         val startDateSelectionEnabled: Boolean
         val saveButtonEnabled: Boolean
         val types: List<Type>

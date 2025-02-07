@@ -53,6 +53,7 @@ class AddFlightUseCase private constructor(
     data class AddFlightItem(
         override val id: String,
         override val timestamp: Time,
+        override val isEditing: Boolean,
         val minDepartureTime: Time,
         val minArrivalTime: Time,
         val departureTime: String? = null,
@@ -124,11 +125,13 @@ class AddFlightUseCase private constructor(
         override fun createItem(
             data: PendingFlight,
             startDateSelectionEnabled: Boolean,
+            isForEditing: Boolean,
         ): AddFlightItem {
             val arrivalTime = data.arrival ?: data.departure
             val item = AddFlightItem(
                 id = data.id,
                 timestamp = data.departure,
+                isEditing = isForEditing,
                 minDepartureTime = Time.now().toMidnight(),
                 minArrivalTime = Time(
                     data.departure.timeInMillis,
