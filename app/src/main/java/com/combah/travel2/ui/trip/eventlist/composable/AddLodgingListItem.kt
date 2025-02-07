@@ -31,10 +31,13 @@ fun AddLodgingListItem(
     saveButtonEnabled: Boolean,
     onSaveButtonTapped: () -> Unit,
     onCancelButtonTapped: () -> Unit,
+    isEditing: Boolean = false,
+    onDeleteButtonTapped: () -> Unit = {}
 ) {
     StartEndAddPlanListItem(
         initialType = AddPlanType.Lodging,
         onTypeSelected,
+        typeSelectionEnabled = !isEditing,
         startTitle = { Text("CheckIn") },
         minStartTime = minCheckInTime,
         startDateSelectionEnabled = checkInDateSelectionEnabled,
@@ -65,6 +68,8 @@ fun AddLodgingListItem(
         saveButtonEnabled = saveButtonEnabled,
         onCancelButtonTapped = onCancelButtonTapped,
         onSaveButtonTapped = onSaveButtonTapped,
+        deleteButtonEnabled = isEditing,
+        onDeleteButtonTapped = onDeleteButtonTapped,
     )
 }
 

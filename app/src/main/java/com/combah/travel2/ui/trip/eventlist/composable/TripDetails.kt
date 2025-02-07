@@ -183,38 +183,39 @@ private fun TripDetailItem(
             showDivider = event.showDivider,
             onAddButtonClick = { viewModel.addButtonTapped(event.id) })
 
-        is AddFlightUseCase.AddFlightItem -> AddFlightListItem(onTypeSelected = {
-            viewModel.typeSelected(
-                event.id, it
-            )
-        },
+        is AddFlightUseCase.AddFlightItem -> AddFlightListItem(
+            onTypeSelected = {
+                viewModel.typeSelected(
+                    event.id, it
+                )
+            },
             minDepartureTime = event.minDepartureTime,
             minArrivalTime = event.minArrivalTime,
             departureDateSelectionEnabled = event.startDateSelectionEnabled,
             departureDayOfMonth = event.departureDayOfMonth,
             departureDayOfWeek = event.departureDayOfWeek,
             onDepartureDateChanged = { viewModel.setDepartureDate(event.id, it) },
-            event.departureTime,
+            departureTime = event.departureTime,
             onDepartureTimeChanged = { hour, minute ->
                 viewModel.setDepartureTime(
                     event.id, hour, minute
                 )
             },
-            event.airportFromName,
+            airportFromName = event.airportFromName,
             onAirportFromTextChanged = {
                 scope.launch {
                     viewModel.airportFromSearchTextChanged(event.id, it)
                 }
             },
-            event.airportFromSearchResults,
+            airportFromSearchResults = event.airportFromSearchResults,
             airportFromSearchResultTapped = {
                 viewModel.airportFromSearchResultTapped(
                     event.id, it
                 )
             },
-            event.arrivalTime,
-            event.arrivalDayOfMonth,
-            event.arrivalDayOfWeek,
+            arrivalTime = event.arrivalTime,
+            arrivalDayOfMonth = event.arrivalDayOfMonth,
+            arrivalDayOfWeek = event.arrivalDayOfWeek,
             onArrivalTimeChanged = { hour, minute ->
                 viewModel.setArrivalTime(
                     event.id, hour, minute

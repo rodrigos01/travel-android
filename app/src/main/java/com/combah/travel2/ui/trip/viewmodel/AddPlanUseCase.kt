@@ -1,6 +1,8 @@
 package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.combineWithoutWaiting
+import com.combah.travel2.model.data.Flight
+import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.TripEntity
 import com.combah.travel2.ui.trip.creation.usecase.AddFlightItemActionHandler
@@ -14,14 +16,15 @@ class AddPlanUseCase(
 ) : AddPlanItemActionHandler, AddFlightItemActionHandler by addFlightUseCase,
     AddLodgingItemActionHandler by addLodgingUseCase {
 
-    interface ItemStore<T : AddPlanItem> {
+    interface ItemStore<E : TripEntity, T : AddPlanItem> {
         val items: Flow<Map<String, T>>
         fun addItem(time: Time, startDateSelectionEnabled: Boolean = false): T
+        fun addItem(entity: E): T
         fun remove(item: T)
     }
 
 
-    interface AddItemUseCase<E : TripEntity, T : AddPlanItem> : ItemStore<T> {
+    interface AddItemUseCase<E : TripEntity, T : AddPlanItem> : ItemStore<E, T> {
         fun createAppData(item: T): E
     }
 
@@ -50,6 +53,13 @@ class AddPlanUseCase(
         type: AddPlanItem.Type = AddPlanItem.Type.Flight
     ): AddPlanItem {
         return type.useCase.addItem(time, startDateSelectionEnabled)
+    }
+
+    fun createAddPlanItem(entity: TripEntity): AddPlanItem {
+        return when (entity) {
+            is Flight -> addFlightUseCase.addItem(entity)
+            is Lodging -> addLodgingUseCase.addItem(entity)
+        }
     }
 
     fun typeChanged(addPlanItem: AddPlanItem, newType: AddPlanItem.Type): AddPlanItem {

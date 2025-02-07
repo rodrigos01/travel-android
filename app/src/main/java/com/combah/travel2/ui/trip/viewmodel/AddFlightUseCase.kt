@@ -12,7 +12,6 @@ import com.combah.travel2.model.repository.AddFlightRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddFlightItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase
-import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseFactory
 import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -21,15 +20,35 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.time.Duration.Companion.minutes
 
-class AddFlightUseCase(
-    private val addFlightRepository: AddFlightRepository,
-    private val timeFormatter: TimeFormatter,
-    itemStoreFactory: AddPlanItemStore.Factory<PendingFlight, AddFlightItem> = AddPlanItemStore.Factory(),
-    inputUseCaseStoreFactory: InputUseCaseStore.Factory<InputUseCaseSet, InputState> = InputUseCaseStore.Factory()
+class AddFlightUseCase private constructor(
+    private val itemStore: AddPlanItemStore<Flight, PendingFlight, AddFlightItem>,
+    private val inputUseCaseStore: InputUseCaseStore<InputUseCaseSet, InputState>,
 ) : AddPlanUseCase.AddItemUseCase<Flight, AddFlightUseCase.AddFlightItem>,
-    AddFlightItemActionHandler, AddPlanItemStore.DataFactory<AddFlightUseCase.PendingFlight>,
-    AddPlanItemStore.ItemFactory<AddFlightUseCase.AddFlightItem, AddFlightUseCase.PendingFlight>,
-    InputUseCaseStore.UseCaseSetFactory<AddFlightUseCase.InputUseCaseSet, AddFlightUseCase.InputState> {
+    AddPlanUseCase.ItemStore<Flight, AddFlightUseCase.AddFlightItem> by itemStore,
+    AddFlightItemActionHandler {
+
+    constructor(
+        repository: AddFlightRepository,
+        timeFormatter: TimeFormatter,
+        itemStoreFactory: AddPlanItemStore.Factory<Flight, PendingFlight, AddFlightItem> = AddPlanItemStore.Factory(),
+        inputUseCaseStore: InputUseCaseStore<InputUseCaseSet, InputState> = InputUseCaseStore.Factory<InputUseCaseSet, InputState>()
+            .create(setFactory = {
+                InputUseCaseSet(
+                    airportFromAutoCompleteUseCase = it.createAutoCompleteUseCase(
+                        repository
+                    ),
+                    airportToAutoCompleteUseCase = it.createAutoCompleteUseCase(
+                        repository
+                    ),
+                )
+            }),
+    ) : this(
+        itemStoreFactory.create(
+            dataFactory = DataFactory(inputUseCaseStore),
+            itemFactory = ItemFactory(timeFormatter),
+        ),
+        inputUseCaseStore,
+    )
 
     data class AddFlightItem(
         override val id: String,
@@ -75,12 +94,60 @@ class AddFlightUseCase(
         val airportToSearchResults: List<Airport>,
     )
 
-    private val itemStore: AddPlanItemStore<PendingFlight, AddFlightItem> = itemStoreFactory.create(
-        dataFactory = this,
-        itemFactory = this,
-    )
+    class DataFactory(private val inputUseCaseStore: InputUseCaseStore<InputUseCaseSet, InputState>) :
+        AddPlanItemStore.DataFactory<Flight, PendingFlight> {
+        override fun createData(time: Time): PendingFlight {
+            val data = PendingFlight(
+                id = UUID.randomUUID().toString(),
+                departure = time,
+            )
+            inputUseCaseStore.register(data.id)
+            return data
+        }
 
-    private val inputUseCaseStore = inputUseCaseStoreFactory.create(setFactory = this)
+        override fun createData(entity: Flight): PendingFlight {
+            val segment = entity.segments.firstOrNull()
+            val data = PendingFlight(
+                entity.id,
+                segment?.departure ?: Time.now(),
+                segment?.airportFrom,
+                segment?.airportTo,
+                segment?.arrival
+            )
+            inputUseCaseStore.register(data.id)
+            return data
+        }
+    }
+
+    class ItemFactory(private val timeFormatter: TimeFormatter) :
+        AddPlanItemStore.ItemFactory<AddFlightItem, PendingFlight> {
+        override fun createItem(
+            data: PendingFlight,
+            startDateSelectionEnabled: Boolean,
+        ): AddFlightItem {
+            val arrivalTime = data.arrival ?: data.departure
+            val item = AddFlightItem(
+                id = data.id,
+                timestamp = data.departure,
+                minDepartureTime = Time.now().toMidnight(),
+                minArrivalTime = Time(
+                    data.departure.timeInMillis,
+                    timeZone = data.airportTo?.timeZone ?: data.departure.timeZone,
+                ) + 1.minutes,
+                departureTime = timeFormatter.timeString(data.departure),
+                departureDayOfWeek = timeFormatter.dayOfWeekString(data.departure),
+                departureDayOfMonth = timeFormatter.dayOfMonthString(data.departure),
+                airportFromName = data.airportFrom?.name,
+                arrivalDayOfWeek = timeFormatter.dayOfWeekString(arrivalTime),
+                arrivalDayOfMonth = timeFormatter.dayOfMonthString(arrivalTime),
+                arrivalTime = data.arrival?.let { timeFormatter.timeString(it) },
+                airportToName = data.airportTo?.name,
+                saveButtonEnabled = data.arrival?.let { it > data.departure } ?: false && data.airportFrom != null && data.airportTo != null,
+                startDateSelectionEnabled = startDateSelectionEnabled,
+            )
+            return item
+        }
+    }
 
     override val items: Flow<Map<String, AddFlightItem>> =
         combine(itemStore.items, inputUseCaseStore.inputStates) { itemMap, inputStateMap ->
@@ -93,61 +160,6 @@ class AddFlightUseCase(
                 )
             }.toMap()
         }
-
-    override fun createData(time: Time): PendingFlight {
-        val data = PendingFlight(
-            id = UUID.randomUUID().toString(),
-            departure = time,
-        )
-        inputUseCaseStore.register(data.id)
-        return data
-    }
-
-    override fun createItem(
-        data: PendingFlight,
-        startDateSelectionEnabled: Boolean,
-    ): AddFlightItem {
-        val arrivalTime = data.arrival ?: data.departure
-        val item = AddFlightItem(
-            id = data.id,
-            timestamp = data.departure,
-            minDepartureTime = Time.now().toMidnight(),
-            minArrivalTime = Time(
-                data.departure.timeInMillis,
-                timeZone = data.airportTo?.timeZone ?: data.departure.timeZone,
-            ) + 1.minutes,
-            departureTime = timeFormatter.timeString(data.departure),
-            departureDayOfWeek = timeFormatter.dayOfWeekString(data.departure),
-            departureDayOfMonth = timeFormatter.dayOfMonthString(data.departure),
-            airportFromName = data.airportFrom?.name,
-            arrivalDayOfWeek = timeFormatter.dayOfWeekString(arrivalTime),
-            arrivalDayOfMonth = timeFormatter.dayOfMonthString(arrivalTime),
-            arrivalTime = data.arrival?.let { timeFormatter.timeString(it) },
-            airportToName = data.airportTo?.name,
-            saveButtonEnabled = data.arrival?.let { it > data.departure } ?: false && data.airportFrom != null && data.airportTo != null,
-            startDateSelectionEnabled = startDateSelectionEnabled,
-        )
-        return item
-    }
-
-    override fun addItem(time: Time, startDateSelectionEnabled: Boolean): AddFlightItem {
-        return itemStore.addItem(time, startDateSelectionEnabled)
-    }
-
-    override fun remove(item: AddFlightItem) {
-        itemStore.remove(item)
-    }
-
-    override fun createUseCaseSet(useCaseFactory: InputUseCaseFactory): InputUseCaseSet {
-        return InputUseCaseSet(
-            airportFromAutoCompleteUseCase = useCaseFactory.createAutoCompleteUseCase(
-                addFlightRepository
-            ),
-            airportToAutoCompleteUseCase = useCaseFactory.createAutoCompleteUseCase(
-                addFlightRepository
-            ),
-        )
-    }
 
     override fun setDepartureDate(itemId: String, date: Time) {
         itemStore.update(itemId) {

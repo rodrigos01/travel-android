@@ -5,15 +5,16 @@ import com.combah.travel2.extensions.get
 import com.combah.travel2.extensions.remove
 import com.combah.travel2.extensions.set
 import com.combah.travel2.model.data.Time
+import com.combah.travel2.model.data.TripEntity
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
-class AddPlanItemStore<Data : AddPlanItemStore.AddPlanData, Item : AddPlanUseCase.AddPlanItem>(
-    private val dataFactory: DataFactory<Data>,
+class AddPlanItemStore<Entity : TripEntity, Data : AddPlanItemStore.AddPlanData, Item : AddPlanUseCase.AddPlanItem>(
+    private val dataFactory: DataFactory<Entity, Data>,
     private val itemFactory: ItemFactory<Item, Data>,
-) : AddPlanUseCase.ItemStore<Item> {
+) : AddPlanUseCase.ItemStore<Entity, Item> {
 
     interface AddPlanData {
         val id: String
@@ -23,8 +24,9 @@ class AddPlanItemStore<Data : AddPlanItemStore.AddPlanData, Item : AddPlanUseCas
         fun createItem(data: Data, startDateSelectionEnabled: Boolean): Item
     }
 
-    fun interface DataFactory<Data : AddPlanData> {
+    interface DataFactory<Entity : TripEntity, Data : AddPlanData> {
         fun createData(time: Time): Data
+        fun createData(entity: Entity): Data
     }
 
     data class ItemStoreData<Item, Data>(
@@ -39,7 +41,14 @@ class AddPlanItemStore<Data : AddPlanItemStore.AddPlanData, Item : AddPlanUseCas
         get() = _items.map { it.entries.associate { (key, value) -> key to value.item } }
 
     override fun addItem(time: Time, startDateSelectionEnabled: Boolean): Item {
-        val data = dataFactory.createData(time)
+        return addItem(dataFactory.createData(time), startDateSelectionEnabled)
+    }
+
+    override fun addItem(entity: Entity): Item {
+        return addItem(dataFactory.createData(entity))
+    }
+
+    private fun addItem(data: Data, startDateSelectionEnabled: Boolean = true): Item {
         val item = itemFactory.createItem(data, startDateSelectionEnabled)
         _items[data.id] = ItemStoreData(item, data)
         return item
@@ -69,9 +78,9 @@ class AddPlanItemStore<Data : AddPlanItemStore.AddPlanData, Item : AddPlanUseCas
         return _items[itemId]
     }
 
-    class Factory<Data : AddPlanData, Item : AddPlanUseCase.AddPlanItem> {
+    class Factory<Entity : TripEntity, Data : AddPlanData, Item : AddPlanUseCase.AddPlanItem> {
         fun create(
-            dataFactory: DataFactory<Data>,
+            dataFactory: DataFactory<Entity, Data>,
             itemFactory: ItemFactory<Item, Data>
         ) = AddPlanItemStore(dataFactory, itemFactory)
     }

@@ -38,10 +38,13 @@ fun AddFlightListItem(
     saveButtonEnabled: Boolean,
     onSaveButtonTapped: () -> Unit,
     onCancelButtonTapped: () -> Unit,
+    isEditing: Boolean = false,
+    onDeleteButtonTapped: () -> Unit = {}
 ) {
     StartEndAddPlanListItem(
         initialType = AddPlanType.Flight,
         onTypeSelected,
+        typeSelectionEnabled = !isEditing,
         startTitle = { Text("Departure") },
         minStartTime = minDepartureTime,
         startDateSelectionEnabled = departureDateSelectionEnabled,
@@ -74,6 +77,8 @@ fun AddFlightListItem(
         saveButtonEnabled = saveButtonEnabled,
         onCancelButtonTapped = onCancelButtonTapped,
         onSaveButtonTapped = onSaveButtonTapped,
+        deleteButtonEnabled = isEditing,
+        onDeleteButtonTapped = onDeleteButtonTapped,
     )
 }
 
