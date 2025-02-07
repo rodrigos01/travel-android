@@ -77,7 +77,7 @@ fun DatePickerButton(
                 showDatePicker.value = false
             },
             onDismiss = { showDatePicker.value = false },
-            buttonEnabled = true,
+            confirmButtonEnabled = true,
         ) {
             DatePicker(
                 state = datePickerState,

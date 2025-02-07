@@ -2,9 +2,11 @@ package com.combah.travel2.ui.trip.creation.composable
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -12,8 +14,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -23,8 +23,10 @@ import androidx.compose.ui.window.DialogProperties
 fun ConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
-    buttonEnabled: Boolean,
-    errorMessage: String? = null,
+    confirmButtonEnabled: Boolean,
+    confirmButtonLabel: String = "Confirm",
+    confirmButtonColors: ButtonColors = ButtonDefaults.textButtonColors(),
+    dismissButtonLabel: String = "Cancel",
     content: @Composable () -> Unit,
 ) {
     Dialog(
@@ -36,32 +38,28 @@ fun ConfirmationDialog(
                 .padding(16.dp),
             shape = MaterialTheme.shapes.medium,
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                        .padding(all = 16.dp)
+                ) {
                     content()
                 }
-                Box(
-                    contentAlignment = Alignment.Center, modifier = Modifier
-                        .height(32.dp)
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                ) {
-                    errorMessage?.let {
-                        Text(
-                            text = it,
-                            color = Color.Red,
-                            textAlign = TextAlign.Center,
-                        )
+                Row(modifier = Modifier.align(Alignment.End).padding(end = 8.dp, bottom = 8.dp)) {
+                    TextButton(
+                        onClick = onConfirm,
+                    ) {
+                        Text(dismissButtonLabel)
                     }
-                }
-                TextButton(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .align(Alignment.End),
-                    enabled = buttonEnabled,
-                    onClick = onConfirm,
-                ) {
-                    Text("Confirm")
+                    TextButton(
+                        enabled = confirmButtonEnabled,
+                        colors = confirmButtonColors,
+                        onClick = onConfirm,
+                    ) {
+                        Text(confirmButtonLabel)
+                    }
                 }
             }
         }
@@ -73,7 +71,6 @@ fun ConfirmationDialog(
 fun ConfirmationDialogPreview() = ConfirmationDialog(
     onConfirm = {},
     onDismiss = {},
-    buttonEnabled = false,
-    errorMessage = "Invalid Time",
+    confirmButtonEnabled = true,
     content = { Text("Dialog") },
 )
