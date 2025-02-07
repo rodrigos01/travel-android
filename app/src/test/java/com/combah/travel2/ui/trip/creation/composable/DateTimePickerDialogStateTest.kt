@@ -19,11 +19,11 @@ private const val NOV_15_2_35_PM = 1700076900000
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-class DateTimePickerStateTest {
+class DateTimePickerDialogStateTest {
 
     private val datePickerState: DatePickerState = mock()
     private val timePickerState: TimePickerState = mock()
-    private val subject = DateTimePickerState(null, datePickerState, timePickerState)
+    private val subject = DateTimePickerDialogState(null, datePickerState, timePickerState)
 
     @Test
     fun `step should start as Date`() {
@@ -82,7 +82,7 @@ class DateTimePickerStateTest {
 
     @Test
     fun `timeConfirmEnabled should be false when date picker date is equal minDate and time picker time is before minDate time`() {
-        val localSubject = DateTimePickerState(
+        val localSubject = DateTimePickerDialogState(
             minDate = Date(NOV_15_2_35_PM),
             datePickerState, timePickerState
         )
@@ -98,7 +98,7 @@ class DateTimePickerStateTest {
 
     @Test
     fun `timeConfirmEnabled should be false when date picker date is equal minDate and time picker time is equal minDate time`() {
-        val localSubject = DateTimePickerState(
+        val localSubject = DateTimePickerDialogState(
             minDate = Date(NOV_15_2_35_PM),
             datePickerState, timePickerState
         )
@@ -114,7 +114,7 @@ class DateTimePickerStateTest {
 
     @Test
     fun `timeConfirmEnabled should be true when date picker date is equal minDate and time picker time is after minDate time`() {
-        val localSubject = DateTimePickerState(
+        val localSubject = DateTimePickerDialogState(
             minDate = Date(NOV_15_2_35_PM),
             datePickerState, timePickerState
         )
@@ -130,7 +130,7 @@ class DateTimePickerStateTest {
 
     @Test
     fun `timeConfirmEnabled should be true when date picker date is after minDate`() {
-        val localSubject = DateTimePickerState(
+        val localSubject = DateTimePickerDialogState(
             minDate = Date(NOV_15_2_35_PM), // 11.5.2023 2:35 P.M.
             datePickerState, timePickerState
         )

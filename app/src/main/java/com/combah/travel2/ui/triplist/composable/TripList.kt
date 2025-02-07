@@ -2,6 +2,11 @@ package com.combah.travel2.ui.triplist.composable
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
@@ -16,12 +21,20 @@ import com.combah.travel2.ui.triplist.TripListViewModel
 @Composable
 fun TripList(viewModel: TripListViewModel, navController: NavController) {
     val state by viewModel.viewState.collectAsStateWithLifecycle()
-    LazyColumn {
-        items(state.trips) { trip ->
-            TripListItem(
-                name = trip.name,
-                coverImageUrl = trip.coverImage,
-                onClick = { navController.navigate(TripDetailsDestination.getRoute(trip.id)) })
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = { viewModel.addTrip() }) {
+                Icon(imageVector = Icons.Filled.Add, contentDescription = "")
+            }
+        }
+    ) { paddingValues ->
+        LazyColumn(contentPadding = paddingValues) {
+            items(state.trips) { trip ->
+                TripListItem(
+                    name = trip.name,
+                    coverImageUrl = trip.coverImage,
+                    onClick = { navController.navigate(TripDetailsDestination.getRoute(trip.id)) })
+            }
         }
     }
 }
@@ -29,8 +42,9 @@ fun TripList(viewModel: TripListViewModel, navController: NavController) {
 @Composable
 @Preview
 fun TripListPreview() {
+    val navController = rememberNavController()
     AppTheme {
-        TripList(TripListViewModel(MockTripRepository()), rememberNavController())
+        TripList(TripListViewModel(MockTripRepository(), navController), navController)
     }
 }
 

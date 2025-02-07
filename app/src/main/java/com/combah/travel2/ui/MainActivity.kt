@@ -2,7 +2,6 @@ package com.combah.travel2.ui
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
@@ -14,12 +13,9 @@ import androidx.navigation.navArgument
 import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.viewModel
 import com.combah.travel2.ui.theme.AppTheme
-import com.combah.travel2.ui.trip.TripViewModel
-import com.combah.travel2.ui.trip.creation.TransportationSetupViewModel
-import com.combah.travel2.ui.trip.creation.composable.TransportationSetup
-import com.combah.travel2.ui.trip.creation.composable.TransportationSetupDestination
 import com.combah.travel2.ui.trip.eventlist.composable.TripDetails
 import com.combah.travel2.ui.trip.eventlist.composable.TripDetailsDestination
+import com.combah.travel2.ui.trip.viewmodel.TripViewModel
 import com.combah.travel2.ui.triplist.TripListViewModel
 import com.combah.travel2.ui.triplist.composable.TripList
 import com.combah.travel2.ui.triplist.composable.TripListDestination
@@ -42,8 +38,8 @@ class MainActivity : AppCompatActivity() {
         AppTheme(dynamicColor = false) {
             NavHost(navController = navController, startDestination = TripListDestination.ROUTE) {
                 composable(TripListDestination.ROUTE) {
-                    val viewModel: TripListViewModel by viewModel {
-                        TripListViewModel(serviceLocator.tripRepository)
+                    val viewModel: TripListViewModel = viewModel {
+                        TripListViewModel(serviceLocator.tripRepository, navController)
                     }
                     TripList(viewModel = viewModel, navController = navController)
                 }
@@ -55,16 +51,12 @@ class MainActivity : AppCompatActivity() {
                     val tripId = it.arguments?.getString(
                         TripDetailsDestination.ARG_TRIP_ID
                     ) ?: error("tripId must be provided")
-                    val viewModel: TripViewModel by viewModel {
+                    val viewModel: TripViewModel = viewModel {
                         TripViewModel(
-                            serviceLocator, tripId
+                            serviceLocator, navController, tripId
                         )
                     }
                     TripDetails(viewModel = viewModel, navController = navController)
-                }
-                composable(TransportationSetupDestination.KEY) {
-                    val viewModel: TransportationSetupViewModel by viewModels()
-                    TransportationSetup(viewModel = viewModel, navController)
                 }
             }
         }
