@@ -18,12 +18,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.combah.travel2.ui.theme.AppTheme
 
 @Composable
 fun ConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
-    confirmButtonEnabled: Boolean,
+    confirmButtonEnabled: Boolean = true,
     confirmButtonLabel: String = "Confirm",
     confirmButtonColors: ButtonColors = ButtonDefaults.textButtonColors(),
     dismissButtonLabel: String = "Cancel",
@@ -43,13 +44,13 @@ fun ConfirmationDialog(
             ) {
                 Box(
                     modifier = Modifier.align(Alignment.CenterHorizontally)
-                        .padding(all = 16.dp)
+                        .padding(start = 16.dp, top = 16.dp, end = 16.dp)
                 ) {
                     content()
                 }
                 Row(modifier = Modifier.align(Alignment.End).padding(end = 8.dp, bottom = 8.dp)) {
                     TextButton(
-                        onClick = onConfirm,
+                        onClick = onDismiss,
                     ) {
                         Text(dismissButtonLabel)
                     }
@@ -68,9 +69,11 @@ fun ConfirmationDialog(
 
 @Composable
 @Preview
-fun ConfirmationDialogPreview() = ConfirmationDialog(
-    onConfirm = {},
-    onDismiss = {},
-    confirmButtonEnabled = true,
-    content = { Text("Dialog") },
-)
+fun ConfirmationDialogPreview() = AppTheme {
+    ConfirmationDialog(
+        onConfirm = {},
+        onDismiss = {},
+        confirmButtonEnabled = true,
+    ) { Text("This is a Dialog") }
+}
+

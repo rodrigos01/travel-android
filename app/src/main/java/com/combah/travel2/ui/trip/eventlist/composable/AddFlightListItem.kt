@@ -78,7 +78,7 @@ fun AddFlightListItem(
         onCancelButtonTapped = onCancelButtonTapped,
         onSaveButtonTapped = onSaveButtonTapped,
         deleteButtonEnabled = isEditing,
-        onDeleteButtonTapped = onDeleteButtonTapped,
+        onDeleteConfirmed = onDeleteButtonTapped,
     )
 }
 
