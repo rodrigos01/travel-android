@@ -20,8 +20,12 @@ class AddPlanItemStore<Entity : TripEntity, Data : AddPlanItemStore.AddPlanData,
         val id: String
     }
 
-    fun interface ItemFactory<Item, Data : AddPlanData> {
-        fun createItem(data: Data, startDateSelectionEnabled: Boolean): Item
+    interface ItemFactory<Item, Data : AddPlanData> {
+        fun createItem(
+            data: Data,
+            startDateSelectionEnabled: Boolean,
+            isForEditing: Boolean,
+        ): Item
     }
 
     interface DataFactory<Entity : TripEntity, Data : AddPlanData> {
@@ -45,11 +49,15 @@ class AddPlanItemStore<Entity : TripEntity, Data : AddPlanItemStore.AddPlanData,
     }
 
     override fun addItem(entity: Entity): Item {
-        return addItem(dataFactory.createData(entity))
+        return addItem(dataFactory.createData(entity), isForEditing = true)
     }
 
-    private fun addItem(data: Data, startDateSelectionEnabled: Boolean = true): Item {
-        val item = itemFactory.createItem(data, startDateSelectionEnabled)
+    private fun addItem(
+        data: Data,
+        startDateSelectionEnabled: Boolean = true,
+        isForEditing: Boolean = false,
+    ): Item {
+        val item = itemFactory.createItem(data, startDateSelectionEnabled, isForEditing)
         _items[data.id] = ItemStoreData(item, data)
         return item
     }
@@ -64,7 +72,11 @@ class AddPlanItemStore<Entity : TripEntity, Data : AddPlanItemStore.AddPlanData,
         _items[itemId] = updater(data.data)
             .let {
                 ItemStoreData(
-                    itemFactory.createItem(it, data.item.startDateSelectionEnabled),
+                    itemFactory.createItem(
+                        it,
+                        data.item.startDateSelectionEnabled,
+                        data.item.isEditing,
+                    ),
                     it,
                 )
             }

@@ -48,6 +48,7 @@ class AddLodgingUseCase private constructor(
     data class AddLodgingItem(
         override val id: String,
         override val timestamp: Time,
+        override val isEditing: Boolean,
         val minCheckInTime: Time,
         val checkInDayOfMonth: String,
         val checkInDayOfWeek: String,
@@ -119,10 +120,12 @@ class AddLodgingUseCase private constructor(
         override fun createItem(
             data: PendingLodging,
             startDateSelectionEnabled: Boolean,
+            isForEditing: Boolean,
         ): AddLodgingItem {
             return AddLodgingItem(
                 id = data.id,
                 timestamp = data.checkIn,
+                isEditing = isForEditing,
                 minCheckInTime = data.checkIn.toMidnight(),
                 checkInDayOfWeek = timeFormatter.dayOfWeekString(data.checkIn),
                 checkInDayOfMonth = timeFormatter.dayOfMonthString(data.checkIn),
