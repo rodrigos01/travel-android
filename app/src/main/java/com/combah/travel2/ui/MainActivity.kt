@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
                     ) ?: error("tripId must be provided")
                     val viewModel: TripViewModel = viewModel {
                         TripViewModel(
-                            serviceLocator, tripId
+                            serviceLocator, navController, tripId
                         )
                     }
                     TripDetails(viewModel = viewModel, navController = navController)

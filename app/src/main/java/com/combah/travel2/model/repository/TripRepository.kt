@@ -14,6 +14,7 @@ interface TripRepository {
 
     suspend fun addTrip(): String
     suspend fun updateName(tripId: String, newName: String)
+    suspend fun deleteTrip(tripId: String)
     suspend fun saveFlight(tripId: String, flight: Flight)
     suspend fun saveLodging(tripId: String, lodging: Lodging)
     suspend fun deleteFlight(tripId: String, flightId: String)

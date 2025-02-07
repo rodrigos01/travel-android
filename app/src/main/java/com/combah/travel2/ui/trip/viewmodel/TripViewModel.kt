@@ -4,6 +4,7 @@ package com.combah.travel2.ui.trip.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.extensions.now
@@ -19,6 +20,7 @@ import com.combah.travel2.model.repository.AddFlightRepository
 import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
+import com.combah.travel2.ui.triplist.composable.TripListDestination
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -41,6 +43,7 @@ class TripViewModel(
     private val tripId: String,
     private val addPlanUseCase: AddPlanUseCase,
     private val timeFormatter: TimeFormatter,
+    private val navController: NavController,
 ) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
 
     data class ViewState(
@@ -77,6 +80,13 @@ class TripViewModel(
     fun tripNameChanged(newName: String) {
         viewModelScope.launch {
             repository.updateName(tripId, newName)
+        }
+    }
+
+    fun deleteTrip() {
+        viewModelScope.launch {
+            repository.deleteTrip(tripId)
+            navController.navigate(TripListDestination.ROUTE)
         }
     }
 
@@ -395,6 +405,7 @@ class TripViewModel(
 
 fun TripViewModel(
     serviceLocator: ServiceLocator,
+    navController: NavController,
     tripId: String,
 ): TripViewModel {
     val timeFormatter = TimeFormatter()
@@ -406,6 +417,7 @@ fun TripViewModel(
             AddLodgingUseCase(AddLodgingRepository(), timeFormatter)
         ),
         timeFormatter,
+        navController,
     )
 }
 
