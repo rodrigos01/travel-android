@@ -32,7 +32,7 @@ fun AddLodgingListItem(
     onSaveButtonTapped: () -> Unit,
     onCancelButtonTapped: () -> Unit,
     isEditing: Boolean = false,
-    onDeleteButtonTapped: () -> Unit = {}
+    onDeleteConfirmed: () -> Unit = {}
 ) {
     StartEndAddPlanListItem(
         initialType = AddPlanType.Lodging,
@@ -69,7 +69,7 @@ fun AddLodgingListItem(
         onCancelButtonTapped = onCancelButtonTapped,
         onSaveButtonTapped = onSaveButtonTapped,
         deleteButtonEnabled = isEditing,
-        onDeleteConfirmed = onDeleteButtonTapped,
+        onDeleteConfirmed = onDeleteConfirmed,
     )
 }
 
