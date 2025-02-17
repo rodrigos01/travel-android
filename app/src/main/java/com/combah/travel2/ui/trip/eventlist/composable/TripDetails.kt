@@ -337,7 +337,7 @@ private fun TripDetailItem(
             saveButtonEnabled = event.saveButtonEnabled,
             onSaveButtonTapped = { viewModel.save(event.id) },
             onCancelButtonTapped = { viewModel.cancelEdit(event.id) },
-            onDeleteButtonTapped = { viewModel.delete(AddPlanItem.Type.Lodging, event.id) },
+            onDeleteConfirmed = { viewModel.delete(AddPlanItem.Type.Lodging, event.id) },
         )
     }
 }
