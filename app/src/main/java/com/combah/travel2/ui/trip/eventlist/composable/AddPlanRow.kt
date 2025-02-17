@@ -1,12 +1,17 @@
 package com.combah.travel2.ui.trip.eventlist.composable
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ProvideTextStyle
@@ -20,12 +25,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.combah.travel2.R
 import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.extensions.update
 import com.combah.travel2.model.data.Time
@@ -100,8 +108,6 @@ fun AddPlanRow(
             if (dateSelectionEnabled) {
                 DatePickerButton(
                     minTime.toMidnight(),
-                    dayOfMonth,
-                    dayOfWeek,
                     onDateSelected = {
                         selectedTime = selectedTime.update(
                             dayOfMonth = it.dayOfMonth,
@@ -111,7 +117,28 @@ fun AddPlanRow(
                         onDateChanged(it)
                     },
                     modifier = Modifier.width(80.dp),
-                )
+                ) {
+                    FilledTonalButton(
+                        onClick = {},
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(
+                            start = 24.dp,
+                            end = 4.dp,
+                            top = 8.dp,
+                            bottom = 8.dp
+                        ),
+                    ) {
+                        Row {
+                            LeadingDate(dayOfMonth = dayOfMonth, dayOfWeek = dayOfWeek)
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_arrow_drop_down_24),
+                                colorFilter = ColorFilter.tint(LocalContentColor.current),
+                                contentDescription = null,
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
+                        }
+                    }
+                }
             } else {
                 LeadingDate(
                     dayOfMonth, dayOfWeek, modifier = Modifier.width(80.dp),
