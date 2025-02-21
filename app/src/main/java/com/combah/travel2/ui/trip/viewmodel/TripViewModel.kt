@@ -20,6 +20,9 @@ import com.combah.travel2.model.repository.AddFlightRepository
 import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
+import com.combah.travel2.ui.trip.creation.usecase.BaseAddPlanItemActionHandler
+import com.combah.travel2.ui.trip.state.AddPlanItemState
+import com.combah.travel2.ui.trip.state.TripItemState
 import com.combah.travel2.ui.triplist.composable.TripListDestination
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -44,16 +47,16 @@ class TripViewModel(
     private val addPlanUseCase: AddPlanUseCase,
     private val timeFormatter: TimeFormatter,
     private val navController: NavController,
-) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
+) : ViewModel(), BaseAddPlanItemActionHandler, AddPlanItemActionHandler by addPlanUseCase {
 
     data class ViewState(
         val title: String,
-        val items: List<TripItem>,
+        val items: List<TripItemState>,
     )
 
-    private val reversibleItems = mutableMapOf<String, TripItem>()
+    private val reversibleItems = mutableMapOf<String, TripItemState>()
 
-    private var TripItem.Identifiable.original: TripItem?
+    private var TripItemState.Identifiable.original: TripItemState?
         get() = reversibleItems[id]
         set(value) {
             value?.let { reversibleItems[id] = it } ?: reversibleItems.remove(id)
@@ -72,7 +75,7 @@ class TripViewModel(
         merge(eventsFromTrip, localState).combine(addPlanUseCase.items) { state, addPlanItems ->
             state.updateItems {
                 replaceAll { item ->
-                    (item as? TripItem.Identifiable)?.id?.let { addPlanItems[it] } ?: item
+                    (item as? TripItemState.Identifiable)?.id?.let { addPlanItems[it] } ?: item
                 }
             }
         }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = localState.value)
@@ -91,16 +94,17 @@ class TripViewModel(
     }
 
     fun addButtonTapped(itemId: String) {
-        val tapped = viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
+        val tapped =
+            viewState.value.items.find { it is TripItemState.Identifiable && it.id == itemId }
         val index = viewState.value.items.indexOf(tapped)
         updateItems {
             val allowStartDateSelection =
-                tapped is TripItem.DateRangeItem || tapped is TripItem.InitialAddPlanItem
+                tapped is TripItemState.DateRangeItemState || tapped is TripItemState.InitialAddPlanItemState
             val addPlanItem = addPlanUseCase.createAddPlanItem(
-                (tapped as TripItem.Timeable).timestamp,
-                startDateSelectionEnabled = allowStartDateSelection,
+                (tapped as TripItemState.Timeable).timestamp,
+                dateSelectionEnabled = allowStartDateSelection,
             )
-            if (tapped is TripItem.Replaceable) {
+            if (tapped is TripItemState.Replaceable) {
                 addPlanItem.original = tapped
                 removeAt(index)
                 add(index, addPlanItem)
@@ -111,12 +115,13 @@ class TripViewModel(
     }
 
     fun emptyDateRowTapped(itemId: String) {
-        val tapped = viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId }
+        val tapped =
+            viewState.value.items.find { it is TripItemState.Identifiable && it.id == itemId }
         val index = viewState.value.items.indexOf(tapped)
         updateItems {
             val addPlanItem = addPlanUseCase.createAddPlanItem(
-                (tapped as TripItem.Timeable).timestamp,
-                startDateSelectionEnabled = false,
+                (tapped as TripItemState.Timeable).timestamp,
+                dateSelectionEnabled = false,
             )
             addPlanItem.original = tapped
             removeAt(index)
@@ -126,22 +131,23 @@ class TripViewModel(
 
     fun itemTapped(itemId: String) {
         val item =
-            viewState.value.items.filterIsInstance<TripItem.EventItem>().find { it.id == itemId }
+            viewState.value.items.filterIsInstance<TripItemState.EventItemState>()
+                .find { it.id == itemId }
                 ?: return
         val entity = when (item) {
-            is TripItem.FlightDepartureItem -> trip.value?.flights?.first { flight ->
+            is TripItemState.FlightDepartureItemState -> trip.value?.flights?.first { flight ->
                 flight.segments.any { it.departure == item.timestamp && it.airportFrom.name == item.airport }
             }
 
-            is TripItem.FlightArrivalItem -> trip.value?.flights?.first { flight ->
+            is TripItemState.FlightArrivalItemState -> trip.value?.flights?.first { flight ->
                 flight.segments.any { it.arrival == item.timestamp && it.airportTo.name == item.airport }
             }
 
-            is TripItem.HotelCheckInItem -> trip.value?.lodgings?.first {
+            is TripItemState.HotelCheckInItemState -> trip.value?.lodgings?.first {
                 it.checkIn == item.timestamp && (it.name ?: it.address) == item.hotelName
             }
 
-            is TripItem.HotelCheckOutItem -> trip.value?.lodgings?.first {
+            is TripItemState.HotelCheckOutItemState -> trip.value?.lodgings?.first {
                 it.checkout == item.timestamp && (it.name ?: it.address) == item.hotelName
             }
         } ?: return
@@ -154,20 +160,21 @@ class TripViewModel(
         }
     }
 
-    fun addPlanTypeChanged(itemId: String, newType: AddPlanUseCase.AddPlanItem.Type) {
+    override fun addPlanTypeChanged(itemId: String, newType: AddPlanItemState.Type) {
         val item =
-            viewState.value.items.find { it is TripItem.Identifiable && it.id == itemId } ?: return
+            viewState.value.items.find { it is TripItemState.Identifiable && it.id == itemId }
+                ?: return
         val index = viewState.value.items.indexOf(item)
         updateItems {
-            this[index] = addPlanUseCase.typeChanged(item as AddPlanUseCase.AddPlanItem, newType)
+            this[index] = addPlanUseCase.typeChanged(item as AddPlanItemState, newType)
         }
     }
 
-    fun save(itemId: String) {
+    override fun save(itemId: String) {
         val item =
-            viewState.value.items.find { it is AddPlanUseCase.AddPlanItem && it.id == itemId }
+            viewState.value.items.find { it is AddPlanItemState && it.id == itemId }
                 ?: return
-        val entity = addPlanUseCase.saveItem(item as AddPlanUseCase.AddPlanItem)
+        val entity = addPlanUseCase.saveItem(item as AddPlanItemState)
         viewModelScope.launch {
             when (entity) {
                 is Flight -> repository.saveFlight(tripId, entity)
@@ -176,32 +183,32 @@ class TripViewModel(
         }
     }
 
-    fun cancelEdit(itemId: String) {
+    override fun cancelEdit(itemId: String) {
         val item =
-            viewState.value.items.find { it is AddPlanUseCase.AddPlanItem && it.id == itemId } as? AddPlanUseCase.AddPlanItem
+            viewState.value.items.find { it is AddPlanItemState && it.id == itemId } as? AddPlanItemState
                 ?: return
         val itemIndex = viewState.value.items.indexOf(item)
         addPlanUseCase.removeItem(item)
         updateItems {
-            removeIf { it is TripItem.Identifiable && item.id == it.id }
+            removeIf { it is TripItemState.Identifiable && item.id == it.id }
             item.original?.let { add(itemIndex, it) }
         }
     }
 
-    fun delete(type: AddPlanUseCase.AddPlanItem.Type, itemId: String) {
+    override fun delete(type: AddPlanItemState.Type, itemId: String) {
         viewModelScope.launch {
             when (type) {
-                AddPlanUseCase.AddPlanItem.Type.Flight -> repository.deleteFlight(tripId, itemId)
-                AddPlanUseCase.AddPlanItem.Type.Lodging -> repository.deleteLodging(tripId, itemId)
+                AddPlanItemState.Type.Flight -> repository.deleteFlight(tripId, itemId)
+                AddPlanItemState.Type.Lodging -> repository.deleteLodging(tripId, itemId)
             }
         }
     }
 
-    private fun updateItems(updater: MutableList<TripItem>.() -> Unit) {
+    private fun updateItems(updater: MutableList<TripItemState>.() -> Unit) {
         localState.value = localState.value.updateItems(updater)
     }
 
-    private fun genItems(trip: Trip): List<TripItem> {
+    private fun genItems(trip: Trip): List<TripItemState> {
         val events = trip.flights.flatMap { it.segments } + trip.lodgings
         val pairs = events.flatMap { event ->
             when (event) {
@@ -222,11 +229,11 @@ class TripViewModel(
                     .takeWhile { it.place == place }.size == 1
             val lastInSection =
                 index == pairs.lastIndex || pairs[index + 1].first.dateString != time.dateString || lastInPlace
-            mutableListOf<TripItem>().apply {
+            mutableListOf<TripItemState>().apply {
                 placeItem?.let { add(it) }
                 if (firstInMonth) {
                     add(
-                        TripItem.MonthItem(
+                        TripItemState.MonthItemState(
                             timestamp = time,
                             month = time.monthString,
                             year = time.year.toString(),
@@ -245,7 +252,7 @@ class TripViewModel(
             items
         } else {
             listOf(
-                TripItem.InitialAddPlanItem(
+                TripItemState.InitialAddPlanItemState(
                     UUID.randomUUID().toString(),
                     Time.now(),
                 )
@@ -255,7 +262,7 @@ class TripViewModel(
 
     private fun genPlaceItem(
         index: Int, pairs: List<Pair<Time, TripEvent>>
-    ): TripItem.PlaceItem? {
+    ): TripItemState.PlaceItemState? {
         val (time, event) = pairs[index]
 
         val place = event.getPlace(time)
@@ -272,7 +279,7 @@ class TripViewModel(
         // Exclude if only event in place is a departure
         if (placeEntries.size == 1 && lastEntry.isDeparture) return null
 
-        return TripItem.PlaceItem(
+        return TripItemState.PlaceItemState(
             timestamp = time,
             placeName = place.name,
             imageUrl = place.coverImage ?: "",
@@ -295,7 +302,7 @@ class TripViewModel(
 
     private fun genEmptyAddPlanItem(
         emptyAddPlanItemTimestamp: Time, showDivider: Boolean
-    ) = TripItem.EmptyAddPlanItem(
+    ) = TripItemState.EmptyAddPlanItemState(
         UUID.randomUUID().toString(),
         emptyAddPlanItemTimestamp,
         showDivider = showDivider,
@@ -303,13 +310,13 @@ class TripViewModel(
 
     private fun genDateRangeItem(
         from: Time, to: Time
-    ): TripItem? {
+    ): TripItemState? {
         val start = from + 1.days
         val end = to.toMidnight() - 1.minutes
         return if (end <= start) {
             null
         } else if (end - 1.days >= start) {
-            TripItem.DateRangeItem(
+            TripItemState.DateRangeItemState(
                 id = UUID.randomUUID().toString(),
                 timestamp = from,
                 dayOfMonthStart = start.dayOfMonthString,
@@ -318,7 +325,7 @@ class TripViewModel(
                 dayOfWeekEnd = end.dayOfWeekString,
             )
         } else {
-            TripItem.EmptyDateItem(
+            TripItemState.EmptyDateItemState(
                 id = UUID.randomUUID().toString(),
                 timestamp = from,
                 dayOfMonth = start.dayOfMonthString,
@@ -331,12 +338,12 @@ class TripViewModel(
         timestamp: Time,
         event: TripEvent,
         showDate: Boolean,
-    ): TripItem.EventItem {
+    ): TripItemState.EventItemState {
         contract { returns() implies (event is FlightSegment || event is Lodging) }
         return when (event) {
             is FlightSegment -> {
                 if (timestamp == event.departure) {
-                    TripItem.FlightDepartureItem(
+                    TripItemState.FlightDepartureItemState(
                         id = UUID.randomUUID().toString(),
                         timestamp = event.departure,
                         showDate = showDate,
@@ -347,7 +354,7 @@ class TripViewModel(
                         airport = event.airportFrom.name,
                     )
                 } else {
-                    TripItem.FlightArrivalItem(
+                    TripItemState.FlightArrivalItemState(
                         id = UUID.randomUUID().toString(),
                         timestamp = event.arrival,
                         showDate = showDate,
@@ -361,7 +368,7 @@ class TripViewModel(
 
             is Lodging -> {
                 if (timestamp == event.checkIn) {
-                    TripItem.HotelCheckInItem(
+                    TripItemState.HotelCheckInItemState(
                         id = UUID.randomUUID().toString(),
                         timestamp = event.checkIn,
                         showDate = showDate,
@@ -372,7 +379,7 @@ class TripViewModel(
                         hotelAddress = event.address,
                     )
                 } else {
-                    TripItem.HotelCheckOutItem(
+                    TripItemState.HotelCheckOutItemState(
                         id = UUID.randomUUID().toString(),
                         timestamp = event.checkout,
                         showDate = showDate,
@@ -434,7 +441,7 @@ private fun TripEvent.getPlace(referenceTime: Time) = when (this) {
 private val Time.dateString
     get() = "$year=$month-$dayOfMonth"
 
-private fun TripViewModel.ViewState.updateItems(updater: MutableList<TripItem>.() -> Unit): TripViewModel.ViewState {
+private fun TripViewModel.ViewState.updateItems(updater: MutableList<TripItemState>.() -> Unit): TripViewModel.ViewState {
     return copy(
         items = items.toMutableList().apply(updater).toList()
     )

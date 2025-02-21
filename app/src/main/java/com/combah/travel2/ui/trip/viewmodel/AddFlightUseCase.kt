@@ -13,6 +13,8 @@ import com.combah.travel2.ui.trip.creation.usecase.AddFlightItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase
 import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseStore
+import com.combah.travel2.ui.trip.state.AddFlightItemState
+import com.combah.travel2.ui.trip.state.ManualAddPlanState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.util.UUID
@@ -21,16 +23,16 @@ import kotlin.collections.component2
 import kotlin.time.Duration.Companion.minutes
 
 class AddFlightUseCase private constructor(
-    private val itemStore: AddPlanItemStore<Flight, PendingFlight, AddFlightItem>,
+    private val itemStore: AddPlanItemStore<Flight, PendingFlight, AddFlightItemState>,
     private val inputUseCaseStore: InputUseCaseStore<InputUseCaseSet, InputState>,
-) : AddPlanUseCase.AddItemUseCase<Flight, AddFlightUseCase.AddFlightItem>,
-    AddPlanUseCase.ItemStore<Flight, AddFlightUseCase.AddFlightItem> by itemStore,
+) : AddPlanUseCase.AddItemUseCase<Flight, AddFlightItemState>,
+    AddPlanUseCase.ItemStore<Flight, AddFlightItemState> by itemStore,
     AddFlightItemActionHandler {
 
     constructor(
         repository: AddFlightRepository,
         timeFormatter: TimeFormatter,
-        itemStoreFactory: AddPlanItemStore.Factory<Flight, PendingFlight, AddFlightItem> = AddPlanItemStore.Factory(),
+        itemStoreFactory: AddPlanItemStore.Factory<Flight, PendingFlight, AddFlightItemState> = AddPlanItemStore.Factory(),
         inputUseCaseStore: InputUseCaseStore<InputUseCaseSet, InputState> = InputUseCaseStore.Factory<InputUseCaseSet, InputState>()
             .create(setFactory = {
                 InputUseCaseSet(
@@ -49,26 +51,6 @@ class AddFlightUseCase private constructor(
         ),
         inputUseCaseStore,
     )
-
-    data class AddFlightItem(
-        override val id: String,
-        override val timestamp: Time,
-        override val isEditing: Boolean,
-        val minDepartureTime: Time,
-        val minArrivalTime: Time,
-        val departureTime: String? = null,
-        val departureDayOfMonth: String,
-        val departureDayOfWeek: String,
-        val airportFromName: String? = null,
-        val airportFromSearchResults: List<String> = emptyList(),
-        val arrivalTime: String? = null,
-        val arrivalDayOfMonth: String,
-        val arrivalDayOfWeek: String,
-        val airportToName: String? = null,
-        val airportToSearchResults: List<String> = emptyList(),
-        override val saveButtonEnabled: Boolean,
-        override val startDateSelectionEnabled: Boolean = false,
-    ) : AddPlanUseCase.AddPlanItem
 
     data class PendingFlight(
         override val id: String,
@@ -121,45 +103,50 @@ class AddFlightUseCase private constructor(
     }
 
     class ItemFactory(private val timeFormatter: TimeFormatter) :
-        AddPlanItemStore.ItemFactory<AddFlightItem, PendingFlight> {
+        AddPlanItemStore.ItemFactory<AddFlightItemState, PendingFlight> {
         override fun createItem(
             data: PendingFlight,
-            startDateSelectionEnabled: Boolean,
-            isForEditing: Boolean,
-        ): AddFlightItem {
+            dateSelectionEnabled: Boolean,
+            typeSelectionEnabled: Boolean,
+            deleteEnabled: Boolean,
+        ): AddFlightItemState {
             val arrivalTime = data.arrival ?: data.departure
-            val item = AddFlightItem(
+            val item = AddFlightItemState(
                 id = data.id,
                 timestamp = data.departure,
-                isEditing = isForEditing,
-                minDepartureTime = Time.now().toMidnight(),
-                minArrivalTime = Time(
-                    data.departure.timeInMillis,
-                    timeZone = data.airportTo?.timeZone ?: data.departure.timeZone,
-                ) + 1.minutes,
-                departureTime = timeFormatter.timeString(data.departure),
-                departureDayOfWeek = timeFormatter.dayOfWeekString(data.departure),
-                departureDayOfMonth = timeFormatter.dayOfMonthString(data.departure),
-                airportFromName = data.airportFrom?.name,
-                arrivalDayOfWeek = timeFormatter.dayOfWeekString(arrivalTime),
-                arrivalDayOfMonth = timeFormatter.dayOfMonthString(arrivalTime),
-                arrivalTime = data.arrival?.let { timeFormatter.timeString(it) },
-                airportToName = data.airportTo?.name,
+                startState = ManualAddPlanState(
+                    time = data.departure,
+                    minTime = Time.now().toMidnight(),
+                    dateSelectionEnabled = dateSelectionEnabled,
+                    locationText = data.airportFrom?.name,
+                    searchResults = emptyList(),
+                ),
+                endState = ManualAddPlanState(
+                    time = arrivalTime,
+                    minTime = Time(
+                        data.departure.timeInMillis,
+                        timeZone = data.airportTo?.timeZone ?: data.departure.timeZone,
+                    ) + 1.minutes,
+                    dateSelectionEnabled = true,
+                    locationText = data.airportTo?.name,
+                    searchResults = emptyList(),
+                ),
+                typeSelectionEnabled = typeSelectionEnabled,
+                deleteButtonEnabled = deleteEnabled,
                 saveButtonEnabled = data.arrival?.let { it > data.departure } ?: false && data.airportFrom != null && data.airportTo != null,
-                startDateSelectionEnabled = startDateSelectionEnabled,
             )
             return item
         }
     }
 
-    override val items: Flow<Map<String, AddFlightItem>> =
+    override val items: Flow<Map<String, AddFlightItemState>> =
         combine(itemStore.items, inputUseCaseStore.inputStates) { itemMap, inputStateMap ->
             itemMap.map { (id, item) ->
                 id to item.copy(
-                    airportFromSearchResults = inputStateMap[id]?.airportFromSearchResults?.map { it.name }
-                        ?: emptyList(),
-                    airportToSearchResults = inputStateMap[id]?.airportToSearchResults?.map { it.name }
-                        ?: emptyList(),
+                    startState = item.startState.copy(searchResults = inputStateMap[id]?.airportFromSearchResults?.map { it.name }
+                        ?: emptyList()),
+                    endState = item.endState.copy(searchResults = inputStateMap[id]?.airportToSearchResults?.map { it.name }
+                        ?: emptyList()),
                 )
             }.toMap()
         }
@@ -243,7 +230,7 @@ class AddFlightUseCase private constructor(
         }
     }
 
-    override fun createAppData(item: AddFlightItem): Flight {
+    override fun createAppData(item: AddFlightItemState): Flight {
         val pending = itemStore.get(item.id) ?: error("provided Id is not from this Use Case")
         pending.airportFrom ?: error("airport from is not set")
         pending.airportTo ?: error("airport to is not set")

@@ -5,7 +5,9 @@ import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.test.Assertions.assertType
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
-import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase.AddPlanItem
+import com.combah.travel2.ui.trip.state.AddFlightItemState
+import com.combah.travel2.ui.trip.state.AddLodgingItemState
+import com.combah.travel2.ui.trip.state.AddPlanItemState
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -29,12 +31,12 @@ class AddPlanUseCaseTest {
     private val testScope = TestScope(rule.dispatcher)
 
     private val addFlightItems =
-        MutableStateFlow<Map<String, AddFlightUseCase.AddFlightItem>>(emptyMap())
+        MutableStateFlow<Map<String, AddFlightItemState>>(emptyMap())
     private val addFlightUseCase: AddFlightUseCase = mock {
         on { items } doReturn addFlightItems
     }
     private val addLodgingItems =
-        MutableStateFlow<Map<String, AddLodgingUseCase.AddLodgingItem>>(emptyMap())
+        MutableStateFlow<Map<String, AddLodgingItemState>>(emptyMap())
     private val addLodgingUseCase: AddLodgingUseCase = mock {
         on { items } doReturn addLodgingItems
     }
@@ -42,17 +44,17 @@ class AddPlanUseCaseTest {
 
     @Test
     fun `added plan item should be initialized as Flight`() {
-        val original = mock<AddFlightUseCase.AddFlightItem>()
+        val original = mock<AddFlightItemState>()
         addFlightUseCase.stub {
             on { addItem(any()) } doReturn original
         }
         val addedItem = subject.createAddPlanItem(mock())
-        assertType<AddFlightUseCase.AddFlightItem>(addedItem)
+        assertType<AddFlightItemState>(addedItem)
     }
 
     @Test
     fun `Add Plan Items should have all types available`() {
-        val original = AddFlightUseCase.AddFlightItem(
+        val original = AddFlightItemState(
             id = "originalItem",
             timestamp = mock(),
             minDepartureTime = mock(),
@@ -63,14 +65,14 @@ class AddPlanUseCaseTest {
             arrivalDayOfWeek = "Wed",
         )
         assertThat(original.types).containsExactly(
-            AddPlanItem.Type.Flight,
-            AddPlanItem.Type.Lodging,
+            AddPlanItemState.Type.Flight,
+            AddPlanItemState.Type.Lodging,
         )
     }
 
     @Test
     fun `added flight item should be initialized with initial time as departure`() {
-        val expected: AddFlightUseCase.AddFlightItem = mock()
+        val expected: AddFlightItemState = mock()
         val initialTime: Time = mock()
         addFlightUseCase.stub { on { addItem(initialTime) } doReturn expected }
         val addedItem = subject.createAddPlanItem(initialTime)
@@ -79,9 +81,9 @@ class AddPlanUseCaseTest {
 
     @Test
     fun `type selected should change item`() {
-        val expected: AddLodgingUseCase.AddLodgingItem = mock()
+        val expected: AddLodgingItemState = mock()
         val initialTime: Time = mock()
-        val original = mock<AddFlightUseCase.AddFlightItem> {
+        val original = mock<AddFlightItemState> {
             on { id } doReturn "originalId"
             on { timestamp } doReturn initialTime
         }
@@ -90,17 +92,17 @@ class AddPlanUseCaseTest {
         }
         addLodgingUseCase.stub { on { addItem(initialTime) } doReturn expected }
         val item = subject.createAddPlanItem(initialTime)
-        val newItem = subject.typeChanged(item, AddPlanItem.Type.Lodging)
+        val newItem = subject.typeChanged(item, AddPlanItemState.Type.Lodging)
         assertThat(newItem).isEqualTo(expected)
     }
 
     @Test
     fun `type selected should keep original item's time`() {
         val initialTime: Time = mock()
-        val expected: AddLodgingUseCase.AddLodgingItem = mock {
+        val expected: AddLodgingItemState = mock {
             on { timestamp } doReturn initialTime
         }
-        val original = mock<AddFlightUseCase.AddFlightItem> {
+        val original = mock<AddFlightItemState> {
             on { id } doReturn "originalId"
             on { timestamp } doReturn initialTime
         }
@@ -109,16 +111,16 @@ class AddPlanUseCaseTest {
         }
         addLodgingUseCase.stub { on { addItem(initialTime) } doReturn expected }
         val addedItem = subject.createAddPlanItem(initialTime)
-        val newItem = subject.typeChanged(addedItem, AddPlanItem.Type.Lodging)
-        assertType<AddLodgingUseCase.AddLodgingItem>(newItem)
+        val newItem = subject.typeChanged(addedItem, AddPlanItemState.Type.Lodging)
+        assertType<AddLodgingItemState>(newItem)
         assertThat(newItem).isEqualTo(expected)
     }
 
     @Test
     fun `type selected should not change item change item if same item selected`() {
-        val expected: AddLodgingUseCase.AddLodgingItem = mock()
+        val expected: AddLodgingItemState = mock()
         val initialTime: Time = mock()
-        val original = mock<AddFlightUseCase.AddFlightItem> {
+        val original = mock<AddFlightItemState> {
             on { id } doReturn "originalId"
         }
         addFlightUseCase.stub {
@@ -126,20 +128,20 @@ class AddPlanUseCaseTest {
         }
         addLodgingUseCase.stub { on { addItem(initialTime) } doReturn expected }
         val item = subject.createAddPlanItem(initialTime)
-        val newItem = subject.typeChanged(item, AddPlanItem.Type.Flight)
+        val newItem = subject.typeChanged(item, AddPlanItemState.Type.Flight)
         assertThat(newItem).isEqualTo(item)
     }
 
     @Test
     fun `addFlightItem items changed should update existing item`() = testScope.runTest {
         val addPlanItemId = "originalItemId"
-        val addPlanItem: AddFlightUseCase.AddFlightItem = mock {
+        val addPlanItem: AddFlightItemState = mock {
             on { id } doReturn addPlanItemId
         }
         val items = subject.items.stateIn(this)
         addFlightItems.value = mapOf(addPlanItemId to addPlanItem)
         assertThat(items.value[addPlanItemId]).isEqualTo(addPlanItem)
-        val newFlightItem: AddFlightUseCase.AddFlightItem = mock {
+        val newFlightItem: AddFlightItemState = mock {
             on { id } doReturn addPlanItemId
         }
         addFlightItems.value = mapOf(addPlanItemId to newFlightItem)
@@ -149,7 +151,7 @@ class AddPlanUseCaseTest {
 
     @Test
     fun `saveItem should return flight from use case`() {
-        val original = mock<AddFlightUseCase.AddFlightItem> {
+        val original = mock<AddFlightItemState> {
             on { id } doReturn "originalId"
         }
         val expected: Flight = mock()
@@ -162,7 +164,7 @@ class AddPlanUseCaseTest {
 
     @Test
     fun `saveItem should return lodging from use case`() {
-        val original = mock<AddLodgingUseCase.AddLodgingItem> {
+        val original = mock<AddLodgingItemState> {
             on { id } doReturn "originalId"
         }
         val expected: Lodging = mock()

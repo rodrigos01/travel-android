@@ -6,12 +6,13 @@ import com.combah.travel2.extensions.remove
 import com.combah.travel2.extensions.set
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.TripEntity
+import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
-class AddPlanItemStore<Entity : TripEntity, Data : AddPlanItemStore.AddPlanData, Item : AddPlanUseCase.AddPlanItem>(
+class AddPlanItemStore<Entity : TripEntity, Data : AddPlanItemStore.AddPlanData, Item : AddPlanItemState>(
     private val dataFactory: DataFactory<Entity, Data>,
     private val itemFactory: ItemFactory<Item, Data>,
 ) : AddPlanUseCase.ItemStore<Entity, Item> {
@@ -23,8 +24,9 @@ class AddPlanItemStore<Entity : TripEntity, Data : AddPlanItemStore.AddPlanData,
     interface ItemFactory<Item, Data : AddPlanData> {
         fun createItem(
             data: Data,
-            startDateSelectionEnabled: Boolean,
-            isForEditing: Boolean,
+            dateSelectionEnabled: Boolean,
+            typeSelectionEnabled: Boolean,
+            deleteEnabled: Boolean,
         ): Item
     }
 
@@ -44,20 +46,26 @@ class AddPlanItemStore<Entity : TripEntity, Data : AddPlanItemStore.AddPlanData,
     override val items: Flow<Map<String, Item>>
         get() = _items.map { it.entries.associate { (key, value) -> key to value.item } }
 
-    override fun addItem(time: Time, startDateSelectionEnabled: Boolean): Item {
-        return addItem(dataFactory.createData(time), startDateSelectionEnabled)
+    override fun addItem(time: Time, dateSelectionEnabled: Boolean): Item {
+        return addItem(dataFactory.createData(time), dateSelectionEnabled)
     }
 
     override fun addItem(entity: Entity): Item {
-        return addItem(dataFactory.createData(entity), isForEditing = true)
+        return addItem(
+            dataFactory.createData(entity),
+            typeSelectionEnabled = false,
+            deleteEnabled = true
+        )
     }
 
     private fun addItem(
         data: Data,
-        startDateSelectionEnabled: Boolean = true,
-        isForEditing: Boolean = false,
+        dateSelectionEnabled: Boolean = true,
+        typeSelectionEnabled: Boolean = true,
+        deleteEnabled: Boolean = false,
     ): Item {
-        val item = itemFactory.createItem(data, startDateSelectionEnabled, isForEditing)
+        val item =
+            itemFactory.createItem(data, dateSelectionEnabled, typeSelectionEnabled, deleteEnabled)
         _items[data.id] = ItemStoreData(item, data)
         return item
     }
@@ -74,8 +82,9 @@ class AddPlanItemStore<Entity : TripEntity, Data : AddPlanItemStore.AddPlanData,
                 ItemStoreData(
                     itemFactory.createItem(
                         it,
-                        data.item.startDateSelectionEnabled,
-                        data.item.isEditing,
+                        data.item.dateSelectionEnabled,
+                        data.item.typeSelectionEnabled,
+                        data.item.deleteButtonEnabled,
                     ),
                     it,
                 )
@@ -90,7 +99,7 @@ class AddPlanItemStore<Entity : TripEntity, Data : AddPlanItemStore.AddPlanData,
         return _items[itemId]
     }
 
-    class Factory<Entity : TripEntity, Data : AddPlanData, Item : AddPlanUseCase.AddPlanItem> {
+    class Factory<Entity : TripEntity, Data : AddPlanData, Item : AddPlanItemState> {
         fun create(
             dataFactory: DataFactory<Entity, Data>,
             itemFactory: ItemFactory<Item, Data>

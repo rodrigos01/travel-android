@@ -4,7 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,7 +32,7 @@ fun PlaceEventListItem(imageUrl: String, placeName: String, startDate: String, e
             .background(color = MaterialTheme.colorScheme.surface)
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        BoxWithConstraints(
+        Box(
             Modifier
                 .wrapContentHeight()
                 .fillMaxWidth()

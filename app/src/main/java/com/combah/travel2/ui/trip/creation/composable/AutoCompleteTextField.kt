@@ -19,23 +19,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.PopupProperties
 import com.combah.travel2.ui.theme.AppTheme
 
-class AutoCompleteTextFieldState(
-    val initialValue: String?,
-    val suggestions: List<String>,
+class AutoCompleteTextFieldState<T>(
+    val text: String?,
+    val suggestions: List<T>,
 )
 
 @Composable
-fun rememberAutoCompleteTextFieldState(initialValue: String?, suggestions: List<String>) =
-    remember(initialValue, suggestions) { AutoCompleteTextFieldState(initialValue, suggestions) }
+fun <T> rememberAutoCompleteTextFieldState(text: String?, suggestions: List<T>) =
+    remember(text, suggestions) { AutoCompleteTextFieldState(text, suggestions) }
 
 @Composable
-fun AutoCompleteTextField(
-    state: AutoCompleteTextFieldState,
+fun <T> AutoCompleteTextField(
+    state: AutoCompleteTextFieldState<T>,
     label: String?,
     placeHolder: String?,
     onTextChanged: (String) -> Unit,
     onOptionSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    itemContent: (T) -> String
 ) {
     val focusManager = LocalFocusManager.current
     Box(
@@ -44,14 +45,14 @@ fun AutoCompleteTextField(
         var input: String? by remember {
             mutableStateOf(null)
         }
-        var selection: String? by remember {
+        var selection: T? by remember {
             mutableStateOf(null)
         }
-        val airportFromText = remember(state.initialValue, input, selection) {
-            input ?: selection ?: state.initialValue.orEmpty()
+        val text = remember(state.text, input, selection) {
+            input ?: selection?.let { itemContent(it) } ?: state.text.orEmpty()
         }
         OutlinedTextField(
-            value = airportFromText,
+            value = text,
             label = {
                 label?.let { Text(it) }
             },
@@ -73,7 +74,7 @@ fun AutoCompleteTextField(
         ) {
             state.suggestions.forEachIndexed { index, option ->
                 DropdownMenuItem(
-                    text = { Text(option) },
+                    text = { Text(itemContent(option)) },
                     onClick = {
                         showSuggestions = false
                         input = null
@@ -93,12 +94,13 @@ fun AutoCompleteTextField(
 fun AutoCompleteTextFieldPreview() {
     AppTheme {
         Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
-            AutoCompleteTextField(
+            AutoCompleteTextField<String>(
                 state = rememberAutoCompleteTextFieldState(null, emptyList()),
                 label = "label",
                 placeHolder = null,
                 onTextChanged = {},
                 onOptionSelected = {},
+                itemContent = { "" }
             )
         }
     }

@@ -36,8 +36,8 @@ fun LodgingSearchListItem(
     onSwitchToManualButtonTapped: () -> Unit,
     onDeleteConfirmed: () -> Unit,
 ) {
-    AddPlanListItem(
-        initialType = AddPlanType.Lodging,
+    AddPlanScaffold(
+        type = AddPlanType.Lodging,
         onTypeSelected = onTypeSelected,
         typeSelectionEnabled = !isEditing,
         deleteButtonEnabled = isEditing,

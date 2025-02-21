@@ -1,7 +1,7 @@
 package com.combah.travel2.test
 
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
-import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase
+import com.combah.travel2.ui.trip.state.AddPlanItemState
 import org.mockito.kotlin.KArgumentCaptor
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
@@ -14,7 +14,7 @@ object Captor {
         return captor.lastValue
     }
 
-    fun <T : AddPlanItemStore.AddPlanData, E : AddPlanUseCase.AddPlanItem> getUpdateResult(
+    fun <T : AddPlanItemStore.AddPlanData, E : AddPlanItemState> getUpdateResult(
         itemStore: AddPlanItemStore<T, E>,
         originalData: T,
     ): T {

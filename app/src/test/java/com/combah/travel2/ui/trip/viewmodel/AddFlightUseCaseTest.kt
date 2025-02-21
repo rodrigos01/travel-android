@@ -12,7 +12,7 @@ import com.combah.travel2.test.UnconfinedDispatcherTestRule
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase
 import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseStore
-import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase.AddFlightItem
+import com.combah.travel2.ui.trip.state.AddFlightItemState
 import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase.InputState
 import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase.InputUseCaseSet
 import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase.PendingFlight
@@ -44,8 +44,8 @@ class AddFlightUseCaseTest {
         on { dayOfMonthString(any()) } doReturn ""
         on { dayOfWeekString(any()) } doReturn ""
     }
-    private val itemFlow = MutableStateFlow(mapOf<String, AddFlightItem>())
-    private val itemStore = mock<AddPlanItemStore<PendingFlight, AddFlightItem>> {
+    private val itemFlow = MutableStateFlow(mapOf<String, AddFlightItemState>())
+    private val itemStore = mock<AddPlanItemStore<PendingFlight, AddFlightItemState>> {
         on { items } doReturn itemFlow
     }
     private val airportFromAutoCompleteState =
@@ -109,14 +109,14 @@ class AddFlightUseCaseTest {
     @Test
     fun `addItem should return itemStore item`() {
         val time = mockTime()
-        val item = mock<AddFlightItem>()
+        val item = mock<AddFlightItemState>()
         itemStore.stub { on { addItem(time) } doReturn item }
         assertThat(subject.addItem(time)).isEqualTo(item)
     }
 
     @Test
     fun `remove should call itemStore remove`() {
-        val item = mock<AddFlightItem>()
+        val item = mock<AddFlightItemState>()
         subject.remove(item)
         verify(itemStore).remove(item)
     }
@@ -358,8 +358,8 @@ class AddFlightUseCaseTest {
         assertThat(segment.airportTo).isEqualTo(data.airportTo)
     }
 
-    private fun mockItem(id: String): AddFlightItem {
-        val item = AddFlightItem(
+    private fun mockItem(id: String): AddFlightItemState {
+        val item = AddFlightItemState(
             id,
             timestamp = mock(),
             minDepartureTime = mock(),
