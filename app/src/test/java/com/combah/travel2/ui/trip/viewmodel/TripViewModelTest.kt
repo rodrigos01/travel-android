@@ -13,15 +13,17 @@ import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
-import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase.AddPlanItem
-import com.combah.travel2.ui.trip.viewmodel.TripItem.DateRangeItem
-import com.combah.travel2.ui.trip.viewmodel.TripItem.EmptyDateItem
-import com.combah.travel2.ui.trip.viewmodel.TripItem.FlightArrivalItem
-import com.combah.travel2.ui.trip.viewmodel.TripItem.FlightDepartureItem
-import com.combah.travel2.ui.trip.viewmodel.TripItem.HotelCheckInItem
-import com.combah.travel2.ui.trip.viewmodel.TripItem.HotelCheckOutItem
-import com.combah.travel2.ui.trip.viewmodel.TripItem.MonthItem
-import com.combah.travel2.ui.trip.viewmodel.TripItem.PlaceItem
+import com.combah.travel2.ui.trip.state.AddFlightItemState
+import com.combah.travel2.ui.trip.state.AddPlanItemState
+import com.combah.travel2.ui.trip.state.TripItemState
+import com.combah.travel2.ui.trip.state.TripItemState.DateRangeItemState
+import com.combah.travel2.ui.trip.state.TripItemState.EmptyDateItemState
+import com.combah.travel2.ui.trip.state.TripItemState.FlightArrivalItemState
+import com.combah.travel2.ui.trip.state.TripItemState.FlightDepartureItemState
+import com.combah.travel2.ui.trip.state.TripItemState.HotelCheckInItemState
+import com.combah.travel2.ui.trip.state.TripItemState.HotelCheckOutItemState
+import com.combah.travel2.ui.trip.state.TripItemState.MonthItemState
+import com.combah.travel2.ui.trip.state.TripItemState.PlaceItemState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -47,7 +49,7 @@ class TripViewModelTest {
         on { findTripById("tripId") } doReturn tripFlow
     }
 
-    private val addPlanItems = MutableStateFlow<Map<String, AddPlanItem>>(mapOf())
+    private val addPlanItems = MutableStateFlow<Map<String, AddPlanItemState>>(mapOf())
     private val addPlanUseCase: AddPlanUseCase = mock {
         on { items } doReturn addPlanItems
     }
@@ -77,7 +79,7 @@ class TripViewModelTest {
             )
         )
         val departures =
-            subject.viewState.value.items.filterIsInstance(FlightDepartureItem::class.java)
+            subject.viewState.value.items.filterIsInstance(FlightDepartureItemState::class.java)
         assertThat(departures).satisfiesExactly(
             { item ->
                 assertThat(item.airport).isEqualTo("John F. Kennedy Intl. Airport")
@@ -121,7 +123,8 @@ class TripViewModelTest {
                 ),
             )
         )
-        val arrivals = subject.viewState.value.items.filterIsInstance(FlightArrivalItem::class.java)
+        val arrivals =
+            subject.viewState.value.items.filterIsInstance(FlightArrivalItemState::class.java)
         assertThat(arrivals).satisfiesExactly({ item ->
             assertThat(item.dayOfMonth).isEqualTo("11")
             assertThat(item.time).isEqualTo("10:00 AM")
@@ -156,7 +159,7 @@ class TripViewModelTest {
                 )
             )
         )
-        val lodgings = subject.viewState.value.items.filterIsInstance<HotelCheckInItem>()
+        val lodgings = subject.viewState.value.items.filterIsInstance<HotelCheckInItemState>()
         assertThat(lodgings).satisfiesExactly({ item ->
             assertThat(item.hotelName).isEqualTo("Pestana Porto - A Brasileira")
             assertThat(item.hotelAddress).isEqualTo("R. de Sá da Bandeira 91, 4000-427 Porto, Portugal")
@@ -197,7 +200,7 @@ class TripViewModelTest {
                 )
             )
         )
-        val lodgings = subject.viewState.value.items.filterIsInstance<HotelCheckOutItem>()
+        val lodgings = subject.viewState.value.items.filterIsInstance<HotelCheckOutItemState>()
         assertThat(lodgings).satisfiesExactly({ item ->
             assertThat(item.hotelName).isEqualTo("Pestana Porto - A Brasileira")
             assertThat(item.dayOfMonth).isEqualTo("21")
@@ -263,7 +266,7 @@ class TripViewModelTest {
                 )
             )
         )
-        val places = subject.viewState.value.items.filterIsInstance<PlaceItem>()
+        val places = subject.viewState.value.items.filterIsInstance<PlaceItemState>()
         assertThat(places).satisfiesExactly({ item ->
             assertThat(item.placeName).isEqualTo("Porto")
             assertThat(item.dateStart).isEqualTo("May 11")
@@ -309,7 +312,7 @@ class TripViewModelTest {
                 ),
             )
         )
-        val places = subject.viewState.value.items.filterIsInstance<PlaceItem>()
+        val places = subject.viewState.value.items.filterIsInstance<PlaceItemState>()
         assertThat(places).noneSatisfy {
             assertThat(it.placeName).isEqualTo("New York")
         }
@@ -345,7 +348,7 @@ class TripViewModelTest {
                 ),
             )
         )
-        val places = subject.viewState.value.items.filterIsInstance<PlaceItem>()
+        val places = subject.viewState.value.items.filterIsInstance<PlaceItemState>()
         assertThat(places).noneSatisfy {
             assertThat(it.placeName).isEqualTo("Lisbon")
         }
@@ -373,7 +376,7 @@ class TripViewModelTest {
                 ),
             ),
         )
-        val months = subject.viewState.value.items.filterIsInstance<MonthItem>()
+        val months = subject.viewState.value.items.filterIsInstance<MonthItemState>()
         assertThat(months).satisfiesExactly({ item ->
             assertThat(item.month).isEqualTo("May")
             assertThat(item.year).isEqualTo("2024")
@@ -409,35 +412,36 @@ class TripViewModelTest {
                 ),
             )
         )
-        val eventItems = subject.viewState.value.items.filterIsInstance<TripItem.EventItem>()
+        val eventItems =
+            subject.viewState.value.items.filterIsInstance<TripItemState.EventItemState>()
         assertThat(eventItems).satisfiesExactly(
             {
-                val item = it as FlightDepartureItem
+                val item = it as FlightDepartureItemState
                 assertThat(item.airport).isEqualTo("John F. Kennedy Intl. Airport")
                 assertThat(item.showDate).isTrue
             },
             {
-                val item = it as FlightArrivalItem
+                val item = it as FlightArrivalItemState
                 assertThat(item.airport).isEqualTo("Humberto Delgado International Airport")
                 assertThat(item.showDate).isTrue
             },
             {
-                val item = it as HotelCheckInItem
+                val item = it as HotelCheckInItemState
                 assertThat(item.hotelName).isEqualTo("Pestana Porto - A Brasileira")
                 assertThat(item.showDate).isFalse
             },
             {
-                val item = it as HotelCheckOutItem
+                val item = it as HotelCheckOutItemState
                 assertThat(item.hotelName).isEqualTo("Pestana Porto - A Brasileira")
                 assertThat(item.showDate).isTrue
             },
             {
-                val item = it as FlightDepartureItem
+                val item = it as FlightDepartureItemState
                 assertThat(item.airport).isEqualTo("Humberto Delgado International Airport")
                 assertThat(item.showDate).isFalse
             },
             {
-                val item = it as FlightArrivalItem
+                val item = it as FlightArrivalItemState
                 assertThat(item.airport).isEqualTo("John F. Kennedy Intl. Airport")
                 assertThat(item.showDate).isFalse
             },
@@ -455,7 +459,7 @@ class TripViewModelTest {
                 ),
             )
         )
-        val dateRanges = subject.viewState.value.items.filterIsInstance<DateRangeItem>()
+        val dateRanges = subject.viewState.value.items.filterIsInstance<DateRangeItemState>()
         assertThat(dateRanges).satisfiesExactly({ item ->
             assertThat(item.dayOfMonthStart).isEqualTo("12")
             assertThat(item.dayOfMonthEnd).isEqualTo("18")
@@ -476,7 +480,7 @@ class TripViewModelTest {
                 )
             )
         )
-        val dateRanges = subject.viewState.value.items.filterIsInstance<DateRangeItem>()
+        val dateRanges = subject.viewState.value.items.filterIsInstance<DateRangeItemState>()
         assertThat(dateRanges).noneSatisfy { item ->
             assertThat(item.dayOfMonthStart).isEqualTo("11")
             assertThat(item.dayOfMonthEnd).isEqualTo("10")
@@ -494,7 +498,7 @@ class TripViewModelTest {
                 ),
             )
         )
-        val dateRanges = subject.viewState.value.items.filterIsInstance<DateRangeItem>()
+        val dateRanges = subject.viewState.value.items.filterIsInstance<DateRangeItemState>()
         assertThat(dateRanges).noneSatisfy { item ->
             assertThat(item.dayOfMonthStart).isEqualTo("12")
             assertThat(item.dayOfMonthEnd).isEqualTo("12")
@@ -512,7 +516,7 @@ class TripViewModelTest {
                 ),
             )
         )
-        val dateRanges = subject.viewState.value.items.filterIsInstance<EmptyDateItem>()
+        val dateRanges = subject.viewState.value.items.filterIsInstance<EmptyDateItemState>()
         assertThat(dateRanges).satisfiesExactly({ item ->
             assertThat(item.dayOfMonth).isEqualTo("12")
         })
@@ -531,9 +535,9 @@ class TripViewModelTest {
             )
         )
         val checkInItemIndex =
-            subject.viewState.value.items.indexOfFirst { it is HotelCheckInItem && it.hotelName == lodgingName }
+            subject.viewState.value.items.indexOfFirst { it is HotelCheckInItemState && it.hotelName == lodgingName }
         val addPlanItem = subject.viewState.value.items[checkInItemIndex + 1]
-        assertThat(addPlanItem).isInstanceOf(TripItem.EmptyAddPlanItem::class.java)
+        assertThat(addPlanItem).isInstanceOf(TripItemState.EmptyAddPlanItemState::class.java)
     }
 
     @Test
@@ -556,9 +560,9 @@ class TripViewModelTest {
             )
         )
         val checkOutItemIndex =
-            subject.viewState.value.items.indexOfFirst { it is HotelCheckOutItem && it.hotelName == lodgingName }
+            subject.viewState.value.items.indexOfFirst { it is HotelCheckOutItemState && it.hotelName == lodgingName }
         val addPlanItem = subject.viewState.value.items[checkOutItemIndex + 1]
-        assertThat(addPlanItem).isInstanceOf(TripItem.EmptyAddPlanItem::class.java)
+        assertThat(addPlanItem).isInstanceOf(TripItemState.EmptyAddPlanItemState::class.java)
     }
 
     @Test
@@ -574,7 +578,7 @@ class TripViewModelTest {
             )
         )
         val addPlanItem = subject.viewState.value.items.last()
-        assertThat(addPlanItem).isInstanceOf(TripItem.EmptyAddPlanItem::class.java)
+        assertThat(addPlanItem).isInstanceOf(TripItemState.EmptyAddPlanItemState::class.java)
     }
 
     @Test
@@ -616,10 +620,10 @@ class TripViewModelTest {
             )
         )
         val departureItemIndex = subject.viewState.value.items.indexOfFirst {
-            it is FlightDepartureItem && it.destination == "New York"
+            it is FlightDepartureItemState && it.destination == "New York"
         }
         val itemBefore = subject.viewState.value.items[departureItemIndex - 1]
-        assertThat(itemBefore).isNotInstanceOf(TripItem.EmptyAddPlanItem::class.java)
+        assertThat(itemBefore).isNotInstanceOf(TripItemState.EmptyAddPlanItemState::class.java)
     }
 
     @Test
@@ -633,9 +637,10 @@ class TripViewModelTest {
                 ),
             )
         )
-        val dateRangeItemIndex = subject.viewState.value.items.indexOfFirst { it is DateRangeItem }
+        val dateRangeItemIndex =
+            subject.viewState.value.items.indexOfFirst { it is DateRangeItemState }
         val itemBefore = subject.viewState.value.items[dateRangeItemIndex - 1]
-        assertThat(itemBefore).isNotInstanceOf(TripItem.EmptyAddPlanItem::class.java)
+        assertThat(itemBefore).isNotInstanceOf(TripItemState.EmptyAddPlanItemState::class.java)
     }
 
     @Test
@@ -650,12 +655,12 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val expected: AddPlanItem = mock {
+        val expected: AddPlanItemState = mock {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)
         val originalItem =
-            subject.viewState.value.items.first { it is TripItem.EmptyAddPlanItem } as TripItem.EmptyAddPlanItem
+            subject.viewState.value.items.first { it is TripItemState.EmptyAddPlanItemState } as TripItemState.EmptyAddPlanItemState
         val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
         subject.addButtonTapped(originalItem.id)
         val addedItem = subject.viewState.value.items[originalItemIndex]
@@ -682,15 +687,15 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val expected: AddPlanItem = mock {
+        val expected: AddPlanItemState = mock {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)
         val checkOutItem =
-            subject.viewState.value.items.first { it is HotelCheckOutItem && it.hotelName == lodgingName } as TripItem.EventItem
+            subject.viewState.value.items.first { it is HotelCheckOutItemState && it.hotelName == lodgingName } as TripItemState.EventItemState
         subject.addButtonTapped(checkOutItem.id)
         verify(addPlanUseCase).createAddPlanItem(
-            eq(Time("2024-05-30T11:00 +0200")), startDateSelectionEnabled = eq(false), type = any()
+            eq(Time("2024-05-30T11:00 +0200")), dateSelectionEnabled = eq(false), type = any()
         )
     }
 
@@ -706,11 +711,12 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val expected: AddPlanItem = mock {
+        val expected: AddPlanItemState = mock {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)
-        val originalItem = subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
+        val originalItem =
+            subject.viewState.value.items.filterIsInstance<DateRangeItemState>().first()
         val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
         subject.addButtonTapped(originalItem.id)
         val addedItem = subject.viewState.value.items[originalItemIndex + 1]
@@ -729,14 +735,15 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val expected: AddPlanItem = mock {
+        val expected: AddPlanItemState = mock {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)
-        val originalItem = subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
+        val originalItem =
+            subject.viewState.value.items.filterIsInstance<DateRangeItemState>().first()
         subject.addButtonTapped(originalItem.id)
         verify(addPlanUseCase).createAddPlanItem(
-            time = any(), startDateSelectionEnabled = eq(true), type = any()
+            time = any(), dateSelectionEnabled = eq(true), type = any()
         )
     }
 
@@ -752,11 +759,12 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val expected: AddPlanItem = mock {
+        val expected: AddPlanItemState = mock {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)
-        val originalItem = subject.viewState.value.items.filterIsInstance<EmptyDateItem>().first()
+        val originalItem =
+            subject.viewState.value.items.filterIsInstance<EmptyDateItemState>().first()
         val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
         subject.emptyDateRowTapped(originalItem.id)
         val addedItem = subject.viewState.value.items[originalItemIndex]
@@ -775,10 +783,10 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val addPlanItem: AddPlanItem = mock {
+        val addPlanItem: AddPlanItemState = mock {
             on { id } doReturn addPlanItemId
         }
-        val expected: AddPlanItem = mock {
+        val expected: AddPlanItemState = mock {
             on { id } doReturn "newId"
         }
         mockAddPlanItem(addPlanItem)
@@ -789,10 +797,10 @@ class TripViewModelTest {
             }
         }
         val originalItem =
-            subject.viewState.value.items.first { it is TripItem.EmptyAddPlanItem } as TripItem.EmptyAddPlanItem
+            subject.viewState.value.items.first { it is TripItemState.EmptyAddPlanItemState } as TripItemState.EmptyAddPlanItemState
         val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
         subject.addButtonTapped(originalItem.id)
-        subject.addPlanTypeChanged("originalItemId", AddPlanItem.Type.Lodging)
+        subject.addPlanTypeChanged("originalItemId", AddPlanItemState.Type.Lodging)
         val newItem = subject.viewState.value.items[originalItemIndex]
         assertThat(newItem).isEqualTo(expected)
     }
@@ -809,7 +817,7 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val addPlanItem: AddPlanItem = mock {
+        val addPlanItem: AddPlanItemState = mock {
             on { id } doReturn addPlanItemId
         }
         val entity: Flight = mock()
@@ -818,7 +826,7 @@ class TripViewModelTest {
             on { saveItem(addPlanItem) } doReturn entity
         }
         val originalItem =
-            subject.viewState.value.items.first { it is TripItem.EmptyAddPlanItem } as TripItem.EmptyAddPlanItem
+            subject.viewState.value.items.first { it is TripItemState.EmptyAddPlanItemState } as TripItemState.EmptyAddPlanItemState
         subject.addButtonTapped(originalItem.id)
         subject.save(addPlanItemId)
         verify(addPlanUseCase).saveItem(addPlanItem)
@@ -837,7 +845,7 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val addPlanItem: AddPlanItem = mock {
+        val addPlanItem: AddPlanItemState = mock {
             on { id } doReturn addPlanItemId
         }
         val entity: Lodging = mock()
@@ -846,7 +854,7 @@ class TripViewModelTest {
             on { saveItem(addPlanItem) } doReturn entity
         }
         val originalItem =
-            subject.viewState.value.items.first { it is TripItem.EmptyAddPlanItem } as TripItem.EmptyAddPlanItem
+            subject.viewState.value.items.first { it is TripItemState.EmptyAddPlanItemState } as TripItemState.EmptyAddPlanItemState
         subject.addButtonTapped(originalItem.id)
         subject.save(addPlanItemId)
         verify(addPlanUseCase).saveItem(addPlanItem)
@@ -865,15 +873,15 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val addPlanItem: AddPlanItem = mock {
+        val addPlanItem: AddPlanItemState = mock {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(addPlanItem)
         val originalItem =
-            subject.viewState.value.items.first { it is TripItem.EmptyAddPlanItem } as TripItem.EmptyAddPlanItem
+            subject.viewState.value.items.first { it is TripItemState.EmptyAddPlanItemState } as TripItemState.EmptyAddPlanItemState
         val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
         subject.addButtonTapped(originalItem.id)
-        val newAddPlanItem = mock<AddFlightUseCase.AddFlightItem> {
+        val newAddPlanItem = mock<AddFlightItemState> {
             on { id } doReturn addPlanItemId
         }
         addPlanItems.value = mapOf(addPlanItemId to newAddPlanItem)
@@ -893,7 +901,7 @@ class TripViewModelTest {
             )
         )
         val newItemId = "originalItemId"
-        val newAddPlanItem = mock<AddFlightUseCase.AddFlightItem> {
+        val newAddPlanItem = mock<AddFlightItemState> {
             on { id } doReturn newItemId
         }
         addPlanItems.value = mapOf(newItemId to newAddPlanItem)
@@ -912,11 +920,12 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val expected: AddPlanItem = mock {
+        val expected: AddPlanItemState = mock {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)
-        val originalItem = subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
+        val originalItem =
+            subject.viewState.value.items.filterIsInstance<DateRangeItemState>().first()
         subject.addButtonTapped(originalItem.id)
         subject.cancelEdit(addPlanItemId)
         verify(addPlanUseCase).removeItem(expected)
@@ -934,11 +943,12 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val expected: AddPlanItem = mock {
+        val expected: AddPlanItemState = mock {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)
-        val originalItem = subject.viewState.value.items.filterIsInstance<DateRangeItem>().first()
+        val originalItem =
+            subject.viewState.value.items.filterIsInstance<DateRangeItemState>().first()
         subject.addButtonTapped(originalItem.id)
         subject.cancelEdit(addPlanItemId)
         assertThat(subject.viewState.value.items).doesNotContain(expected)
@@ -957,13 +967,13 @@ class TripViewModelTest {
         )
         val addPlanItemId = "originalItemId"
         val addPlanItemTimestamp: Time = mock()
-        val addPlanItem: AddPlanItem = mock {
+        val addPlanItem: AddPlanItemState = mock {
             on { id } doReturn addPlanItemId
             on { timestamp } doReturn addPlanItemTimestamp
         }
         mockAddPlanItem(addPlanItem)
         val originalItem =
-            subject.viewState.value.items.first { it is TripItem.EmptyAddPlanItem } as TripItem.EmptyAddPlanItem
+            subject.viewState.value.items.first { it is TripItemState.EmptyAddPlanItemState } as TripItemState.EmptyAddPlanItemState
         val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
         subject.addButtonTapped(originalItem.id)
         subject.cancelEdit(addPlanItemId)
@@ -971,7 +981,7 @@ class TripViewModelTest {
         assertThat(resultAddPlanItem).isEqualTo(originalItem)
     }
 
-    private fun mockAddPlanItem(addPlanItem: AddPlanItem) {
+    private fun mockAddPlanItem(addPlanItem: AddPlanItemState) {
         addPlanUseCase.stub {
             on { createAddPlanItem(any(), any(), any()) } doAnswer {
                 addPlanItems.value = mapOf(addPlanItem.id to addPlanItem)

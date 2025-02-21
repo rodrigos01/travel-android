@@ -77,6 +77,7 @@ fun TypeSelectorButton(
                     onClick = {
                         selection = option
                         onOptionSelected(option)
+                        showTypeSelectorMenu = false
                     },
                     colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.onSecondaryContainer),
                 )

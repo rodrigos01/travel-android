@@ -8,23 +8,31 @@ import java.util.Date
 import java.util.Locale
 
 class TimeFormatter {
-    fun dayOfMonthString(time: Time): String = time.dayOfMonth.toString()
+    fun dayOfMonthString(time: Time): String = time.dayOfMonthString()
 
-    fun dayAndMonthString(time: Time): String =
-        SimpleDateFormat("MMM d", Locale.getDefault()).apply {
-            timeZone = time.timeZone
-        }.format(Date(time.timeInMillis))
+    fun dayAndMonthString(time: Time): String = time.dayAndMonthString()
 
-    fun dayOfWeekString(time: Time): String =
-        DateFormatSymbols.getInstance().shortWeekdays[time.dayOfWeek]
+    fun dayOfWeekString(time: Time): String = time.dayOfWeekString()
 
-    fun timeString(time: Time): String {
-        val formatter = SimpleDateFormat.getTimeInstance(DateFormat.SHORT).apply {
-            timeZone = time.timeZone
-        }
-        val date = Date(time.timeInMillis)
-        return formatter.format(date)
-    }
+    fun timeString(time: Time): String = time.timeString()
 
     fun monthString(time: Time): String = DateFormatSymbols.getInstance().months[time.month - 1]
+}
+
+fun Time.dayOfMonthString(): String = dayOfMonth.toString()
+
+fun Time.dayAndMonthString(): String =
+    SimpleDateFormat("MMM d", Locale.getDefault()).apply {
+        timeZone = this@dayAndMonthString.timeZone
+    }.format(Date(timeInMillis))
+
+fun Time.dayOfWeekString(): String =
+    DateFormatSymbols.getInstance().shortWeekdays[dayOfWeek]
+
+fun Time.timeString(): String {
+    val formatter = SimpleDateFormat.getTimeInstance(DateFormat.SHORT).apply {
+        timeZone = this@timeString.timeZone
+    }
+    val date = Date(timeInMillis)
+    return formatter.format(date)
 }

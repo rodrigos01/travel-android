@@ -18,10 +18,8 @@ import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
@@ -34,6 +32,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.combah.travel2.R
+import com.combah.travel2.extensions.dayOfMonthString
+import com.combah.travel2.extensions.dayOfWeekString
+import com.combah.travel2.extensions.now
+import com.combah.travel2.extensions.timeString
 import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.extensions.update
 import com.combah.travel2.model.data.Time
@@ -46,31 +48,39 @@ import com.combah.travel2.ui.trip.creation.composable.rememberAutoCompleteTextFi
 import com.combah.travel2.ui.trip.creation.composable.rememberTimePickerDialogState
 import java.util.TimeZone
 
+data class AddPlanRowState<Result>(
+    var selectedTime: Time?,
+    val minTime: Time,
+    val searchResults: List<Result>,
+    var selectedSearchResultIndex: Int,
+)
+
 @Composable
-fun AddPlanRow(
+fun <Result> rememberAddPlanRowState(
+    selectedTime: Time? = null,
+    minTime: Time = Time.now(),
+    searchResults: List<Result> = emptyList(),
+    selectedSearchResultIndex: Int = -1,
+) = remember { AddPlanRowState(selectedTime, minTime, searchResults, selectedSearchResultIndex) }
+
+@Composable
+fun <T> AddPlanRow(
     title: @Composable () -> Unit,
-    minTime: Time,
-    dateSelectionEnabled: Boolean = true,
-    dayOfMonth: String,
-    dayOfWeek: String,
-    onDateChanged: (Time) -> Unit,
+    state: AddPlanRowState<T>,
     timeSelectorLabel: String,
-    time: String? = null,
-    onTimeChanged: (hour: Int, minute: Int) -> Unit,
+    text: String? = null,
+    dateSelectionEnabled: Boolean = true,
     showTextField: Boolean = true,
     labelText: String? = null,
     placeHolder: String? = null,
-    text: String? = null,
     onTextChanged: (CharSequence) -> Unit = {},
-    searchResults: List<String> = emptyList(),
-    searchResultTapped: (Int) -> Unit = {},
+    searchResultItemContent: (T) -> String,
 ) {
-    var selectedTime by remember { mutableStateOf(minTime) }
-    selectedTime = selectedTime.update(timeZone = minTime.timeZone)
-    val isMinDate = selectedTime.toMidnight() == minTime.toMidnight()
+    val selectedTime = state.selectedTime ?: state.minTime
+    val isMinDate = selectedTime.toMidnight() == state.minTime.toMidnight()
     val timePickerDialogState = rememberTimePickerDialogState(
-        minHour = if (isMinDate) minTime.hour else 0,
-        minMinute = if (isMinDate) minTime.minute else 0,
+        minHour = if (isMinDate) state.minTime.hour else 0,
+        minMinute = if (isMinDate) state.minTime.minute else 0,
         hour = selectedTime.hour,
         minute = selectedTime.minute,
     )
@@ -90,10 +100,10 @@ fun AddPlanRow(
             }
             if (showTextField) {
                 TimePickerTextButton(
-                    text = time ?: timeSelectorLabel,
+                    text = state.selectedTime?.timeString() ?: timeSelectorLabel,
                     onTimeSelected = { hour, minute ->
-                        selectedTime = selectedTime.update(hour = hour, minute = minute)
-                        onTimeChanged(hour, minute)
+                        state.selectedTime =
+                            selectedTime.update(hour = hour, minute = minute)
                     },
                     modifier = Modifier
                         .semantics { role = Role.Button },
@@ -107,14 +117,13 @@ fun AddPlanRow(
         ) {
             if (dateSelectionEnabled) {
                 DatePickerButton(
-                    minTime.toMidnight(),
+                    state.minTime.toMidnight(),
                     onDateSelected = {
-                        selectedTime = selectedTime.update(
+                        state.selectedTime = selectedTime.update(
                             dayOfMonth = it.dayOfMonth,
                             month = it.month,
                             year = it.year,
                         )
-                        onDateChanged(it)
                     },
                     modifier = Modifier.width(80.dp),
                 ) {
@@ -129,7 +138,10 @@ fun AddPlanRow(
                         ),
                     ) {
                         Row {
-                            LeadingDate(dayOfMonth = dayOfMonth, dayOfWeek = dayOfWeek)
+                            LeadingDate(
+                                dayOfMonth = selectedTime.dayOfMonthString(),
+                                dayOfWeek = selectedTime.dayOfWeekString(),
+                            )
                             Image(
                                 painter = painterResource(id = R.drawable.ic_arrow_drop_down_24),
                                 colorFilter = ColorFilter.tint(LocalContentColor.current),
@@ -141,18 +153,21 @@ fun AddPlanRow(
                 }
             } else {
                 LeadingDate(
-                    dayOfMonth, dayOfWeek, modifier = Modifier.width(80.dp),
+                    dayOfMonth = selectedTime.dayOfMonthString(),
+                    dayOfWeek = selectedTime.dayOfWeekString(),
+                    modifier = Modifier.width(80.dp),
                 )
             }
             if (showTextField) {
                 AutoCompleteTextField(
                     state = rememberAutoCompleteTextFieldState(
-                        text, searchResults,
+                        text, state.searchResults,
                     ),
                     label = labelText,
                     placeHolder = placeHolder,
                     onTextChanged,
-                    searchResultTapped,
+                    onOptionSelected = { state.selectedSearchResultIndex = it },
+                    itemContent = searchResultItemContent,
                 )
             } else {
                 val showTimePicker = remember {
@@ -161,15 +176,14 @@ fun AddPlanRow(
                 val focusManager = LocalFocusManager.current
                 TimePickerButton(
                     onTimeSelected = { hour, minute ->
-                        selectedTime = selectedTime.update(hour = hour, minute = minute)
-                        onTimeChanged(hour, minute)
+                        state.selectedTime = selectedTime.update(hour = hour, minute = minute)
                         focusManager.clearFocus()
                     },
                     showTimePickerState = showTimePicker,
                     timePickerDialogState = timePickerDialogState,
                 ) {
                     OutlinedTextField(
-                        value = time.orEmpty(),
+                        value = selectedTime.timeString(),
                         label = { Text(timeSelectorLabel) },
                         placeholder = { placeHolder?.let { Text(it) } },
                         onValueChange = {},
@@ -192,19 +206,19 @@ fun AddPlanRowPreview() {
     AppTheme {
         Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
             AddPlanRow(
+                state = rememberAddPlanRowState<String>(
+                    selectedTime = Time.now(),
+                    minTime = Time(0L, TimeZone.getDefault()),
+                    searchResults = emptyList(),
+                ),
                 title = { Text("Title") },
-                minTime = Time(0L, TimeZone.getDefault()),
                 timeSelectorLabel = "Pick Time",
-                onTimeChanged = { _, _ -> },
                 dateSelectionEnabled = true,
-                dayOfMonth = "14",
-                dayOfWeek = "Tue",
-                onDateChanged = {},
                 showTextField = true,
                 placeHolder = "PlaceHolder",
                 labelText = "Label",
                 onTextChanged = {},
-                searchResultTapped = {},
+                searchResultItemContent = { it },
             )
         }
     }

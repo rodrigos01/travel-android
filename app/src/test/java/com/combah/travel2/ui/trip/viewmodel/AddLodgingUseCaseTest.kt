@@ -14,7 +14,7 @@ import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase
 import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase.AutoCompleteState
 import com.combah.travel2.ui.trip.creation.usecase.InputUseCaseStore
-import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase.AddLodgingItem
+import com.combah.travel2.ui.trip.state.AddLodgingItemState
 import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase.InputState
 import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase.InputUseCaseSet
 import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase.PendingLodging
@@ -44,9 +44,9 @@ class AddLodgingUseCaseTest {
         on { dayOfMonthString(any()) } doReturn ""
         on { dayOfWeekString(any()) } doReturn ""
     }
-    private val itemFlow = MutableStateFlow(mapOf<String, AddLodgingItem>())
+    private val itemFlow = MutableStateFlow(mapOf<String, AddLodgingItemState>())
     private val itemStore =
-        mock<AddPlanItemStore<PendingLodging, AddLodgingItem>> {
+        mock<AddPlanItemStore<PendingLodging, AddLodgingItemState>> {
             on { items } doReturn itemFlow
         }
     private val autoCompleteState =
@@ -80,7 +80,7 @@ class AddLodgingUseCaseTest {
 
     @Test
     fun `itemStore items updated should update items`() {
-        val item = AddLodgingItem(
+        val item = AddLodgingItemState(
             "lodging_id",
             timestamp = mock(),
             minCheckInTime = mock(),
@@ -125,21 +125,21 @@ class AddLodgingUseCaseTest {
     @Test
     fun `addItem should return itemStore item`() {
         val time = mock<Time>()
-        val item = mock<AddLodgingItem>()
+        val item = mock<AddLodgingItemState>()
         itemStore.stub { on { addItem(time) } doReturn item }
         assertThat(subject.addItem(time)).isEqualTo(item)
     }
 
     @Test
     fun `remove should call itemStore remove`() {
-        val item = mock<AddLodgingItem>()
+        val item = mock<AddLodgingItemState>()
         subject.remove(item)
         verify(itemStore).remove(item)
     }
 
     @Test
     fun `InputState updated should update items`() {
-        val item = AddLodgingItem(
+        val item = AddLodgingItemState(
             "lodging_id",
             timestamp = mock(),
             minCheckInTime = mock(),

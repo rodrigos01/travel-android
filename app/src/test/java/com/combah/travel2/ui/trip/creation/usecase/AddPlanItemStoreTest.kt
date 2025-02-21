@@ -3,7 +3,7 @@ package com.combah.travel2.ui.trip.creation.usecase
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore.AddPlanData
-import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase
+import com.combah.travel2.ui.trip.state.AddPlanItemState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.test.TestScope
@@ -21,7 +21,7 @@ class AddPlanItemStoreTest {
     val rule = UnconfinedDispatcherTestRule()
 
     private val dataFactory: AddPlanItemStore.DataFactory<AddPlanData> = mock()
-    private val itemFactory: AddPlanItemStore.ItemFactory<AddPlanUseCase.AddPlanItem, AddPlanData> =
+    private val itemFactory: AddPlanItemStore.ItemFactory<AddPlanItemState, AddPlanData> =
         mock()
 
     private val subject = AddPlanItemStore(dataFactory, itemFactory)
@@ -63,7 +63,7 @@ class AddPlanItemStoreTest {
         subject.addItem(time)
 
         val newData = mock<AddPlanData>()
-        val newItem = mock<AddPlanUseCase.AddPlanItem>()
+        val newItem = mock<AddPlanItemState>()
         itemFactory.stub { on { createItem(newData, false) } doReturn newItem }
         subject.update("item") { newData }
         assertThat(items.value["item"]).isEqualTo(newItem)
@@ -80,11 +80,11 @@ class AddPlanItemStoreTest {
 
     private fun mockItemCreation(
         time: Time, itemId: String = "itemId"
-    ): AddPlanUseCase.AddPlanItem {
+    ): AddPlanItemState {
         val data = mock<AddPlanData> {
             on { id } doReturn itemId
         }
-        val item = mock<AddPlanUseCase.AddPlanItem> {
+        val item = mock<AddPlanItemState> {
             on { id } doReturn itemId
         }
         dataFactory.stub { on { createData(time) } doReturn data }

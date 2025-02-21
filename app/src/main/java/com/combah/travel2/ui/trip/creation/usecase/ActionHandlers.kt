@@ -1,8 +1,17 @@
 package com.combah.travel2.ui.trip.creation.usecase
 
 import com.combah.travel2.model.data.Time
+import com.combah.travel2.ui.trip.state.AddPlanItemState
 
-interface AddPlanItemActionHandler : AddLodgingItemActionHandler, AddFlightItemActionHandler
+interface AddPlanItemActionHandler : AddLodgingItemActionHandler,
+    AddFlightItemActionHandler
+
+interface BaseAddPlanItemActionHandler {
+    fun addPlanTypeChanged(itemId: String, newType: AddPlanItemState.Type)
+    fun save(itemId: String)
+    fun cancelEdit(itemId: String)
+    fun delete(type: AddPlanItemState.Type, itemId: String)
+}
 
 interface AddLodgingItemActionHandler {
     fun setCheckInDate(itemId: String, date: Time)

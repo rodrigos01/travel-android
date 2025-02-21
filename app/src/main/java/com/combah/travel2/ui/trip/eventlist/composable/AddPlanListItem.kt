@@ -1,116 +1,166 @@
 package com.combah.travel2.ui.trip.eventlist.composable
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.combah.travel2.extensions.now
+import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.AddPlanType
-import com.combah.travel2.ui.trip.creation.composable.ConfirmationDialog
-import com.combah.travel2.ui.trip.creation.composable.TypeSelectorButton
+import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
+import com.combah.travel2.ui.trip.creation.usecase.BaseAddPlanItemActionHandler
+import com.combah.travel2.ui.trip.state.AddFlightItemState
+import com.combah.travel2.ui.trip.state.AddLodgingItemState
+import com.combah.travel2.ui.trip.state.AddPlanItemState
+import com.combah.travel2.ui.trip.state.ManualAddPlanState
+import com.combah.travel2.ui.trip.state.ManualStartEndAddPlanState
+import com.combah.travel2.ui.trip.state.type
+import kotlinx.coroutines.launch
 
 @Composable
 fun AddPlanListItem(
-    initialType: AddPlanType,
-    onTypeSelected: (AddPlanType) -> Unit,
-    typeSelectionEnabled: Boolean,
-    deleteButtonEnabled: Boolean,
-    onDeleteConfirmed: () -> Unit,
-    primaryButtonEnabled: Boolean,
-    primaryButtonLabel: String,
-    onPrimaryButtonTapped: () -> Unit,
-    secondaryButtonLabel: String,
-    onSecondaryButtonTapped: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable() (ColumnScope.() -> Unit),
+    state: AddPlanItemState,
+    addPlanActionHandler: BaseAddPlanItemActionHandler,
+    actionHandler: AddPlanItemActionHandler,
 ) {
-    var showDeleteConfirmation by remember { mutableStateOf(false) }
-    if (showDeleteConfirmation) {
-        ConfirmationDialog(
-            onConfirm = onDeleteConfirmed,
-            onDismiss = { showDeleteConfirmation = false },
-            confirmButtonLabel = "Delete",
-            confirmButtonColors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-            dismissButtonLabel = "Cancel"
-        ) {
-            Text("Delete ${initialType.label}?")
-        }
-    }
-    Column(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.surface)
-    ) {
-        Row {
-            TypeSelectorButton(
-                initialType = initialType,
-                onOptionSelected = onTypeSelected,
-                enabled = typeSelectionEnabled,
+    val scope = rememberCoroutineScope()
+    AddPlanListItem(
+        state,
+        onTypeSelected = {
+            addPlanActionHandler.addPlanTypeChanged(state.id, it)
+        },
+        onAirportFromTextChanged = {
+            scope.launch {
+                actionHandler.airportFromSearchTextChanged(state.id, it)
+            }
+        },
+        onAirportToTextChanged = {
+            scope.launch {
+                actionHandler.airportToSearchTextChanged(state.id, it)
+            }
+        },
+        onLodgingTextChanged = {
+            scope.launch {
+                actionHandler.lodgingTextChanged(
+                    state.id, it
+                )
+            }
+        },
+        onSaveButtonTapped = {
+            addPlanActionHandler.save(state.id)
+        },
+        onCancelButtonTapped = {
+            addPlanActionHandler.cancelEdit(state.id)
+        },
+        onDeleteButtonTapped = {
+            addPlanActionHandler.delete(
+                state.type,
+                state.id
             )
-            if (deleteButtonEnabled) {
-                Spacer(modifier = Modifier.weight(1F))
-                TextButton(onClick = { showDeleteConfirmation = true }) {
-                    Icon(Icons.Filled.Delete, contentDescription = null)
-                    Text("Delete")
+        })
+}
+
+@Composable
+private fun AddPlanListItem(
+    state: AddPlanItemState,
+    onTypeSelected: (AddPlanItemState.Type) -> Unit,
+    onAirportFromTextChanged: (CharSequence) -> Unit,
+    onAirportToTextChanged: (CharSequence) -> Unit,
+    onLodgingTextChanged: (CharSequence) -> Unit,
+    onSaveButtonTapped: () -> Unit,
+    onCancelButtonTapped: () -> Unit,
+    onDeleteButtonTapped: () -> Unit = {}
+) {
+    AddPlanScaffold(
+        state.type.toAddPlanType(),
+        onTypeSelected = { onTypeSelected(it.toState()) },
+        typeSelectionEnabled = state.typeSelectionEnabled,
+        deleteButtonEnabled = state.deleteButtonEnabled,
+        onDeleteConfirmed = onDeleteButtonTapped,
+        primaryButtonEnabled = state.saveButtonEnabled,
+        primaryButtonLabel = "Save",
+        onPrimaryButtonTapped = onSaveButtonTapped,
+        secondaryButtonLabel = "Cancel",
+        onSecondaryButtonTapped = onCancelButtonTapped,
+    ) {
+        when (state) {
+            is ManualStartEndAddPlanState -> {
+                val startEndAddPlanListItemState = rememberStartEndAddPlanListItemState(
+                    startState = rememberAddPlanRowState(
+                        selectedTime = state.startState.time,
+                        minTime = state.startState.minTime,
+                        searchResults = state.startState.searchResults,
+                    ), endState = rememberAddPlanRowState(
+                        selectedTime = state.endState.time,
+                        minTime = state.endState.minTime,
+                        searchResults = state.endState.searchResults,
+                    )
+                )
+                when (state) {
+                    is AddFlightItemState -> AddFlightListItem(
+                        startEndAddPlanState = startEndAddPlanListItemState,
+                        uiState = state,
+                        onAirportFromTextChanged = onAirportFromTextChanged,
+                        onAirportToTextChanged = onAirportToTextChanged,
+                    )
+
+                    is AddLodgingItemState -> AddLodgingListItem(
+                        startEndAddPlanState = startEndAddPlanListItemState,
+                        uiState = state,
+                        onLodgingTextChanged = onLodgingTextChanged,
+                    )
                 }
-            }
-        }
-        content()
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier
-                .padding(top = 8.dp, end = 16.dp)
-                .align(Alignment.End)
-        ) {
-            OutlinedButton(onClick = onSecondaryButtonTapped) {
-                Text(secondaryButtonLabel)
-            }
-            Button(onClick = onPrimaryButtonTapped, enabled = primaryButtonEnabled) {
-                Text(primaryButtonLabel)
             }
         }
     }
 }
 
-@Composable
+fun AddPlanType.toState() = when (this) {
+    AddPlanType.Flight -> AddPlanItemState.Type.Flight
+    AddPlanType.Lodging -> AddPlanItemState.Type.Lodging
+}
+
+fun AddPlanItemState.Type.toAddPlanType() = when (this) {
+    AddPlanItemState.Type.Flight -> AddPlanType.Flight
+    AddPlanItemState.Type.Lodging -> AddPlanType.Lodging
+}
+
 @Preview
+@Composable
 fun AddPlanListItemPreview() {
     AppTheme {
-        AddPlanListItem(
-            initialType = AddPlanType.Lodging,
-            onTypeSelected = {},
-            typeSelectionEnabled = true,
-            deleteButtonEnabled = true,
-            onDeleteConfirmed = {},
-            primaryButtonEnabled = true,
-            primaryButtonLabel = "Save",
-            onPrimaryButtonTapped = {},
-            secondaryButtonLabel = "Cancel",
-            onSecondaryButtonTapped = {},
-            modifier = Modifier.padding(horizontal = 16.dp)
-        ) {
-            Text("Add Plan Content 1")
-            Text("Add Plan Content 2")
+        Surface {
+            AddPlanListItem(
+                state = AddFlightItemState(
+                    id = "",
+                    timestamp = Time.now(),
+                    startState = ManualAddPlanState(
+                        Time.now(),
+                        Time.now(),
+                        dateSelectionEnabled = false,
+                        locationText = null,
+                        searchResults = emptyList(),
+                    ),
+                    endState = ManualAddPlanState(
+                        Time.now(),
+                        Time.now(),
+                        dateSelectionEnabled = true,
+                        locationText = null,
+                        searchResults = emptyList(),
+                    ),
+                    typeSelectionEnabled = true,
+                    saveButtonEnabled = true,
+                    deleteButtonEnabled = true,
+                ),
+                onAirportFromTextChanged = {},
+                onAirportToTextChanged = {},
+                onLodgingTextChanged = {},
+                onTypeSelected = {},
+                onCancelButtonTapped = {},
+                onDeleteButtonTapped = {},
+                onSaveButtonTapped = {},
+            )
         }
     }
 }
