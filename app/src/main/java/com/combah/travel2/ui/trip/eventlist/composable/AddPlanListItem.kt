@@ -9,7 +9,6 @@ import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.AddPlanType
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
-import com.combah.travel2.ui.trip.creation.usecase.BaseAddPlanItemActionHandler
 import com.combah.travel2.ui.trip.state.AddFlightItemState
 import com.combah.travel2.ui.trip.state.AddLodgingItemState
 import com.combah.travel2.ui.trip.state.AddPlanItemState
@@ -21,14 +20,13 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddPlanListItem(
     state: AddPlanItemState,
-    addPlanActionHandler: BaseAddPlanItemActionHandler,
     actionHandler: AddPlanItemActionHandler,
 ) {
     val scope = rememberCoroutineScope()
     AddPlanListItem(
         state,
         onTypeSelected = {
-            addPlanActionHandler.addPlanTypeChanged(state.id, it)
+            actionHandler.addPlanTypeChanged(state.id, it)
         },
         onAirportFromTextChanged = {
             scope.launch {
@@ -48,13 +46,13 @@ fun AddPlanListItem(
             }
         },
         onSaveButtonTapped = {
-            addPlanActionHandler.save(state.id)
+            actionHandler.save(state.id)
         },
         onCancelButtonTapped = {
-            addPlanActionHandler.cancelEdit(state.id)
+            actionHandler.cancelEdit(state.id)
         },
         onDeleteButtonTapped = {
-            addPlanActionHandler.delete(
+            actionHandler.delete(
                 state.type,
                 state.id
             )

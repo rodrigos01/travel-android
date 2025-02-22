@@ -45,6 +45,7 @@ import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.model.repository.mock.MockTripRepository
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.ConfirmationDialog
+import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.state.TripItemState
 import com.combah.travel2.ui.trip.state.TripItemState.DateRangeItemState
@@ -235,7 +236,6 @@ private fun TripDetailItem(
         is AddPlanItemState -> AddPlanListItem(
             event,
             actionHandler = viewModel,
-            addPlanActionHandler = viewModel,
         )
     }
 }
@@ -250,8 +250,9 @@ fun TripDetailsPreview() {
                 MockTripRepository(),
                 "minhaTrip",
                 AddPlanUseCase(
-                    AddFlightUseCase(AddFlightRepository(), TimeFormatter()),
-                    AddLodgingUseCase(AddLodgingRepository(), TimeFormatter()),
+                    AddPlanItemStore(),
+                    AddFlightUseCase(AddPlanItemStore(), AddFlightRepository()),
+                    AddLodgingUseCase(AddPlanItemStore(), AddLodgingRepository()),
                 ),
                 TimeFormatter(),
                 navController,

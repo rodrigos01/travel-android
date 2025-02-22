@@ -1,8 +1,9 @@
 package com.combah.travel2.ui.trip.creation.usecase
 
+import com.combah.travel2.extensions.MapStateFlow
+import com.combah.travel2.extensions.MutableMapStateFlow
+import com.combah.travel2.extensions.set
 import com.combah.travel2.model.repository.AutoCompleteRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class AutoCompleteUseCase<T>(private val repository: AutoCompleteRepository<T>) :
@@ -11,15 +12,15 @@ class AutoCompleteUseCase<T>(private val repository: AutoCompleteRepository<T>) 
         val searchResults: List<T>,
     )
 
-    private val _state = MutableStateFlow(AutoCompleteState<T>(emptyList()))
-    override val state: StateFlow<AutoCompleteState<T>> = _state.asStateFlow()
+    private val _state = MutableMapStateFlow<String, AutoCompleteState<T>>()
+    override val state: MapStateFlow<String, AutoCompleteState<T>> = _state.asStateFlow()
 
-    suspend fun setQuery(query: String) {
+    suspend fun setQuery(itemId: String, query: String) {
         val results = repository.autocomplete(query)
-        _state.value = AutoCompleteState(results)
+        _state[itemId] = AutoCompleteState(results)
     }
 
-    fun clearResults() {
-        _state.value = AutoCompleteState(emptyList())
+    fun clearResults(itemId: String) {
+        _state[itemId] = AutoCompleteState(emptyList())
     }
 }

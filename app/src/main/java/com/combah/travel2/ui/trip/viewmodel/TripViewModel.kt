@@ -20,7 +20,7 @@ import com.combah.travel2.model.repository.AddFlightRepository
 import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
-import com.combah.travel2.ui.trip.creation.usecase.BaseAddPlanItemActionHandler
+import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.state.TripItemState
 import com.combah.travel2.ui.triplist.composable.TripListDestination
@@ -47,7 +47,7 @@ class TripViewModel(
     private val addPlanUseCase: AddPlanUseCase,
     private val timeFormatter: TimeFormatter,
     private val navController: NavController,
-) : ViewModel(), BaseAddPlanItemActionHandler, AddPlanItemActionHandler by addPlanUseCase {
+) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
 
     data class ViewState(
         val title: String,
@@ -160,21 +160,8 @@ class TripViewModel(
         }
     }
 
-    override fun addPlanTypeChanged(itemId: String, newType: AddPlanItemState.Type) {
-        val item =
-            viewState.value.items.find { it is TripItemState.Identifiable && it.id == itemId }
-                ?: return
-        val index = viewState.value.items.indexOf(item)
-        updateItems {
-            this[index] = addPlanUseCase.typeChanged(item as AddPlanItemState, newType)
-        }
-    }
-
     override fun save(itemId: String) {
-        val item =
-            viewState.value.items.find { it is AddPlanItemState && it.id == itemId }
-                ?: return
-        val entity = addPlanUseCase.saveItem(item as AddPlanItemState)
+        val entity = addPlanUseCase.saveItem(itemId)
         viewModelScope.launch {
             when (entity) {
                 is Flight -> repository.saveFlight(tripId, entity)
@@ -184,11 +171,8 @@ class TripViewModel(
     }
 
     override fun cancelEdit(itemId: String) {
-        val item =
-            viewState.value.items.find { it is AddPlanItemState && it.id == itemId } as? AddPlanItemState
-                ?: return
+        val item = addPlanUseCase.removeItem(itemId) ?: return
         val itemIndex = viewState.value.items.indexOf(item)
-        addPlanUseCase.removeItem(item)
         updateItems {
             removeIf { it is TripItemState.Identifiable && item.id == it.id }
             item.original?.let { add(itemIndex, it) }
@@ -196,6 +180,7 @@ class TripViewModel(
     }
 
     override fun delete(type: AddPlanItemState.Type, itemId: String) {
+        addPlanUseCase.removeItem(itemId)
         viewModelScope.launch {
             when (type) {
                 AddPlanItemState.Type.Flight -> repository.deleteFlight(tripId, itemId)
@@ -415,13 +400,15 @@ fun TripViewModel(
     navController: NavController,
     tripId: String,
 ): TripViewModel {
+    val itemStore = AddPlanItemStore()
     val timeFormatter = TimeFormatter()
     return TripViewModel(
         serviceLocator.tripRepository,
         tripId,
         AddPlanUseCase(
-            AddFlightUseCase(AddFlightRepository(), timeFormatter),
-            AddLodgingUseCase(AddLodgingRepository(), timeFormatter)
+            itemStore,
+            AddFlightUseCase(itemStore, AddFlightRepository()),
+            AddLodgingUseCase(itemStore, AddLodgingRepository())
         ),
         timeFormatter,
         navController,
