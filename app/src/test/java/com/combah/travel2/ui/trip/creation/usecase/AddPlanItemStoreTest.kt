@@ -2,7 +2,6 @@ package com.combah.travel2.ui.trip.creation.usecase
 
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
-import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore.AddPlanData
 import com.combah.travel2.ui.trip.state.AddPlanItemState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -20,8 +19,8 @@ class AddPlanItemStoreTest {
     @get:Rule
     val rule = UnconfinedDispatcherTestRule()
 
-    private val dataFactory: AddPlanItemStore.DataFactory<AddPlanData> = mock()
-    private val itemFactory: AddPlanItemStore.ItemFactory<AddPlanItemState, AddPlanData> =
+    private val dataFactory: AddPlanItemStore.DataFactory<PendingData> = mock()
+    private val itemFactory: AddPlanItemStore.ItemFactory<AddPlanItemState, PendingData> =
         mock()
 
     private val subject = AddPlanItemStore(dataFactory, itemFactory)
@@ -47,7 +46,7 @@ class AddPlanItemStoreTest {
 
     @Test
     fun `get should return data created by factory`() {
-        val data = mock<AddPlanData> {
+        val data = mock<PendingData> {
             on { id } doReturn "dataId"
         }
         dataFactory.stub { on { createData(any()) } doReturn data }
@@ -62,7 +61,7 @@ class AddPlanItemStoreTest {
         mockItemCreation(time, "item")
         subject.addItem(time)
 
-        val newData = mock<AddPlanData>()
+        val newData = mock<PendingData>()
         val newItem = mock<AddPlanItemState>()
         itemFactory.stub { on { createItem(newData, false) } doReturn newItem }
         subject.update("item") { newData }
@@ -81,7 +80,7 @@ class AddPlanItemStoreTest {
     private fun mockItemCreation(
         time: Time, itemId: String = "itemId"
     ): AddPlanItemState {
-        val data = mock<AddPlanData> {
+        val data = mock<PendingData> {
             on { id } doReturn itemId
         }
         val item = mock<AddPlanItemState> {

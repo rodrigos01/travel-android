@@ -4,9 +4,7 @@ import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.trip.state.AddPlanItemState
 
 interface AddPlanItemActionHandler : AddLodgingItemActionHandler,
-    AddFlightItemActionHandler
-
-interface BaseAddPlanItemActionHandler {
+    AddFlightItemActionHandler {
     fun addPlanTypeChanged(itemId: String, newType: AddPlanItemState.Type)
     fun save(itemId: String)
     fun cancelEdit(itemId: String)

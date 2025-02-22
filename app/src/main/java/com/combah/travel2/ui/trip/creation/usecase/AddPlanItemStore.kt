@@ -4,106 +4,62 @@ import com.combah.travel2.extensions.MutableMapStateFlow
 import com.combah.travel2.extensions.get
 import com.combah.travel2.extensions.remove
 import com.combah.travel2.extensions.set
-import com.combah.travel2.model.data.Time
-import com.combah.travel2.model.data.TripEntity
 import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase
+import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase.ItemFactory
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
-class AddPlanItemStore<Entity : TripEntity, Data : AddPlanItemStore.AddPlanData, Item : AddPlanItemState>(
-    private val dataFactory: DataFactory<Entity, Data>,
-    private val itemFactory: ItemFactory<Item, Data>,
-) : AddPlanUseCase.ItemStore<Entity, Item> {
+class AddPlanItemStore : AddPlanUseCase.ItemStore {
 
-    interface AddPlanData {
-        val id: String
-    }
-
-    interface ItemFactory<Item, Data : AddPlanData> {
-        fun createItem(
-            data: Data,
-            dateSelectionEnabled: Boolean,
-            typeSelectionEnabled: Boolean,
-            deleteEnabled: Boolean,
-        ): Item
-    }
-
-    interface DataFactory<Entity : TripEntity, Data : AddPlanData> {
-        fun createData(time: Time): Data
-        fun createData(entity: Entity): Data
-    }
-
-    data class ItemStoreData<Item, Data>(
-        val item: Item,
-        val data: Data,
+    data class ItemStoreData(
+        val state: AddPlanItemState,
+        val pendingData: PendingData,
     )
 
-    private val _items: MutableStateFlow<Map<String, ItemStoreData<Item, Data>>> =
-        MutableMapStateFlow()
+    private val _items = MutableMapStateFlow<String, ItemStoreData>()
+    override val items: Flow<Map<String, AddPlanItemState>> =
+        _items.map { it.entries.associate { (key, value) -> key to value.state } }
 
-    override val items: Flow<Map<String, Item>>
-        get() = _items.map { it.entries.associate { (key, value) -> key to value.item } }
-
-    override fun addItem(time: Time, dateSelectionEnabled: Boolean): Item {
-        return addItem(dataFactory.createData(time), dateSelectionEnabled)
-    }
-
-    override fun addItem(entity: Entity): Item {
-        return addItem(
-            dataFactory.createData(entity),
-            typeSelectionEnabled = false,
-            deleteEnabled = true
+    override fun addItem(data: PendingData, item: AddPlanItemState) =
+        _items.set(
+            item.id,
+            ItemStoreData(item, data)
         )
+
+    override fun getItem(itemId: String): AddPlanItemState? {
+        return _items[itemId]?.state
     }
 
-    private fun addItem(
-        data: Data,
-        dateSelectionEnabled: Boolean = true,
-        typeSelectionEnabled: Boolean = true,
-        deleteEnabled: Boolean = false,
-    ): Item {
-        val item =
-            itemFactory.createItem(data, dateSelectionEnabled, typeSelectionEnabled, deleteEnabled)
-        _items[data.id] = ItemStoreData(item, data)
-        return item
+    override fun getData(itemId: String): PendingData? {
+        return _items[itemId]?.pendingData
     }
 
-    fun get(itemId: String) = _items[itemId]?.data
+    override fun remove(item: AddPlanItemState) {
+        _items.remove(item.id)
+    }
 
-    fun update(
+    override fun <R : PendingData, T : AddPlanItemState> update(
         itemId: String,
-        updater: (Data) -> Data,
+        itemFactory: ItemFactory<R, T>,
+        updater: (R) -> R,
     ) {
-        val data = findItem(itemId) ?: error("Item with id $itemId not found in store")
-        _items[itemId] = updater(data.data)
+        val entry = _items[itemId] ?: error("Item with id $itemId not found in store")
+        val data =
+            entry.pendingData as? R ?: error("Item with id $itemId is not from the expected type")
+        val item = entry.state
+        _items[itemId] = updater(data)
             .let {
                 ItemStoreData(
                     itemFactory.createItem(
                         it,
-                        data.item.dateSelectionEnabled,
-                        data.item.typeSelectionEnabled,
-                        data.item.deleteButtonEnabled,
+                        item.dateSelectionEnabled,
+                        item.typeSelectionEnabled,
+                        item.deleteButtonEnabled,
                     ),
                     it,
                 )
             }
-    }
-
-    override fun remove(item: Item) {
-        _items.remove(item.id)
-    }
-
-    private fun findItem(itemId: String): ItemStoreData<Item, Data>? {
-        return _items[itemId]
-    }
-
-    class Factory<Entity : TripEntity, Data : AddPlanData, Item : AddPlanItemState> {
-        fun create(
-            dataFactory: DataFactory<Entity, Data>,
-            itemFactory: ItemFactory<Item, Data>
-        ) = AddPlanItemStore(dataFactory, itemFactory)
     }
 }
 

@@ -8,27 +8,48 @@ import com.combah.travel2.model.data.TripEntity
 import com.combah.travel2.ui.trip.creation.usecase.AddFlightItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
+import com.combah.travel2.ui.trip.creation.usecase.PendingData
 import com.combah.travel2.ui.trip.state.AddFlightItemState
 import com.combah.travel2.ui.trip.state.AddLodgingItemState
 import com.combah.travel2.ui.trip.state.AddPlanItemState
 import kotlinx.coroutines.flow.Flow
 
 class AddPlanUseCase(
+    private val itemStore: ItemStore,
     private val addFlightUseCase: AddFlightUseCase,
     private val addLodgingUseCase: AddLodgingUseCase,
 ) : AddPlanItemActionHandler, AddFlightItemActionHandler by addFlightUseCase,
     AddLodgingItemActionHandler by addLodgingUseCase {
 
-    interface ItemStore<E : TripEntity, T : AddPlanItemState> {
-        val items: Flow<Map<String, T>>
-        fun addItem(time: Time, dateSelectionEnabled: Boolean = false): T
-        fun addItem(entity: E): T
-        fun remove(item: T)
+    interface ItemStore {
+        val items: Flow<Map<String, AddPlanItemState>>
+        fun addItem(data: PendingData, item: AddPlanItemState)
+        fun <R : PendingData, T : AddPlanItemState> update(
+            itemId: String,
+            itemFactory: ItemFactory<R, T>,
+            updater: (R) -> R,
+        )
+
+        fun getItem(itemId: String): AddPlanItemState?
+        fun getData(itemId: String): PendingData?
+
+        fun remove(item: AddPlanItemState)
     }
 
+    interface ItemFactory<R : PendingData, T : AddPlanItemState> {
+        fun createItem(
+            data: R,
+            dateSelectionEnabled: Boolean = true,
+            typeSelectionEnabled: Boolean = true,
+            deleteEnabled: Boolean = false,
+        ): T
+    }
 
-    interface AddItemUseCase<E : TripEntity, T : AddPlanItemState> : ItemStore<E, T> {
-        fun createAppData(item: T): E
+    interface AddItemUseCase<E : TripEntity, T : AddPlanItemState, R : PendingData> :
+        ItemFactory<R, T> {
+        fun createData(time: Time): R
+        fun createData(entity: E): R
+        fun createAppData(data: R): E
     }
 
     val items = combineWithoutWaiting(
@@ -42,47 +63,67 @@ class AddPlanUseCase(
         dateSelectionEnabled: Boolean = false,
         type: AddPlanItemState.Type = AddPlanItemState.Type.Flight
     ): AddPlanItemState {
-        return type.useCase.addItem(time, dateSelectionEnabled)
+        val data =
+            type.useCase()
+                .createData(time)
+        val item = type.useCase().createItem(data, dateSelectionEnabled)
+        itemStore.addItem(data, item)
+        return item
     }
 
     fun createAddPlanItem(entity: TripEntity): AddPlanItemState {
-        return when (entity) {
-            is Flight -> addFlightUseCase.addItem(entity)
-            is Lodging -> addLodgingUseCase.addItem(entity)
-        }
+        val data =
+            entity.type.useCase()
+                .createData(entity)
+        val item = entity.type.useCase().createItem(
+            data,
+            dateSelectionEnabled = false,
+            typeSelectionEnabled = false,
+            deleteEnabled = true,
+        )
+        itemStore.addItem(data, item)
+        return item
     }
 
-    fun typeChanged(
-        addPlanItem: AddPlanItemState,
-        newType: AddPlanItemState.Type
-    ): AddPlanItemState {
+    override fun addPlanTypeChanged(itemId: String, newType: AddPlanItemState.Type) {
+        val addPlanItem = itemStore.getItem(itemId) ?: return
         if (addPlanItem.type == newType) {
-            return addPlanItem
+            return
         }
-        removeItem(addPlanItem)
-        return createAddPlanItem(
+        itemStore.remove(addPlanItem)
+        createAddPlanItem(
             addPlanItem.timestamp,
             false,
             newType,
         )
     }
 
-    fun saveItem(addPlanItem: AddPlanItemState): TripEntity = when (addPlanItem) {
-        is AddFlightItemState -> addFlightUseCase.createAppData(addPlanItem)
-        is AddLodgingItemState -> addLodgingUseCase.createAppData(addPlanItem)
-    }
+    override fun save(itemId: String) = Unit
 
-    fun removeItem(addPlanItem: AddPlanItemState) {
-        when (addPlanItem) {
-            is AddFlightItemState -> addFlightUseCase.remove(addPlanItem)
-            is AddLodgingItemState -> addLodgingUseCase.remove(addPlanItem)
+    fun saveItem(itemId: String): TripEntity {
+        val addPlanItem =
+            itemStore.getItem(itemId) ?: error("Item with id $itemId not found in store")
+        val data =
+            itemStore.getData(addPlanItem.id) ?: error("Item with id $itemId not found in store")
+        return data.type.useCase().createAppData(data).also {
+            itemStore.remove(addPlanItem)
         }
     }
 
-    private val AddPlanItemState.Type.useCase: AddItemUseCase<out TripEntity, out AddPlanItemState>
+    override fun cancelEdit(itemId: String) = Unit
+
+    override fun delete(type: AddPlanItemState.Type, itemId: String) = Unit
+
+    fun removeItem(itemId: String): AddPlanItemState? {
+        val item = itemStore.getItem(itemId) ?: return null
+        itemStore.remove(item)
+        return item
+    }
+
+    private val PendingData.type
         get() = when (this) {
-            AddPlanItemState.Type.Flight -> addFlightUseCase
-            AddPlanItemState.Type.Lodging -> addLodgingUseCase
+            is PendingData.PendingFlight -> AddPlanItemState.Type.Flight
+            is PendingData.PendingLodging -> AddPlanItemState.Type.Lodging
         }
 
     private val AddPlanItemState.type
@@ -90,4 +131,16 @@ class AddPlanUseCase(
             is AddFlightItemState -> AddPlanItemState.Type.Flight
             is AddLodgingItemState -> AddPlanItemState.Type.Lodging
         }
+
+    private val TripEntity.type
+        get() = when (this) {
+            is Flight -> AddPlanItemState.Type.Flight
+            is Lodging -> AddPlanItemState.Type.Lodging
+        }
+
+    private fun AddPlanItemState.Type.useCase() =
+        when (this) {
+            AddPlanItemState.Type.Flight -> addFlightUseCase
+            AddPlanItemState.Type.Lodging -> addLodgingUseCase
+        } as AddItemUseCase<TripEntity, AddPlanItemState, PendingData>
 }
