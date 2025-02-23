@@ -1,47 +1,22 @@
 package com.combah.travel2.ui.trip.viewmodel
 
-import com.combah.travel2.extensions.filterValueInstanceOf
-import com.combah.travel2.extensions.get
 import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.extensions.update
 import com.combah.travel2.model.data.Lodging
-import com.combah.travel2.model.data.SimplePlace
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandler
-import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase
 import com.combah.travel2.ui.trip.creation.usecase.PendingData.PendingLodging
 import com.combah.travel2.ui.trip.state.AddLodgingItemState
 import com.combah.travel2.ui.trip.state.ManualAddPlanState
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import java.util.UUID
 import kotlin.time.Duration.Companion.days
 
 class AddLodgingUseCase private constructor(
     private val itemStore: AddPlanUseCase.ItemStore,
-    private val autoCompleteUseCase: AutoCompleteUseCase<SimplePlace>,
+    private val repository: AddLodgingRepository,
 ) : AddPlanUseCase.AddItemUseCase<Lodging, AddLodgingItemState, PendingLodging>,
     AddLodgingItemActionHandler {
-
-    constructor(
-        itemStore: AddPlanUseCase.ItemStore,
-        repository: AddLodgingRepository
-    ) : this(
-        itemStore,
-        AutoCompleteUseCase(repository),
-    )
-
-    private val storeItems: Flow<Map<String, AddLodgingItemState>> =
-        itemStore.items.filterValueInstanceOf()
-    val items: Flow<Map<String, AddLodgingItemState>>
-        get() = combine(storeItems, autoCompleteUseCase.state) { itemMap, inputStateMap ->
-            itemMap.entries.associate { (key, value) ->
-                key to value.copy(startState = value.startState.copy(searchResults = inputStateMap[key]?.searchResults?.map {
-                    it.name ?: it.address
-                } ?: emptyList()))
-            }
-        }
 
     override fun setCheckInDate(itemId: String, date: Time) = itemStore.update(itemId) {
         it.copy(
@@ -82,20 +57,23 @@ class AddLodgingUseCase private constructor(
     }
 
     override suspend fun lodgingTextChanged(itemId: String, content: CharSequence) {
-        autoCompleteUseCase.setQuery(itemId, content.toString())
+        val results = repository.autocomplete(content.toString())
+        itemStore.update(itemId) { data ->
+            data.copy(
+                searchResults = results
+            )
+        }
     }
 
     override fun lodgingSearchResultTapped(itemId: String, index: Int) {
-        val selected = autoCompleteUseCase.state[itemId]?.searchResults?.getOrNull(index)
-        autoCompleteUseCase.clearResults(itemId)
-        itemStore.update(itemId) {
-            selected?.let { selected ->
-                it.copy(
-                    name = selected.name,
-                    address = selected.address,
-                    city = selected.city,
-                )
-            } ?: it
+        itemStore.update(itemId) { data ->
+            val selected = data.searchResults.getOrNull(index)
+            data.copy(
+                name = selected?.name,
+                address = selected?.address,
+                city = selected?.city,
+                searchResults = emptyList(),
+            )
         }
     }
 
@@ -127,7 +105,7 @@ class AddLodgingUseCase private constructor(
                 minTime = data.checkIn.toMidnight(),
                 dateSelectionEnabled = dateSelectionEnabled,
                 locationText = data.name ?: data.address,
-                searchResults = emptyList(),
+                searchResults = data.searchResults.map { it.name ?: it.address },
             ),
             endState = ManualAddPlanState(
                 time = data.checkOut,

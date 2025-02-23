@@ -1,6 +1,5 @@
 package com.combah.travel2.ui.trip.viewmodel
 
-import com.combah.travel2.extensions.combineWithoutWaiting
 import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
@@ -52,11 +51,7 @@ class AddPlanUseCase(
         fun createAppData(data: R): E
     }
 
-    val items = combineWithoutWaiting(
-        addFlightUseCase.items, emptyMap(), addLodgingUseCase.items, emptyMap(),
-    ) { addFlightItems, addLodgingItems ->
-        addFlightItems + addLodgingItems
-    }
+    val items = itemStore.items
 
     fun createAddPlanItem(
         time: Time,

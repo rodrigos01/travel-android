@@ -10,7 +10,6 @@ import com.combah.travel2.test.Captor
 import com.combah.travel2.test.Mocks.mockTime
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
-import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase
 import com.combah.travel2.ui.trip.state.AddFlightItemState
 import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase.InputState
 import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase.InputUseCaseSet
