@@ -1,57 +1,24 @@
 package com.combah.travel2.ui.trip.viewmodel
 
-import com.combah.travel2.extensions.filterValueInstanceOf
-import com.combah.travel2.extensions.get
 import com.combah.travel2.extensions.now
 import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.extensions.update
-import com.combah.travel2.model.data.Airport
 import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddFlightRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddFlightItemActionHandler
-import com.combah.travel2.ui.trip.creation.usecase.AutoCompleteUseCase
 import com.combah.travel2.ui.trip.creation.usecase.PendingData.PendingFlight
 import com.combah.travel2.ui.trip.state.AddFlightItemState
 import com.combah.travel2.ui.trip.state.ManualAddPlanState
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import java.util.UUID
-import kotlin.collections.component1
-import kotlin.collections.component2
 import kotlin.time.Duration.Companion.minutes
 
 class AddFlightUseCase private constructor(
     private val itemStore: AddPlanUseCase.ItemStore,
-    private val airportFromAutoCompleteUseCase: AutoCompleteUseCase<Airport>,
-    private val airportToAutoCompleteUseCase: AutoCompleteUseCase<Airport>,
+    private val repository: AddFlightRepository,
 ) : AddPlanUseCase.AddItemUseCase<Flight, AddFlightItemState, PendingFlight>,
     AddFlightItemActionHandler {
-
-    constructor(itemStore: AddPlanUseCase.ItemStore, repository: AddFlightRepository) : this(
-        itemStore,
-        AutoCompleteUseCase(repository),
-        AutoCompleteUseCase(repository),
-    )
-
-    private val storeItems: Flow<Map<String, AddFlightItemState>> =
-        itemStore.items.filterValueInstanceOf()
-    val items: Flow<Map<String, AddFlightItemState>> =
-        combine(
-            storeItems,
-            airportFromAutoCompleteUseCase.state,
-            airportToAutoCompleteUseCase.state
-        ) { itemMap, airportFromInputState, airportToInputState ->
-            itemMap.entries.associate { (id, item) ->
-                id to item.copy(
-                    startState = item.startState.copy(searchResults = airportFromInputState[id]?.searchResults?.map { it.name }
-                        ?: emptyList()),
-                    endState = item.endState.copy(searchResults = airportToInputState[id]?.searchResults?.map { it.name }
-                        ?: emptyList()),
-                )
-            }
-        }
 
     override fun setDepartureDate(itemId: String, date: Time) {
         itemStore.update(itemId) {
@@ -99,14 +66,18 @@ class AddFlightUseCase private constructor(
     override suspend fun airportFromSearchTextChanged(
         itemId: String, content: CharSequence
     ) {
-        airportFromAutoCompleteUseCase.setQuery(itemId, content.toString())
+        val results = repository.autocomplete(content.toString())
+        itemStore.update(itemId) {
+            it.copy(airportFromSearchResults = results)
+        }
     }
 
     override fun airportFromSearchResultTapped(itemId: String, index: Int) {
-        val selected = airportSearchResultTapped(airportFromAutoCompleteUseCase, itemId, index)
         itemStore.update(itemId) {
+            val selected = it.airportToSearchResults.getOrNull(index)
             it.copy(
-                airportFrom = selected
+                airportFrom = selected,
+                airportFromSearchResults = emptyList()
             )
         }
     }
@@ -114,28 +85,22 @@ class AddFlightUseCase private constructor(
     override suspend fun airportToSearchTextChanged(
         itemId: String, content: CharSequence
     ) {
-        airportToAutoCompleteUseCase.setQuery(itemId, content.toString())
-    }
-
-    override fun airportToSearchResultTapped(itemId: String, index: Int) {
-        val selected = airportSearchResultTapped(airportToAutoCompleteUseCase, itemId, index)
-        itemStore.update(itemId) { data ->
-            data.copy(
-                airportTo = selected,
-                arrival = selected?.timeZone?.let { data.arrival?.update(timeZone = it) }
-                    ?: data.arrival
-            )
+        val results = repository.autocomplete(content.toString())
+        itemStore.update(itemId) {
+            it.copy(airportToSearchResults = results)
         }
     }
 
-    private fun airportSearchResultTapped(
-        useCase: AutoCompleteUseCase<Airport>,
-        itemId: String,
-        index: Int,
-    ): Airport? {
-        val selected = useCase.state[itemId]?.searchResults?.getOrNull(index)
-        useCase.clearResults(itemId)
-        return selected
+    override fun airportToSearchResultTapped(itemId: String, index: Int) {
+        itemStore.update(itemId) { data ->
+            val selected = data.airportToSearchResults.getOrNull(index)
+            data.copy(
+                airportTo = selected,
+                arrival = selected?.timeZone?.let { data.arrival?.update(timeZone = it) }
+                    ?: data.arrival,
+                airportToSearchResults = emptyList(),
+            )
+        }
     }
 
     override fun createData(time: Time): PendingFlight = PendingFlight(
@@ -170,7 +135,7 @@ class AddFlightUseCase private constructor(
                 minTime = Time.now().toMidnight(),
                 dateSelectionEnabled = dateSelectionEnabled,
                 locationText = data.airportFrom?.name,
-                searchResults = emptyList(),
+                searchResults = data.airportFromSearchResults.map { it.name },
             ),
             endState = ManualAddPlanState(
                 time = arrivalTime,
@@ -180,7 +145,7 @@ class AddFlightUseCase private constructor(
                 ) + 1.minutes,
                 dateSelectionEnabled = true,
                 locationText = data.airportTo?.name,
-                searchResults = emptyList(),
+                searchResults = data.airportToSearchResults.map { it.name },
             ),
             typeSelectionEnabled = typeSelectionEnabled,
             deleteButtonEnabled = deleteEnabled,
