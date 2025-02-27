@@ -16,11 +16,8 @@ import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.data.TripEvent
-import com.combah.travel2.model.repository.AddFlightRepository
-import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
-import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.state.TripItemState
 import com.combah.travel2.ui.triplist.composable.TripListDestination
@@ -400,17 +397,11 @@ fun TripViewModel(
     navController: NavController,
     tripId: String,
 ): TripViewModel {
-    val itemStore = AddPlanItemStore()
-    val timeFormatter = TimeFormatter()
     return TripViewModel(
         serviceLocator.tripRepository,
         tripId,
-        AddPlanUseCase(
-            itemStore,
-            AddFlightUseCase(itemStore, AddFlightRepository()),
-            AddLodgingUseCase(itemStore, AddLodgingRepository())
-        ),
-        timeFormatter,
+        AddPlanUseCase(),
+        TimeFormatter(),
         navController,
     )
 }

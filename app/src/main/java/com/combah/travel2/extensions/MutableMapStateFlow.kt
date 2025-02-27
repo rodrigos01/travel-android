@@ -3,9 +3,9 @@ package com.combah.travel2.extensions
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import okhttp3.internal.toImmutableMap
 
+typealias MapFlow<K, V> = Flow<Map<K, V>>
 typealias MapStateFlow<K, V> = StateFlow<Map<K, V>>
 typealias MutableMapStateFlow<K, V> = MutableStateFlow<Map<K, V>>
 
@@ -25,9 +25,6 @@ fun <K, V> MutableMapStateFlow<K, V>.remove(key: K): V? {
 }
 
 operator fun <K, V> MapStateFlow<K, V>.get(key: K): V? = value[key]
-
-inline fun <reified T : V, K, V> Flow<Map<K, V>>.filterValueInstanceOf(): Flow<Map<K, T>> =
-    map { it.filterValueInstanceOf() }
 
 inline fun <K, V, reified T : V> Map<K, V>.filterValueInstanceOf(): Map<K, T> {
     return entries.fold(mutableMapOf()) { newMap, (key, value) ->

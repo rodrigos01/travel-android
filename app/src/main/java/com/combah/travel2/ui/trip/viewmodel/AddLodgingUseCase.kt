@@ -1,11 +1,13 @@
 package com.combah.travel2.ui.trip.viewmodel
 
+import com.combah.travel2.extensions.MapFlow
 import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.extensions.update
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandler
+import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.PendingData.PendingLodging
 import com.combah.travel2.ui.trip.state.AddLodgingItemState
 import com.combah.travel2.ui.trip.state.ManualAddPlanState
@@ -13,10 +15,14 @@ import java.util.UUID
 import kotlin.time.Duration.Companion.days
 
 class AddLodgingUseCase private constructor(
-    private val itemStore: AddPlanUseCase.ItemStore,
+    private val itemStore: AddPlanItemStore<PendingLodging, AddLodgingItemState>,
     private val repository: AddLodgingRepository,
-) : AddPlanUseCase.AddItemUseCase<Lodging, AddLodgingItemState, PendingLodging>,
+) : AddPlanUseCase.AddItemUseCase<Lodging, AddLodgingItemState>,
     AddLodgingItemActionHandler {
+
+    constructor() : this(AddPlanItemStore(), AddLodgingRepository())
+
+    override val items: MapFlow<String, AddLodgingItemState> = itemStore.items(::createItem)
 
     override fun setCheckInDate(itemId: String, date: Time) = itemStore.update(itemId) {
         it.copy(
@@ -77,25 +83,34 @@ class AddLodgingUseCase private constructor(
         }
     }
 
-    override fun createData(time: Time) = PendingLodging(
-        id = UUID.randomUUID().toString(),
-        checkIn = time,
-        checkOut = time.toMidnight() + 1.days,
-    )
+    override fun addItem(time: Time, params: AddPlanUseCase.StateParams): AddLodgingItemState {
+        val data = PendingLodging(
+            id = UUID.randomUUID().toString(),
+            checkIn = time,
+            checkOut = time.toMidnight() + 1.days,
+        )
+        itemStore.addItem(data, params)
+        return createItem(data, params)
+    }
 
-    override fun createData(entity: Lodging): PendingLodging = PendingLodging(
-        id = entity.id,
-        name = entity.name,
-        address = entity.address,
-        checkIn = entity.checkIn,
-        checkOut = entity.checkout
-    )
+    override fun addItem(
+        entity: Lodging,
+        params: AddPlanUseCase.StateParams,
+    ): AddLodgingItemState {
+        val data = PendingLodging(
+            id = entity.id,
+            name = entity.name,
+            address = entity.address,
+            checkIn = entity.checkIn,
+            checkOut = entity.checkout
+        )
+        itemStore.addItem(data, params)
+        return createItem(data, params)
+    }
 
-    override fun createItem(
+    private fun createItem(
         data: PendingLodging,
-        dateSelectionEnabled: Boolean,
-        typeSelectionEnabled: Boolean,
-        deleteEnabled: Boolean,
+        stateParams: AddPlanUseCase.StateParams,
     ): AddLodgingItemState {
         return AddLodgingItemState(
             id = data.id,
@@ -103,7 +118,7 @@ class AddLodgingUseCase private constructor(
             startState = ManualAddPlanState(
                 time = data.checkIn,
                 minTime = data.checkIn.toMidnight(),
-                dateSelectionEnabled = dateSelectionEnabled,
+                dateSelectionEnabled = stateParams.dateSelectionEnabled,
                 locationText = data.name ?: data.address,
                 searchResults = data.searchResults.map { it.name ?: it.address },
             ),
@@ -116,14 +131,18 @@ class AddLodgingUseCase private constructor(
             ),
             saveButtonEnabled = data.checkOut > data.checkIn && (data.name
                 ?: data.address) != null,
-            deleteButtonEnabled = deleteEnabled,
-            typeSelectionEnabled = typeSelectionEnabled,
+            deleteButtonEnabled = stateParams.deleteEnabled,
+            typeSelectionEnabled = stateParams.typeSelectionEnabled,
         )
     }
 
-    override fun createAppData(data: PendingLodging): Lodging {
-        val item = itemStore.getItem(data.id) as? AddLodgingItemState
-            ?: error("PendingLodging has no state item associated to it")
+    override fun removeItem(item: AddLodgingItemState) {
+        itemStore.remove(item)
+    }
+
+    override fun createEntity(item: AddLodgingItemState): Lodging {
+        val data = itemStore.getData(item.id)
+            ?: error("item has no pending data associated with it")
         data.address ?: error("address from is not set")
         data.city ?: error("city from is not set")
         data.checkOut
@@ -136,9 +155,4 @@ class AddLodgingUseCase private constructor(
             data.checkOut,
         )
     }
-
-    private fun AddPlanUseCase.ItemStore.update(
-        itemId: String,
-        updater: (PendingLodging) -> PendingLodging
-    ) = update(itemId, this@AddLodgingUseCase, updater)
 }
