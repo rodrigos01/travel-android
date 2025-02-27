@@ -18,8 +18,11 @@ import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
@@ -32,6 +35,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.combah.travel2.R
+import com.combah.travel2.extensions.Time
 import com.combah.travel2.extensions.dayOfMonthString
 import com.combah.travel2.extensions.dayOfWeekString
 import com.combah.travel2.extensions.now
@@ -49,11 +53,13 @@ import com.combah.travel2.ui.trip.creation.composable.rememberTimePickerDialogSt
 import java.util.TimeZone
 
 data class AddPlanRowState<Result>(
-    var selectedTime: Time?,
+    private val selectedTimeState: MutableState<Time?>,
     val minTime: Time,
     val searchResults: List<Result>,
     var selectedSearchResultIndex: Int,
-)
+) {
+    var selectedTime: Time? by selectedTimeState
+}
 
 @Composable
 fun <Result> rememberAddPlanRowState(
@@ -61,7 +67,11 @@ fun <Result> rememberAddPlanRowState(
     minTime: Time = Time.now(),
     searchResults: List<Result> = emptyList(),
     selectedSearchResultIndex: Int = -1,
-) = remember { AddPlanRowState(selectedTime, minTime, searchResults, selectedSearchResultIndex) }
+) = remember {
+    AddPlanRowState(
+        mutableStateOf(selectedTime), minTime, searchResults, selectedSearchResultIndex
+    )
+}
 
 @Composable
 fun <T> AddPlanRow(
@@ -93,8 +103,7 @@ fun <T> AddPlanRow(
             modifier = Modifier.minimumInteractiveComponentSize(),
         ) {
             Box(
-                modifier =
-                Modifier.width(80.dp)
+                modifier = Modifier.width(80.dp)
             ) {
                 ProvideTextStyle(MaterialTheme.typography.titleMedium, title)
             }
@@ -102,11 +111,9 @@ fun <T> AddPlanRow(
                 TimePickerTextButton(
                     text = state.selectedTime?.timeString() ?: timeSelectorLabel,
                     onTimeSelected = { hour, minute ->
-                        state.selectedTime =
-                            selectedTime.update(hour = hour, minute = minute)
+                        state.selectedTime = selectedTime.update(hour = hour, minute = minute)
                     },
-                    modifier = Modifier
-                        .semantics { role = Role.Button },
+                    modifier = Modifier.semantics { role = Role.Button },
                     timePickerDialogState = timePickerDialogState,
                 )
             }
@@ -131,10 +138,7 @@ fun <T> AddPlanRow(
                         onClick = {},
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(
-                            start = 24.dp,
-                            end = 4.dp,
-                            top = 8.dp,
-                            bottom = 8.dp
+                            start = 24.dp, end = 4.dp, top = 8.dp, bottom = 8.dp
                         ),
                     ) {
                         Row {
@@ -182,8 +186,7 @@ fun <T> AddPlanRow(
                     showTimePickerState = showTimePicker,
                     timePickerDialogState = timePickerDialogState,
                 ) {
-                    OutlinedTextField(
-                        value = selectedTime.timeString(),
+                    OutlinedTextField(value = selectedTime.timeString(),
                         label = { Text(timeSelectorLabel) },
                         placeholder = { placeHolder?.let { Text(it) } },
                         onValueChange = {},
@@ -191,8 +194,7 @@ fun <T> AddPlanRow(
                             if (it.hasFocus) {
                                 showTimePicker.value = true
                             }
-                        }
-                    )
+                        })
                 }
             }
         }
@@ -205,12 +207,13 @@ fun <T> AddPlanRow(
 fun AddPlanRowPreview() {
     AppTheme {
         Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
+            val state = rememberAddPlanRowState<String>(
+                selectedTime = Time("2025-06-12T03:45 -0300"),
+                minTime = Time(0L, TimeZone.getDefault()),
+                searchResults = emptyList(),
+            )
             AddPlanRow(
-                state = rememberAddPlanRowState<String>(
-                    selectedTime = Time.now(),
-                    minTime = Time(0L, TimeZone.getDefault()),
-                    searchResults = emptyList(),
-                ),
+                state = state,
                 title = { Text("Title") },
                 timeSelectorLabel = "Pick Time",
                 dateSelectionEnabled = true,
