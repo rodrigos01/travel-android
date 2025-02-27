@@ -14,7 +14,7 @@ import com.combah.travel2.ui.trip.state.ManualAddPlanState
 import java.util.UUID
 import kotlin.time.Duration.Companion.days
 
-class AddLodgingUseCase private constructor(
+class AddLodgingUseCase(
     private val itemStore: AddPlanItemStore<PendingLodging, AddLodgingItemState>,
     private val repository: AddLodgingRepository,
 ) : AddPlanUseCase.AddItemUseCase<Lodging, AddLodgingItemState>,

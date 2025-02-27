@@ -32,14 +32,14 @@ sealed interface TripItemState {
         val dayOfWeekEnd: String,
     ) : TripItemState, Timeable, Identifiable
 
-    interface Replaceable
+    interface Replaceable : Identifiable
 
     data class EmptyDateItemState(
         override val id: String,
         override val timestamp: Time,
         val dayOfMonth: String,
         val dayOfWeek: String,
-    ) : TripItemState, Timeable, Identifiable, Replaceable
+    ) : TripItemState, Timeable, Replaceable
 
     sealed interface EventItemState : TripItemState, Timeable, Identifiable {
         val showDate: Boolean
@@ -108,12 +108,12 @@ sealed interface TripItemState {
         override val id: String,
         override val timestamp: Time,
         val showDivider: Boolean,
-    ) : Replaceable, Timeable, Identifiable, TripItemState
+    ) : Replaceable, Timeable, TripItemState
 
     data class InitialAddPlanItemState(
         override val id: String,
         override val timestamp: Time,
-    ) : Replaceable, Timeable, Identifiable, TripItemState
+    ) : Replaceable, Timeable, TripItemState
 }
 
 data class ManualAddPlanState(
