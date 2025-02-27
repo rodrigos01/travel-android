@@ -16,7 +16,7 @@ import com.combah.travel2.ui.trip.state.ManualAddPlanState
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
 
-class AddFlightUseCase private constructor(
+class AddFlightUseCase(
     private val itemStore: AddPlanItemStore<PendingFlight, AddFlightItemState>,
     private val repository: AddFlightRepository,
 ) : AddPlanUseCase.AddItemUseCase<Flight, AddFlightItemState>,

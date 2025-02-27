@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
 
-class AddPlanUseCase private constructor(
+class AddPlanUseCase(
     private val addFlightUseCase: AddFlightUseCase,
     private val addLodgingUseCase: AddLodgingUseCase,
     coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main),
@@ -73,7 +73,7 @@ class AddPlanUseCase private constructor(
         removeItem(addPlanItem)
         createAddPlanItem(
             addPlanItem.timestamp,
-            dateSelectionEnabled = false,
+            addPlanItem.dateSelectionEnabled,
             newType,
         )
     }

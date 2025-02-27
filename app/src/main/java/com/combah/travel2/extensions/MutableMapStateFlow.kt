@@ -25,12 +25,3 @@ fun <K, V> MutableMapStateFlow<K, V>.remove(key: K): V? {
 }
 
 operator fun <K, V> MapStateFlow<K, V>.get(key: K): V? = value[key]
-
-inline fun <K, V, reified T : V> Map<K, V>.filterValueInstanceOf(): Map<K, T> {
-    return entries.fold(mutableMapOf()) { newMap, (key, value) ->
-        if (value is T) {
-            newMap[key] = value
-        }
-        newMap
-    }
-}

@@ -153,7 +153,7 @@ class TripViewModel(
         updateItems {
             addPlanItem.original = item
             removeAt(index)
-            add(index, addPlanUseCase.createAddPlanItem(entity))
+            add(index, addPlanItem)
         }
     }
 
