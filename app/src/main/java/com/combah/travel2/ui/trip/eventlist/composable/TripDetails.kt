@@ -40,12 +40,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.combah.travel2.extensions.TimeFormatter
-import com.combah.travel2.model.repository.AddFlightRepository
-import com.combah.travel2.model.repository.AddLodgingRepository
 import com.combah.travel2.model.repository.mock.MockTripRepository
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.ConfirmationDialog
-import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.state.TripItemState
 import com.combah.travel2.ui.trip.state.TripItemState.DateRangeItemState
@@ -56,8 +53,6 @@ import com.combah.travel2.ui.trip.state.TripItemState.HotelCheckInItemState
 import com.combah.travel2.ui.trip.state.TripItemState.HotelCheckOutItemState
 import com.combah.travel2.ui.trip.state.TripItemState.MonthItemState
 import com.combah.travel2.ui.trip.state.TripItemState.PlaceItemState
-import com.combah.travel2.ui.trip.viewmodel.AddFlightUseCase
-import com.combah.travel2.ui.trip.viewmodel.AddLodgingUseCase
 import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -249,11 +244,7 @@ fun TripDetailsPreview() {
             TripViewModel(
                 MockTripRepository(),
                 "minhaTrip",
-                AddPlanUseCase(
-                    AddPlanItemStore(),
-                    AddFlightUseCase(AddPlanItemStore(), AddFlightRepository()),
-                    AddLodgingUseCase(AddPlanItemStore(), AddLodgingRepository()),
-                ),
+                AddPlanUseCase(),
                 TimeFormatter(),
                 navController,
             ),
