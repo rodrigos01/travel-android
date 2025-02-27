@@ -1,12 +1,12 @@
 package com.combah.travel2.ui.trip.creation.composable
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -19,7 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.PopupProperties
 import com.combah.travel2.ui.theme.AppTheme
 
-class AutoCompleteTextFieldState<T>(
+data class AutoCompleteTextFieldState<T>(
     val text: String?,
     val suggestions: List<T>,
 )
@@ -93,14 +93,14 @@ fun <T> AutoCompleteTextField(
 @Preview
 fun AutoCompleteTextFieldPreview() {
     AppTheme {
-        Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
-            AutoCompleteTextField<String>(
-                state = rememberAutoCompleteTextFieldState(null, emptyList()),
+        Surface {
+            AutoCompleteTextField(
+                state = rememberAutoCompleteTextFieldState(null, List(4) { "Item$it" }),
                 label = "label",
                 placeHolder = null,
                 onTextChanged = {},
                 onOptionSelected = {},
-                itemContent = { "" }
+                itemContent = { it }
             )
         }
     }

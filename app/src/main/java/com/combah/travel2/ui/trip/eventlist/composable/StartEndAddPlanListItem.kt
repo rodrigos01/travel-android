@@ -6,6 +6,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
+import com.combah.travel2.extensions.Time
 import com.combah.travel2.extensions.now
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.theme.AppTheme
@@ -48,7 +49,7 @@ fun StartEndAddPlanListItem(
             dateSelectionEnabled = uiState.startState.dateSelectionEnabled,
             placeHolder = startPlaceHolder,
             labelText = startLabelText,
-            text = uiState.endState.locationText,
+            text = uiState.startState.locationText,
             onTextChanged = onStartTextChanged,
             searchResultItemContent = { it },
         )
@@ -82,7 +83,7 @@ fun StartEndAddPlanListItemPreview() {
                     timestamp = Time.now(),
                     typeSelectionEnabled = false,
                     startState = ManualAddPlanState(
-                        time = null,
+                        time = Time("2025-09-21T14:49 +0100"),
                         minTime = Time.now(),
                         dateSelectionEnabled = false,
                         locationText = null,
@@ -92,7 +93,7 @@ fun StartEndAddPlanListItemPreview() {
                         time = null,
                         minTime = Time.now(),
                         dateSelectionEnabled = true,
-                        locationText = null,
+                        locationText = "Somewhere",
                         searchResults = emptyList()
                     ),
                     deleteButtonEnabled = true,

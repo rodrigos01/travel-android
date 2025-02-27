@@ -4,6 +4,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.combah.travel2.extensions.Time
 import com.combah.travel2.extensions.now
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.theme.AppTheme
@@ -44,17 +45,17 @@ fun AddFlightListItemPreview() {
                     "", Time.now(),
                     typeSelectionEnabled = false,
                     startState = ManualAddPlanState(
-                        time = null,
+                        time = Time("2025-06-12T05:00 -0300"),
                         minTime = Time.now(),
                         dateSelectionEnabled = false,
                         locationText = null,
                         searchResults = emptyList()
                     ),
                     endState = ManualAddPlanState(
-                        time = null,
+                        time = Time("2025-06-12T05:00 -0300"),
                         minTime = Time.now(),
                         dateSelectionEnabled = true,
-                        locationText = null,
+                        locationText = "Somewhere",
                         searchResults = emptyList()
                     ),
                     deleteButtonEnabled = true,
