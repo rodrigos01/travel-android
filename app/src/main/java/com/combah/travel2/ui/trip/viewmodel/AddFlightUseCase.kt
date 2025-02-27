@@ -1,5 +1,6 @@
 package com.combah.travel2.ui.trip.viewmodel
 
+import com.combah.travel2.extensions.MapFlow
 import com.combah.travel2.extensions.now
 import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.extensions.update
@@ -8,6 +9,7 @@ import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddFlightRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddFlightItemActionHandler
+import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.PendingData.PendingFlight
 import com.combah.travel2.ui.trip.state.AddFlightItemState
 import com.combah.travel2.ui.trip.state.ManualAddPlanState
@@ -15,10 +17,14 @@ import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
 
 class AddFlightUseCase private constructor(
-    private val itemStore: AddPlanUseCase.ItemStore,
+    private val itemStore: AddPlanItemStore<PendingFlight, AddFlightItemState>,
     private val repository: AddFlightRepository,
-) : AddPlanUseCase.AddItemUseCase<Flight, AddFlightItemState, PendingFlight>,
+) : AddPlanUseCase.AddItemUseCase<Flight, AddFlightItemState>,
     AddFlightItemActionHandler {
+
+    constructor() : this(AddPlanItemStore(), AddFlightRepository())
+
+    override val items: MapFlow<String, AddFlightItemState> = itemStore.items(::createItem)
 
     override fun setDepartureDate(itemId: String, date: Time) {
         itemStore.update(itemId) {
@@ -103,12 +109,16 @@ class AddFlightUseCase private constructor(
         }
     }
 
-    override fun createData(time: Time): PendingFlight = PendingFlight(
-        id = UUID.randomUUID().toString(),
-        departure = time,
-    )
+    override fun addItem(time: Time, params: AddPlanUseCase.StateParams): AddFlightItemState {
+        val data = PendingFlight(
+            id = UUID.randomUUID().toString(),
+            departure = time,
+        )
+        itemStore.addItem(data, params)
+        return createItem(data, params)
+    }
 
-    override fun createData(entity: Flight): PendingFlight {
+    override fun addItem(entity: Flight, params: AddPlanUseCase.StateParams): AddFlightItemState {
         val segment = entity.segments.firstOrNull()
         val data = PendingFlight(
             entity.id,
@@ -117,23 +127,22 @@ class AddFlightUseCase private constructor(
             segment?.airportTo,
             segment?.arrival
         )
-        return data
+        itemStore.addItem(data, params)
+        return createItem(data, params)
     }
 
-    override fun createItem(
+    private fun createItem(
         data: PendingFlight,
-        dateSelectionEnabled: Boolean,
-        typeSelectionEnabled: Boolean,
-        deleteEnabled: Boolean,
+        stateParams: AddPlanUseCase.StateParams,
     ): AddFlightItemState {
         val arrivalTime = data.arrival ?: data.departure
-        val item = AddFlightItemState(
+        return AddFlightItemState(
             id = data.id,
             timestamp = data.departure,
             startState = ManualAddPlanState(
                 time = data.departure,
                 minTime = Time.now().toMidnight(),
-                dateSelectionEnabled = dateSelectionEnabled,
+                dateSelectionEnabled = stateParams.dateSelectionEnabled,
                 locationText = data.airportFrom?.name,
                 searchResults = data.airportFromSearchResults.map { it.name },
             ),
@@ -147,14 +156,18 @@ class AddFlightUseCase private constructor(
                 locationText = data.airportTo?.name,
                 searchResults = data.airportToSearchResults.map { it.name },
             ),
-            typeSelectionEnabled = typeSelectionEnabled,
-            deleteButtonEnabled = deleteEnabled,
+            typeSelectionEnabled = stateParams.typeSelectionEnabled,
+            deleteButtonEnabled = stateParams.deleteEnabled,
             saveButtonEnabled = data.arrival?.let { it > data.departure } ?: false && data.airportFrom != null && data.airportTo != null,
         )
-        return item
     }
 
-    override fun createAppData(data: PendingFlight): Flight {
+    override fun removeItem(item: AddFlightItemState) {
+        itemStore.remove(item)
+    }
+
+    override fun createEntity(item: AddFlightItemState): Flight {
+        val data = itemStore.getData(item.id) ?: error("Item not found in store")
         data.airportFrom ?: error("airport from is not set")
         data.airportTo ?: error("airport to is not set")
         data.arrival ?: error("arival time is not set")
@@ -171,9 +184,4 @@ class AddFlightUseCase private constructor(
             0.0,
         )
     }
-
-    private fun AddPlanUseCase.ItemStore.update(
-        itemId: String,
-        updater: (PendingFlight) -> PendingFlight
-    ) = update(itemId, this@AddFlightUseCase, updater)
 }
