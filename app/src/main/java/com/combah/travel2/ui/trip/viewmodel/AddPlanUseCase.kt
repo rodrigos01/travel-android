@@ -11,9 +11,9 @@ import com.combah.travel2.ui.trip.creation.usecase.AddFlightItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
 import com.combah.travel2.ui.trip.state.AddFlightItemState
-import com.combah.travel2.ui.trip.state.AddLodgingItemState
 import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.state.LodgingSearchItemState
+import com.combah.travel2.ui.trip.state.ManualAddLodgingItemState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -38,6 +38,9 @@ class AddPlanUseCase(
         fun addItem(entity: E, params: StateParams): T
 
         fun removeItem(item: T)
+    }
+
+    interface EntityFactory<E : TripEntity, T : AddPlanItemState> {
         fun createEntity(item: T): E
     }
 
@@ -94,7 +97,7 @@ class AddPlanUseCase(
     private fun removeItem(item: AddPlanItemState) {
         when (item) {
             is AddFlightItemState -> addFlightUseCase.removeItem(item)
-            is AddLodgingItemState -> addLodgingUseCase.removeItem(item)
+            is ManualAddLodgingItemState -> addLodgingUseCase.removeItem(item)
             is LodgingSearchItemState -> Unit
         }
     }
@@ -102,13 +105,14 @@ class AddPlanUseCase(
     private val AddPlanItemState.type
         get() = when (this) {
             is AddFlightItemState -> AddPlanItemState.Type.Flight
-            is AddLodgingItemState, is LodgingSearchItemState -> AddPlanItemState.Type.Lodging
+            is ManualAddLodgingItemState, is LodgingSearchItemState -> AddPlanItemState.Type.Lodging
         }
 
-    private fun AddPlanItemState.Type.useCase() = when (this) {
-        AddPlanItemState.Type.Flight -> addFlightUseCase
-        AddPlanItemState.Type.Lodging -> addLodgingUseCase
-    }
+    private fun AddPlanItemState.Type.useCase(): AddItemUseCase<out TripEntity, out AddPlanItemState> =
+        when (this) {
+            AddPlanItemState.Type.Flight -> addFlightUseCase
+            AddPlanItemState.Type.Lodging -> addLodgingUseCase
+        }
 
 
     private fun TripEntity.asState(
@@ -123,7 +127,7 @@ class AddPlanUseCase(
     private fun AddPlanItemState.asEntity(): TripEntity {
         return when (this) {
             is AddFlightItemState -> addFlightUseCase.createEntity(this)
-            is AddLodgingItemState -> addLodgingUseCase.createEntity(this)
+            is ManualAddLodgingItemState -> addLodgingUseCase.createEntity(this)
             is LodgingSearchItemState -> error("LodgingSearchItemState entity creation not implemented")
         }
     }

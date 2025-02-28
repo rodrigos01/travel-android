@@ -27,4 +27,12 @@ sealed interface PendingData {
         val city: Place? = null,
         val searchResults: List<SimplePlace> = emptyList(),
     ) : PendingData
+
+    data class LodgingSearchParams(
+        override val id: String,
+        val checkIn: Time,
+        val checkOut: Time,
+        val city: Place? = null,
+        val searchResults: List<SimplePlace> = emptyList(),
+    ) : PendingData
 }

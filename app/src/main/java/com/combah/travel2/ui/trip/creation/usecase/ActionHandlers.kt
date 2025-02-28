@@ -11,12 +11,19 @@ interface AddPlanItemActionHandler : AddLodgingItemActionHandler,
     fun delete(type: AddPlanItemState.Type, itemId: String)
 }
 
-interface AddLodgingItemActionHandler {
+interface AddLodgingItemActionHandler : AddLodgingItemActionHandlerBase {
+    fun onSwitchToManualButtonTapped(itemId: String)
+}
+
+interface ManualAddPlanItemActionHandler : AddLodgingItemActionHandlerBase
+
+interface LodgingSearchItemActionHandler : AddLodgingItemActionHandlerBase
+
+interface AddLodgingItemActionHandlerBase {
     fun setCheckInTime(itemId: String, time: Time)
     fun setCheckOutTime(itemId: String, time: Time)
     fun locationTextChanged(itemId: String, content: CharSequence)
     fun locationSearchResultTapped(itemId: String, index: Int)
-    fun onSwitchToManualButtonTapped(itemId: String)
 }
 
 interface AddFlightItemActionHandler {

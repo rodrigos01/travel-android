@@ -10,7 +10,7 @@ import com.combah.travel2.test.Mocks.mockTime
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.PendingData.PendingLodging
-import com.combah.travel2.ui.trip.state.AddLodgingItemState
+import com.combah.travel2.ui.trip.state.ManualAddLodgingItemState
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -32,9 +32,9 @@ class AddLodgingUseCaseTest {
     val rule = UnconfinedDispatcherTestRule()
 
     private val repository: AddLodgingRepository = mock()
-    private val itemFlow = MutableStateFlow(mapOf<String, AddLodgingItemState>())
+    private val itemFlow = MutableStateFlow(mapOf<String, ManualAddLodgingItemState>())
     private val itemStore =
-        mock<AddPlanItemStore<PendingLodging, AddLodgingItemState>> {
+        mock<AddPlanItemStore<PendingLodging, ManualAddLodgingItemState>> {
             on { items(any()) } doReturn itemFlow
         }
     private val subject = AddLodgingUseCase(itemStore, repository)
@@ -45,7 +45,7 @@ class AddLodgingUseCaseTest {
 
     @Test
     fun `itemStore items updated should update items`() {
-        val item = mock<AddLodgingItemState> {
+        val item = mock<ManualAddLodgingItemState> {
             on { id } doReturn "lodging_id"
         }
         itemFlow.value = mapOf("lodging_id" to item)
@@ -82,7 +82,7 @@ class AddLodgingUseCaseTest {
 
     @Test
     fun `remove should call itemStore remove`() {
-        val item = mock<AddLodgingItemState>()
+        val item = mock<ManualAddLodgingItemState>()
         subject.removeItem(item)
         verify(itemStore).remove(item)
     }

@@ -24,6 +24,7 @@ class AddFlightUseCase(
     private val itemStore: AddPlanItemStore<PendingFlight, AddFlightItemState> = AddPlanItemStore(),
     private val repository: AddFlightRepository = AddFlightRepository(),
 ) : AddPlanUseCase.AddItemUseCase<Flight, AddFlightItemState>,
+    AddPlanUseCase.EntityFactory<Flight, AddFlightItemState>,
     AddFlightItemActionHandler {
 
     override val items: MapFlow<String, AddFlightItemState> = itemStore.items(::createItem)

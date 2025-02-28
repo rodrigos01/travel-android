@@ -11,9 +11,9 @@ import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.AddPlanType
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
 import com.combah.travel2.ui.trip.state.AddFlightItemState
-import com.combah.travel2.ui.trip.state.AddLodgingItemState
 import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.state.LodgingSearchItemState
+import com.combah.travel2.ui.trip.state.ManualAddLodgingItemState
 import com.combah.travel2.ui.trip.state.ManualAddPlanState
 import com.combah.travel2.ui.trip.state.ManualStartEndAddPlanState
 import com.combah.travel2.ui.trip.state.type
@@ -87,7 +87,7 @@ fun AddPlanListItem(
                         )
                     }
 
-                    is AddLodgingItemState -> {
+                    is ManualAddLodgingItemState -> {
                         LaunchedEffect(
                             itemState.startState.selectedTime,
                             itemState.startState.selectedSearchResultIndex,
@@ -155,7 +155,7 @@ fun AddPlanType.toState() = when (this) {
 val AddPlanItemState.uiType
     get() = when (this) {
         is AddFlightItemState -> AddPlanType.Flight
-        is AddLodgingItemState, is LodgingSearchItemState -> AddPlanType.Lodging
+        is ManualAddLodgingItemState, is LodgingSearchItemState -> AddPlanType.Lodging
     }
 
 @Preview
