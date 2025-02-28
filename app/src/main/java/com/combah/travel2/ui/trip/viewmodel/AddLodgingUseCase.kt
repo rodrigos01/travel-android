@@ -11,63 +11,54 @@ import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.PendingData.PendingLodging
 import com.combah.travel2.ui.trip.state.AddLodgingItemState
 import com.combah.travel2.ui.trip.state.ManualAddPlanState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.util.UUID
 import kotlin.time.Duration.Companion.days
 
 class AddLodgingUseCase(
-    private val itemStore: AddPlanItemStore<PendingLodging, AddLodgingItemState>,
-    private val repository: AddLodgingRepository,
+    private val coroutineScope: CoroutineScope,
+    private val itemStore: AddPlanItemStore<PendingLodging, AddLodgingItemState> = AddPlanItemStore(),
+    private val repository: AddLodgingRepository = AddLodgingRepository(),
 ) : AddPlanUseCase.AddItemUseCase<Lodging, AddLodgingItemState>,
     AddLodgingItemActionHandler {
 
-    constructor() : this(AddPlanItemStore(), AddLodgingRepository())
-
     override val items: MapFlow<String, AddLodgingItemState> = itemStore.items(::createItem)
 
-    override fun setCheckInDate(itemId: String, date: Time) = itemStore.update(itemId) {
+    override fun setCheckInTime(itemId: String, time: Time) = itemStore.update(itemId) {
         it.copy(
             checkIn = it.checkIn.update(
-                dayOfMonth = date.dayOfMonth,
-                month = date.month,
-                year = date.year,
+                dayOfMonth = time.dayOfMonth,
+                month = time.month,
+                year = time.year,
+                hour = time.hour,
+                minute = time.minute,
             )
         )
     }
 
-    override fun setCheckInTime(itemId: String, hour: Int, minute: Int) {
-        itemStore.update(itemId) {
-            it.copy(
-                checkIn = it.checkIn.update(hour = hour, minute = minute)
-            )
-        }
-    }
-
-    override fun setCheckOutDate(itemId: String, date: Time) {
+    override fun setCheckOutTime(itemId: String, time: Time) {
         itemStore.update(itemId) {
             it.copy(
                 checkOut = it.checkOut.update(
-                    dayOfMonth = date.dayOfMonth,
-                    month = date.month,
-                    year = date.year,
+                    dayOfMonth = time.dayOfMonth,
+                    month = time.month,
+                    year = time.year,
+                    hour = time.hour,
+                    minute = time.minute,
                 )
             )
         }
     }
 
-    override fun setCheckoutTime(itemId: String, hour: Int, minute: Int) {
-        itemStore.update(itemId) {
-            it.copy(
-                checkOut = it.checkOut.update(hour = hour, minute = minute)
-            )
-        }
-    }
-
-    override suspend fun lodgingTextChanged(itemId: String, content: CharSequence) {
-        val results = repository.autocomplete(content.toString())
-        itemStore.update(itemId) { data ->
-            data.copy(
-                searchResults = results
-            )
+    override fun lodgingTextChanged(itemId: String, content: CharSequence) {
+        coroutineScope.launch {
+            val results = repository.autocomplete(content.toString())
+            itemStore.update(itemId) { data ->
+                data.copy(
+                    searchResults = results
+                )
+            }
         }
     }
 

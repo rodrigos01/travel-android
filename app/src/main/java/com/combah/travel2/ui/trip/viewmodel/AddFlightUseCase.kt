@@ -13,68 +13,56 @@ import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.PendingData.PendingFlight
 import com.combah.travel2.ui.trip.state.AddFlightItemState
 import com.combah.travel2.ui.trip.state.ManualAddPlanState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
 
 class AddFlightUseCase(
-    private val itemStore: AddPlanItemStore<PendingFlight, AddFlightItemState>,
-    private val repository: AddFlightRepository,
+    private val coroutineScope: CoroutineScope,
+    private val itemStore: AddPlanItemStore<PendingFlight, AddFlightItemState> = AddPlanItemStore(),
+    private val repository: AddFlightRepository = AddFlightRepository(),
 ) : AddPlanUseCase.AddItemUseCase<Flight, AddFlightItemState>,
     AddFlightItemActionHandler {
 
-    constructor() : this(AddPlanItemStore(), AddFlightRepository())
-
     override val items: MapFlow<String, AddFlightItemState> = itemStore.items(::createItem)
 
-    override fun setDepartureDate(itemId: String, date: Time) {
+    override fun setDepartureTime(itemId: String, time: Time) {
         itemStore.update(itemId) {
             it.copy(
                 departure = it.departure.update(
-                    dayOfMonth = date.dayOfMonth,
-                    month = date.month,
-                    year = date.year,
+                    dayOfMonth = time.dayOfMonth,
+                    month = time.month,
+                    year = time.year,
+                    hour = time.hour,
+                    minute = time.minute,
                 )
             )
         }
     }
 
-    override fun setDepartureTime(itemId: String, hour: Int, minute: Int) {
-        itemStore.update(itemId) {
-            it.copy(departure = it.departure.update(hour = hour, minute = minute))
-        }
-    }
-
-    override fun setArrivalDate(itemId: String, date: Time) {
+    override fun setArrivalTime(itemId: String, time: Time) {
         itemStore.update(itemId) {
             it.copy(
                 arrival = (it.arrival ?: it.departure).update(
-                    dayOfMonth = date.dayOfMonth,
-                    month = date.month,
-                    year = date.year,
+                    dayOfMonth = time.dayOfMonth,
+                    month = time.month,
+                    year = time.year,
+                    hour = time.hour,
+                    minute = time.minute,
                 )
             )
         }
     }
 
-    override fun setArrivalTime(itemId: String, hour: Int, minute: Int) {
-        itemStore.update(itemId) {
-            val baseTime = it.arrival ?: it.departure
-            it.copy(
-                arrival = baseTime.update(
-                    hour = hour,
-                    minute = minute,
-                    timeZone = it.airportTo?.timeZone ?: baseTime.timeZone,
-                )
-            )
-        }
-    }
-
-    override suspend fun airportFromSearchTextChanged(
+    override fun airportFromSearchTextChanged(
         itemId: String, content: CharSequence
     ) {
-        val results = repository.autocomplete(content.toString())
-        itemStore.update(itemId) {
-            it.copy(airportFromSearchResults = results)
+        coroutineScope.launch {
+            val results = repository.autocomplete(content.toString())
+            itemStore.update(itemId) {
+                it.copy(airportFromSearchResults = results)
+            }
         }
     }
 
@@ -88,12 +76,14 @@ class AddFlightUseCase(
         }
     }
 
-    override suspend fun airportToSearchTextChanged(
+    override fun airportToSearchTextChanged(
         itemId: String, content: CharSequence
     ) {
-        val results = repository.autocomplete(content.toString())
-        itemStore.update(itemId) {
-            it.copy(airportToSearchResults = results)
+        coroutineScope.launch {
+            val results = repository.autocomplete(content.toString())
+            itemStore.update(itemId) {
+                it.copy(airportToSearchResults = results)
+            }
         }
     }
 

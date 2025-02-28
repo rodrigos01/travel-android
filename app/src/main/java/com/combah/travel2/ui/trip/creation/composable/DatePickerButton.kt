@@ -25,13 +25,13 @@ import java.util.TimeZone
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerButton(
-    minimumSelectableTime: Time,
+    minimumSelectableTime: Time?,
     onDateSelected: (Time) -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
     val minTimeInDeviceTimeZone =
-        minimumSelectableTime.update(timeZone = TimeZone.getTimeZone("UTC")).timeInMillis
+        minimumSelectableTime?.update(timeZone = TimeZone.getTimeZone("UTC"))?.timeInMillis ?: 0L
     val showDatePicker = remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(
         initialDisplayedMonthMillis = minTimeInDeviceTimeZone,

@@ -17,10 +17,13 @@ import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.data.TripEvent
 import com.combah.travel2.model.repository.TripRepository
+import com.combah.travel2.ui.common.coroutines.UseCaseScope
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
 import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.state.TripItemState
 import com.combah.travel2.ui.triplist.composable.TripListDestination
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,6 +35,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
+import kotlin.collections.set
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.time.Duration.Companion.days
@@ -41,10 +45,21 @@ import kotlin.time.Duration.Companion.minutes
 class TripViewModel(
     private val repository: TripRepository,
     private val tripId: String,
-    private val addPlanUseCase: AddPlanUseCase,
-    private val timeFormatter: TimeFormatter,
     private val navController: NavController,
+    private val timeFormatter: TimeFormatter = TimeFormatter(),
+    private val useCaseScope: CoroutineScope = UseCaseScope,
+    private val addPlanUseCase: AddPlanUseCase = AddPlanUseCase(coroutineScope = useCaseScope),
 ) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
+
+    constructor(
+        serviceLocator: ServiceLocator,
+        navController: NavController,
+        tripId: String,
+    ) : this(
+        serviceLocator.tripRepository,
+        tripId,
+        navController,
+    )
 
     data class ViewState(
         val title: String,
@@ -72,7 +87,9 @@ class TripViewModel(
         merge(eventsFromTrip, localState).combine(addPlanUseCase.items) { state, addPlanItems ->
             state.updateItems {
                 replaceAll { item ->
-                    (item as? TripItemState.Identifiable)?.id?.let { addPlanItems[it] } ?: item
+                    (item as? TripItemState.Identifiable)?.id?.let {
+                        addPlanItems[it] ?: reversibleItems[it]
+                    } ?: item
                 }
             }
         }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = localState.value)
@@ -168,12 +185,7 @@ class TripViewModel(
     }
 
     override fun cancelEdit(itemId: String) {
-        val item = addPlanUseCase.removeItem(itemId) ?: return
-        val itemIndex = viewState.value.items.indexOf(item)
-        updateItems {
-            removeIf { it is TripItemState.Identifiable && item.id == it.id }
-            item.original?.let { add(itemIndex, it) }
-        }
+        addPlanUseCase.removeItem(itemId) ?: return
     }
 
     override fun delete(type: AddPlanItemState.Type, itemId: String) {
@@ -390,20 +402,11 @@ class TripViewModel(
     private val Time.monthString: String
         get() = timeFormatter.monthString(this)
 
-}
+    override fun onCleared() {
+        super.onCleared()
+        useCaseScope.cancel()
+    }
 
-fun TripViewModel(
-    serviceLocator: ServiceLocator,
-    navController: NavController,
-    tripId: String,
-): TripViewModel {
-    return TripViewModel(
-        serviceLocator.tripRepository,
-        tripId,
-        AddPlanUseCase(),
-        TimeFormatter(),
-        navController,
-    )
 }
 
 private fun TripEvent.getPlace(referenceTime: Time) = when (this) {

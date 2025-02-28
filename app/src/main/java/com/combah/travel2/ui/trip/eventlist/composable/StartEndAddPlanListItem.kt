@@ -15,14 +15,14 @@ import com.combah.travel2.ui.trip.state.ManualAddPlanState
 import com.combah.travel2.ui.trip.state.ManualStartEndAddPlanState
 
 data class StartEndAddPlanListItemState(
-    val startState: AddPlanRowState<String>,
-    val endState: AddPlanRowState<String>,
+    val startState: AddPlanRowState,
+    val endState: AddPlanRowState,
 )
 
 @Composable
 fun rememberStartEndAddPlanListItemState(
-    startState: AddPlanRowState<String>,
-    endState: AddPlanRowState<String>,
+    startState: AddPlanRowState,
+    endState: AddPlanRowState,
 ) = remember { StartEndAddPlanListItemState(startState, endState) }
 
 @Composable
@@ -43,19 +43,22 @@ fun StartEndAddPlanListItem(
 ) {
     Column {
         AddPlanRow(
-            title = startTitle,
             state = state.startState,
+            minTime = uiState.startState.minTime,
+            searchResults = uiState.startState.searchResults,
+            title = startTitle,
             timeSelectorLabel = startTimeSelectorLabel,
             dateSelectionEnabled = uiState.startState.dateSelectionEnabled,
             placeHolder = startPlaceHolder,
             labelText = startLabelText,
             text = uiState.startState.locationText,
             onTextChanged = onStartTextChanged,
-            searchResultItemContent = { it },
         )
         AddPlanRow(
-            title = endTitle,
             state = state.endState,
+            minTime = uiState.endState.minTime,
+            searchResults = uiState.endState.searchResults,
+            title = endTitle,
             timeSelectorLabel = endTimeSelectorLabel,
             dateSelectionEnabled = uiState.endState.dateSelectionEnabled,
             placeHolder = endPlaceHolder,
@@ -63,7 +66,6 @@ fun StartEndAddPlanListItem(
             labelText = endLabelText,
             text = uiState.endState.locationText,
             onTextChanged = onEndTextChanged,
-            searchResultItemContent = { it },
         )
     }
 }

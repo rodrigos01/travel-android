@@ -2,6 +2,7 @@ package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.MapFlow
 import com.combah.travel2.extensions.get
+import com.combah.travel2.extensions.mergeMaps
 import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
@@ -13,21 +14,15 @@ import com.combah.travel2.ui.trip.state.AddFlightItemState
 import com.combah.travel2.ui.trip.state.AddLodgingItemState
 import com.combah.travel2.ui.trip.state.AddPlanItemState
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
 
 class AddPlanUseCase(
-    private val addFlightUseCase: AddFlightUseCase,
-    private val addLodgingUseCase: AddLodgingUseCase,
-    coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main),
+    coroutineScope: CoroutineScope,
+    private val addFlightUseCase: AddFlightUseCase = AddFlightUseCase(coroutineScope = coroutineScope),
+    private val addLodgingUseCase: AddLodgingUseCase = AddLodgingUseCase(coroutineScope = coroutineScope),
 ) : AddPlanItemActionHandler, AddFlightItemActionHandler by addFlightUseCase,
     AddLodgingItemActionHandler by addLodgingUseCase {
-
-    constructor() : this(AddFlightUseCase(), AddLodgingUseCase())
 
     data class StateParams(
         val dateSelectionEnabled: Boolean = true,
@@ -45,12 +40,10 @@ class AddPlanUseCase(
         fun createEntity(item: T): E
     }
 
-    val items = merge(
+    val items = mergeMaps(
         addFlightUseCase.items,
         addLodgingUseCase.items,
-    ).scan(emptyMap<String, AddPlanItemState>()) { items, newValue ->
-        items + newValue
-    }.stateIn(coroutineScope, SharingStarted.Lazily, initialValue = emptyMap())
+    ).stateIn(coroutineScope, SharingStarted.Lazily, initialValue = emptyMap())
 
     fun createAddPlanItem(
         time: Time,

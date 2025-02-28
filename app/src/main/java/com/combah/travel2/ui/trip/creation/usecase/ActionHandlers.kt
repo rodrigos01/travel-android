@@ -12,29 +12,25 @@ interface AddPlanItemActionHandler : AddLodgingItemActionHandler,
 }
 
 interface AddLodgingItemActionHandler {
-    fun setCheckInDate(itemId: String, date: Time)
-    fun setCheckInTime(itemId: String, hour: Int, minute: Int)
-    fun setCheckOutDate(itemId: String, date: Time)
-    fun setCheckoutTime(itemId: String, hour: Int, minute: Int)
+    fun setCheckInTime(itemId: String, time: Time)
+    fun setCheckOutTime(itemId: String, time: Time)
 
-    suspend fun lodgingTextChanged(itemId: String, content: CharSequence)
+    fun lodgingTextChanged(itemId: String, content: CharSequence)
 
     fun lodgingSearchResultTapped(itemId: String, index: Int)
 }
 
 interface AddFlightItemActionHandler {
-    fun setDepartureDate(itemId: String, date: Time)
-    fun setDepartureTime(itemId: String, hour: Int, minute: Int)
-    fun setArrivalDate(itemId: String, date: Time)
-    fun setArrivalTime(itemId: String, hour: Int, minute: Int)
+    fun setDepartureTime(itemId: String, time: Time)
+    fun setArrivalTime(itemId: String, time: Time)
 
-    suspend fun airportFromSearchTextChanged(
+    fun airportFromSearchTextChanged(
         itemId: String, content: CharSequence
     )
 
     fun airportFromSearchResultTapped(itemId: String, index: Int)
 
-    suspend fun airportToSearchTextChanged(
+    fun airportToSearchTextChanged(
         itemId: String, content: CharSequence
     )
 
