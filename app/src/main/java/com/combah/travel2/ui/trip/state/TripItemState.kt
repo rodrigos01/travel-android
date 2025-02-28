@@ -148,7 +148,9 @@ sealed interface ManualStartEndAddPlanState : AddPlanItemState {
         get() = startState.dateSelectionEnabled
 }
 
-data class AddLodgingItemState(
+sealed interface AddLodgingItemState : AddPlanItemState
+
+data class ManualAddLodgingItemState(
     override val id: String,
     override val timestamp: Time,
     override val typeSelectionEnabled: Boolean,
@@ -156,7 +158,7 @@ data class AddLodgingItemState(
     override val endState: ManualAddPlanState,
     override val saveButtonEnabled: Boolean,
     override val deleteButtonEnabled: Boolean,
-) : ManualStartEndAddPlanState
+) : AddLodgingItemState, ManualStartEndAddPlanState
 
 data class AddFlightItemState(
     override val id: String,
@@ -179,11 +181,11 @@ data class LodgingSearchItemState(
     val searchResults: List<String>,
     val checkIn: Time?,
     val checkOut: Time?,
-) : AddPlanItemState
+) : AddLodgingItemState
 
 val AddPlanItemState.type
     get() = when (this) {
         is AddFlightItemState -> AddPlanItemState.Type.Flight
-        is AddLodgingItemState,
+        is ManualAddLodgingItemState,
         is LodgingSearchItemState -> AddPlanItemState.Type.Lodging
     }

@@ -6,8 +6,8 @@ import com.combah.travel2.model.data.Time
 import com.combah.travel2.test.Assertions.assertType
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
 import com.combah.travel2.ui.trip.state.AddFlightItemState
-import com.combah.travel2.ui.trip.state.AddLodgingItemState
 import com.combah.travel2.ui.trip.state.AddPlanItemState
+import com.combah.travel2.ui.trip.state.ManualAddLodgingItemState
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -39,7 +39,7 @@ class AddPlanUseCaseTest {
         on { items } doReturn addFlightItems
     }
     private val addLodgingItems =
-        MutableStateFlow<Map<String, AddLodgingItemState>>(emptyMap())
+        MutableStateFlow<Map<String, ManualAddLodgingItemState>>(emptyMap())
     private val addLodgingUseCase: AddLodgingUseCase = mock {
         on { items } doReturn addLodgingItems
     }
@@ -67,7 +67,7 @@ class AddPlanUseCaseTest {
 
     @Test
     fun `type selected should change item`() {
-        val expected: AddLodgingItemState = mock()
+        val expected: ManualAddLodgingItemState = mock()
         val initialTime: Time = mock()
         val original = mock<AddFlightItemState> {
             on { id } doReturn "originalId"
@@ -129,7 +129,7 @@ class AddPlanUseCaseTest {
 
     @Test
     fun `saveItem should return lodging from use case`() {
-        val original = mock<AddLodgingItemState> {
+        val original = mock<ManualAddLodgingItemState> {
             on { id } doReturn "originalId"
         }
         val expected: Lodging = mock()

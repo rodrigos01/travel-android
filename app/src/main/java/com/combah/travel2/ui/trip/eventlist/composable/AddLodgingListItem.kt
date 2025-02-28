@@ -7,7 +7,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.combah.travel2.extensions.now
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.theme.AppTheme
-import com.combah.travel2.ui.trip.state.AddLodgingItemState
+import com.combah.travel2.ui.trip.state.ManualAddLodgingItemState
 import com.combah.travel2.ui.trip.state.ManualAddPlanState
 import com.combah.travel2.ui.trip.state.ManualStartEndAddPlanState
 
@@ -39,7 +39,7 @@ fun AddLodgingListItemPreview() {
     AppTheme {
         Surface {
             AddLodgingListItem(
-                uiState = AddLodgingItemState(
+                uiState = ManualAddLodgingItemState(
                     "", Time.now(),
                     typeSelectionEnabled = false,
                     startState = ManualAddPlanState(
