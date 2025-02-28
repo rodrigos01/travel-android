@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
+import kotlin.time.Duration
 
 fun Time(source: String): Time {
     val date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm Z", Locale.getDefault()).parse(source)
@@ -13,6 +14,16 @@ fun Time(source: String): Time {
     val timezone = TimeZone.getTimeZone("GMT$offsetString")
     return Time(date.time, timezone)
 }
+
+operator fun Time.plus(other: Long): Time =
+    Time(timeInMillis = timeInMillis + other, timeZone = timeZone)
+
+operator fun Time.plus(other: Time): Time = this + other.timeInMillis
+operator fun Time.plus(duration: Duration) = this + duration.inWholeMilliseconds
+operator fun Time.minus(other: Long): Time =
+    Time(timeInMillis = timeInMillis - other, timeZone = timeZone)
+
+operator fun Time.minus(duration: Duration) = this - duration.inWholeMilliseconds
 
 fun Time.update(
     dayOfMonth: Int = this.dayOfMonth,

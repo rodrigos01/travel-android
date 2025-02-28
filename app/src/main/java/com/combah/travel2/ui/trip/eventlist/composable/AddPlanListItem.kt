@@ -13,6 +13,7 @@ import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
 import com.combah.travel2.ui.trip.state.AddFlightItemState
 import com.combah.travel2.ui.trip.state.AddLodgingItemState
 import com.combah.travel2.ui.trip.state.AddPlanItemState
+import com.combah.travel2.ui.trip.state.LodgingSearchItemState
 import com.combah.travel2.ui.trip.state.ManualAddPlanState
 import com.combah.travel2.ui.trip.state.ManualStartEndAddPlanState
 import com.combah.travel2.ui.trip.state.type
@@ -23,7 +24,7 @@ fun AddPlanListItem(
     actionHandler: AddPlanItemActionHandler,
 ) {
     AddPlanScaffold(
-        state.type.toAddPlanType(),
+        state.uiType,
         onTypeSelected = { actionHandler.addPlanTypeChanged(state.id, it.toState()) },
         typeSelectionEnabled = state.typeSelectionEnabled,
         deleteButtonEnabled = state.deleteButtonEnabled,
@@ -96,7 +97,7 @@ fun AddPlanListItem(
                                 actionHandler.setCheckInTime(state.id, it)
                             }
                             if (itemState.startState.selectedSearchResultIndex != -1) {
-                                actionHandler.lodgingSearchResultTapped(
+                                actionHandler.locationSearchResultTapped(
                                     state.id,
                                     itemState.startState.selectedSearchResultIndex,
                                 )
@@ -109,13 +110,38 @@ fun AddPlanListItem(
                             startEndAddPlanState = itemState,
                             uiState = state,
                             onLodgingTextChanged = {
-                                actionHandler.lodgingTextChanged(
+                                actionHandler.locationTextChanged(
                                     state.id, it
                                 )
                             },
                         )
                     }
                 }
+            }
+
+            is LodgingSearchItemState -> {
+                LodgingSearchListItem(
+                    checkIn = state.checkIn,
+                    checkOut = state.checkOut,
+                    locationText = state.locationText,
+                    searchResults = state.searchResults,
+                    onCheckInDateSelected = { actionHandler.setCheckInTime(state.id, it) },
+                    onCheckOutDateSelected = { actionHandler.setCheckOutTime(state.id, it) },
+                    onLocationSearchTextChanged = {
+                        actionHandler.locationTextChanged(
+                            state.id,
+                            it
+                        )
+                    },
+                    onLocationSearchResultSelected = {
+                        actionHandler.locationSearchResultTapped(
+                            state.id,
+                            it
+                        )
+                    },
+                    onSwitchToManualButtonTapped = {
+                        actionHandler.onSwitchToManualButtonTapped(state.id)
+                    })
             }
         }
     }
@@ -126,10 +152,11 @@ fun AddPlanType.toState() = when (this) {
     AddPlanType.Lodging -> AddPlanItemState.Type.Lodging
 }
 
-fun AddPlanItemState.Type.toAddPlanType() = when (this) {
-    AddPlanItemState.Type.Flight -> AddPlanType.Flight
-    AddPlanItemState.Type.Lodging -> AddPlanType.Lodging
-}
+val AddPlanItemState.uiType
+    get() = when (this) {
+        is AddFlightItemState -> AddPlanType.Flight
+        is AddLodgingItemState, is LodgingSearchItemState -> AddPlanType.Lodging
+    }
 
 @Preview
 @Composable
@@ -173,8 +200,9 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
     override fun airportToSearchTextChanged(itemId: String, content: CharSequence) = Unit
     override fun airportFromSearchResultTapped(itemId: String, index: Int) = Unit
     override fun airportToSearchResultTapped(itemId: String, index: Int) = Unit
-    override fun lodgingTextChanged(itemId: String, content: CharSequence) = Unit
-    override fun lodgingSearchResultTapped(itemId: String, index: Int) = Unit
+    override fun locationTextChanged(itemId: String, content: CharSequence) = Unit
+    override fun locationSearchResultTapped(itemId: String, index: Int) = Unit
+    override fun onSwitchToManualButtonTapped(itemId: String) = Unit
     override fun setCheckInTime(itemId: String, time: Time) = Unit
     override fun setCheckOutTime(itemId: String, time: Time) = Unit
     override fun setDepartureTime(itemId: String, time: Time) = Unit

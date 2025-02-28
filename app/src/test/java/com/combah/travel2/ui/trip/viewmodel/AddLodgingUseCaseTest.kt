@@ -150,7 +150,7 @@ class AddLodgingUseCaseTest {
                     mock(),
                 )
             )
-        subject.lodgingSearchResultTapped("lodging_id", 1)
+        subject.locationSearchResultTapped("lodging_id", 1)
         val result = getUpdateResult(originalData)
         assertThat(result.name).isEqualTo("Hotel Novotel Paris Les Halles")
         assertThat(result.address).isEqualTo("Blvd Les Halles, 45")

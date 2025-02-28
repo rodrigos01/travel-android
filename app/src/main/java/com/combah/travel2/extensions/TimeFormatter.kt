@@ -21,6 +21,10 @@ class TimeFormatter {
 
 fun Time.dayOfMonthString(): String = dayOfMonth.toString()
 
+fun Time.dateString(): String =
+    SimpleDateFormat.getDateInstance(DateFormat.SHORT).apply { timeZone = this@dateString.timeZone }
+        .format(Date(timeInMillis))
+
 fun Time.dayAndMonthString(): String =
     SimpleDateFormat("MMM d", Locale.getDefault()).apply {
         timeZone = this@dayAndMonthString.timeZone

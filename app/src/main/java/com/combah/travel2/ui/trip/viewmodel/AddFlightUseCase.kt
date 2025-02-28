@@ -2,6 +2,7 @@ package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.MapFlow
 import com.combah.travel2.extensions.now
+import com.combah.travel2.extensions.plus
 import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.extensions.update
 import com.combah.travel2.model.data.Flight
