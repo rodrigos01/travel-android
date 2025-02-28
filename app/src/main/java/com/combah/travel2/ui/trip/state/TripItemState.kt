@@ -136,7 +136,7 @@ sealed interface AddPlanItemState : TripItemState, TripItemState.Identifiable,
         get() = Type.entries
 
     enum class Type {
-        Flight, Lodging,
+        Flight, Lodging
     }
 
 }
@@ -156,7 +156,7 @@ data class AddLodgingItemState(
     override val endState: ManualAddPlanState,
     override val saveButtonEnabled: Boolean,
     override val deleteButtonEnabled: Boolean,
-) : AddPlanItemState, ManualStartEndAddPlanState
+) : ManualStartEndAddPlanState
 
 data class AddFlightItemState(
     override val id: String,
@@ -166,10 +166,24 @@ data class AddFlightItemState(
     override val endState: ManualAddPlanState,
     override val saveButtonEnabled: Boolean,
     override val deleteButtonEnabled: Boolean,
-) : AddPlanItemState, ManualStartEndAddPlanState
+) : ManualStartEndAddPlanState
+
+data class LodgingSearchItemState(
+    override val id: String,
+    override val timestamp: Time,
+    override val typeSelectionEnabled: Boolean,
+    override val saveButtonEnabled: Boolean,
+    override val deleteButtonEnabled: Boolean,
+    override val dateSelectionEnabled: Boolean,
+    val locationText: String?,
+    val searchResults: List<String>,
+    val checkIn: Time?,
+    val checkOut: Time?,
+) : AddPlanItemState
 
 val AddPlanItemState.type
     get() = when (this) {
         is AddFlightItemState -> AddPlanItemState.Type.Flight
-        is AddLodgingItemState -> AddPlanItemState.Type.Lodging
+        is AddLodgingItemState,
+        is LodgingSearchItemState -> AddPlanItemState.Type.Lodging
     }

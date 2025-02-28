@@ -1,6 +1,7 @@
 package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.MapFlow
+import com.combah.travel2.extensions.plus
 import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.extensions.update
 import com.combah.travel2.model.data.Lodging
@@ -51,7 +52,7 @@ class AddLodgingUseCase(
         }
     }
 
-    override fun lodgingTextChanged(itemId: String, content: CharSequence) {
+    override fun locationTextChanged(itemId: String, content: CharSequence) {
         coroutineScope.launch {
             val results = repository.autocomplete(content.toString())
             itemStore.update(itemId) { data ->
@@ -62,7 +63,7 @@ class AddLodgingUseCase(
         }
     }
 
-    override fun lodgingSearchResultTapped(itemId: String, index: Int) {
+    override fun locationSearchResultTapped(itemId: String, index: Int) {
         itemStore.update(itemId) { data ->
             val selected = data.searchResults.getOrNull(index)
             data.copy(
@@ -73,6 +74,8 @@ class AddLodgingUseCase(
             )
         }
     }
+
+    override fun onSwitchToManualButtonTapped(itemId: String) = Unit
 
     override fun addItem(time: Time, params: AddPlanUseCase.StateParams): AddLodgingItemState {
         val data = PendingLodging(

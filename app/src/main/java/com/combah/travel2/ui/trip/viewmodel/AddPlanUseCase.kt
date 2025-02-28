@@ -13,6 +13,7 @@ import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
 import com.combah.travel2.ui.trip.state.AddFlightItemState
 import com.combah.travel2.ui.trip.state.AddLodgingItemState
 import com.combah.travel2.ui.trip.state.AddPlanItemState
+import com.combah.travel2.ui.trip.state.LodgingSearchItemState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -94,13 +95,14 @@ class AddPlanUseCase(
         when (item) {
             is AddFlightItemState -> addFlightUseCase.removeItem(item)
             is AddLodgingItemState -> addLodgingUseCase.removeItem(item)
+            is LodgingSearchItemState -> Unit
         }
     }
 
     private val AddPlanItemState.type
         get() = when (this) {
             is AddFlightItemState -> AddPlanItemState.Type.Flight
-            is AddLodgingItemState -> AddPlanItemState.Type.Lodging
+            is AddLodgingItemState, is LodgingSearchItemState -> AddPlanItemState.Type.Lodging
         }
 
     private fun AddPlanItemState.Type.useCase() = when (this) {
@@ -114,7 +116,6 @@ class AddPlanUseCase(
     ): AddPlanItemState {
         return when (this) {
             is Flight -> addFlightUseCase.addItem(this, params)
-
             is Lodging -> addLodgingUseCase.addItem(this, params)
         }
     }
@@ -123,6 +124,7 @@ class AddPlanUseCase(
         return when (this) {
             is AddFlightItemState -> addFlightUseCase.createEntity(this)
             is AddLodgingItemState -> addLodgingUseCase.createEntity(this)
+            is LodgingSearchItemState -> error("LodgingSearchItemState entity creation not implemented")
         }
     }
 }

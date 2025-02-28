@@ -7,7 +7,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.TimeFormatter
+import com.combah.travel2.extensions.minus
 import com.combah.travel2.extensions.now
+import com.combah.travel2.extensions.plus
 import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
@@ -144,10 +146,8 @@ class TripViewModel(
     }
 
     fun itemTapped(itemId: String) {
-        val item =
-            viewState.value.items.filterIsInstance<TripItemState.EventItemState>()
-                .find { it.id == itemId }
-                ?: return
+        val item = viewState.value.items.filterIsInstance<TripItemState.EventItemState>()
+            .find { it.id == itemId } ?: return
         val entity = when (item) {
             is TripItemState.FlightDepartureItemState -> trip.value?.flights?.first { flight ->
                 flight.segments.any { it.departure == item.timestamp && it.airportFrom.name == item.airport }

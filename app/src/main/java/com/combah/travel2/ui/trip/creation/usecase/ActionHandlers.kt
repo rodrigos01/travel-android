@@ -14,10 +14,9 @@ interface AddPlanItemActionHandler : AddLodgingItemActionHandler,
 interface AddLodgingItemActionHandler {
     fun setCheckInTime(itemId: String, time: Time)
     fun setCheckOutTime(itemId: String, time: Time)
-
-    fun lodgingTextChanged(itemId: String, content: CharSequence)
-
-    fun lodgingSearchResultTapped(itemId: String, index: Int)
+    fun locationTextChanged(itemId: String, content: CharSequence)
+    fun locationSearchResultTapped(itemId: String, index: Int)
+    fun onSwitchToManualButtonTapped(itemId: String)
 }
 
 interface AddFlightItemActionHandler {
