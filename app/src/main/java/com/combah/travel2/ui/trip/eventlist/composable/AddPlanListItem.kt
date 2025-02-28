@@ -2,7 +2,7 @@ package com.combah.travel2.ui.trip.eventlist.composable
 
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.tooling.preview.Preview
 import com.combah.travel2.extensions.Time
 import com.combah.travel2.extensions.now
@@ -16,99 +16,105 @@ import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.state.ManualAddPlanState
 import com.combah.travel2.ui.trip.state.ManualStartEndAddPlanState
 import com.combah.travel2.ui.trip.state.type
-import kotlinx.coroutines.launch
 
 @Composable
 fun AddPlanListItem(
     state: AddPlanItemState,
     actionHandler: AddPlanItemActionHandler,
 ) {
-    val scope = rememberCoroutineScope()
-    AddPlanListItem(
-        state,
-        onTypeSelected = {
-            actionHandler.addPlanTypeChanged(state.id, it)
-        },
-        onAirportFromTextChanged = {
-            scope.launch {
-                actionHandler.airportFromSearchTextChanged(state.id, it)
-            }
-        },
-        onAirportToTextChanged = {
-            scope.launch {
-                actionHandler.airportToSearchTextChanged(state.id, it)
-            }
-        },
-        onLodgingTextChanged = {
-            scope.launch {
-                actionHandler.lodgingTextChanged(
-                    state.id, it
-                )
-            }
-        },
-        onSaveButtonTapped = {
-            actionHandler.save(state.id)
-        },
-        onCancelButtonTapped = {
-            actionHandler.cancelEdit(state.id)
-        },
-        onDeleteButtonTapped = {
-            actionHandler.delete(
-                state.type,
-                state.id
-            )
-        })
-}
-
-@Composable
-private fun AddPlanListItem(
-    state: AddPlanItemState,
-    onTypeSelected: (AddPlanItemState.Type) -> Unit,
-    onAirportFromTextChanged: (CharSequence) -> Unit,
-    onAirportToTextChanged: (CharSequence) -> Unit,
-    onLodgingTextChanged: (CharSequence) -> Unit,
-    onSaveButtonTapped: () -> Unit,
-    onCancelButtonTapped: () -> Unit,
-    onDeleteButtonTapped: () -> Unit = {}
-) {
     AddPlanScaffold(
         state.type.toAddPlanType(),
-        onTypeSelected = { onTypeSelected(it.toState()) },
+        onTypeSelected = { actionHandler.addPlanTypeChanged(state.id, it.toState()) },
         typeSelectionEnabled = state.typeSelectionEnabled,
         deleteButtonEnabled = state.deleteButtonEnabled,
-        onDeleteConfirmed = onDeleteButtonTapped,
+        onDeleteConfirmed = { actionHandler.delete(state.type, state.id) },
         primaryButtonEnabled = state.saveButtonEnabled,
         primaryButtonLabel = "Save",
-        onPrimaryButtonTapped = onSaveButtonTapped,
+        onPrimaryButtonTapped = { actionHandler.save(state.id) },
         secondaryButtonLabel = "Cancel",
-        onSecondaryButtonTapped = onCancelButtonTapped,
+        onSecondaryButtonTapped = { actionHandler.cancelEdit(state.id) },
     ) {
         when (state) {
             is ManualStartEndAddPlanState -> {
-                val startEndAddPlanListItemState = rememberStartEndAddPlanListItemState(
+                val itemState = rememberStartEndAddPlanListItemState(
                     startState = rememberAddPlanRowState(
                         selectedTime = state.startState.time,
-                        minTime = state.startState.minTime,
-                        searchResults = state.startState.searchResults,
                     ), endState = rememberAddPlanRowState(
                         selectedTime = state.endState.time,
-                        minTime = state.endState.minTime,
-                        searchResults = state.endState.searchResults,
                     )
                 )
                 when (state) {
-                    is AddFlightItemState -> AddFlightListItem(
-                        startEndAddPlanState = startEndAddPlanListItemState,
-                        uiState = state,
-                        onAirportFromTextChanged = onAirportFromTextChanged,
-                        onAirportToTextChanged = onAirportToTextChanged,
-                    )
+                    is AddFlightItemState -> {
+                        LaunchedEffect(
+                            itemState.startState.selectedTime,
+                            itemState.startState.selectedSearchResultIndex,
+                            itemState.endState.selectedTime,
+                            itemState.endState.selectedSearchResultIndex,
+                        ) {
+                            itemState.startState.selectedTime?.let {
+                                actionHandler.setDepartureTime(state.id, it)
+                            }
+                            if (itemState.startState.selectedSearchResultIndex != -1) {
+                                actionHandler.airportFromSearchResultTapped(
+                                    state.id,
+                                    itemState.startState.selectedSearchResultIndex,
+                                )
+                            }
+                            itemState.endState.selectedTime?.let {
+                                actionHandler.setArrivalTime(state.id, it)
+                            }
+                            if (itemState.endState.selectedSearchResultIndex != -1) {
+                                actionHandler.airportToSearchResultTapped(
+                                    state.id,
+                                    itemState.endState.selectedSearchResultIndex,
+                                )
+                            }
+                        }
+                        AddFlightListItem(
+                            startEndAddPlanState = itemState,
+                            uiState = state,
+                            onAirportFromTextChanged = {
+                                actionHandler.airportFromSearchTextChanged(
+                                    state.id, it
+                                )
+                            },
+                            onAirportToTextChanged = {
+                                actionHandler.airportToSearchTextChanged(
+                                    state.id, it
+                                )
+                            },
+                        )
+                    }
 
-                    is AddLodgingItemState -> AddLodgingListItem(
-                        startEndAddPlanState = startEndAddPlanListItemState,
-                        uiState = state,
-                        onLodgingTextChanged = onLodgingTextChanged,
-                    )
+                    is AddLodgingItemState -> {
+                        LaunchedEffect(
+                            itemState.startState.selectedTime,
+                            itemState.startState.selectedSearchResultIndex,
+                            itemState.endState.selectedTime,
+                        ) {
+                            itemState.startState.selectedTime?.let {
+                                actionHandler.setCheckInTime(state.id, it)
+                            }
+                            if (itemState.startState.selectedSearchResultIndex != -1) {
+                                actionHandler.lodgingSearchResultTapped(
+                                    state.id,
+                                    itemState.startState.selectedSearchResultIndex,
+                                )
+                            }
+                            itemState.endState.selectedTime?.let {
+                                actionHandler.setCheckOutTime(state.id, it)
+                            }
+                        }
+                        AddLodgingListItem(
+                            startEndAddPlanState = itemState,
+                            uiState = state,
+                            onLodgingTextChanged = {
+                                actionHandler.lodgingTextChanged(
+                                    state.id, it
+                                )
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -152,14 +158,25 @@ fun AddPlanListItemPreview() {
                     saveButtonEnabled = true,
                     deleteButtonEnabled = true,
                 ),
-                onAirportFromTextChanged = {},
-                onAirportToTextChanged = {},
-                onLodgingTextChanged = {},
-                onTypeSelected = {},
-                onCancelButtonTapped = {},
-                onDeleteButtonTapped = {},
-                onSaveButtonTapped = {},
+                actionHandler = NoOpActionHandler,
             )
         }
     }
+}
+
+private object NoOpActionHandler : AddPlanItemActionHandler {
+    override fun addPlanTypeChanged(itemId: String, newType: AddPlanItemState.Type) = Unit
+    override fun delete(type: AddPlanItemState.Type, itemId: String) = Unit
+    override fun save(itemId: String) = Unit
+    override fun cancelEdit(itemId: String) = Unit
+    override fun airportFromSearchTextChanged(itemId: String, content: CharSequence) = Unit
+    override fun airportToSearchTextChanged(itemId: String, content: CharSequence) = Unit
+    override fun airportFromSearchResultTapped(itemId: String, index: Int) = Unit
+    override fun airportToSearchResultTapped(itemId: String, index: Int) = Unit
+    override fun lodgingTextChanged(itemId: String, content: CharSequence) = Unit
+    override fun lodgingSearchResultTapped(itemId: String, index: Int) = Unit
+    override fun setCheckInTime(itemId: String, time: Time) = Unit
+    override fun setCheckOutTime(itemId: String, time: Time) = Unit
+    override fun setDepartureTime(itemId: String, time: Time) = Unit
+    override fun setArrivalTime(itemId: String, time: Time) = Unit
 }

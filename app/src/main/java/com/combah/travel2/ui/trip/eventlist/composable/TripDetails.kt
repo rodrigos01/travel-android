@@ -2,7 +2,6 @@ package com.combah.travel2.ui.trip.eventlist.composable
 
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,7 +29,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,7 +37,6 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.model.repository.mock.MockTripRepository
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.ConfirmationDialog
@@ -53,18 +50,15 @@ import com.combah.travel2.ui.trip.state.TripItemState.HotelCheckInItemState
 import com.combah.travel2.ui.trip.state.TripItemState.HotelCheckOutItemState
 import com.combah.travel2.ui.trip.state.TripItemState.MonthItemState
 import com.combah.travel2.ui.trip.state.TripItemState.PlaceItemState
-import com.combah.travel2.ui.trip.viewmodel.AddPlanUseCase
 import com.combah.travel2.ui.trip.viewmodel.TripViewModel
-import kotlinx.coroutines.CoroutineScope
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripDetails(
     viewModel: TripViewModel,
     navController: NavController,
 ) {
     val state by viewModel.viewState.collectAsStateWithLifecycle()
-    val scope = rememberCoroutineScope()
     var isInEditMode by remember {
         mutableStateOf(false)
     }
@@ -150,7 +144,7 @@ fun TripDetails(
                 Box(
                     modifier = Modifier.animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
                 ) {
-                    TripDetailItem(event, viewModel, scope)
+                    TripDetailItem(event, viewModel)
                 }
             }
         }
@@ -159,7 +153,7 @@ fun TripDetails(
 
 @Composable
 private fun TripDetailItem(
-    event: TripItemState, viewModel: TripViewModel, scope: CoroutineScope
+    event: TripItemState, viewModel: TripViewModel
 ) {
     when (event) {
         is MonthItemState -> MonthEventListItem(event.month, event.year)
@@ -244,8 +238,6 @@ fun TripDetailsPreview() {
             TripViewModel(
                 MockTripRepository(),
                 "minhaTrip",
-                AddPlanUseCase(),
-                TimeFormatter(),
                 navController,
             ),
             navController,
