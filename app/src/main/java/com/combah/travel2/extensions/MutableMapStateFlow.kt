@@ -29,4 +29,6 @@ fun <K, V> MutableMapStateFlow<K, V>.remove(key: K): V? {
 operator fun <K, V> MapStateFlow<K, V>.get(key: K): V? = value[key]
 
 fun <K, V> mergeMaps(vararg flows: MapFlow<K, V>): MapFlow<K, V> =
-    combine(flows.map { it.onStart { emit(emptyMap()) } }) { it.fold(emptyMap()) { acc, map -> acc + map } }
+    combine(flows.map { it.onStart { emit(emptyMap()) } }) {
+        it.fold(emptyMap()) { acc, map -> acc + map }
+    }

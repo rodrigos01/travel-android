@@ -14,7 +14,6 @@ import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.state.LodgingSearchItemState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.util.UUID
 import kotlin.time.Duration.Companion.days
 
 class LodgingSearchParamsUseCase(
@@ -48,9 +47,13 @@ class LodgingSearchParamsUseCase(
         itemStore.update(itemId) { it.copy(city = it.searchResults[index].city) }
     }
 
-    override fun addItem(time: Time, params: AddPlanUseCase.StateParams): AddPlanItemState {
+    override fun addItem(
+        id: String,
+        time: Time,
+        params: AddPlanUseCase.StateParams,
+    ): AddPlanItemState {
         val data = PendingData.LodgingSearchParams(
-            id = UUID.randomUUID().toString(),
+            id = id,
             checkIn = time,
             checkOut = time.toMidnight() + 1.days,
         )

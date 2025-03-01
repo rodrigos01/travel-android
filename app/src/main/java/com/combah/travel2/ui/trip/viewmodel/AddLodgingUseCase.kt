@@ -31,6 +31,7 @@ class AddLodgingUseCase(
         val item = items[itemId] ?: return
         removeItem(item)
         manualAddLodgingUseCase.addItem(
+            itemId,
             item.timestamp,
             AddPlanUseCase.StateParams(
                 item.dateSelectionEnabled,
@@ -57,8 +58,12 @@ class AddLodgingUseCase(
     override fun locationSearchResultTapped(itemId: String, index: Int) =
         getActionHandler(itemId).locationSearchResultTapped(itemId, index)
 
-    override fun addItem(time: Time, params: AddPlanUseCase.StateParams): AddPlanItemState =
-        lodgingSearchParamsUseCase.addItem(time, params)
+    override fun addItem(
+        id: String,
+        time: Time,
+        params: AddPlanUseCase.StateParams,
+    ): AddPlanItemState =
+        lodgingSearchParamsUseCase.addItem(id, time, params)
 
     override fun addItem(entity: Lodging, params: AddPlanUseCase.StateParams): AddLodgingItemState =
         manualAddLodgingUseCase.addItem(entity, params)
