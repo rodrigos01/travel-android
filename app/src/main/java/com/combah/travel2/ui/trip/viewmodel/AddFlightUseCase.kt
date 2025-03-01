@@ -16,7 +16,6 @@ import com.combah.travel2.ui.trip.state.AddFlightItemState
 import com.combah.travel2.ui.trip.state.ManualAddPlanState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
 
 class AddFlightUseCase(
@@ -101,9 +100,13 @@ class AddFlightUseCase(
         }
     }
 
-    override fun addItem(time: Time, params: AddPlanUseCase.StateParams): AddFlightItemState {
+    override fun addItem(
+        id: String,
+        time: Time,
+        params: AddPlanUseCase.StateParams,
+    ): AddFlightItemState {
         val data = PendingFlight(
-            id = UUID.randomUUID().toString(),
+            id = id,
             departure = time,
         )
         itemStore.addItem(data, params)

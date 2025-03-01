@@ -1,6 +1,7 @@
 package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.MapFlow
+import com.combah.travel2.extensions.MapStateFlow
 import com.combah.travel2.extensions.get
 import com.combah.travel2.extensions.mergeMaps
 import com.combah.travel2.model.data.Flight
@@ -17,6 +18,7 @@ import com.combah.travel2.ui.trip.state.ManualAddLodgingItemState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import java.util.UUID
 
 class AddPlanUseCase(
     coroutineScope: CoroutineScope,
@@ -34,7 +36,7 @@ class AddPlanUseCase(
     interface AddItemUseCase<E : TripEntity, T : AddPlanItemState> {
         val items: MapFlow<String, T>
 
-        fun addItem(time: Time, params: StateParams): AddPlanItemState
+        fun addItem(id: String, time: Time, params: StateParams): AddPlanItemState
         fun addItem(entity: E, params: StateParams): T
 
         fun removeItem(item: T)
@@ -44,7 +46,7 @@ class AddPlanUseCase(
         fun createEntity(item: T): E
     }
 
-    val items = mergeMaps(
+    val items: MapStateFlow<String, AddPlanItemState> = mergeMaps(
         addFlightUseCase.items,
         addLodgingUseCase.items,
     ).stateIn(coroutineScope, SharingStarted.Lazily, initialValue = emptyMap())
@@ -53,13 +55,23 @@ class AddPlanUseCase(
         time: Time,
         dateSelectionEnabled: Boolean = true,
         type: AddPlanItemState.Type = AddPlanItemState.Type.Flight
+    ): AddPlanItemState = createAddPlanItem(id = null, time, dateSelectionEnabled, type)
+
+    private fun createAddPlanItem(
+        id: String?,
+        time: Time,
+        dateSelectionEnabled: Boolean = true,
+        type: AddPlanItemState.Type,
     ): AddPlanItemState {
-        return type.useCase().addItem(time, StateParams(dateSelectionEnabled))
+        return type.useCase().addItem(
+            id = id ?: UUID.randomUUID().toString(),
+            time,
+            StateParams(dateSelectionEnabled),
+        )
     }
 
     fun createAddPlanItem(entity: TripEntity): AddPlanItemState {
-        val item = entity.asState(StateParams(typeSelectionEnabled = false, deleteEnabled = true))
-        return item
+        return entity.asState(StateParams(typeSelectionEnabled = false, deleteEnabled = true))
     }
 
     override fun addPlanTypeChanged(itemId: String, newType: AddPlanItemState.Type) {
@@ -69,6 +81,7 @@ class AddPlanUseCase(
         }
         removeItem(addPlanItem)
         createAddPlanItem(
+            itemId,
             addPlanItem.timestamp,
             addPlanItem.dateSelectionEnabled,
             newType,
