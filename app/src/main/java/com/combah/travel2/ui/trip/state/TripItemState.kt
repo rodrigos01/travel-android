@@ -178,10 +178,13 @@ data class LodgingSearchItemState(
     override val deleteButtonEnabled: Boolean,
     override val dateSelectionEnabled: Boolean,
     val locationText: String?,
-    val searchResults: List<String>,
+    val searchResults: List<SearchResultItemState>,
     val checkIn: Time?,
+    val minCheckOutTime: Time?,
     val checkOut: Time?,
 ) : AddLodgingItemState
+
+data class SearchResultItemState(val title: String, val subtitle: String)
 
 val AddPlanItemState.type
     get() = when (this) {

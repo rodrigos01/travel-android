@@ -2,6 +2,7 @@ package com.combah.travel2.ui.trip.eventlist.composable
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,22 +15,26 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.combah.travel2.R
+import com.combah.travel2.extensions.Time
 import com.combah.travel2.extensions.dateString
-import com.combah.travel2.extensions.now
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.common.components.IconTextButton
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.AddPlanType
 import com.combah.travel2.ui.trip.creation.composable.DatePickerButton
+import com.combah.travel2.ui.trip.state.SearchResultItemState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +44,7 @@ fun LodgingSearchListItem(
     minCheckIn: Time? = null,
     minCheckOut: Time? = null,
     locationText: String? = null,
-    searchResults: List<String> = emptyList(),
+    searchResults: List<SearchResultItemState> = emptyList(),
     onCheckInDateSelected: (Time) -> Unit,
     onCheckOutDateSelected: (Time) -> Unit,
     onSwitchToManualButtonTapped: () -> Unit,
@@ -47,31 +52,19 @@ fun LodgingSearchListItem(
     onLocationSearchResultSelected: (Int) -> Unit,
 ) {
     Column {
-        Row {
-            DatePickerButton(
-                minimumSelectableTime = minCheckIn,
-                onDateSelected = onCheckInDateSelected,
-                modifier = Modifier.weight(1F),
-            ) {
-                IconTextButton(
-                    onClick = {},
-                    leadingIconResId = R.drawable.baseline_today_24,
-                ) {
-                    Text(checkIn?.dateString() ?: "check-in date")
-                }
-            }
-            DatePickerButton(
-                minimumSelectableTime = minCheckOut,
-                onDateSelected = onCheckOutDateSelected,
-                modifier = Modifier.weight(1F),
-            ) {
-                IconTextButton(
-                    onClick = {},
-                    leadingIconResId = R.drawable.baseline_today_24,
-                ) {
-                    Text(checkOut?.dateString() ?: "check-out date")
-                }
-            }
+        Row(horizontalArrangement = Arrangement.SpaceAround, modifier = Modifier.fillMaxWidth()) {
+            DatePickerTextButton(
+                checkIn,
+                minCheckIn,
+                label = "check-in date",
+                onCheckInDateSelected
+            )
+            DatePickerTextButton(
+                checkOut,
+                minCheckOut,
+                label = "check-out date",
+                onCheckOutDateSelected
+            )
         }
         var showSearchDialog by remember { mutableStateOf(false) }
         var buttonLabel by remember { mutableStateOf(locationText) }
@@ -88,18 +81,26 @@ fun LodgingSearchListItem(
             Dialog(onDismissRequest = {
                 showSearchDialog = false
             }) {
+                var query by remember { mutableStateOf(locationText ?: "") }
+                val expanded =
+                    searchResults.isNotEmpty() && query.isNotBlank() && query.isNotEmpty()
+                val focusRequester = remember { FocusRequester() }
                 DockedSearchBar(
                     inputField = {
                         SearchBarDefaults.InputField(
-                            query = "",
+                            query = query,
                             placeholder = { Text("Enter location") },
-                            onQueryChange = onLocationSearchTextChanged,
-                            expanded = true,
+                            onQueryChange = {
+                                query = it
+                                onLocationSearchTextChanged(it)
+                            },
+                            expanded = expanded,
                             onExpandedChange = {},
-                            onSearch = {}
+                            onSearch = {},
+                            modifier = Modifier.focusRequester(focusRequester)
                         )
                     },
-                    expanded = true,
+                    expanded = expanded,
                     onExpandedChange = {},
                     colors = SearchBarDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
                     modifier = Modifier
@@ -107,12 +108,21 @@ fun LodgingSearchListItem(
                         .padding(horizontal = 16.dp)
                 ) {
                     searchResults.forEachIndexed { index, result ->
-                        Text(result, modifier = Modifier.clickable {
-                            buttonLabel = result
-                            showSearchDialog = false
-                            onLocationSearchResultSelected(index)
-                        }.padding(all = 16.dp).fillMaxWidth())
+                        Column(modifier = Modifier
+                            .clickable {
+                                buttonLabel = "${result.title}, ${result.subtitle}"
+                                showSearchDialog = false
+                                onLocationSearchResultSelected(index)
+                            }
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .fillMaxWidth()) {
+                            Text(result.title, style = MaterialTheme.typography.labelMedium)
+                            Text(result.subtitle, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
+                }
+                LaunchedEffect(showSearchDialog) {
+                    focusRequester.requestFocus()
                 }
             }
         }
@@ -128,14 +138,39 @@ fun LodgingSearchListItem(
 }
 
 @Composable
+private fun DatePickerTextButton(
+    time: Time?,
+    minTime: Time?,
+    label: String,
+    onTimeSelected: (Time) -> Unit,
+) {
+    var selectedTime by remember { mutableStateOf(time) }
+    DatePickerButton(
+        selectedTime = selectedTime,
+        minimumSelectableTime = minTime,
+        onDateSelected = {
+            selectedTime = it
+            onTimeSelected(it)
+        },
+    ) {
+        IconTextButton(
+            onClick = {},
+            leadingIconResId = R.drawable.baseline_today_24,
+        ) {
+            Text(selectedTime?.dateString() ?: label)
+        }
+    }
+}
+
+@Composable
 @Preview
 fun LodgingSearchListItemPreview() {
     AppTheme {
         AddPlanScaffold(AddPlanType.Lodging, {}, true, false, {}, true, "Save", {}, "Cancel", {}) {
             LodgingSearchListItem(
-                checkIn = Time.now(),
+                checkIn = Time("2025-12-05T12:00 +0100"),
                 checkOut = null,
-                searchResults = List(5) { "City$it" },
+                searchResults = List(5) { SearchResultItemState("City$it", "Address$it") },
                 locationText = null,
                 onCheckInDateSelected = {},
                 onCheckOutDateSelected = {},
