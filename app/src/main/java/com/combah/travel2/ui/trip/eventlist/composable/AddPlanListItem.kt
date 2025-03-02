@@ -123,6 +123,7 @@ fun AddPlanListItem(
                 LodgingSearchListItem(
                     checkIn = state.checkIn,
                     checkOut = state.checkOut,
+                    minCheckOut = state.minCheckOutTime,
                     locationText = state.locationText,
                     searchResults = state.searchResults,
                     onCheckInDateSelected = { actionHandler.setCheckInTime(state.id, it) },

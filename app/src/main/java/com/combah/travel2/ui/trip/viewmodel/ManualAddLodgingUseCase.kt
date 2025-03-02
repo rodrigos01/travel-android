@@ -7,7 +7,6 @@ import com.combah.travel2.extensions.update
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddLodgingRepository
-import com.combah.travel2.model.repository.AddLodgingRepository.ResultType
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.ManualAddPlanItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.PendingData.PendingLodging
@@ -55,7 +54,7 @@ class ManualAddLodgingUseCase(
 
     override fun locationTextChanged(itemId: String, content: CharSequence) {
         coroutineScope.launch {
-            val results = repository.autocomplete(content.toString(), ResultType.Lodging)
+            val results = repository.autocomplete(content.toString())
             itemStore.update(itemId) { data ->
                 data.copy(
                     searchResults = results

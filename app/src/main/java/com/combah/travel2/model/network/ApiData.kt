@@ -12,6 +12,11 @@ interface ApiResponse {
     data class PlaceAutoComplete(
         val data: List<ApiData.SimplePlace>
     )
+
+    @Serializable
+    data class CityAutoComplete(
+        val data: List<ApiData.Place>
+    )
 }
 
 interface ApiData {

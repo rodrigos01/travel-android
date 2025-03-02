@@ -6,12 +6,12 @@ import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddLodgingRepository
-import com.combah.travel2.model.repository.AddLodgingRepository.ResultType
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.LodgingSearchItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.PendingData
 import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.state.LodgingSearchItemState
+import com.combah.travel2.ui.trip.state.SearchResultItemState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.days
@@ -33,8 +33,11 @@ class LodgingSearchParamsUseCase(
     }
 
     override fun locationTextChanged(itemId: String, content: CharSequence) {
+        if (content.length < 3) {
+            return
+        }
         coroutineScope.launch {
-            val results = repository.autocomplete(content.toString(), ResultType.City)
+            val results = repository.autocompleteCity(content.toString())
             itemStore.update(itemId) { data ->
                 data.copy(
                     searchResults = results
@@ -44,7 +47,7 @@ class LodgingSearchParamsUseCase(
     }
 
     override fun locationSearchResultTapped(itemId: String, index: Int) {
-        itemStore.update(itemId) { it.copy(city = it.searchResults[index].city) }
+        itemStore.update(itemId) { it.copy(city = it.searchResults[index]) }
     }
 
     override fun addItem(
@@ -55,7 +58,6 @@ class LodgingSearchParamsUseCase(
         val data = PendingData.LodgingSearchParams(
             id = id,
             checkIn = time,
-            checkOut = time.toMidnight() + 1.days,
         )
         itemStore.addItem(data, params)
         return createItem(data, params)
@@ -85,13 +87,19 @@ class LodgingSearchParamsUseCase(
         LodgingSearchItemState(
             id = searchParams.id,
             timestamp = searchParams.checkIn,
-            saveButtonEnabled = searchParams.city != null && searchParams.checkOut > searchParams.checkIn,
+            saveButtonEnabled = searchParams.city != null && searchParams.checkOut != null && searchParams.checkOut > searchParams.checkIn,
             dateSelectionEnabled = stateParams.dateSelectionEnabled,
             deleteButtonEnabled = stateParams.deleteEnabled,
             typeSelectionEnabled = stateParams.typeSelectionEnabled,
             checkIn = searchParams.checkIn,
+            minCheckOutTime = searchParams.checkIn.toMidnight() + 1.days,
             checkOut = searchParams.checkOut,
             locationText = searchParams.city?.name,
-            searchResults = searchParams.searchResults.map { it.name ?: it.address },
+            searchResults = searchParams.searchResults.map {
+                SearchResultItemState(
+                    it.name,
+                    it.address
+                )
+            },
         )
 }
