@@ -175,6 +175,13 @@ class TripViewModel(
     }
 
     override fun save(itemId: String) {
+        val lodgingSearchParams = addPlanUseCase.getLodgingSearchParams(itemId)
+        if (lodgingSearchParams != null) {
+            addPlanUseCase.getLodgingSearchParams(itemId)?.let {
+                navController.navigate(route = it)
+            }
+            return
+        }
         val entity = addPlanUseCase.saveItem(itemId)
         viewModelScope.launch {
             when (entity) {

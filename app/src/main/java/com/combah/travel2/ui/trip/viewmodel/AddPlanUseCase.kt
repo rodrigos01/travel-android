@@ -8,6 +8,7 @@ import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.TripEntity
+import com.combah.travel2.ui.lodgingsearch.composable.LodgingSearchDestination
 import com.combah.travel2.ui.trip.creation.usecase.AddFlightItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
@@ -89,6 +90,9 @@ class AddPlanUseCase(
     }
 
     override fun save(itemId: String) = Unit
+
+    fun getLodgingSearchParams(itemId: String): LodgingSearchDestination.Params? =
+        addLodgingUseCase.getLodgingSearchParams(itemId)
 
     fun saveItem(itemId: String): TripEntity {
         val addPlanItem = items[itemId] ?: error("Item with id $itemId not found in store")

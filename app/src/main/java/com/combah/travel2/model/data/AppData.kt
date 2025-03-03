@@ -1,5 +1,6 @@
 package com.combah.travel2.model.data
 
+import kotlinx.serialization.Serializable
 import java.util.TimeZone
 
 data class Trip(
@@ -44,6 +45,7 @@ data class Lodging(
     val checkout: Time,
 ) : TripEntity, TripEvent
 
+@Serializable
 data class Place(
     val id: String,
     val name: String,
