@@ -72,3 +72,17 @@ data class SimplePlace(
     val address: String,
     val city: Place,
 )
+
+data class LodgingSearchResult(
+    val id: String,
+    val name: String,
+    val coverImage: String,
+    val address: String,
+    val rating: Double,
+    val reviewCount: Int,
+    val stars: Int,
+    val price: Double,
+    val totalPrice: Double,
+    val latitude: Double,
+    val longitude: Double,
+)

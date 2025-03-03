@@ -40,3 +40,13 @@ fun Time.timeString(): String {
     val date = Date(timeInMillis)
     return formatter.format(date)
 }
+
+fun Time.asISO8601DateString(): String =
+    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).also {
+        it.timeZone = timeZone
+    }.format(Date(timeInMillis))
+
+fun Time.asISO8601String(): String =
+    SimpleDateFormat("yyyy-MM-dd'T'HH:mm Z", Locale.getDefault()).also {
+        it.timeZone = timeZone
+    }.format(Date(timeInMillis))

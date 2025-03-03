@@ -17,6 +17,11 @@ interface ApiResponse {
     data class CityAutoComplete(
         val data: List<ApiData.Place>
     )
+
+    @Serializable
+    data class LodgingSearch(
+        val hotels: List<ApiData.Lodging>,
+    )
 }
 
 interface ApiData {
@@ -46,5 +51,20 @@ interface ApiData {
         val name: String?,
         val address: String,
         val city: Place
+    )
+
+    @Serializable
+    data class Lodging(
+        val id: String,
+        val name: String,
+        val coverImage: String,
+        val address: String,
+        val rating: Double,
+        val reviewCount: Int,
+        val stars: Int,
+        val price: Double,
+        val totalPrice: Double,
+        val latitude: Double,
+        val longitude: Double,
     )
 }
