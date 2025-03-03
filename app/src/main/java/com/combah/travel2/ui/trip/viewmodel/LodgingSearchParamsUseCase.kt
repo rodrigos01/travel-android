@@ -6,6 +6,7 @@ import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.AddLodgingRepository
+import com.combah.travel2.ui.lodgingsearch.composable.LodgingSearchDestination
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.LodgingSearchItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.PendingData
@@ -102,4 +103,19 @@ class LodgingSearchParamsUseCase(
                 )
             },
         )
+
+    fun getParams(itemId: String): LodgingSearchDestination.Params? =
+        itemStore.getData(itemId)?.let {
+            if (it.checkOut != null && it.city != null) {
+                LodgingSearchDestination.Params(
+                    checkIn = it.checkIn.timeInMillis,
+                    checkOut = it.checkOut.timeInMillis,
+                    locationId = it.city.id,
+                    locationName = it.city.name,
+                    timeZoneId = it.checkIn.timeZone.id
+                )
+            } else {
+                null
+            }
+        }
 }

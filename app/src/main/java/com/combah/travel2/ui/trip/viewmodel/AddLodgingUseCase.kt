@@ -5,6 +5,7 @@ import com.combah.travel2.extensions.get
 import com.combah.travel2.extensions.mergeMaps
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
+import com.combah.travel2.ui.lodgingsearch.composable.LodgingSearchDestination
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandlerBase
 import com.combah.travel2.ui.trip.state.AddLodgingItemState
@@ -80,4 +81,7 @@ class AddLodgingUseCase(
                 is LodgingSearchItemState -> lodgingSearchParamsUseCase
             }
         } ?: error("Item with id $itemId not found in store")
+
+    fun getLodgingSearchParams(itemId: String): LodgingSearchDestination.Params? =
+        lodgingSearchParamsUseCase.getParams(itemId)
 }

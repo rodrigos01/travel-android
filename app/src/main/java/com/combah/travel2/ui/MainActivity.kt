@@ -10,8 +10,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.toRoute
 import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.viewModel
+import com.combah.travel2.model.repository.AddLodgingRepository
+import com.combah.travel2.ui.lodgingsearch.composable.LodgingSearch
+import com.combah.travel2.ui.lodgingsearch.composable.LodgingSearchDestination
+import com.combah.travel2.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.eventlist.composable.TripDetails
 import com.combah.travel2.ui.trip.eventlist.composable.TripDetailsDestination
@@ -57,6 +62,20 @@ class MainActivity : AppCompatActivity() {
                         )
                     }
                     TripDetails(viewModel = viewModel, navController = navController)
+                }
+                composable<LodgingSearchDestination.Params> { backStackEntry ->
+                    val params: LodgingSearchDestination.Params = backStackEntry.toRoute()
+                    val viewModel: LodgingSearchViewModel = viewModel {
+                        LodgingSearchViewModel(
+                            AddLodgingRepository(),
+                            params.checkIn,
+                            params.checkOut,
+                            params.locationId,
+                            params.locationName,
+                            params.timeZoneId,
+                        )
+                    }
+                    LodgingSearch(navController, viewModel)
                 }
             }
         }

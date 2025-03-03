@@ -38,8 +38,8 @@ class AddLodgingRepository {
         return request<ApiResponse.LodgingSearch>("/lodging/search") {
             url {
                 parameters.append("cityId", locationId)
-                parameters.append("checkIn", checkIn.asISO8601DateString())
-                parameters.append("checkOut", checkOut.asISO8601DateString())
+                parameters.append("checkin", checkIn.asISO8601DateString())
+                parameters.append("checkout", checkOut.asISO8601DateString())
                 parameters.append("adults", "1")
                 parameters.append("children", "0")
                 parameters.append(
