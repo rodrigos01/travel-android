@@ -1,6 +1,7 @@
 package com.combah.travel2.model.network
 
 import com.combah.travel2.model.data.Airport
+import com.combah.travel2.model.data.LodgingSearchResult
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.SimplePlace
 import java.util.TimeZone
@@ -27,4 +28,18 @@ fun ApiData.Place.toAppDataModel() = Place(
     coverImage = coverImage,
     externalId = externalId,
     source = source,
+)
+
+fun ApiData.Lodging.toAppDataModel() = LodgingSearchResult(
+    id = id,
+    name = name,
+    rating = rating,
+    reviewCount = reviewCount,
+    stars = stars,
+    address = address,
+    latitude = latitude,
+    longitude = longitude,
+    coverImage = coverImage,
+    price = price,
+    totalPrice = totalPrice,
 )
