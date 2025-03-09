@@ -46,16 +46,6 @@ fun DatePickerButton(
         minimumSelectableTime?.update(timeZone = TimeZone.getTimeZone("UTC"))
     val selectedTimeInDeviceTimeZone = selectedTime?.update(timeZone = TimeZone.getTimeZone("UTC"))
     var showDatePicker by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = selectedTimeInDeviceTimeZone?.timeInMillis,
-        initialDisplayedMonthMillis = minTimeInDeviceTimeZone?.timeInMillis
-            ?: selectedTimeInDeviceTimeZone?.timeInMillis ?: Time.now().timeInMillis,
-        selectableDates = object : SelectableDates {
-            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                return minTimeInDeviceTimeZone == null || utcTimeMillis >= minTimeInDeviceTimeZone.timeInMillis
-            }
-        }
-    )
     val coroutineScope = rememberCoroutineScope()
     val interactionSource = remember { MutableInteractionSource() }
     Box(
@@ -88,6 +78,16 @@ fun DatePickerButton(
         content()
     }
     if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedTimeInDeviceTimeZone?.timeInMillis,
+            initialDisplayedMonthMillis = selectedTimeInDeviceTimeZone?.timeInMillis
+                ?: minTimeInDeviceTimeZone?.timeInMillis ?: Time.now().timeInMillis,
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    return minTimeInDeviceTimeZone == null || utcTimeMillis >= minTimeInDeviceTimeZone.timeInMillis
+                }
+            }
+        )
         ConfirmationDialog(
             onConfirm = {
                 datePickerState.selectedTime?.let {
