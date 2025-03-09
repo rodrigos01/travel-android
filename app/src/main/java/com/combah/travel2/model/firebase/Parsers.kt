@@ -44,7 +44,8 @@ fun FirebaseData.FlightSegment.toAppDataModel() = FlightSegment(
 fun FirebaseData.Airport.toAppDataModel(city: FirebaseData.Place? = null) = Airport(
     iata = iata ?: error("iata is required"),
     name = name ?: error("name is required"),
-    timeZone = (timezone ?: city?.timeZone)?.let { TimeZone.getTimeZone(it) },
+    timeZone = (timezone ?: city?.timeZone)?.let { TimeZone.getTimeZone(it) }
+        ?: TimeZone.getDefault(),
     city = this.city?.toAppDataModel() ?: city?.toAppDataModel() ?: error("city is required"),
 )
 

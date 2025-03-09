@@ -1,6 +1,7 @@
 package com.combah.travel2.ui.trip.viewmodel
 
 import com.combah.travel2.extensions.MapFlow
+import com.combah.travel2.extensions.atTimeZone
 import com.combah.travel2.extensions.now
 import com.combah.travel2.extensions.plus
 import com.combah.travel2.extensions.toMidnight
@@ -16,7 +17,7 @@ import com.combah.travel2.ui.trip.state.AddFlightItemState
 import com.combah.travel2.ui.trip.state.ManualAddPlanState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.hours
 
 class AddFlightUseCase(
     private val coroutineScope: CoroutineScope,
@@ -37,7 +38,7 @@ class AddFlightUseCase(
                     year = time.year,
                     hour = time.hour,
                     minute = time.minute,
-                )
+                ),
             )
         }
     }
@@ -69,7 +70,7 @@ class AddFlightUseCase(
 
     override fun airportFromSearchResultTapped(itemId: String, index: Int) {
         itemStore.update(itemId) {
-            val selected = it.airportToSearchResults.getOrNull(index)
+            val selected = it.airportFromSearchResults.getOrNull(index)
             it.copy(
                 airportFrom = selected,
                 airportFromSearchResults = emptyList()
@@ -130,7 +131,8 @@ class AddFlightUseCase(
         data: PendingFlight,
         stateParams: AddPlanUseCase.StateParams,
     ): AddFlightItemState {
-        val arrivalTime = data.arrival ?: data.departure
+        val minArrival = (data.airportTo?.let { data.departure.atTimeZone(it.timeZone) }
+            ?: data.departure) + 1.hours
         return AddFlightItemState(
             id = data.id,
             timestamp = data.departure,
@@ -142,18 +144,15 @@ class AddFlightUseCase(
                 searchResults = data.airportFromSearchResults.map { it.name },
             ),
             endState = ManualAddPlanState(
-                time = arrivalTime,
-                minTime = Time(
-                    data.departure.timeInMillis,
-                    timeZone = data.airportTo?.timeZone ?: data.departure.timeZone,
-                ) + 1.minutes,
+                time = data.arrival?.takeIf { it >= minArrival },
+                minTime = minArrival,
                 dateSelectionEnabled = true,
                 locationText = data.airportTo?.name,
                 searchResults = data.airportToSearchResults.map { it.name },
             ),
             typeSelectionEnabled = stateParams.typeSelectionEnabled,
             deleteButtonEnabled = stateParams.deleteEnabled,
-            saveButtonEnabled = data.arrival?.let { it > data.departure } ?: false && data.airportFrom != null && data.airportTo != null,
+            saveButtonEnabled = data.arrival?.let { it >= minArrival } ?: false && data.airportFrom != null && data.airportTo != null,
         )
     }
 
@@ -179,4 +178,8 @@ class AddFlightUseCase(
             0.0,
         )
     }
+
+    private fun PendingFlight.minArrival(
+        departureTime: Time = this.departure
+    ) = (airportTo?.let { departureTime.atTimeZone(it.timeZone) } ?: departureTime) + 1.hours
 }

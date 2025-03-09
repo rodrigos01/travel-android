@@ -39,31 +39,34 @@ fun AddPlanListItem(
             is ManualStartEndAddPlanState -> {
                 val itemState = rememberStartEndAddPlanListItemState(
                     startState = rememberAddPlanRowState(
+                        key = state.startState.searchResults,
                         selectedTime = state.startState.time,
                     ), endState = rememberAddPlanRowState(
+                        key = state.endState.searchResults,
                         selectedTime = state.endState.time,
                     )
                 )
                 when (state) {
                     is AddFlightItemState -> {
-                        LaunchedEffect(
-                            itemState.startState.selectedTime,
-                            itemState.startState.selectedSearchResultIndex,
-                            itemState.endState.selectedTime,
-                            itemState.endState.selectedSearchResultIndex,
-                        ) {
+                        LaunchedEffect(itemState.startState.selectedTime) {
                             itemState.startState.selectedTime?.let {
                                 actionHandler.setDepartureTime(state.id, it)
                             }
+                        }
+                        LaunchedEffect(itemState.startState.selectedSearchResultIndex) {
                             if (itemState.startState.selectedSearchResultIndex != -1) {
                                 actionHandler.airportFromSearchResultTapped(
                                     state.id,
                                     itemState.startState.selectedSearchResultIndex,
                                 )
                             }
+                        }
+                        LaunchedEffect(itemState.endState.selectedTime) {
                             itemState.endState.selectedTime?.let {
                                 actionHandler.setArrivalTime(state.id, it)
                             }
+                        }
+                        LaunchedEffect(itemState.endState.selectedSearchResultIndex) {
                             if (itemState.endState.selectedSearchResultIndex != -1) {
                                 actionHandler.airportToSearchResultTapped(
                                     state.id,
@@ -88,20 +91,20 @@ fun AddPlanListItem(
                     }
 
                     is ManualAddLodgingItemState -> {
-                        LaunchedEffect(
-                            itemState.startState.selectedTime,
-                            itemState.startState.selectedSearchResultIndex,
-                            itemState.endState.selectedTime,
-                        ) {
+                        LaunchedEffect(itemState.startState.selectedTime) {
                             itemState.startState.selectedTime?.let {
                                 actionHandler.setCheckInTime(state.id, it)
                             }
+                        }
+                        LaunchedEffect(itemState.startState.selectedSearchResultIndex) {
                             if (itemState.startState.selectedSearchResultIndex != -1) {
                                 actionHandler.locationSearchResultTapped(
                                     state.id,
                                     itemState.startState.selectedSearchResultIndex,
                                 )
                             }
+                        }
+                        LaunchedEffect(itemState.endState.selectedTime) {
                             itemState.endState.selectedTime?.let {
                                 actionHandler.setCheckOutTime(state.id, it)
                             }

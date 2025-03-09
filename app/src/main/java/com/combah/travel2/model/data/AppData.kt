@@ -32,7 +32,7 @@ data class FlightSegment(
 data class Airport(
     val iata: String,
     val name: String,
-    val timeZone: TimeZone?,
+    val timeZone: TimeZone,
     val city: Place,
 )
 

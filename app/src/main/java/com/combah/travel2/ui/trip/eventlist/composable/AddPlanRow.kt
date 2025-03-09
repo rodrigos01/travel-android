@@ -63,9 +63,10 @@ class AddPlanRowState(
 
 @Composable
 fun rememberAddPlanRowState(
+    key: Any? = null,
     selectedTime: Time? = null,
     selectedSearchResultIndex: Int = -1,
-) = remember {
+) = remember(key, selectedTime) {
     AddPlanRowState(
         mutableStateOf(selectedTime),
         mutableIntStateOf(selectedSearchResultIndex),
@@ -124,7 +125,7 @@ fun AddPlanRow(
         ) {
             if (dateSelectionEnabled) {
                 DatePickerButton(
-                    minTime?.toMidnight(),
+                    minimumSelectableTime = minTime?.toMidnight(),
                     onDateSelected = {
                         state.selectedTime = selectedTime.update(
                             dayOfMonth = it.dayOfMonth,
@@ -132,6 +133,7 @@ fun AddPlanRow(
                             year = it.year,
                         )
                     },
+                    selectedTime = state.selectedTime,
                     modifier = Modifier.width(80.dp),
                 ) {
                     Row(

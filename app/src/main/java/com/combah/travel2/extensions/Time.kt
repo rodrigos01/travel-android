@@ -40,4 +40,6 @@ fun Time.update(
 
 fun Time.toMidnight(): Time = update(hour = 0, minute = 0, second = 0)
 
+fun Time.atTimeZone(timeZone: TimeZone): Time = Time(timeInMillis, timeZone)
+
 fun Time.Companion.now() = Time(timeInMillis = System.currentTimeMillis(), TimeZone.getDefault())
