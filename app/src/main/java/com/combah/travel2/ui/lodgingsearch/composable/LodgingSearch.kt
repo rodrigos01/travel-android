@@ -114,21 +114,7 @@ fun LodgingSearch(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier.padding(vertical = 16.dp),
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(MaterialTheme.shapes.extraLarge)
-                                        .background(color = MaterialTheme.colorScheme.secondaryContainer)
-                                )
-                                {
-                                    Text(
-                                        "%.1f".format(result.rating),
-                                        textAlign = TextAlign.Center,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        modifier = Modifier
-                                            .align(Alignment.Center)
-                                    )
-                                }
+                                LodgingRating(result.rating)
                                 Text(
                                     result.lodgingType,
                                     style = MaterialTheme.typography.bodyMedium,
@@ -146,6 +132,25 @@ fun LodgingSearch(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun LodgingRating(rating: Double) {
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .clip(MaterialTheme.shapes.extraLarge)
+            .background(color = MaterialTheme.colorScheme.secondaryContainer)
+    )
+    {
+        Text(
+            "%.1f".format(rating),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier
+                .align(Alignment.Center)
+        )
     }
 }
 
