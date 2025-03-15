@@ -98,6 +98,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.1.0")
+    // Google Maps
+    implementation("com.google.maps.android:maps-compose:6.4.1")
     // Ktor
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-android:$ktorVersion")

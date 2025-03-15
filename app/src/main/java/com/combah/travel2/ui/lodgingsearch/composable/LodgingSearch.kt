@@ -1,8 +1,8 @@
 package com.combah.travel2.ui.lodgingsearch.composable
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -37,8 +38,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.combah.travel2.extensions.Time
-import com.combah.travel2.model.data.Place
-import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.lodgingsearch.state.LodgingSearchResultState
 import com.combah.travel2.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
 import com.combah.travel2.ui.theme.AppTheme
@@ -52,7 +51,6 @@ fun LodgingSearch(
     state: LodgingSearchViewModel.UiState,
 ) {
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
                 TopAppBar(title = { Text("Lodging Search") }, navigationIcon = {
@@ -81,15 +79,14 @@ fun LodgingSearch(
             modifier = Modifier.padding(paddingValues),
         ) {
             items(state.results, key = { it.id }) { result ->
-                Box(
+                Surface(
+                    shape = MaterialTheme.shapes.large,
+                    border = BorderStroke(
+                        1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                    ),
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
-                        .border(
-                            1.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant,
-                            shape = MaterialTheme.shapes.large,
-                        )
-                        .clip(MaterialTheme.shapes.large)
                         .animateItem()
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -121,11 +118,7 @@ fun LodgingSearch(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.weight(1f)
                                 )
-                                Text(
-                                    NumberFormat.getCurrencyInstance().format(result.price),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.tertiary,
-                                )
+                                PriceText(result.price)
                             }
                         }
                     }
@@ -133,6 +126,15 @@ fun LodgingSearch(
             }
         }
     }
+}
+
+@Composable
+fun PriceText(value: Double) {
+    Text(
+        NumberFormat.getCurrencyInstance().format(value),
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.tertiary,
+    )
 }
 
 @Composable
