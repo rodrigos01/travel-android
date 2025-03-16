@@ -1,72 +1,93 @@
 package com.combah.travel2.ui.trip.creation.composable
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.combah.travel2.R
+import com.combah.travel2.extensions.Time
+import com.combah.travel2.extensions.now
 import com.combah.travel2.extensions.update
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.theme.AppTheme
-import com.combah.travel2.ui.trip.eventlist.composable.LeadingDate
+import kotlinx.coroutines.launch
 import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerButton(
-    minimumSelectableTime: Time,
-    dayOfMonth: String,
-    dayOfWeek: String,
+    minimumSelectableTime: Time?,
     onDateSelected: (Time) -> Unit,
     modifier: Modifier = Modifier,
+    selectedTime: Time? = null,
+    content: @Composable () -> Unit,
 ) {
     val minTimeInDeviceTimeZone =
-        minimumSelectableTime.update(timeZone = TimeZone.getTimeZone("UTC")).timeInMillis
-    val showDatePicker = remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState(
-        initialDisplayedMonthMillis = minTimeInDeviceTimeZone,
-        selectableDates = object : SelectableDates {
-            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                return utcTimeMillis >= minTimeInDeviceTimeZone
+        minimumSelectableTime?.update(timeZone = TimeZone.getTimeZone("UTC"))
+    val selectedTimeInDeviceTimeZone = selectedTime?.update(timeZone = TimeZone.getTimeZone("UTC"))
+    var showDatePicker by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier = modifier
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(pass = PointerEventPass.Initial)
+                    val press = PressInteraction.Press(down.position)
+                    coroutineScope.launch { interactionSource.emit(press) }
+                    waitForUpOrCancellation(pass = PointerEventPass.Initial)?.let {
+                        coroutineScope.launch {
+                            interactionSource.emit(
+                                PressInteraction.Release(
+                                    press
+                                )
+                            )
+                        }
+                        showDatePicker = true
+                    } ?: coroutineScope.launch {
+                        interactionSource.emit(
+                            PressInteraction.Cancel(
+                                press
+                            )
+                        )
+                    }
+                }
             }
-        }
-    )
-    FilledTonalButton(
-        onClick = { showDatePicker.value = true },
-        shape = RoundedCornerShape(8.dp),
-        contentPadding = PaddingValues(start = 24.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
-        modifier = modifier,
+            .indication(interactionSource, LocalIndication.current),
     ) {
-        Row {
-            LeadingDate(dayOfMonth = dayOfMonth, dayOfWeek = dayOfWeek)
-            Image(
-                painter = painterResource(id = R.drawable.ic_arrow_drop_down_24),
-                colorFilter = ColorFilter.tint(LocalContentColor.current),
-                contentDescription = null,
-                modifier = Modifier.align(Alignment.CenterVertically)
-            )
-        }
+        content()
     }
-    if (showDatePicker.value) {
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedTimeInDeviceTimeZone?.timeInMillis,
+            initialDisplayedMonthMillis = selectedTimeInDeviceTimeZone?.timeInMillis
+                ?: minTimeInDeviceTimeZone?.timeInMillis ?: Time.now().timeInMillis,
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    return minTimeInDeviceTimeZone == null || utcTimeMillis >= minTimeInDeviceTimeZone.timeInMillis
+                }
+            }
+        )
         ConfirmationDialog(
             onConfirm = {
                 datePickerState.selectedTime?.let {
@@ -74,9 +95,9 @@ fun DatePickerButton(
                         it
                     )
                 }
-                showDatePicker.value = false
+                showDatePicker = false
             },
-            onDismiss = { showDatePicker.value = false },
+            onDismiss = { showDatePicker = false },
             confirmButtonEnabled = true,
         ) {
             DatePicker(
@@ -90,15 +111,14 @@ fun DatePickerButton(
 @Preview
 fun DatePickerButtonPreview() {
     AppTheme {
-        Box(
-            modifier = Modifier.background(MaterialTheme.colorScheme.surface).padding(16.dp)
-        ) {
+        Surface {
             DatePickerButton(
-                minimumSelectableTime = Time(1000L, TimeZone.getDefault()),
-                dayOfMonth = "15",
-                dayOfWeek = "Wed",
+                selectedTime = Time("2025-11-28T00:00 -0300"),
+                minimumSelectableTime = null,
                 onDateSelected = {},
-            )
+            ) {
+                TextButton(onClick = {}) { Text("Pick Date") }
+            }
         }
     }
 }
