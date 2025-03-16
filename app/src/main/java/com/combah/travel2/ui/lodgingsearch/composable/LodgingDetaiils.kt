@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -107,11 +108,13 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit) {
                     .fillMaxWidth()
                     .aspectRatio(16F / 9F)
             ) {
-                LodgingImage(
-                    state.photos.first(), modifier = Modifier
-                        .weight(1F)
-                        .fillMaxHeight()
-                )
+                state.photos.firstOrNull()?.let {
+                    LodgingImage(
+                        it, modifier = Modifier
+                            .weight(1F)
+                            .fillMaxHeight()
+                    )
+                }
                 if (state.photos.size >= 3) {
                     Column(
                         verticalArrangement = spacedBy(8.dp),
@@ -123,7 +126,12 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit) {
                         )
                         LodgingImage(
                             state.photos[2],
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.scrim),
+                            colorFilter = ColorFilter.tint(
+                                MaterialTheme.colorScheme.scrim.copy(
+                                    alpha = 0.3F
+                                ),
+                                blendMode = BlendMode.SrcAtop,
+                            ),
                             modifier = Modifier
                                 .weight(1F)
                                 .matchWidthToHeight()
@@ -160,10 +168,12 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit) {
                         horizontalArrangement = spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        LodgingImage(
-                            room.photos.first(), modifier = Modifier
-                                .size(64.dp)
-                        )
+                        room.photos.firstOrNull()?.let {
+                            LodgingImage(
+                                it, modifier = Modifier
+                                    .size(64.dp)
+                            )
+                        }
                         Column(
                             modifier = Modifier
                                 .weight(1F)
@@ -219,7 +229,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit) {
             }
             val marker = LatLng(state.latitude, state.longitude)
             GoogleMap(
-                cameraPositionState = rememberCameraPositionState {
+                cameraPositionState = rememberCameraPositionState(marker.toString()) {
                     position = CameraPosition.fromLatLngZoom(marker, 15f)
                 },
                 uiSettings = MapUiSettings(
@@ -298,11 +308,6 @@ private fun Modifier.matchWidthToHeight(): Modifier {
         .onPlaced {
             width = it.size.height
         }
-}
-
-@Composable
-fun LodgingDetails() {
-
 }
 
 @Preview(showBackground = true)

@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
@@ -49,7 +50,7 @@ fun PlaceEventListItem(imageUrl: String, placeName: String, startDate: String, e
                     .fillMaxWidth()
                     .aspectRatio(2.33f),
                 contentScale = ContentScale.FillWidth,
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.scrim)
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.scrim.copy(alpha = 0.3F), blendMode = BlendMode.SrcAtop)
             )
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,

@@ -27,7 +27,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import java.util.concurrent.TimeUnit
 
-class AddLodgingUseCaseTest {
+class AddLodgingDetailsSearchResultUseCaseTest {
     @get:Rule
     val rule = UnconfinedDispatcherTestRule()
 

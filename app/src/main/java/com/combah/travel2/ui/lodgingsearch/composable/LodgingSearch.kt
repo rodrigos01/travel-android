@@ -29,6 +29,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,41 +54,33 @@ import kotlinx.serialization.Serializable
 import java.text.NumberFormat
 
 @Composable
-fun LodgingSearch(navController: NavController, state: LodgingSearchViewModel.UiState) {
+fun LodgingSearch(
+    navController: NavController,
+    state: LodgingSearchViewModel.UiState,
+    onLodgingTapped: (LodgingSearchResultState) -> Unit,
+    onLodgingClosed: (String) -> Unit = {},
+) {
     val searchTabListState = rememberLazyListState()
     val searchResults: @Composable TabbedHostScope.() -> Unit = {
-        LodgingSearchResults(
-            navController,
+        LodgingSearchResults(navController,
             state,
             scrollState = searchTabListState,
             onLodgingTapped = { lodging ->
-                openTab(
-                    lodging.id,
-                    title = { Text(lodging.name) },
-                ) {
-                    LodgingDetails(
-                        state = LodgingDetailsState(
-                            name = lodging.name,
-                            rating = lodging.rating,
-                            reviewCountText = "123 reviews",
-                            lodgingType = "5-Star Hotel",
-                            photos = listOf(lodging.coverImage),
-                            checkIn = state.checkIn,
-                            checkOut = state.checkOut,
-                            price = lodging.price,
-                            rooms = emptyList(),
-                            address = lodging.address,
-                            latitude = 0.0,
-                            longitude = 0.0,
-                        ),
-                        onClose = { closeTab(lodging.id) },
-                    )
-                }
+                onLodgingTapped(lodging)
+                navigate(lodging.id)
             })
     }
     TabbedHost(startDestination = "search") {
         tab("search", icon = { Icon(Icons.Outlined.Search, contentDescription = null) }) {
             searchResults()
+        }
+        state.openedResults.forEach { (id, lodging) ->
+            tab(id, title = { Text(lodging.name) }, content = {
+                LodgingDetails(lodging, onClose = {
+                    onLodgingClosed(id)
+                    navigate("search")
+                })
+            })
         }
     }
 }
@@ -98,38 +93,36 @@ fun LodgingSearchResults(
     onLodgingTapped: (LodgingSearchResultState) -> Unit = {},
     scrollState: LazyListState = rememberLazyListState(),
 ) {
-    Scaffold(
-        topBar = {
-            Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
-                TopAppBar(title = { Text("Lodging Search") }, navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = ""
-                        )
-                    }
-                })
-                LodgingSearchParams(
-                    checkIn = state.checkIn,
-                    checkOut = state.checkOut,
-                    minCheckOut = state.minCheckOut,
-                    locationText = state.locationText,
-                    onCheckInDateSelected = {},
-                    onCheckOutDateSelected = {},
-                    onLocationSearchResultSelected = {},
-                    onLocationSearchTextChanged = {},
-                )
-            }
-        }) { paddingValues ->
+    Scaffold(topBar = {
+        Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
+            TopAppBar(title = { Text("Lodging Search") }, navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = ""
+                    )
+                }
+            })
+            LodgingSearchParams(
+                checkIn = state.checkIn,
+                checkOut = state.checkOut,
+                minCheckOut = state.minCheckOut,
+                locationText = state.locationText,
+                onCheckInDateSelected = {},
+                onCheckOutDateSelected = {},
+                onLocationSearchResultSelected = {},
+                onLocationSearchTextChanged = {},
+            )
+        }
+    }) { paddingValues ->
         LazyColumn(
             contentPadding = PaddingValues(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             state = scrollState,
-            modifier = Modifier.padding(paddingValues),
+            modifier = Modifier.padding(paddingValues)
         ) {
             items(state.results, key = { it.id }) { result ->
-                Surface(
-                    shape = MaterialTheme.shapes.large,
+                Surface(shape = MaterialTheme.shapes.large,
                     border = BorderStroke(
                         1.dp,
                         color = MaterialTheme.colorScheme.outlineVariant,
@@ -137,8 +130,7 @@ fun LodgingSearchResults(
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .animateItem(),
-                    onClick = { onLodgingTapped(result) }
-                ) {
+                    onClick = { onLodgingTapped(result) }) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Image(
                             painter = rememberAsyncImagePainter(model = result.coverImage),
@@ -194,14 +186,12 @@ fun LodgingRating(rating: Double) {
             .size(32.dp)
             .clip(MaterialTheme.shapes.extraLarge)
             .background(color = MaterialTheme.colorScheme.secondaryContainer)
-    )
-    {
+    ) {
         Text(
             "%.1f".format(rating),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier
-                .align(Alignment.Center)
+            modifier = Modifier.align(Alignment.Center)
         )
     }
 }
@@ -223,31 +213,52 @@ fun LodgingSearch(
     viewModel: LodgingSearchViewModel,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    LodgingSearch(navController = navController, state = state)
+    LodgingSearch(
+        navController = navController,
+        state = state,
+        onLodgingTapped = { viewModel.onLodgingTapped(it.id) },
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewLodgingSearch() {
     AppTheme {
-        LodgingSearch(
-            navController = rememberNavController(),
-            LodgingSearchViewModel.UiState(
-                checkIn = Time("2025-08-10T00:00 -0500"),
-                checkOut = Time("2025-08-15T00:00 -0500"),
-                locationText = "New York, United States",
-                results = List(10) { index ->
-                    LodgingSearchResultState(
-                        id = index.toString(),
-                        name = "Hotel $index",
-                        address = "$index Street, City, ${index * 1023}",
-                        coverImage = "",
-                        rating = index * 1.2,
-                        lodgingType = "Hotel",
-                        price = index * 12.4,
-                    )
-                })
-        )
+        var details by remember { mutableStateOf(mapOf<String, LodgingDetailsState>()) }
+        LodgingSearch(navController = rememberNavController(), LodgingSearchViewModel.UiState(
+            checkIn = Time("2025-08-10T00:00 -0500"),
+            checkOut = Time("2025-08-15T00:00 -0500"),
+            locationText = "New York, United States",
+            results = List(10) { index ->
+                LodgingSearchResultState(
+                    id = index.toString(),
+                    name = "Hotel $index",
+                    address = "$index Street, City, ${index * 1023}",
+                    coverImage = "",
+                    rating = index * 1.2,
+                    lodgingType = "Hotel",
+                    price = index * 12.4,
+                )
+            },
+            openedResults = details
+        ), onLodgingTapped = { lodging ->
+            details = details.toMutableMap().also {
+                it[lodging.id] = LodgingDetailsState(
+                    name = lodging.name,
+                    rating = lodging.rating,
+                    reviewCountText = "",
+                    lodgingType = lodging.lodgingType,
+                    photos = listOf(lodging.coverImage),
+                    checkIn = Time("2025-08-10T00:00 -0500"),
+                    checkOut = Time("2025-08-15T00:00 -0500"),
+                    price = lodging.price,
+                    rooms = emptyList(),
+                    address = lodging.address,
+                    latitude = 0.0,
+                    longitude = 0.0,
+                )
+            }
+        })
     }
 }
 
