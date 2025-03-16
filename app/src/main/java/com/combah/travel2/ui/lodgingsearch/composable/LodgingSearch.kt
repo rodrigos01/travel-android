@@ -119,7 +119,7 @@ fun LodgingSearchResults(
             contentPadding = PaddingValues(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             state = scrollState,
-            modifier = Modifier.padding(paddingValues)
+            modifier = Modifier.padding(top = paddingValues.calculateTopPadding())
         ) {
             items(state.results, key = { it.id }) { result ->
                 Surface(shape = MaterialTheme.shapes.large,
