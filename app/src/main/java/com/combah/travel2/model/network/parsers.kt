@@ -30,7 +30,7 @@ fun ApiData.Place.toAppDataModel() = Place(
     source = source,
 )
 
-fun ApiData.Lodging.toAppDataModel() = LodgingSearchResult(
+fun ApiData.LodgingSearchResult.toAppDataModel() = LodgingSearchResult(
     id = id,
     name = name,
     rating = rating,

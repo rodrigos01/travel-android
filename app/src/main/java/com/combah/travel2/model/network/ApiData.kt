@@ -20,7 +20,7 @@ interface ApiResponse {
 
     @Serializable
     data class LodgingSearch(
-        val hotels: List<ApiData.Lodging>,
+        val hotels: List<ApiData.LodgingSearchResult>,
     )
 }
 
@@ -54,7 +54,7 @@ interface ApiData {
     )
 
     @Serializable
-    data class Lodging(
+    data class LodgingSearchResult(
         val id: String,
         val name: String,
         val coverImage: String,
@@ -66,5 +66,41 @@ interface ApiData {
         val totalPrice: Double,
         val latitude: Double,
         val longitude: Double,
+    )
+
+    @Serializable
+    data class LodgingDetails(
+        val id: String,
+        val name: String,
+        val coverImage: String,
+        val address: String,
+        val rating: Double,
+        val reviewCount: Int,
+        val stars: Int,
+        val price: Double,
+        val totalPrice: Double,
+        val latitude: Double,
+        val longitude: Double,
+        val photos: List<String>,
+        val rooms: List<LodgingOffer>,
+    )
+
+    @Serializable
+    data class LodgingOffer(
+        val photos: List<String>,
+        val name: String,
+        val features: LodgingOfferFeatures,
+        val price: Double,
+        val totalPrice: Double,
+        val bookingUrl: String,
+        val bookingAgency: String,
+    )
+
+    @Serializable
+    data class LodgingOfferFeatures(
+        val breakfast: Boolean,
+        val refundable: Boolean,
+        val prePayment: Boolean,
+        val allInclusive: Boolean,
     )
 }
