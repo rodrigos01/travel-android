@@ -97,10 +97,11 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit) {
         }
     ) { paddingValues ->
         Column(
-            verticalArrangement = spacedBy(8.dp), modifier = Modifier
-                .padding(paddingValues)
+            verticalArrangement = spacedBy(8.dp),
+            modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState())
+                .padding(top = paddingValues.calculateTopPadding())
+                .verticalScroll(rememberScrollState()),
         ) {
             Row(
                 horizontalArrangement = spacedBy(8.dp),
@@ -227,31 +228,35 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit) {
                 Image(Icons.Filled.Place, contentDescription = "Location icon")
                 Text(state.address, style = MaterialTheme.typography.labelLarge)
             }
-            val marker = LatLng(state.latitude, state.longitude)
-            GoogleMap(
-                cameraPositionState = rememberCameraPositionState(marker.toString()) {
-                    position = CameraPosition.fromLatLngZoom(marker, 15f)
-                },
-                uiSettings = MapUiSettings(
-                    indoorLevelPickerEnabled = false,
-                    myLocationButtonEnabled = false,
-                    scrollGesturesEnabled = false,
-                    rotationGesturesEnabled = false,
-                    tiltGesturesEnabled = false,
-                    zoomGesturesEnabled = false,
-                    zoomControlsEnabled = false,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(6 / 4f)
-                    .clip(MaterialTheme.shapes.large)
-                    .background(color = MaterialTheme.colorScheme.surfaceContainer)
-            ) {
-                Marker(
-                    state = rememberMarkerState(position = marker),
-                    title = state.name,
-                    snippet = state.address
-                )
+            if (state.latitude != 0.0 || state.longitude != 0.0) {
+                val marker = LatLng(state.latitude, state.longitude)
+                val cameraPositionState =
+                    rememberCameraPositionState(key = "${state.latitude},${state.longitude}") {
+                        position = CameraPosition.fromLatLngZoom(marker, 15f)
+                    }
+                GoogleMap(
+                    cameraPositionState = cameraPositionState,
+                    uiSettings = MapUiSettings(
+                        indoorLevelPickerEnabled = false,
+                        myLocationButtonEnabled = false,
+                        scrollGesturesEnabled = false,
+                        rotationGesturesEnabled = false,
+                        tiltGesturesEnabled = false,
+                        zoomGesturesEnabled = false,
+                        zoomControlsEnabled = false,
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(6 / 4f)
+                        .clip(MaterialTheme.shapes.large)
+                        .background(color = MaterialTheme.colorScheme.surfaceContainer)
+                ) {
+                    Marker(
+                        state = rememberMarkerState(position = marker),
+                        title = state.name,
+                        snippet = state.address
+                    )
+                }
             }
         }
     }
