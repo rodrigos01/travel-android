@@ -1,9 +1,13 @@
 package com.combah.travel2.extensions
 
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onStart
 import okhttp3.internal.toImmutableMap
 
+typealias MapFlow<K, V> = Flow<Map<K, V>>
 typealias MapStateFlow<K, V> = StateFlow<Map<K, V>>
 typealias MutableMapStateFlow<K, V> = MutableStateFlow<Map<K, V>>
 
@@ -23,3 +27,8 @@ fun <K, V> MutableMapStateFlow<K, V>.remove(key: K): V? {
 }
 
 operator fun <K, V> MapStateFlow<K, V>.get(key: K): V? = value[key]
+
+fun <K, V> mergeMaps(vararg flows: MapFlow<K, V>): MapFlow<K, V> =
+    combine(flows.map { it.onStart { emit(emptyMap()) } }) {
+        it.fold(emptyMap()) { acc, map -> acc + map }
+    }

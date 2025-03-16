@@ -4,7 +4,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.TimeZone
-import kotlin.time.Duration
 
 /**
  * Immutable Representation of an instant in time with a timezone
@@ -35,16 +34,6 @@ data class Time(
         calendar[Calendar.SECOND],
         calendar.timeZone,
     )
-
-    operator fun plus(other: Long): Time =
-        Time(timeInMillis = timeInMillis + other, timeZone = timeZone)
-
-    operator fun plus(other: Time): Time = this + other.timeInMillis
-    operator fun plus(duration: Duration) = this + duration.inWholeMilliseconds
-    operator fun minus(other: Long): Time =
-        Time(timeInMillis = timeInMillis - other, timeZone = timeZone)
-
-    operator fun minus(duration: Duration) = this - duration.inWholeMilliseconds
 
     override operator fun compareTo(other: Time): Int {
         return timeInMillis.compareTo(other.timeInMillis)

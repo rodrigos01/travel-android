@@ -1,5 +1,6 @@
 package com.combah.travel2.model.data
 
+import kotlinx.serialization.Serializable
 import java.util.TimeZone
 
 data class Trip(
@@ -31,7 +32,7 @@ data class FlightSegment(
 data class Airport(
     val iata: String,
     val name: String,
-    val timeZone: TimeZone?,
+    val timeZone: TimeZone,
     val city: Place,
 )
 
@@ -44,6 +45,7 @@ data class Lodging(
     val checkout: Time,
 ) : TripEntity, TripEvent
 
+@Serializable
 data class Place(
     val id: String,
     val name: String,
@@ -71,4 +73,18 @@ data class SimplePlace(
     val name: String?,
     val address: String,
     val city: Place,
+)
+
+data class LodgingSearchResult(
+    val id: String,
+    val name: String,
+    val coverImage: String,
+    val address: String,
+    val rating: Double,
+    val reviewCount: Int,
+    val stars: Int,
+    val price: Double,
+    val totalPrice: Double,
+    val latitude: Double,
+    val longitude: Double,
 )
