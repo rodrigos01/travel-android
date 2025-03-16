@@ -68,6 +68,8 @@ class LodgingSearchViewModel(
                 )
             }
         )
+    }.map {
+        it
     }.stateIn(
         viewModelScope,
         SharingStarted.Eagerly,

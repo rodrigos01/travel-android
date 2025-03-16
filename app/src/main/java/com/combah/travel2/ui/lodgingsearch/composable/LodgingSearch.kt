@@ -13,9 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,17 +41,62 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.combah.travel2.extensions.Time
+import com.combah.travel2.ui.common.components.TabbedHost
+import com.combah.travel2.ui.common.components.TabbedHostScope
+import com.combah.travel2.ui.lodgingsearch.state.LodgingDetailsState
 import com.combah.travel2.ui.lodgingsearch.state.LodgingSearchResultState
 import com.combah.travel2.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
 import com.combah.travel2.ui.theme.AppTheme
 import kotlinx.serialization.Serializable
 import java.text.NumberFormat
 
+@Composable
+fun LodgingSearch(navController: NavController, state: LodgingSearchViewModel.UiState) {
+    val searchTabListState = rememberLazyListState()
+    val searchResults: @Composable TabbedHostScope.() -> Unit = {
+        LodgingSearchResults(
+            navController,
+            state,
+            scrollState = searchTabListState,
+            onLodgingTapped = { lodging ->
+                openTab(
+                    lodging.id,
+                    title = { Text(lodging.name) },
+                ) {
+                    LodgingDetails(
+                        state = LodgingDetailsState(
+                            name = lodging.name,
+                            rating = lodging.rating,
+                            reviewCountText = "123 reviews",
+                            lodgingType = "5-Star Hotel",
+                            photos = listOf(lodging.coverImage),
+                            checkIn = state.checkIn,
+                            checkOut = state.checkOut,
+                            price = lodging.price,
+                            rooms = emptyList(),
+                            address = lodging.address,
+                            latitude = 0.0,
+                            longitude = 0.0,
+                        ),
+                        onClose = { closeTab(lodging.id) },
+                    )
+                }
+            })
+    }
+    TabbedHost(startDestination = "search") {
+        tab("search", icon = { Icon(Icons.Outlined.Search, contentDescription = null) }) {
+            searchResults()
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LodgingSearch(
+fun LodgingSearchResults(
     navController: NavController,
     state: LodgingSearchViewModel.UiState,
+    onLodgingTapped: (LodgingSearchResultState) -> Unit = {},
+    scrollState: LazyListState = rememberLazyListState(),
 ) {
     Scaffold(
         topBar = {
@@ -76,6 +124,7 @@ fun LodgingSearch(
         LazyColumn(
             contentPadding = PaddingValues(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
+            state = scrollState,
             modifier = Modifier.padding(paddingValues),
         ) {
             items(state.results, key = { it.id }) { result ->
@@ -87,7 +136,8 @@ fun LodgingSearch(
                     ),
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
-                        .animateItem()
+                        .animateItem(),
+                    onClick = { onLodgingTapped(result) }
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Image(
@@ -97,7 +147,7 @@ fun LodgingSearch(
                                 .fillMaxWidth()
                                 .aspectRatio(1.77f)
                                 .background(color = MaterialTheme.colorScheme.tertiary),
-                            contentScale = ContentScale.FillWidth
+                            contentScale = ContentScale.Crop
                         )
                         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                             Text(result.name, style = MaterialTheme.typography.bodyLarge)
