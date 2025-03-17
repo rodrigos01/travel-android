@@ -43,9 +43,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
+import com.combah.travel2.common.ui.components.TabbedHost
+import com.combah.travel2.common.ui.components.TabbedHostScope
 import com.combah.travel2.extensions.Time
-import com.combah.travel2.ui.common.components.TabbedHost
-import com.combah.travel2.ui.common.components.TabbedHostScope
 import com.combah.travel2.ui.lodgingsearch.state.LodgingDetailsState
 import com.combah.travel2.ui.lodgingsearch.state.LodgingSearchResultState
 import com.combah.travel2.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
