@@ -1,4 +1,4 @@
-package com.combah.travel2.ui.common.components
+package com.combah.travel2.common.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -41,7 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.combah.travel2.ui.common.components.TabbedHostScope.Tab
+import com.combah.travel2.common.ui.components.TabbedHostScope.Tab
 import com.combah.travel2.ui.theme.AppTheme
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -100,7 +100,9 @@ fun TabbedHost(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        Box(modifier = Modifier.weight(1F).fillMaxWidth()) {
+        Box(modifier = Modifier
+            .weight(1F)
+            .fillMaxWidth()) {
             scope.findTab(currentTabId).content(scope)
         }
         AnimatedVisibility(

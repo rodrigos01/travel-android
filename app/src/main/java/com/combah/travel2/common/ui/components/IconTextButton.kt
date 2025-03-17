@@ -1,4 +1,4 @@
-package com.combah.travel2.ui.common.components
+package com.combah.travel2.common.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image

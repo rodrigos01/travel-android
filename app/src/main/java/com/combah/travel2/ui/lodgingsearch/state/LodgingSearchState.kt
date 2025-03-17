@@ -25,6 +25,7 @@ data class LodgingDetailsState(
     val address: String,
     val latitude: Double,
     val longitude: Double,
+    val isLoading: Boolean,
 )
 
 data class LodgingRoomOfferState(
