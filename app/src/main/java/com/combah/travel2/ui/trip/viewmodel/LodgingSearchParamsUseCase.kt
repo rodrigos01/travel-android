@@ -1,5 +1,6 @@
 package com.combah.travel2.ui.trip.viewmodel
 
+import com.combah.travel2.common.coroutines.MutexScope
 import com.combah.travel2.extensions.MapFlow
 import com.combah.travel2.extensions.plus
 import com.combah.travel2.extensions.toMidnight
@@ -33,11 +34,12 @@ class LodgingSearchParamsUseCase(
         itemStore.update(itemId) { it.copy(checkOut = time) }
     }
 
+    private val autoCompleteScope = MutexScope(coroutineScope.coroutineContext)
     override fun locationTextChanged(itemId: String, content: CharSequence) {
         if (content.length < 3) {
             return
         }
-        coroutineScope.launch {
+        autoCompleteScope.launch {
             val results = repository.autocompleteCity(content.toString())
             itemStore.update(itemId) { data ->
                 data.copy(
