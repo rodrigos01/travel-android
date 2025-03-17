@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.TimeZone
@@ -30,14 +31,28 @@ class LodgingSearchViewModel(
     locationName: String,
     timeZoneId: String,
 ) : ViewModel() {
-    data class UiState(
-        val checkIn: Time,
-        val checkOut: Time,
-        val locationText: String,
-        val results: List<LodgingSearchResultState>,
-        val openedResults: Map<String, LodgingDetailsState> = emptyMap(),
-        val minCheckOut: Time? = null,
-    )
+    interface UiState {
+        val checkIn: Time
+        val checkOut: Time
+        val locationText: String
+        val minCheckOut: Time?
+
+        data class Loading(
+            override val checkIn: Time,
+            override val checkOut: Time,
+            override val locationText: String,
+            override val minCheckOut: Time? = null,
+        ) : UiState
+
+        data class Loaded(
+            override val checkIn: Time,
+            override val checkOut: Time,
+            override val locationText: String,
+            val results: List<LodgingSearchResultState>,
+            val openedResults: Map<String, LodgingDetailsState> = emptyMap(),
+            override val minCheckOut: Time? = null,
+        ) : UiState
+    }
 
     private data class SearchParams(
         val checkIn: Time,
@@ -45,6 +60,7 @@ class LodgingSearchViewModel(
         val city: Place,
     )
 
+    private val loadingState = MutableStateFlow(false)
     private val searchState = MutableStateFlow(
         SearchParams(
             checkIn = Time(checkInMillis, TimeZone.getTimeZone(timeZoneId)),
@@ -52,55 +68,70 @@ class LodgingSearchViewModel(
             city = Place(locationId, locationName, "", 0.0, 0.0, null, "", ""),
         )
     )
-    private val searchResultState = searchState.map {
-        it to repository.search(
-            locationId = it.city.id,
-            checkIn = it.checkIn,
-            checkOut = it.checkOut,
-        )
-    }
+    private val searchResultState = searchState
+        .onEach { loadingState.value = true }
+        .map {
+            it to repository.search(
+                locationId = it.city.id,
+                checkIn = it.checkIn,
+                checkOut = it.checkOut,
+            )
+        }
+        .onEach {
+            loadingState.value = false
+        }
     private val openedResultsState = MutableMapStateFlow<String, LodgingDetailsState>()
     val uiState =
-        combine(searchResultState, openedResultsState) { (params, results), openedResults ->
-            UiState(
-                checkIn = params.checkIn,
-                checkOut = params.checkOut,
-                minCheckOut = params.checkIn.toMidnight() + 1.days,
-                locationText = params.city.name,
-                results = results.sortedBy { -it.reviewCount }.map {
-                    LodgingSearchResultState(
-                        id = it.id,
-                        name = it.name,
-                        coverImage = it.coverImage,
-                        address = it.address,
-                        rating = it.rating,
-                        lodgingType = "${it.stars}-star hotel",
-                        price = it.price,
-                    )
-                },
-                openedResults = openedResults,
-            )
-        }.map {
-            it
+        combine(
+            searchResultState,
+            openedResultsState,
+            loadingState
+        ) { (params, results), openedResults, loading ->
+            if (loading) {
+                UiState.Loading(
+                    checkIn = params.checkIn,
+                    checkOut = params.checkOut,
+                    locationText = params.city.name,
+                )
+            } else {
+                UiState.Loaded(
+                    checkIn = params.checkIn,
+                    checkOut = params.checkOut,
+                    minCheckOut = params.checkIn.toMidnight() + 1.days,
+                    locationText = params.city.name,
+                    results = results.sortedBy { -it.reviewCount }.map {
+                        LodgingSearchResultState(
+                            id = it.id,
+                            name = it.name,
+                            coverImage = it.coverImage,
+                            address = it.address,
+                            rating = it.rating,
+                            lodgingType = "${it.stars}-star hotel",
+                            price = it.price,
+                        )
+                    },
+                    openedResults = openedResults,
+                )
+            }
         }.stateIn(
-            viewModelScope, SharingStarted.Eagerly, UiState(
+            viewModelScope, SharingStarted.Eagerly, UiState.Loading(
                 searchState.value.checkIn,
                 searchState.value.checkOut,
                 searchState.value.city.name,
-                emptyList()
             )
         )
 
     fun onLodgingTapped(lodgingId: String) {
-        val existingState = uiState.value.results.first { it.id == lodgingId } ?: return
+        val state = uiState.value as UiState.Loaded ?: return
+        val existingState = state.results.first { it.id == lodgingId } ?: return
         openedResultsState[lodgingId] = LodgingDetailsState(
             name = existingState.name,
             rating = existingState.rating,
             reviewCountText = "",
             lodgingType = existingState.lodgingType,
             photos = listOf(existingState.coverImage),
-            checkIn = uiState.value.checkIn,
-            checkOut = uiState.value.checkOut,
+            checkIn = state.checkIn,
+            checkOut = state.checkOut,
             price = existingState.price,
             rooms = emptyList(),
             address = existingState.address,
