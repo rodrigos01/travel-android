@@ -110,7 +110,11 @@ fun LodgingSearchResults(
     scrollState: LazyListState = rememberLazyListState(),
 ) {
     Scaffold(topBar = {
-        Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface).padding(bottom = 8.dp)) {
+        Column(
+            modifier = Modifier
+                .background(color = MaterialTheme.colorScheme.surface)
+                .padding(bottom = 8.dp)
+        ) {
             TopAppBar(title = { Text("Lodging Search") }, navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
@@ -264,6 +268,7 @@ fun LodgingSearch(
         navController = navController,
         state = state,
         onLodgingTapped = { viewModel.onLodgingTapped(it.id) },
+        onLodgingClosed = { viewModel.onLodgingClosed(it) }
     )
 }
 
