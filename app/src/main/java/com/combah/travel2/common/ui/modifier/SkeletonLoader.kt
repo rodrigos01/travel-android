@@ -22,6 +22,7 @@ import com.combah.travel2.ui.theme.AppTheme
 @Composable
 fun Modifier.skeletonLoader(
     contentColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    durationMillis: Int = 800,
     startDelayMillis: Int = 0,
 ): Modifier {
     val transition = rememberInfiniteTransition()
@@ -29,7 +30,7 @@ fun Modifier.skeletonLoader(
         initialValue = contentColor.copy(alpha = 0.2F),
         targetValue = contentColor,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 600),
+            animation = tween(durationMillis = durationMillis),
             repeatMode = RepeatMode.Reverse,
             initialStartOffset = StartOffset(offsetMillis = startDelayMillis)
         )

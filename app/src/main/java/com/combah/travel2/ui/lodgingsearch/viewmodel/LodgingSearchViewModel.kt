@@ -122,9 +122,9 @@ class LodgingSearchViewModel(
         )
 
     fun onLodgingTapped(lodgingId: String) {
-        val state = uiState.value as UiState.Loaded ?: return
-        val existingState = state.results.first { it.id == lodgingId } ?: return
-        openedResultsState[lodgingId] = LodgingDetailsState(
+        val state = uiState.value as? UiState.Loaded ?: return
+        val existingState = state.results.firstOrNull { it.id == lodgingId } ?: return
+        val initialState = LodgingDetailsState(
             name = existingState.name,
             rating = existingState.rating,
             reviewCountText = "",
@@ -137,20 +137,16 @@ class LodgingSearchViewModel(
             address = existingState.address,
             latitude = 0.0,
             longitude = 0.0,
+            isLoading = true,
         )
+        openedResultsState[lodgingId] = initialState
         viewModelScope.launch {
             val lodging =
                 repository.details(lodgingId, searchState.value.checkIn, searchState.value.checkOut)
                     ?: return@launch
-            openedResultsState[lodgingId] = LodgingDetailsState(name = lodging.name,
-                rating = lodging.rating,
-                price = lodging.price,
-                address = lodging.address,
-                photos = lodging.photos,
+            openedResultsState[lodgingId] = initialState.copy(
+                photos = initialState.photos + lodging.photos.subList(1, lodging.photos.size),
                 reviewCountText = lodging.reviewCount.toString(),
-                checkIn = searchState.value.checkIn,
-                checkOut = searchState.value.checkOut,
-                lodgingType = "${lodging.stars}-star hotel",
                 latitude = lodging.latitude,
                 longitude = lodging.longitude,
                 rooms = lodging.rooms.map { offer ->
@@ -165,7 +161,9 @@ class LodgingSearchViewModel(
                         bookingUrl = offer.bookingUrl,
                         bookingAgency = offer.bookingAgency,
                     )
-                })
+                },
+                isLoading = false,
+            )
         }
     }
 
