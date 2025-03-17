@@ -1,4 +1,4 @@
-package com.combah.travel2.ui.common.coroutines
+package com.combah.travel2.common.coroutines
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
