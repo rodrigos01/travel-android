@@ -23,7 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import com.combah.travel2.R
-import com.combah.travel2.ui.common.components.IconTextButton
+import com.combah.travel2.common.ui.components.IconTextButton
 import com.combah.travel2.ui.theme.AppTheme
 
 enum class AddPlanType(

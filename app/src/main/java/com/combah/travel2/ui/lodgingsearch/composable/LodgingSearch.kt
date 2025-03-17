@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -43,9 +45,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
+import com.combah.travel2.common.ui.components.TabbedHost
+import com.combah.travel2.common.ui.components.TabbedHostScope
+import com.combah.travel2.common.ui.modifier.skeletonLoader
 import com.combah.travel2.extensions.Time
-import com.combah.travel2.ui.common.components.TabbedHost
-import com.combah.travel2.ui.common.components.TabbedHostScope
 import com.combah.travel2.ui.lodgingsearch.state.LodgingDetailsState
 import com.combah.travel2.ui.lodgingsearch.state.LodgingSearchResultState
 import com.combah.travel2.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
@@ -60,9 +63,20 @@ fun LodgingSearch(
     onLodgingTapped: (LodgingSearchResultState) -> Unit,
     onLodgingClosed: (String) -> Unit = {},
 ) {
+    LodgingSearchResults(navController, state, onLodgingTapped, onLodgingClosed)
+}
+
+@Composable
+private fun LodgingSearchResults(
+    navController: NavController,
+    state: LodgingSearchViewModel.UiState,
+    onLodgingTapped: (LodgingSearchResultState) -> Unit,
+    onLodgingClosed: (String) -> Unit
+) {
     val searchTabListState = rememberLazyListState()
     val searchResults: @Composable TabbedHostScope.() -> Unit = {
-        LodgingSearchResults(navController,
+        LodgingSearchResults(
+            navController,
             state,
             scrollState = searchTabListState,
             onLodgingTapped = { lodging ->
@@ -74,13 +88,15 @@ fun LodgingSearch(
         tab("search", icon = { Icon(Icons.Outlined.Search, contentDescription = null) }) {
             searchResults()
         }
-        state.openedResults.forEach { (id, lodging) ->
-            tab(id, title = { Text(lodging.name) }, content = {
-                LodgingDetails(lodging, onClose = {
-                    onLodgingClosed(id)
-                    navigate("search")
+        if (state is LodgingSearchViewModel.UiState.Loaded) {
+            state.openedResults.forEach { (id, lodging) ->
+                tab(id, title = { Text(lodging.name) }, content = {
+                    LodgingDetails(lodging, onClose = {
+                        onLodgingClosed(id)
+                        navigate("search")
+                    })
                 })
-            })
+            }
         }
     }
 }
@@ -94,7 +110,11 @@ fun LodgingSearchResults(
     scrollState: LazyListState = rememberLazyListState(),
 ) {
     Scaffold(topBar = {
-        Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
+        Column(
+            modifier = Modifier
+                .background(color = MaterialTheme.colorScheme.surface)
+                .padding(bottom = 8.dp)
+        ) {
             TopAppBar(title = { Text("Lodging Search") }, navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
@@ -116,56 +136,87 @@ fun LodgingSearchResults(
         }
     }) { paddingValues ->
         LazyColumn(
-            contentPadding = PaddingValues(vertical = 16.dp),
+            contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             state = scrollState,
             modifier = Modifier.padding(top = paddingValues.calculateTopPadding())
         ) {
-            items(state.results, key = { it.id }) { result ->
-                Surface(shape = MaterialTheme.shapes.large,
-                    border = BorderStroke(
-                        1.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                    ),
+            when (state) {
+                is LodgingSearchViewModel.UiState.Loading -> {
+                    loading()
+                }
+
+                is LodgingSearchViewModel.UiState.Loaded -> {
+                    loaded(state, onLodgingTapped)
+                }
+            }
+        }
+    }
+}
+
+private fun LazyListScope.loaded(
+    state: LodgingSearchViewModel.UiState.Loaded,
+    onLodgingTapped: (LodgingSearchResultState) -> Unit
+) {
+    items(state.results, key = { it.id }) { result ->
+        Surface(shape = MaterialTheme.shapes.large,
+            border = BorderStroke(
+                1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+            ),
+            modifier = Modifier
+                .animateItem(),
+            onClick = { onLodgingTapped(result) }) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Image(
+                    painter = rememberAsyncImagePainter(model = result.coverImage),
+                    contentDescription = "Place Description",
                     modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .animateItem(),
-                    onClick = { onLodgingTapped(result) }) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Image(
-                            painter = rememberAsyncImagePainter(model = result.coverImage),
-                            contentDescription = "Place Description",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(1.77f)
-                                .background(color = MaterialTheme.colorScheme.tertiary),
-                            contentScale = ContentScale.Crop
+                        .fillMaxWidth()
+                        .aspectRatio(1.77f)
+                        .background(color = MaterialTheme.colorScheme.tertiary),
+                    contentScale = ContentScale.Crop
+                )
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    Text(result.name, style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        result.address,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(vertical = 16.dp),
+                    ) {
+                        LodgingRating(result.rating)
+                        Text(
+                            result.lodgingType,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
                         )
-                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            Text(result.name, style = MaterialTheme.typography.bodyLarge)
-                            Text(
-                                result.address,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.padding(vertical = 16.dp),
-                            ) {
-                                LodgingRating(result.rating)
-                                Text(
-                                    result.lodgingType,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                PriceText(result.price)
-                            }
-                        }
+                        PriceText(result.price)
                     }
                 }
             }
+        }
+    }
+}
+
+private fun LazyListScope.loading() {
+    items(3) { index ->
+        Column(
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.large)
+                .skeletonLoader(startDelayMillis = index * 300)
+        ) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1.77f)
+            )
+            Box(Modifier.height(64.dp))
         }
     }
 }
@@ -217,6 +268,7 @@ fun LodgingSearch(
         navController = navController,
         state = state,
         onLodgingTapped = { viewModel.onLodgingTapped(it.id) },
+        onLodgingClosed = { viewModel.onLodgingClosed(it) }
     )
 }
 
@@ -225,7 +277,7 @@ fun LodgingSearch(
 fun PreviewLodgingSearch() {
     AppTheme {
         var details by remember { mutableStateOf(mapOf<String, LodgingDetailsState>()) }
-        LodgingSearch(navController = rememberNavController(), LodgingSearchViewModel.UiState(
+        val loadedState = LodgingSearchViewModel.UiState.Loaded(
             checkIn = Time("2025-08-10T00:00 -0500"),
             checkOut = Time("2025-08-15T00:00 -0500"),
             locationText = "New York, United States",
@@ -241,24 +293,34 @@ fun PreviewLodgingSearch() {
                 )
             },
             openedResults = details
-        ), onLodgingTapped = { lodging ->
-            details = details.toMutableMap().also {
-                it[lodging.id] = LodgingDetailsState(
-                    name = lodging.name,
-                    rating = lodging.rating,
-                    reviewCountText = "",
-                    lodgingType = lodging.lodgingType,
-                    photos = listOf(lodging.coverImage),
-                    checkIn = Time("2025-08-10T00:00 -0500"),
-                    checkOut = Time("2025-08-15T00:00 -0500"),
-                    price = lodging.price,
-                    rooms = emptyList(),
-                    address = lodging.address,
-                    latitude = 0.0,
-                    longitude = 0.0,
-                )
-            }
-        })
+        )
+        val loadingState = LodgingSearchViewModel.UiState.Loading(
+            checkIn = Time("2025-08-10T00:00 -0500"),
+            checkOut = Time("2025-08-15T00:00 -0500"),
+            locationText = "New York, United States",
+        )
+        LodgingSearch(
+            navController = rememberNavController(),
+            state = loadingState,
+            onLodgingTapped = { lodging ->
+                details = details.toMutableMap().also {
+                    it[lodging.id] = LodgingDetailsState(
+                        name = lodging.name,
+                        rating = lodging.rating,
+                        reviewCountText = "",
+                        lodgingType = lodging.lodgingType,
+                        photos = listOf(lodging.coverImage),
+                        checkIn = Time("2025-08-10T00:00 -0500"),
+                        checkOut = Time("2025-08-15T00:00 -0500"),
+                        price = lodging.price,
+                        rooms = emptyList(),
+                        address = lodging.address,
+                        latitude = 0.0,
+                        longitude = 0.0,
+                        isLoading = false,
+                    )
+                }
+            })
     }
 }
 

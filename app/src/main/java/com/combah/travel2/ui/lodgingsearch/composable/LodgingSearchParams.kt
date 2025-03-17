@@ -25,9 +25,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.combah.travel2.R
+import com.combah.travel2.common.ui.components.IconTextButton
 import com.combah.travel2.extensions.dateString
 import com.combah.travel2.model.data.Time
-import com.combah.travel2.ui.common.components.IconTextButton
 import com.combah.travel2.ui.trip.creation.composable.DatePickerButton
 import com.combah.travel2.ui.trip.state.SearchResultItemState
 

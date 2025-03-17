@@ -5,6 +5,7 @@ package com.combah.travel2.ui.trip.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.combah.travel2.common.coroutines.UseCaseScope
 import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.extensions.minus
@@ -19,7 +20,6 @@ import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.Trip
 import com.combah.travel2.model.data.TripEvent
 import com.combah.travel2.model.repository.TripRepository
-import com.combah.travel2.ui.common.coroutines.UseCaseScope
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
 import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.state.TripItemState
