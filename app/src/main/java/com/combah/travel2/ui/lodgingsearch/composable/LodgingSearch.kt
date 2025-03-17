@@ -110,7 +110,7 @@ fun LodgingSearchResults(
     scrollState: LazyListState = rememberLazyListState(),
 ) {
     Scaffold(topBar = {
-        Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
+        Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface).padding(bottom = 8.dp)) {
             TopAppBar(title = { Text("Lodging Search") }, navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
