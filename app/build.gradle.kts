@@ -6,6 +6,7 @@ plugins {
     id("com.google.gms.google-services")
     id("kotlinx-serialization")
     id("org.jetbrains.kotlin.plugin.compose") version "2.1.10"
+    id("com.google.firebase.appdistribution")
 }
 
 val ktorVersion = "3.0.3"
@@ -41,6 +42,11 @@ android {
             isDebuggable = false
             proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("release")
+
+            firebaseAppDistribution {
+                artifactType = "APK"
+                groups = "developers"
+            }
         }
     }
     buildFeatures {
