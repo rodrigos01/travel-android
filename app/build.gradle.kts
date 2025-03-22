@@ -22,7 +22,9 @@ android {
         minSdk = 24
         targetSdk = 35
         versionCode = 1
-        versionName = "1.0"
+        versionName =
+            "1.0" + System.getenv("BUILD_NUMBER")?.let { ".$it" } + System.getenv("BRANCH_NAME")
+                ?.let { ".$it" }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
