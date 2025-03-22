@@ -4,9 +4,10 @@ import com.combah.travel2.common.coroutines.MutexScope
 import com.combah.travel2.extensions.MapFlow
 import com.combah.travel2.extensions.plus
 import com.combah.travel2.extensions.toMidnight
+import com.combah.travel2.model.PlaceRepository
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
-import com.combah.travel2.model.repository.AddLodgingRepository
+import com.combah.travel2.model.repository.LodgingSearchRepository
 import com.combah.travel2.ui.lodgingsearch.composable.LodgingSearchDestination
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.LodgingSearchItemActionHandler
@@ -18,11 +19,17 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.days
 
+interface LodgingSearchParamsFactory {
+    fun getLodgingSearchParams(tripId: String, itemId: String): LodgingSearchDestination.Params?
+}
+
 class LodgingSearchParamsUseCase(
-    private val coroutineScope: CoroutineScope,
+    coroutineScope: CoroutineScope,
     private val itemStore: AddPlanItemStore<PendingData.LodgingSearchParams, LodgingSearchItemState> = AddPlanItemStore(),
-    private val repository: AddLodgingRepository = AddLodgingRepository(),
-) : AddPlanUseCase.AddItemUseCase<Lodging, LodgingSearchItemState>, LodgingSearchItemActionHandler {
+    private val repository: LodgingSearchRepository = LodgingSearchRepository(),
+    private val placeRepository: PlaceRepository,
+) : AddPlanUseCase.AddItemUseCase<Lodging, LodgingSearchItemState>, LodgingSearchItemActionHandler,
+    LodgingSearchParamsFactory {
 
     override val items: MapFlow<String, LodgingSearchItemState> = itemStore.items(::createItem)
 
@@ -106,14 +113,18 @@ class LodgingSearchParamsUseCase(
             },
         )
 
-    fun getParams(itemId: String): LodgingSearchDestination.Params? =
+    override fun getLodgingSearchParams(
+        tripId: String,
+        itemId: String
+    ): LodgingSearchDestination.Params? =
         itemStore.getData(itemId)?.let {
             if (it.checkOut != null && it.city != null) {
+                placeRepository.places[it.city.id] = it.city
                 LodgingSearchDestination.Params(
+                    tripId = tripId,
                     checkIn = it.checkIn.timeInMillis,
                     checkOut = it.checkOut.timeInMillis,
                     locationId = it.city.id,
-                    locationName = it.city.name,
                     timeZoneId = it.checkIn.timeZone.id
                 )
             } else {

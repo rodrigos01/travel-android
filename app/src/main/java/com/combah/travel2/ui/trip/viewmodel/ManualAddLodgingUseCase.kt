@@ -6,7 +6,7 @@ import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.extensions.update
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
-import com.combah.travel2.model.repository.AddLodgingRepository
+import com.combah.travel2.model.repository.LodgingSearchRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.ManualAddPlanItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.PendingData.PendingLodging
@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.days
 class ManualAddLodgingUseCase(
     private val coroutineScope: CoroutineScope,
     private val itemStore: AddPlanItemStore<PendingLodging, ManualAddLodgingItemState> = AddPlanItemStore(),
-    private val repository: AddLodgingRepository = AddLodgingRepository(),
+    private val repository: LodgingSearchRepository = LodgingSearchRepository(),
 ) : AddPlanUseCase.AddItemUseCase<Lodging, ManualAddLodgingItemState>,
     AddPlanUseCase.EntityFactory<Lodging, ManualAddLodgingItemState>,
     ManualAddPlanItemActionHandler {

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,6 +22,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,26 +55,29 @@ import com.combah.travel2.ui.lodgingsearch.state.LodgingDetailsState
 import com.combah.travel2.ui.lodgingsearch.state.LodgingSearchResultState
 import com.combah.travel2.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
 import com.combah.travel2.ui.theme.AppTheme
+import com.combah.travel2.ui.trip.creation.composable.ConfirmationDialog
 import kotlinx.serialization.Serializable
 import java.text.NumberFormat
 
 @Composable
-fun LodgingSearch(
+private fun LodgingSearch(
     navController: NavController,
     state: LodgingSearchViewModel.UiState,
     onLodgingTapped: (LodgingSearchResultState) -> Unit,
-    onLodgingClosed: (String) -> Unit = {},
+    onLodgingClosed: (String) -> Unit,
+    onAddLodgingTapped: (String) -> Unit,
+    onContinueBrowsingTapped: () -> Unit,
 ) {
-    LodgingSearchResults(navController, state, onLodgingTapped, onLodgingClosed)
-}
-
-@Composable
-private fun LodgingSearchResults(
-    navController: NavController,
-    state: LodgingSearchViewModel.UiState,
-    onLodgingTapped: (LodgingSearchResultState) -> Unit,
-    onLodgingClosed: (String) -> Unit
-) {
+    if (state.localState.showAddConfirmation) {
+        ConfirmationDialog(
+            onConfirm = { navController.popBackStack() },
+            onDismiss = onContinueBrowsingTapped,
+            confirmButtonLabel = "Back to Trip",
+            dismissButtonLabel = "Continue browsing"
+        ) {
+            Text("Added to your trip. Do you want to continue browsing?")
+        }
+    }
     val searchTabListState = rememberLazyListState()
     val searchResults: @Composable TabbedHostScope.() -> Unit = {
         LodgingSearchResults(
@@ -94,6 +99,8 @@ private fun LodgingSearchResults(
                     LodgingDetails(lodging, onClose = {
                         onLodgingClosed(id)
                         navigate("search")
+                    }, onAddToTripTapped = {
+                        onAddLodgingTapped(id)
                     })
                 })
             }
@@ -124,10 +131,10 @@ fun LodgingSearchResults(
                 }
             })
             LodgingSearchParams(
-                checkIn = state.checkIn,
-                checkOut = state.checkOut,
-                minCheckOut = state.minCheckOut,
-                locationText = state.locationText,
+                checkIn = state.searchState.checkIn,
+                checkOut = state.searchState.checkOut,
+                minCheckOut = state.searchState.minCheckOut,
+                locationText = state.searchState.locationText,
                 onCheckInDateSelected = {},
                 onCheckOutDateSelected = {},
                 onLocationSearchResultSelected = {},
@@ -250,10 +257,10 @@ fun LodgingRating(rating: Double) {
 object LodgingSearchDestination {
     @Serializable
     data class Params(
+        val tripId: String,
+        val locationId: String,
         val checkIn: Long,
         val checkOut: Long,
-        val locationId: String,
-        val locationName: String,
         val timeZoneId: String,
     )
 }
@@ -268,7 +275,9 @@ fun LodgingSearch(
         navController = navController,
         state = state,
         onLodgingTapped = { viewModel.onLodgingTapped(it.id) },
-        onLodgingClosed = { viewModel.onLodgingClosed(it) }
+        onLodgingClosed = { viewModel.onLodgingClosed(it) },
+        onAddLodgingTapped = { viewModel.onAddLodgingTapped(it) },
+        onContinueBrowsingTapped = { viewModel.onContinueBrowsingTapped() },
     )
 }
 
@@ -278,9 +287,11 @@ fun PreviewLodgingSearch() {
     AppTheme {
         var details by remember { mutableStateOf(mapOf<String, LodgingDetailsState>()) }
         val loadedState = LodgingSearchViewModel.UiState.Loaded(
-            checkIn = Time("2025-08-10T00:00 -0500"),
-            checkOut = Time("2025-08-15T00:00 -0500"),
-            locationText = "New York, United States",
+            LodgingSearchViewModel.SearchParamsState(
+                checkIn = Time("2025-08-10T00:00 -0500"),
+                checkOut = Time("2025-08-15T00:00 -0500"),
+                locationText = "New York, United States",
+            ),
             results = List(10) { index ->
                 LodgingSearchResultState(
                     id = index.toString(),
@@ -295,13 +306,16 @@ fun PreviewLodgingSearch() {
             openedResults = details
         )
         val loadingState = LodgingSearchViewModel.UiState.Loading(
-            checkIn = Time("2025-08-10T00:00 -0500"),
-            checkOut = Time("2025-08-15T00:00 -0500"),
-            locationText = "New York, United States",
+            LodgingSearchViewModel.SearchParamsState(
+                checkIn = Time("2025-08-10T00:00 -0500"),
+                checkOut = Time("2025-08-15T00:00 -0500"),
+                locationText = "New York, United States",
+            ),
         )
+        var state by remember { mutableStateOf<LodgingSearchViewModel.UiState>(loadingState) }
         LodgingSearch(
             navController = rememberNavController(),
-            state = loadingState,
+            state = state,
             onLodgingTapped = { lodging ->
                 details = details.toMutableMap().also {
                     it[lodging.id] = LodgingDetailsState(
@@ -320,7 +334,23 @@ fun PreviewLodgingSearch() {
                         isLoading = false,
                     )
                 }
-            })
+            },
+            onLodgingClosed = {},
+            onAddLodgingTapped = {},
+            onContinueBrowsingTapped = {},
+        )
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)) {
+            Button(
+                onClick = {
+                    state = if (state == loadingState) loadedState else loadingState
+                },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                Text(if (state == loadingState) "Load" else "Reset")
+            }
+        }
     }
 }
 

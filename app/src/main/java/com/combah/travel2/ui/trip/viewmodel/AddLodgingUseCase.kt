@@ -3,9 +3,9 @@ package com.combah.travel2.ui.trip.viewmodel
 import com.combah.travel2.extensions.MapStateFlow
 import com.combah.travel2.extensions.get
 import com.combah.travel2.extensions.mergeMaps
+import com.combah.travel2.model.PlaceRepository
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
-import com.combah.travel2.ui.lodgingsearch.composable.LodgingSearchDestination
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandlerBase
 import com.combah.travel2.ui.trip.state.AddLodgingItemState
@@ -17,15 +17,18 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 
 class AddLodgingUseCase(
+    placeRepository: PlaceRepository,
     private val coroutineScope: CoroutineScope,
     private val manualAddLodgingUseCase: ManualAddLodgingUseCase = ManualAddLodgingUseCase(
         coroutineScope = coroutineScope
     ),
     private val lodgingSearchParamsUseCase: LodgingSearchParamsUseCase = LodgingSearchParamsUseCase(
+        placeRepository = placeRepository,
         coroutineScope = coroutineScope
     ),
 ) : AddPlanUseCase.AddItemUseCase<Lodging, AddLodgingItemState>,
     AddPlanUseCase.EntityFactory<Lodging, ManualAddLodgingItemState> by manualAddLodgingUseCase,
+    LodgingSearchParamsFactory by lodgingSearchParamsUseCase,
     AddLodgingItemActionHandler {
 
     override fun onSwitchToManualButtonTapped(itemId: String) {
@@ -81,7 +84,4 @@ class AddLodgingUseCase(
                 is LodgingSearchItemState -> lodgingSearchParamsUseCase
             }
         } ?: error("Item with id $itemId not found in store")
-
-    fun getLodgingSearchParams(itemId: String): LodgingSearchDestination.Params? =
-        lodgingSearchParamsUseCase.getParams(itemId)
 }
