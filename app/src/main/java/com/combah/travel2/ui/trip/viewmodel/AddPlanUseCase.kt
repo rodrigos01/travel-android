@@ -4,11 +4,11 @@ import com.combah.travel2.extensions.MapFlow
 import com.combah.travel2.extensions.MapStateFlow
 import com.combah.travel2.extensions.get
 import com.combah.travel2.extensions.mergeMaps
+import com.combah.travel2.model.PlaceRepository
 import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.TripEntity
-import com.combah.travel2.ui.lodgingsearch.composable.LodgingSearchDestination
 import com.combah.travel2.ui.trip.creation.usecase.AddFlightItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
@@ -22,11 +22,16 @@ import kotlinx.coroutines.flow.stateIn
 import java.util.UUID
 
 class AddPlanUseCase(
+    placeRepository: PlaceRepository,
     coroutineScope: CoroutineScope,
     private val addFlightUseCase: AddFlightUseCase = AddFlightUseCase(coroutineScope = coroutineScope),
-    private val addLodgingUseCase: AddLodgingUseCase = AddLodgingUseCase(coroutineScope = coroutineScope),
+    private val addLodgingUseCase: AddLodgingUseCase = AddLodgingUseCase(
+        placeRepository = placeRepository,
+        coroutineScope = coroutineScope,
+    ),
 ) : AddPlanItemActionHandler, AddFlightItemActionHandler by addFlightUseCase,
-    AddLodgingItemActionHandler by addLodgingUseCase {
+    AddLodgingItemActionHandler by addLodgingUseCase,
+    LodgingSearchParamsFactory by addLodgingUseCase {
 
     data class StateParams(
         val dateSelectionEnabled: Boolean = true,
@@ -90,9 +95,6 @@ class AddPlanUseCase(
     }
 
     override fun save(itemId: String) = Unit
-
-    fun getLodgingSearchParams(itemId: String): LodgingSearchDestination.Params? =
-        addLodgingUseCase.getLodgingSearchParams(itemId)
 
     fun saveItem(itemId: String): TripEntity {
         val addPlanItem = items[itemId] ?: error("Item with id $itemId not found in store")

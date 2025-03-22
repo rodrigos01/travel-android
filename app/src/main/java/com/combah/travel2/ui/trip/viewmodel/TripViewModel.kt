@@ -12,6 +12,7 @@ import com.combah.travel2.extensions.minus
 import com.combah.travel2.extensions.now
 import com.combah.travel2.extensions.plus
 import com.combah.travel2.extensions.toMidnight
+import com.combah.travel2.model.PlaceRepository
 import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
 import com.combah.travel2.model.data.Lodging
@@ -46,11 +47,15 @@ import kotlin.time.Duration.Companion.minutes
 @OptIn(ExperimentalContracts::class)
 class TripViewModel(
     private val repository: TripRepository,
+    placeRepository: PlaceRepository,
     private val tripId: String,
     private val navController: NavController,
     private val timeFormatter: TimeFormatter = TimeFormatter(),
     private val useCaseScope: CoroutineScope = UseCaseScope,
-    private val addPlanUseCase: AddPlanUseCase = AddPlanUseCase(coroutineScope = useCaseScope),
+    private val addPlanUseCase: AddPlanUseCase = AddPlanUseCase(
+        placeRepository = placeRepository,
+        coroutineScope = useCaseScope,
+    ),
 ) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
 
     constructor(
@@ -59,6 +64,7 @@ class TripViewModel(
         tripId: String,
     ) : this(
         serviceLocator.tripRepository,
+        serviceLocator.placeRepository,
         tripId,
         navController,
     )
@@ -175,11 +181,9 @@ class TripViewModel(
     }
 
     override fun save(itemId: String) {
-        val lodgingSearchParams = addPlanUseCase.getLodgingSearchParams(itemId)
+        val lodgingSearchParams = addPlanUseCase.getLodgingSearchParams(tripId, itemId)
         if (lodgingSearchParams != null) {
-            addPlanUseCase.getLodgingSearchParams(itemId)?.let {
-                navController.navigate(route = it)
-            }
+            navController.navigate(route = lodgingSearchParams)
             return
         }
         val entity = addPlanUseCase.saveItem(itemId)
