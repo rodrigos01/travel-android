@@ -13,7 +13,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.toRoute
 import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.viewModel
-import com.combah.travel2.model.repository.AddLodgingRepository
+import com.combah.travel2.model.repository.LodgingSearchRepository
 import com.combah.travel2.ui.lodgingsearch.composable.LodgingSearch
 import com.combah.travel2.ui.lodgingsearch.composable.LodgingSearchDestination
 import com.combah.travel2.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
@@ -67,11 +67,13 @@ class MainActivity : AppCompatActivity() {
                     val params: LodgingSearchDestination.Params = backStackEntry.toRoute()
                     val viewModel: LodgingSearchViewModel = viewModel {
                         LodgingSearchViewModel(
-                            AddLodgingRepository(),
+                            params.tripId,
+                            LodgingSearchRepository(),
+                            serviceLocator.tripRepository,
+                            serviceLocator.placeRepository,
+                            params.locationId,
                             params.checkIn,
                             params.checkOut,
-                            params.locationId,
-                            params.locationName,
                             params.timeZoneId,
                         )
                     }

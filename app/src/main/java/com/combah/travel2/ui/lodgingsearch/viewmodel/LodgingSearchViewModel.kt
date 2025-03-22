@@ -3,13 +3,14 @@ package com.combah.travel2.ui.lodgingsearch.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.combah.travel2.extensions.MutableMapStateFlow
-import com.combah.travel2.extensions.plus
+import com.combah.travel2.extensions.get
 import com.combah.travel2.extensions.remove
 import com.combah.travel2.extensions.set
-import com.combah.travel2.extensions.toMidnight
-import com.combah.travel2.model.data.Place
+import com.combah.travel2.model.PlaceRepository
+import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Time
-import com.combah.travel2.model.repository.AddLodgingRepository
+import com.combah.travel2.model.repository.LodgingSearchRepository
+import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.ui.lodgingsearch.state.LodgingDetailsState
 import com.combah.travel2.ui.lodgingsearch.state.LodgingRoomOfferState
 import com.combah.travel2.ui.lodgingsearch.state.LodgingSearchResultState
@@ -21,58 +22,61 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.TimeZone
-import kotlin.time.Duration.Companion.days
 
 class LodgingSearchViewModel(
-    private val repository: AddLodgingRepository,
+    private val tripId: String,
+    private val repository: LodgingSearchRepository,
+    private val tripRepository: TripRepository,
+    placeRepository: PlaceRepository,
+    locationId: String,
     checkInMillis: Long,
     checkOutMillis: Long,
-    locationId: String,
-    locationName: String,
     timeZoneId: String,
 ) : ViewModel() {
     interface UiState {
-        val checkIn: Time
-        val checkOut: Time
-        val locationText: String
-        val minCheckOut: Time?
+        val searchState: SearchParamsState
+        val localState: LocalState
 
         data class Loading(
-            override val checkIn: Time,
-            override val checkOut: Time,
-            override val locationText: String,
-            override val minCheckOut: Time? = null,
+            override val searchState: SearchParamsState,
+            override val localState: LocalState = LocalState(),
         ) : UiState
 
         data class Loaded(
-            override val checkIn: Time,
-            override val checkOut: Time,
-            override val locationText: String,
+            override val searchState: SearchParamsState,
             val results: List<LodgingSearchResultState>,
             val openedResults: Map<String, LodgingDetailsState> = emptyMap(),
-            override val minCheckOut: Time? = null,
+            override val localState: LocalState = LocalState(),
         ) : UiState
     }
 
-    private data class SearchParams(
-        val checkIn: Time,
-        val checkOut: Time,
-        val city: Place,
+    data class LocalState(
+        val showAddConfirmation: Boolean = false,
     )
 
+    data class SearchParamsState(
+        val checkIn: Time,
+        val checkOut: Time,
+        val locationText: String,
+        val minCheckOut: Time? = null,
+    )
+
+    private val location =
+        placeRepository.places[locationId] ?: error("Place with id $locationId not found")
+
     private val loadingState = MutableStateFlow(false)
-    private val searchState = MutableStateFlow(
-        SearchParams(
+    private val searchParamsState = MutableStateFlow(
+        SearchParamsState(
             checkIn = Time(checkInMillis, TimeZone.getTimeZone(timeZoneId)),
             checkOut = Time(checkOutMillis, TimeZone.getTimeZone(timeZoneId)),
-            city = Place(locationId, locationName, "", 0.0, 0.0, null, "", ""),
+            locationText = location.name,
         )
     )
-    private val searchResultState = searchState
+    private val searchResultState = searchParamsState
         .onEach { loadingState.value = true }
         .map {
             it to repository.search(
-                locationId = it.city.id,
+                locationId = location.id,
                 checkIn = it.checkIn,
                 checkOut = it.checkOut,
             )
@@ -80,25 +84,21 @@ class LodgingSearchViewModel(
         .onEach {
             loadingState.value = false
         }
+    private val localState = MutableStateFlow(LocalState())
     private val openedResultsState = MutableMapStateFlow<String, LodgingDetailsState>()
     val uiState =
         combine(
             searchResultState,
             openedResultsState,
-            loadingState
-        ) { (params, results), openedResults, loading ->
+            loadingState,
+            localState,
+        ) { (params, results), openedResults, loading, localState ->
             if (loading) {
-                UiState.Loading(
-                    checkIn = params.checkIn,
-                    checkOut = params.checkOut,
-                    locationText = params.city.name,
-                )
+                UiState.Loading(searchState = params, localState = localState)
             } else {
                 UiState.Loaded(
-                    checkIn = params.checkIn,
-                    checkOut = params.checkOut,
-                    minCheckOut = params.checkIn.toMidnight() + 1.days,
-                    locationText = params.city.name,
+                    searchState = params,
+                    localState = localState,
                     results = results.sortedBy { -it.reviewCount }.map {
                         LodgingSearchResultState(
                             id = it.id,
@@ -115,9 +115,7 @@ class LodgingSearchViewModel(
             }
         }.stateIn(
             viewModelScope, SharingStarted.Eagerly, UiState.Loading(
-                searchState.value.checkIn,
-                searchState.value.checkOut,
-                searchState.value.city.name,
+                searchState = searchParamsState.value, localState = localState.value
             )
         )
 
@@ -130,8 +128,8 @@ class LodgingSearchViewModel(
             reviewCountText = "",
             lodgingType = existingState.lodgingType,
             photos = listOf(existingState.coverImage),
-            checkIn = state.checkIn,
-            checkOut = state.checkOut,
+            checkIn = state.searchState.checkIn,
+            checkOut = state.searchState.checkOut,
             price = existingState.price,
             rooms = emptyList(),
             address = existingState.address,
@@ -142,7 +140,11 @@ class LodgingSearchViewModel(
         openedResultsState[lodgingId] = initialState
         viewModelScope.launch {
             val lodging =
-                repository.details(lodgingId, searchState.value.checkIn, searchState.value.checkOut)
+                repository.details(
+                    lodgingId,
+                    searchParamsState.value.checkIn,
+                    searchParamsState.value.checkOut
+                )
                     ?: return@launch
             openedResultsState[lodgingId] = initialState.copy(
                 photos = initialState.photos + lodging.photos.subList(1, lodging.photos.size),
@@ -169,5 +171,25 @@ class LodgingSearchViewModel(
 
     fun onLodgingClosed(lodgingId: String) {
         openedResultsState.remove(lodgingId)
+    }
+
+    fun onAddLodgingTapped(lodgingId: String) {
+        val details = openedResultsState[lodgingId] ?: return
+        val lodging = Lodging(
+            id = lodgingId,
+            name = details.name,
+            address = details.address,
+            city = location,
+            checkIn = details.checkIn,
+            checkout = details.checkOut,
+        )
+        viewModelScope.launch {
+            tripRepository.saveLodging(tripId, lodging)
+            localState.value = localState.value.copy(showAddConfirmation = true)
+        }
+    }
+
+    fun onContinueBrowsingTapped() {
+        localState.value = localState.value.copy(showAddConfirmation = false)
     }
 }

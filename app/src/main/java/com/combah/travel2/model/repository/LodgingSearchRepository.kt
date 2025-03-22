@@ -13,7 +13,7 @@ import io.ktor.http.appendPathSegments
 import java.util.Currency
 import java.util.Locale
 
-class AddLodgingRepository {
+class LodgingSearchRepository {
 
     suspend fun autocomplete(query: String): List<SimplePlace> {
         return request<ApiResponse.PlaceAutoComplete>("/places/autocomplete") {
