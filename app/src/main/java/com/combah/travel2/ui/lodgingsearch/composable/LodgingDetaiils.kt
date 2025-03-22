@@ -62,6 +62,7 @@ import com.combah.travel2.extensions.Time
 import com.combah.travel2.ui.lodgingsearch.state.LodgingDetailsState
 import com.combah.travel2.ui.lodgingsearch.state.LodgingRoomOfferState
 import com.combah.travel2.ui.theme.AppTheme
+import com.combah.travel2.ui.trip.creation.composable.ConfirmationDialog
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -73,7 +74,7 @@ import com.google.maps.android.compose.rememberMarkerState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit) {
+fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripTapped: () -> Unit) {
     Scaffold(
         topBar = {
             Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
@@ -157,7 +158,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit) {
                     )
                 }
                 Button(
-                    onClick = {/* Add to trip */ },
+                    onClick = onAddToTripTapped,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
                     modifier = Modifier.weight(1F)
                 ) {
@@ -237,11 +238,13 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit) {
             }
             AnimatedContent(state.isLoading) { isLoading ->
                 if (isLoading) {
-                    Box(modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(6 / 4f)
-                        .clip(MaterialTheme.shapes.large)
-                        .skeletonLoader(startDelayMillis = 300))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(6 / 4f)
+                            .clip(MaterialTheme.shapes.large)
+                            .skeletonLoader(startDelayMillis = 300)
+                    )
                 } else {
                     val marker = LatLng(state.latitude, state.longitude)
                     val cameraPositionState =
@@ -376,6 +379,7 @@ fun LodgingDetailsPreview() {
             LodgingDetails(
                 state = state,
                 onClose = {},
+                onAddToTripTapped = {},
             )
             if (state != loadedState) {
                 Button(

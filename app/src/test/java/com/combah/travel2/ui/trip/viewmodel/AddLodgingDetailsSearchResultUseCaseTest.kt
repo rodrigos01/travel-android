@@ -4,7 +4,7 @@ import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.SimplePlace
 import com.combah.travel2.model.data.Time
-import com.combah.travel2.model.repository.AddLodgingRepository
+import com.combah.travel2.model.repository.LodgingSearchRepository
 import com.combah.travel2.test.Captor.getUpdateResult
 import com.combah.travel2.test.Mocks.mockTime
 import com.combah.travel2.test.UnconfinedDispatcherTestRule
@@ -31,7 +31,7 @@ class AddLodgingDetailsSearchResultUseCaseTest {
     @get:Rule
     val rule = UnconfinedDispatcherTestRule()
 
-    private val repository: AddLodgingRepository = mock()
+    private val repository: LodgingSearchRepository = mock()
     private val itemFlow = MutableStateFlow(mapOf<String, ManualAddLodgingItemState>())
     private val itemStore =
         mock<AddPlanItemStore<PendingLodging, ManualAddLodgingItemState>> {
