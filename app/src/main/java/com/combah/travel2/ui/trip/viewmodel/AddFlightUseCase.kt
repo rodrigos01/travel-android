@@ -113,10 +113,11 @@ class AddFlightUseCase(
         itemStore.addItem(data, params)
     }
 
-    override fun addItem(entity: Flight, params: AddPlanUseCase.StateParams) {
+    override fun addItem(id: String, entity: Flight, params: AddPlanUseCase.StateParams) {
         entity.segments.forEach { segment ->
             val data = PendingFlight(
                 id = entity.id,
+                entityId = entity.id,
                 segment.departure,
                 segment.airportFrom,
                 segment.airportTo,
@@ -165,7 +166,7 @@ class AddFlightUseCase(
         data.airportTo ?: error("airport to is not set")
         data.arrival ?: error("arival time is not set")
         return Flight(
-            data.id,
+            id = data.entityId ?: data.id,
             listOf(
                 FlightSegment(
                     data.airportFrom,

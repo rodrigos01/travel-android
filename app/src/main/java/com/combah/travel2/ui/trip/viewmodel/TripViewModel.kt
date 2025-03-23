@@ -15,10 +15,12 @@ import com.combah.travel2.extensions.toMidnight
 import com.combah.travel2.model.PlaceRepository
 import com.combah.travel2.model.data.Flight
 import com.combah.travel2.model.data.FlightSegment
+import com.combah.travel2.model.data.Identifiable
 import com.combah.travel2.model.data.Lodging
 import com.combah.travel2.model.data.Place
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.data.Trip
+import com.combah.travel2.model.data.TripEntity
 import com.combah.travel2.model.data.TripEvent
 import com.combah.travel2.model.repository.TripRepository
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
@@ -27,13 +29,11 @@ import com.combah.travel2.ui.trip.state.TripItemState
 import com.combah.travel2.ui.triplist.composable.TripListDestination
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -76,7 +76,7 @@ class TripViewModel(
 
     private val reversibleItems = mutableMapOf<String, TripItemState>()
 
-    private var TripItemState.Identifiable.original: TripItemState?
+    private var Identifiable.original: TripItemState?
         get() = reversibleItems[id]
         set(value) {
             value?.let { reversibleItems[id] = it } ?: reversibleItems.remove(id)
@@ -89,7 +89,7 @@ class TripViewModel(
             title = it.name ?: "Untitled Trip",
             items = genItems(it),
         )
-    }.onEach { localState.value = it }
+    }
     private val addPlanItemsState = addPlanUseCase.items.onEach { state ->
         reversibleItems.keys.forEach { itemId ->
             if (!state.containsKey(itemId)) {
@@ -97,9 +97,8 @@ class TripViewModel(
             }
         }
     }
-    private val localState = MutableStateFlow(ViewState(title = "", items = emptyList()))
     val viewState: StateFlow<ViewState> =
-        merge(eventsFromTrip, localState).combine(addPlanItemsState) { state, addPlanItems ->
+        eventsFromTrip.combine(addPlanItemsState) { state, addPlanItems ->
             val items = state.items.map { item ->
                 if (item is TripItemState.Replaceable) {
                     addPlanItems[item.id]?.let { newItem ->
@@ -114,7 +113,7 @@ class TripViewModel(
             .stateIn(
                 viewModelScope,
                 started = SharingStarted.Eagerly,
-                initialValue = localState.value
+                initialValue = ViewState(title = "", items = emptyList())
             )
 
     fun tripNameChanged(newName: String) {
@@ -132,28 +131,24 @@ class TripViewModel(
 
     fun addButtonTapped(itemId: String) {
         val tapped =
-            viewState.value.items.find { it is TripItemState.Identifiable && it.id == itemId }
-        updateItems {
-            val allowStartDateSelection =
-                tapped is TripItemState.DateRangeItemState || tapped is TripItemState.InitialAddPlanItemState
-            addPlanUseCase.createAddPlanItem(
-                id = (tapped as? TripItemState.Replaceable)?.id,
-                time = (tapped as TripItemState.Timeable).timestamp,
-                dateSelectionEnabled = allowStartDateSelection,
-            )
-        }
+            viewState.value.items.find { it is Identifiable && it.id == itemId }
+        val allowStartDateSelection =
+            tapped is TripItemState.DateRangeItemState || tapped is TripItemState.InitialAddPlanItemState
+        addPlanUseCase.createAddPlanItem(
+            id = (tapped as? TripItemState.Replaceable)?.id,
+            time = (tapped as TripItemState.Timeable).timestamp,
+            dateSelectionEnabled = allowStartDateSelection,
+        )
     }
 
     fun emptyDateRowTapped(itemId: String) {
         val tapped =
-            viewState.value.items.find { it is TripItemState.Identifiable && it.id == itemId }
-        updateItems {
-            addPlanUseCase.createAddPlanItem(
-                id = (tapped as TripItemState.Identifiable).id,
-                time = (tapped as TripItemState.Timeable).timestamp,
-                dateSelectionEnabled = false,
-            )
-        }
+            viewState.value.items.find { it is Identifiable && it.id == itemId }
+        addPlanUseCase.createAddPlanItem(
+            id = (tapped as Identifiable).id,
+            time = (tapped as TripItemState.Timeable).timestamp,
+            dateSelectionEnabled = false,
+        )
     }
 
     fun itemTapped(itemId: String) {
@@ -166,7 +161,7 @@ class TripViewModel(
         addPlanUseCase.createAddPlanItem(itemId, entity)
     }
 
-    private val TripItemState.EventItemState.entity
+    private val TripItemState.EventItemState.entity: TripEntity?
         get() = when (this) {
             is TripItemState.FlightDepartureItemState -> trip.value?.flights?.first { flight ->
                 flight.segments.any { it.departure == timestamp && it.airportFrom.name == airport }
@@ -205,7 +200,7 @@ class TripViewModel(
     }
 
     override fun delete(type: AddPlanItemState.Type, itemId: String) {
-        val entity = (reversibleItems[itemId] as? TripItemState.EventItemState)?.entity
+        val entity = (reversibleItems[itemId] as? TripItemState.EventItemState)?.entity ?: return
         addPlanUseCase.removeItem(itemId)
         viewModelScope.launch {
             when (entity) {
@@ -213,10 +208,6 @@ class TripViewModel(
                 is Lodging -> repository.deleteLodging(tripId, entity.id)
             }
         }
-    }
-
-    private fun updateItems(updater: MutableList<TripItemState>.() -> Unit) {
-        localState.value = localState.value.updateItems(updater)
     }
 
     private fun genItems(trip: Trip): List<TripItemState> {
@@ -438,12 +429,6 @@ private fun TripEvent.getPlace(referenceTime: Time) = when (this) {
 
 private val Time.dateString
     get() = "$year=$month-$dayOfMonth"
-
-private fun TripViewModel.ViewState.updateItems(updater: MutableList<TripItemState>.() -> Unit): TripViewModel.ViewState {
-    return copy(
-        items = items.toMutableList().apply(updater).toList()
-    )
-}
 
 private class EventComparable(
     private val time: Time, private val event: Any
