@@ -90,17 +90,32 @@ class TripViewModel(
             items = genItems(it),
         )
     }.onEach { localState.value = it }
+    private val addPlanItemsState = addPlanUseCase.items.onEach { state ->
+        reversibleItems.keys.forEach { itemId ->
+            if (!state.containsKey(itemId)) {
+                reversibleItems.remove(itemId)
+            }
+        }
+    }
     private val localState = MutableStateFlow(ViewState(title = "", items = emptyList()))
     val viewState: StateFlow<ViewState> =
-        merge(eventsFromTrip, localState).combine(addPlanUseCase.items) { state, addPlanItems ->
-            state.updateItems {
-                replaceAll { item ->
-                    (item as? TripItemState.Identifiable)?.id?.let {
-                        addPlanItems[it] ?: reversibleItems[it]
+        merge(eventsFromTrip, localState).combine(addPlanItemsState) { state, addPlanItems ->
+            val items = state.items.map { item ->
+                if (item is TripItemState.Replaceable) {
+                    addPlanItems[item.id]?.let { newItem ->
+                        newItem.also { it.original = item }
                     } ?: item
+                } else {
+                    item
                 }
             }
-        }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = localState.value)
+            state.copy(items = items)
+        }
+            .stateIn(
+                viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = localState.value
+            )
 
     fun tripNameChanged(newName: String) {
         viewModelScope.launch {
@@ -118,67 +133,57 @@ class TripViewModel(
     fun addButtonTapped(itemId: String) {
         val tapped =
             viewState.value.items.find { it is TripItemState.Identifiable && it.id == itemId }
-        val index = viewState.value.items.indexOf(tapped)
         updateItems {
             val allowStartDateSelection =
                 tapped is TripItemState.DateRangeItemState || tapped is TripItemState.InitialAddPlanItemState
-            val addPlanItem = addPlanUseCase.createAddPlanItem(
-                (tapped as TripItemState.Timeable).timestamp,
+            addPlanUseCase.createAddPlanItem(
+                id = (tapped as? TripItemState.Replaceable)?.id,
+                time = (tapped as TripItemState.Timeable).timestamp,
                 dateSelectionEnabled = allowStartDateSelection,
             )
-            if (tapped is TripItemState.Replaceable) {
-                addPlanItem.original = tapped
-                removeAt(index)
-                add(index, addPlanItem)
-            } else {
-                add(index + 1, addPlanItem)
-            }
         }
     }
 
     fun emptyDateRowTapped(itemId: String) {
         val tapped =
             viewState.value.items.find { it is TripItemState.Identifiable && it.id == itemId }
-        val index = viewState.value.items.indexOf(tapped)
         updateItems {
-            val addPlanItem = addPlanUseCase.createAddPlanItem(
-                (tapped as TripItemState.Timeable).timestamp,
+            addPlanUseCase.createAddPlanItem(
+                id = (tapped as TripItemState.Identifiable).id,
+                time = (tapped as TripItemState.Timeable).timestamp,
                 dateSelectionEnabled = false,
             )
-            addPlanItem.original = tapped
-            removeAt(index)
-            add(index, addPlanItem)
         }
     }
 
     fun itemTapped(itemId: String) {
         val item = viewState.value.items.filterIsInstance<TripItemState.EventItemState>()
             .find { it.id == itemId } ?: return
-        val entity = when (item) {
+        if (reversibleItems.containsKey(itemId)) {
+            return
+        }
+        val entity = item.entity ?: return
+        addPlanUseCase.createAddPlanItem(itemId, entity)
+    }
+
+    private val TripItemState.EventItemState.entity
+        get() = when (this) {
             is TripItemState.FlightDepartureItemState -> trip.value?.flights?.first { flight ->
-                flight.segments.any { it.departure == item.timestamp && it.airportFrom.name == item.airport }
+                flight.segments.any { it.departure == timestamp && it.airportFrom.name == airport }
             }
 
             is TripItemState.FlightArrivalItemState -> trip.value?.flights?.first { flight ->
-                flight.segments.any { it.arrival == item.timestamp && it.airportTo.name == item.airport }
+                flight.segments.any { it.arrival == timestamp && it.airportTo.name == airport }
             }
 
             is TripItemState.HotelCheckInItemState -> trip.value?.lodgings?.first {
-                it.checkIn == item.timestamp && (it.name ?: it.address) == item.hotelName
+                it.checkIn == timestamp && (it.name ?: it.address) == hotelName
             }
 
             is TripItemState.HotelCheckOutItemState -> trip.value?.lodgings?.first {
-                it.checkout == item.timestamp && (it.name ?: it.address) == item.hotelName
+                it.checkout == timestamp && (it.name ?: it.address) == hotelName
             }
-        } ?: return
-        val index = viewState.value.items.indexOf(item)
-        val addPlanItem = addPlanUseCase.createAddPlanItem(entity)
-        updateItems {
-            addPlanItem.original = item
-            removeAt(index)
-            add(index, addPlanItem)
         }
-    }
 
     override fun save(itemId: String) {
         val lodgingSearchParams = addPlanUseCase.getLodgingSearchParams(tripId, itemId)
@@ -200,11 +205,12 @@ class TripViewModel(
     }
 
     override fun delete(type: AddPlanItemState.Type, itemId: String) {
+        val entity = (reversibleItems[itemId] as? TripItemState.EventItemState)?.entity
         addPlanUseCase.removeItem(itemId)
         viewModelScope.launch {
-            when (type) {
-                AddPlanItemState.Type.Flight -> repository.deleteFlight(tripId, itemId)
-                AddPlanItemState.Type.Lodging -> repository.deleteLodging(tripId, itemId)
+            when (entity) {
+                is Flight -> repository.deleteFlight(tripId, entity.id)
+                is Lodging -> repository.deleteLodging(tripId, entity.id)
             }
         }
     }

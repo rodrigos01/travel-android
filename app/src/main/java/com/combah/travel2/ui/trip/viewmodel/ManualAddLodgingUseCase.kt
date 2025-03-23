@@ -79,20 +79,19 @@ class ManualAddLodgingUseCase(
         id: String,
         time: Time,
         params: AddPlanUseCase.StateParams,
-    ): ManualAddLodgingItemState {
+    ) {
         val data = PendingLodging(
             id = id,
             checkIn = time,
             checkOut = time.toMidnight() + 1.days,
         )
         itemStore.addItem(data, params)
-        return createItem(data, params)
     }
 
     override fun addItem(
         entity: Lodging,
         params: AddPlanUseCase.StateParams,
-    ): ManualAddLodgingItemState {
+    ) {
         val data = PendingLodging(
             id = entity.id,
             name = entity.name,
@@ -101,7 +100,6 @@ class ManualAddLodgingUseCase(
             checkOut = entity.checkout
         )
         itemStore.addItem(data, params)
-        return createItem(data, params)
     }
 
     private fun createItem(
@@ -143,7 +141,7 @@ class ManualAddLodgingUseCase(
         data.city ?: error("city from is not set")
         data.checkOut
         return Lodging(
-            item.id,
+            data.id,
             item.startState.locationText,
             data.address,
             data.city,

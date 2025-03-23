@@ -9,7 +9,6 @@ import com.combah.travel2.model.data.Time
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandlerBase
 import com.combah.travel2.ui.trip.state.AddLodgingItemState
-import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.state.LodgingSearchItemState
 import com.combah.travel2.ui.trip.state.ManualAddLodgingItemState
 import kotlinx.coroutines.CoroutineScope
@@ -66,11 +65,11 @@ class AddLodgingUseCase(
         id: String,
         time: Time,
         params: AddPlanUseCase.StateParams,
-    ): AddPlanItemState =
+    ) =
         lodgingSearchParamsUseCase.addItem(id, time, params)
 
-    override fun addItem(entity: Lodging, params: AddPlanUseCase.StateParams): AddLodgingItemState =
-        manualAddLodgingUseCase.addItem(entity, params)
+    override fun addItem(id: String, entity: Lodging, params: AddPlanUseCase.StateParams) =
+        manualAddLodgingUseCase.addItem(id, entity, params)
 
     override fun removeItem(item: AddLodgingItemState) = when (item) {
         is ManualAddLodgingItemState -> manualAddLodgingUseCase.removeItem(item)
