@@ -38,6 +38,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.combah.travel2.model.PlaceRepository
+import com.combah.travel2.model.data.Identifiable
 import com.combah.travel2.model.repository.mock.MockTripRepository
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.ConfirmationDialog
@@ -141,7 +142,7 @@ fun TripDetails(
         LazyColumn(contentPadding = paddingValues) {
             items(
                 state.items,
-                key = { (it as? TripItemState.Identifiable)?.id ?: it.hashCode() }) { event ->
+                key = { (it as? Identifiable)?.id ?: it.hashCode() }) { event ->
                 Box(
                     modifier = Modifier.animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
                 ) {

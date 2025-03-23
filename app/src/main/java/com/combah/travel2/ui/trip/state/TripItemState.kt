@@ -1,5 +1,6 @@
 package com.combah.travel2.ui.trip.state
 
+import com.combah.travel2.model.data.Identifiable
 import com.combah.travel2.model.data.Time
 
 sealed interface TripItemState {
@@ -18,10 +19,6 @@ sealed interface TripItemState {
         val dateStart: String,
         val dateEnd: String,
     ) : TripItemState, Timeable
-
-    interface Identifiable {
-        val id: String
-    }
 
     data class DateRangeItemState(
         override val id: String,
@@ -124,7 +121,7 @@ data class ManualAddPlanState(
     val searchResults: List<String>
 )
 
-sealed interface AddPlanItemState : TripItemState, TripItemState.Identifiable,
+sealed interface AddPlanItemState : TripItemState, Identifiable,
     TripItemState.Timeable {
 
     val typeSelectionEnabled: Boolean

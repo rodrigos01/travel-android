@@ -44,7 +44,7 @@ class AddPlanUseCase(
         val items: MapFlow<String, T>
 
         fun addItem(id: String, time: Time, params: StateParams)
-        fun addItem(entity: E, params: StateParams)
+        fun addItem(id: String, entity: E, params: StateParams)
 
         fun removeItem(item: T)
     }

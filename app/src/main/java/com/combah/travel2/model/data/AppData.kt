@@ -3,6 +3,10 @@ package com.combah.travel2.model.data
 import kotlinx.serialization.Serializable
 import java.util.TimeZone
 
+interface Identifiable {
+    val id: String
+}
+
 data class Trip(
     val id: String,
     val name: String?,
@@ -12,12 +16,12 @@ data class Trip(
     val places: List<Place>,
 )
 
-sealed interface TripEntity
+sealed interface TripEntity : Identifiable
 
 sealed interface TripEvent
 
 data class Flight(
-    val id: String,
+    override val id: String,
     val segments: List<FlightSegment>,
     val price: Double? = null,
 ) : TripEntity
@@ -37,7 +41,7 @@ data class Airport(
 )
 
 data class Lodging(
-    val id: String,
+    override val id: String,
     val name: String?,
     val address: String,
     val city: Place,

@@ -72,11 +72,12 @@ class LodgingSearchParamsUseCase(
     }
 
     override fun addItem(
+        id: String,
         entity: Lodging,
         params: AddPlanUseCase.StateParams
     ) {
         val data = PendingData.LodgingSearchParams(
-            id = entity.id,
+            id = id,
             checkIn = entity.checkIn,
             checkOut = entity.checkout,
         )

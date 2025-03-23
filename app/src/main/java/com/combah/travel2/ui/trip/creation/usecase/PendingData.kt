@@ -10,6 +10,7 @@ sealed interface PendingData {
 
     data class PendingFlight(
         override val id: String,
+        val entityId: String? = null,
         val departure: Time,
         val airportFrom: Airport? = null,
         val airportTo: Airport? = null,
@@ -20,6 +21,7 @@ sealed interface PendingData {
 
     data class PendingLodging(
         override val id: String,
+        val entityId: String? = null,
         val checkIn: Time,
         val checkOut: Time,
         val name: String? = null,
