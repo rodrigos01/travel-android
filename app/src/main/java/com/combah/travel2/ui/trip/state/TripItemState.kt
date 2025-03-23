@@ -30,7 +30,7 @@ sealed interface TripItemState {
         val dayOfWeekStart: String,
         val dayOfMonthEnd: String,
         val dayOfWeekEnd: String,
-    ) : TripItemState, Timeable, Identifiable
+    ) : TripItemState, Timeable, Replaceable
 
     interface Replaceable : Identifiable
 
@@ -59,7 +59,7 @@ sealed interface TripItemState {
         override val time: String,
         val destination: String,
         val airport: String
-    ) : EventItemState {
+    ) : EventItemState, Replaceable {
         override val title = destination
         override val subtitle = airport
     }
@@ -72,7 +72,7 @@ sealed interface TripItemState {
         override val dayOfWeek: String,
         override val time: String,
         val airport: String
-    ) : EventItemState {
+    ) : EventItemState, Replaceable {
         override val title = null
         override val subtitle = airport
     }
@@ -86,7 +86,7 @@ sealed interface TripItemState {
         override val time: String,
         val hotelName: String,
         val hotelAddress: String,
-    ) : EventItemState {
+    ) : EventItemState, Replaceable {
         override val title = null
         override val subtitle = hotelAddress
     }
@@ -99,7 +99,7 @@ sealed interface TripItemState {
         override val dayOfWeek: String,
         override val time: String,
         val hotelName: String,
-    ) : EventItemState {
+    ) : EventItemState, Replaceable {
         override val title = null
         override val subtitle = hotelName
     }

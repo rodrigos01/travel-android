@@ -13,6 +13,7 @@ import com.combah.travel2.ui.trip.creation.usecase.AddFlightItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddLodgingItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemActionHandler
 import com.combah.travel2.ui.trip.state.AddFlightItemState
+import com.combah.travel2.ui.trip.state.AddLodgingItemState
 import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.state.LodgingSearchItemState
 import com.combah.travel2.ui.trip.state.ManualAddLodgingItemState
@@ -42,8 +43,8 @@ class AddPlanUseCase(
     interface AddItemUseCase<E : TripEntity, T : AddPlanItemState> {
         val items: MapFlow<String, T>
 
-        fun addItem(id: String, time: Time, params: StateParams): AddPlanItemState
-        fun addItem(entity: E, params: StateParams): T
+        fun addItem(id: String, time: Time, params: StateParams)
+        fun addItem(entity: E, params: StateParams)
 
         fun removeItem(item: T)
     }
@@ -58,26 +59,20 @@ class AddPlanUseCase(
     ).stateIn(coroutineScope, SharingStarted.Lazily, initialValue = emptyMap())
 
     fun createAddPlanItem(
-        time: Time,
-        dateSelectionEnabled: Boolean = true,
-        type: AddPlanItemState.Type = AddPlanItemState.Type.Flight
-    ): AddPlanItemState = createAddPlanItem(id = null, time, dateSelectionEnabled, type)
-
-    private fun createAddPlanItem(
         id: String?,
         time: Time,
         dateSelectionEnabled: Boolean = true,
-        type: AddPlanItemState.Type,
-    ): AddPlanItemState {
-        return type.useCase().addItem(
+        type: AddPlanItemState.Type = AddPlanItemState.Type.Flight,
+    ) {
+        type.useCase().addItem(
             id = id ?: UUID.randomUUID().toString(),
             time,
             StateParams(dateSelectionEnabled),
         )
     }
 
-    fun createAddPlanItem(entity: TripEntity): AddPlanItemState {
-        return entity.asState(StateParams(typeSelectionEnabled = false, deleteEnabled = true))
+    fun createAddPlanItem(id: String, entity: TripEntity) {
+        return entity.asState(id, StateParams(typeSelectionEnabled = false, deleteEnabled = true))
     }
 
     override fun addPlanTypeChanged(itemId: String, newType: AddPlanItemState.Type) {
@@ -116,8 +111,7 @@ class AddPlanUseCase(
     private fun removeItem(item: AddPlanItemState) {
         when (item) {
             is AddFlightItemState -> addFlightUseCase.removeItem(item)
-            is ManualAddLodgingItemState -> addLodgingUseCase.removeItem(item)
-            is LodgingSearchItemState -> Unit
+            is AddLodgingItemState -> addLodgingUseCase.removeItem(item)
         }
     }
 
@@ -135,11 +129,11 @@ class AddPlanUseCase(
 
 
     private fun TripEntity.asState(
-        params: StateParams = StateParams(),
-    ): AddPlanItemState {
+        id: String, params: StateParams = StateParams(),
+    ) {
         return when (this) {
-            is Flight -> addFlightUseCase.addItem(this, params)
-            is Lodging -> addLodgingUseCase.addItem(this, params)
+            is Flight -> addFlightUseCase.addItem(id, this, params)
+            is Lodging -> addLodgingUseCase.addItem(id, this, params)
         }
     }
 
