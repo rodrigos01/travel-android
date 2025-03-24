@@ -116,7 +116,7 @@ class AddFlightUseCase(
     override fun addItem(id: String, entity: Flight, params: AddPlanUseCase.StateParams) {
         entity.segments.forEach { segment ->
             val data = PendingFlight(
-                id = entity.id,
+                id = id,
                 entityId = entity.id,
                 segment.departure,
                 segment.airportFrom,
