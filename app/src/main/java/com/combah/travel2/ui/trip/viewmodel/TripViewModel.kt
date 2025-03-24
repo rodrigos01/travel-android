@@ -5,7 +5,7 @@ package com.combah.travel2.ui.trip.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.combah.travel2.common.coroutines.UseCaseScope
+import com.combah.travel2.common.coroutines.createUseCaseScope
 import com.combah.travel2.di.ServiceLocator
 import com.combah.travel2.extensions.TimeFormatter
 import com.combah.travel2.extensions.minus
@@ -51,7 +51,7 @@ class TripViewModel(
     private val tripId: String,
     private val navController: NavController,
     private val timeFormatter: TimeFormatter = TimeFormatter(),
-    private val useCaseScope: CoroutineScope = UseCaseScope,
+    private val useCaseScope: CoroutineScope = createUseCaseScope(),
     private val addPlanUseCase: AddPlanUseCase = AddPlanUseCase(
         placeRepository = placeRepository,
         coroutineScope = useCaseScope,
@@ -161,25 +161,6 @@ class TripViewModel(
         addPlanUseCase.createAddPlanItem(itemId, entity)
     }
 
-    private val TripItemState.EventItemState.entity: TripEntity?
-        get() = when (this) {
-            is TripItemState.FlightDepartureItemState -> trip.value?.flights?.first { flight ->
-                flight.segments.any { it.departure == timestamp && it.airportFrom.name == airport }
-            }
-
-            is TripItemState.FlightArrivalItemState -> trip.value?.flights?.first { flight ->
-                flight.segments.any { it.arrival == timestamp && it.airportTo.name == airport }
-            }
-
-            is TripItemState.HotelCheckInItemState -> trip.value?.lodgings?.first {
-                it.checkIn == timestamp && (it.name ?: it.address) == hotelName
-            }
-
-            is TripItemState.HotelCheckOutItemState -> trip.value?.lodgings?.first {
-                it.checkout == timestamp && (it.name ?: it.address) == hotelName
-            }
-        }
-
     override fun save(itemId: String) {
         val lodgingSearchParams = addPlanUseCase.getLodgingSearchParams(tripId, itemId)
         if (lodgingSearchParams != null) {
@@ -209,6 +190,25 @@ class TripViewModel(
             }
         }
     }
+
+    private val TripItemState.EventItemState.entity: TripEntity?
+        get() = when (this) {
+            is TripItemState.FlightDepartureItemState -> trip.value?.flights?.first { flight ->
+                flight.segments.any { it.departure == timestamp && it.airportFrom.name == airport }
+            }
+
+            is TripItemState.FlightArrivalItemState -> trip.value?.flights?.first { flight ->
+                flight.segments.any { it.arrival == timestamp && it.airportTo.name == airport }
+            }
+
+            is TripItemState.HotelCheckInItemState -> trip.value?.lodgings?.first {
+                it.checkIn == timestamp && (it.name ?: it.address) == hotelName
+            }
+
+            is TripItemState.HotelCheckOutItemState -> trip.value?.lodgings?.first {
+                it.checkout == timestamp && (it.name ?: it.address) == hotelName
+            }
+        }
 
     private fun genItems(trip: Trip): List<TripItemState> {
         val events = trip.flights.flatMap { it.segments } + trip.lodgings

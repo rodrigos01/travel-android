@@ -4,4 +4,5 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
-val UseCaseScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+fun createUseCaseScope(): CoroutineScope =
+    CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
