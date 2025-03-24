@@ -32,6 +32,10 @@ class AddPlanItemStore<R : PendingData, T : AddPlanItemState> {
             ItemStoreData(data, stateParams)
         )
 
+    fun hasItem(itemId: String): Boolean {
+        return _items.value.containsKey(itemId)
+    }
+
     fun getData(itemId: String): R? {
         return _items[itemId]?.data
     }

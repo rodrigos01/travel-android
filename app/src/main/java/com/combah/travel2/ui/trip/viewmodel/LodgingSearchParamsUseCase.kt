@@ -12,7 +12,6 @@ import com.combah.travel2.ui.lodgingsearch.composable.LodgingSearchDestination
 import com.combah.travel2.ui.trip.creation.usecase.AddPlanItemStore
 import com.combah.travel2.ui.trip.creation.usecase.LodgingSearchItemActionHandler
 import com.combah.travel2.ui.trip.creation.usecase.PendingData
-import com.combah.travel2.ui.trip.state.AddPlanItemState
 import com.combah.travel2.ui.trip.state.LodgingSearchItemState
 import com.combah.travel2.ui.trip.state.SearchResultItemState
 import kotlinx.coroutines.CoroutineScope
@@ -64,26 +63,25 @@ class LodgingSearchParamsUseCase(
         id: String,
         time: Time,
         params: AddPlanUseCase.StateParams,
-    ): AddPlanItemState {
+    ) {
         val data = PendingData.LodgingSearchParams(
             id = id,
             checkIn = time,
         )
         itemStore.addItem(data, params)
-        return createItem(data, params)
     }
 
     override fun addItem(
+        id: String,
         entity: Lodging,
         params: AddPlanUseCase.StateParams
-    ): LodgingSearchItemState {
+    ) {
         val data = PendingData.LodgingSearchParams(
-            id = entity.id,
+            id = id,
             checkIn = entity.checkIn,
             checkOut = entity.checkout,
         )
         itemStore.addItem(data, params)
-        return createItem(data, params)
     }
 
     override fun removeItem(item: LodgingSearchItemState) {

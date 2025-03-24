@@ -1,5 +1,6 @@
 package com.combah.travel2.ui.trip.state
 
+import com.combah.travel2.model.data.Identifiable
 import com.combah.travel2.model.data.Time
 
 sealed interface TripItemState {
@@ -19,10 +20,6 @@ sealed interface TripItemState {
         val dateEnd: String,
     ) : TripItemState, Timeable
 
-    interface Identifiable {
-        val id: String
-    }
-
     data class DateRangeItemState(
         override val id: String,
         override val timestamp: Time,
@@ -30,7 +27,7 @@ sealed interface TripItemState {
         val dayOfWeekStart: String,
         val dayOfMonthEnd: String,
         val dayOfWeekEnd: String,
-    ) : TripItemState, Timeable, Identifiable
+    ) : TripItemState, Timeable, Replaceable
 
     interface Replaceable : Identifiable
 
@@ -59,7 +56,7 @@ sealed interface TripItemState {
         override val time: String,
         val destination: String,
         val airport: String
-    ) : EventItemState {
+    ) : EventItemState, Replaceable {
         override val title = destination
         override val subtitle = airport
     }
@@ -72,7 +69,7 @@ sealed interface TripItemState {
         override val dayOfWeek: String,
         override val time: String,
         val airport: String
-    ) : EventItemState {
+    ) : EventItemState, Replaceable {
         override val title = null
         override val subtitle = airport
     }
@@ -86,7 +83,7 @@ sealed interface TripItemState {
         override val time: String,
         val hotelName: String,
         val hotelAddress: String,
-    ) : EventItemState {
+    ) : EventItemState, Replaceable {
         override val title = null
         override val subtitle = hotelAddress
     }
@@ -99,7 +96,7 @@ sealed interface TripItemState {
         override val dayOfWeek: String,
         override val time: String,
         val hotelName: String,
-    ) : EventItemState {
+    ) : EventItemState, Replaceable {
         override val title = null
         override val subtitle = hotelName
     }
@@ -124,7 +121,7 @@ data class ManualAddPlanState(
     val searchResults: List<String>
 )
 
-sealed interface AddPlanItemState : TripItemState, TripItemState.Identifiable,
+sealed interface AddPlanItemState : TripItemState, Identifiable,
     TripItemState.Timeable {
 
     val typeSelectionEnabled: Boolean
