@@ -1,10 +1,14 @@
 package com.combah.travel2.ui.lodgingsearch.composable
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DockedSearchBar
@@ -12,6 +16,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,11 +24,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.combah.travel2.R
 import com.combah.travel2.common.ui.components.IconTextButton
 import com.combah.travel2.extensions.dateString
@@ -115,7 +123,7 @@ fun LodgingSearchParams(
                         }
                     }
                 }
-                LaunchedEffect(showSearchDialog) {
+                LaunchedEffect(Unit) {
                     focusRequester.requestFocus()
                 }
             }
@@ -145,5 +153,24 @@ private fun DatePickerTextButton(
         ) {
             Text(selectedTime?.dateString() ?: label)
         }
+    }
+}
+
+@Preview
+@Composable
+fun LodgingSearchParamsPreview() {
+    var searchResults by remember { mutableStateOf(emptyList<SearchResultItemState>()) }
+    Surface(modifier = Modifier.fillMaxSize()) {
+        LodgingSearchParams(
+            searchResults = searchResults,
+            onCheckInDateSelected = {},
+            onCheckOutDateSelected = {},
+            onLocationSearchTextChanged = { query ->
+                searchResults = List(query.length *5) {
+                    SearchResultItemState("City$it", "country$it")
+                }
+            },
+            onLocationSearchResultSelected = {},
+        )
     }
 }

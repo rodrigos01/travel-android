@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Search
@@ -27,26 +29,32 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
+import com.combah.travel2.R
 import com.combah.travel2.common.ui.components.TabbedHost
 import com.combah.travel2.common.ui.components.TabbedHostScope
 import com.combah.travel2.common.ui.modifier.skeletonLoader
@@ -56,6 +64,7 @@ import com.combah.travel2.ui.lodgingsearch.state.LodgingSearchResultState
 import com.combah.travel2.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.ConfirmationDialog
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import java.text.NumberFormat
 
@@ -67,6 +76,7 @@ private fun LodgingSearch(
     onLodgingClosed: (String) -> Unit,
     onAddLodgingTapped: (String) -> Unit,
     onContinueBrowsingTapped: () -> Unit,
+    onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit,
 ) {
     if (state.localState.showAddConfirmation) {
         ConfirmationDialog(
@@ -87,7 +97,9 @@ private fun LodgingSearch(
             onLodgingTapped = { lodging ->
                 onLodgingTapped(lodging)
                 navigate(lodging.id)
-            })
+            },
+            onSortOptionSelected = onSortOptionSelected,
+        )
     }
     TabbedHost(startDestination = "search") {
         tab("search", icon = { Icon(Icons.Outlined.Search, contentDescription = null) }) {
@@ -113,9 +125,13 @@ private fun LodgingSearch(
 fun LodgingSearchResults(
     navController: NavController,
     state: LodgingSearchViewModel.UiState,
-    onLodgingTapped: (LodgingSearchResultState) -> Unit = {},
     scrollState: LazyListState = rememberLazyListState(),
+    onLodgingTapped: (LodgingSearchResultState) -> Unit = {},
+    onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit = {},
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    var showFilterDialog by remember { mutableStateOf(false) }
+    var showSortDialog by remember { mutableStateOf(false) }
     Scaffold(topBar = {
         Column(
             modifier = Modifier
@@ -140,6 +156,21 @@ fun LodgingSearchResults(
                 onLocationSearchResultSelected = {},
                 onLocationSearchTextChanged = {},
             )
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                TextButton(onClick = { showFilterDialog = true }) {
+                    Icon(painterResource(R.drawable.tune_baseline_24), contentDescription = null)
+                    Text("Filter")
+                }
+                TextButton(onClick = { showSortDialog = true }) {
+                    Icon(painterResource(R.drawable.sort_baseline_24), contentDescription = null)
+                    Text("Sort")
+                }
+            }
         }
     }) { paddingValues ->
         LazyColumn(
@@ -155,6 +186,48 @@ fun LodgingSearchResults(
 
                 is LodgingSearchViewModel.UiState.Loaded -> {
                     loaded(state, onLodgingTapped)
+                }
+            }
+        }
+    }
+    if (showSortDialog) {
+        Dialog(onDismissRequest = { showSortDialog = false }) {
+            Surface(
+                shape = MaterialTheme.shapes.large,
+                tonalElevation = 16.dp,
+                shadowElevation = 16.dp,
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .selectableGroup()
+                        .padding(16.dp)
+                ) {
+                    LodgingSearchViewModel.SortOption.entries.forEach { option ->
+                        val selected = state.sortAndFilterState.sortOption == option
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.selectable(
+                                selected = selected,
+                                onClick = {
+                                    onSortOptionSelected(option)
+                                    showSortDialog = false
+                                    coroutineScope.launch {
+                                        scrollState.animateScrollToItem(0)
+                                    }
+                                },
+                            )
+                        ) {
+                            RadioButton(selected = selected, onClick = null)
+                            val label = when (option) {
+                                LodgingSearchViewModel.SortOption.BEST -> "Best"
+                                LodgingSearchViewModel.SortOption.RATING -> "Rating"
+                                LodgingSearchViewModel.SortOption.PRICE_LOW_TO_HIGH -> "Price: Low to High"
+                                LodgingSearchViewModel.SortOption.PRICE_HIGH_TO_LOW -> "Price: High to Low"
+                            }
+                            Text(label, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
                 }
             }
         }
@@ -278,6 +351,7 @@ fun LodgingSearch(
         onLodgingClosed = { viewModel.onLodgingClosed(it) },
         onAddLodgingTapped = { viewModel.onAddLodgingTapped(it) },
         onContinueBrowsingTapped = { viewModel.onContinueBrowsingTapped() },
+        onSortOptionSelected = { viewModel.onSortOptionSelected(it) },
     )
 }
 
@@ -292,6 +366,7 @@ fun PreviewLodgingSearch() {
                 checkOut = Time("2025-08-15T00:00 -0500"),
                 locationText = "New York, United States",
             ),
+            sortAndFilterState = LodgingSearchViewModel.SortAndFilterState(),
             results = List(10) { index ->
                 LodgingSearchResultState(
                     id = index.toString(),
@@ -303,7 +378,7 @@ fun PreviewLodgingSearch() {
                     price = index * 12.4,
                 )
             },
-            openedResults = details
+            openedResults = details,
         )
         val loadingState = LodgingSearchViewModel.UiState.Loading(
             LodgingSearchViewModel.SearchParamsState(
@@ -312,7 +387,7 @@ fun PreviewLodgingSearch() {
                 locationText = "New York, United States",
             ),
         )
-        var state by remember { mutableStateOf<LodgingSearchViewModel.UiState>(loadingState) }
+        var state by remember { mutableStateOf<LodgingSearchViewModel.UiState>(loadedState) }
         LodgingSearch(
             navController = rememberNavController(),
             state = state,
@@ -335,13 +410,16 @@ fun PreviewLodgingSearch() {
                     )
                 }
             },
+            onSortOptionSelected = {},
             onLodgingClosed = {},
             onAddLodgingTapped = {},
             onContinueBrowsingTapped = {},
         )
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
             Button(
                 onClick = {
                     state = if (state == loadingState) loadedState else loadingState
