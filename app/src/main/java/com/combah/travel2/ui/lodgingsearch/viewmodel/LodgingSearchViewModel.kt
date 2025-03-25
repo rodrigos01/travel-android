@@ -8,6 +8,7 @@ import com.combah.travel2.extensions.remove
 import com.combah.travel2.extensions.set
 import com.combah.travel2.model.PlaceRepository
 import com.combah.travel2.model.data.Lodging
+import com.combah.travel2.model.data.LodgingSearchResult
 import com.combah.travel2.model.data.Time
 import com.combah.travel2.model.repository.LodgingSearchRepository
 import com.combah.travel2.model.repository.TripRepository
@@ -36,10 +37,12 @@ class LodgingSearchViewModel(
     interface UiState {
         val searchState: SearchParamsState
         val localState: LocalState
+        val sortAndFilterState: SortAndFilterState
 
         data class Loading(
             override val searchState: SearchParamsState,
             override val localState: LocalState = LocalState(),
+            override val sortAndFilterState: SortAndFilterState = SortAndFilterState(),
         ) : UiState
 
         data class Loaded(
@@ -47,6 +50,7 @@ class LodgingSearchViewModel(
             val results: List<LodgingSearchResultState>,
             val openedResults: Map<String, LodgingDetailsState> = emptyMap(),
             override val localState: LocalState = LocalState(),
+            override val sortAndFilterState: SortAndFilterState,
         ) : UiState
     }
 
@@ -60,6 +64,22 @@ class LodgingSearchViewModel(
         val locationText: String,
         val minCheckOut: Time? = null,
     )
+
+    data class SortAndFilterState(
+        val sortOption: SortOption = SortOption.BEST,
+        val minRating: Double = 0.0,
+        val minStars: Int = 0,
+        val availablePriceRange: ClosedFloatingPointRange<Double> = 0.0..10000.0,
+        val priceRange: ClosedFloatingPointRange<Double> = availablePriceRange,
+    )
+
+    enum class SortOption {
+        BEST, RATING, PRICE_LOW_TO_HIGH, PRICE_HIGH_TO_LOW
+    }
+
+    enum class StarOption(val stars: Int) {
+        ANY(0), THREE(3), FOUR(4), FIVE(5)
+    }
 
     private val location =
         placeRepository.places[locationId] ?: error("Place with id $locationId not found")
@@ -84,6 +104,7 @@ class LodgingSearchViewModel(
         .onEach {
             loadingState.value = false
         }
+    private val sortAndFilterState = MutableStateFlow(SortAndFilterState())
     private val localState = MutableStateFlow(LocalState())
     private val openedResultsState = MutableMapStateFlow<String, LodgingDetailsState>()
     val uiState =
@@ -91,25 +112,31 @@ class LodgingSearchViewModel(
             searchResultState,
             openedResultsState,
             loadingState,
+            sortAndFilterState,
             localState,
-        ) { (params, results), openedResults, loading, localState ->
+        ) { (params, results), openedResults, loading, sortAndFilter, localState ->
             if (loading) {
                 UiState.Loading(searchState = params, localState = localState)
             } else {
                 UiState.Loaded(
                     searchState = params,
                     localState = localState,
-                    results = results.sortedBy { -it.reviewCount }.map {
-                        LodgingSearchResultState(
-                            id = it.id,
-                            name = it.name,
-                            coverImage = it.coverImage,
-                            address = it.address,
-                            rating = it.rating,
-                            lodgingType = "${it.stars}-star hotel",
-                            price = it.price,
-                        )
-                    },
+                    sortAndFilterState = sortAndFilter.copy(
+                        availablePriceRange = results.minOf { it.price }..results.maxOf { it.price }
+                    ),
+                    results = results.asSequence()
+                        .sortedBy { it.sortValue(sortAndFilter.sortOption) }
+                        .filter { it.passesFilter(sortAndFilter) }.map {
+                            LodgingSearchResultState(
+                                id = it.id,
+                                name = it.name,
+                                coverImage = it.coverImage,
+                                address = it.address,
+                                rating = it.rating,
+                                lodgingType = "${it.stars}-star hotel",
+                                price = it.price,
+                            )
+                        }.toList(),
                     openedResults = openedResults,
                 )
             }
@@ -118,6 +145,35 @@ class LodgingSearchViewModel(
                 searchState = searchParamsState.value, localState = localState.value
             )
         )
+
+    fun onSortOptionSelected(option: SortOption) {
+        sortAndFilterState.value = sortAndFilterState.value.copy(sortOption = option)
+    }
+
+    private fun LodgingSearchResult.sortValue(sortOption: SortOption): Double {
+        return when (sortOption) {
+            SortOption.BEST -> 0.0
+            SortOption.RATING -> -rating
+            SortOption.PRICE_LOW_TO_HIGH -> price
+            SortOption.PRICE_HIGH_TO_LOW -> -price
+        }
+    }
+
+    fun onFiltersApplied(
+        minRating: Double,
+        minStars: Int,
+        priceRange: ClosedFloatingPointRange<Double>
+    ) {
+        sortAndFilterState.value = sortAndFilterState.value.copy(
+            minRating = minRating,
+            minStars = minStars,
+            priceRange = priceRange,
+        )
+    }
+
+    private fun LodgingSearchResult.passesFilter(filters: SortAndFilterState): Boolean {
+        return rating >= filters.minRating && stars >= filters.minStars && price in filters.priceRange
+    }
 
     fun onLodgingTapped(lodgingId: String) {
         val state = uiState.value as? UiState.Loaded ?: return

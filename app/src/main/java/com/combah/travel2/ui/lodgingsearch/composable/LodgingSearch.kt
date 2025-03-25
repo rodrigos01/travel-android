@@ -1,5 +1,13 @@
 package com.combah.travel2.ui.lodgingsearch.composable
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -30,23 +38,28 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
+import com.combah.travel2.R
 import com.combah.travel2.common.ui.components.TabbedHost
 import com.combah.travel2.common.ui.components.TabbedHostScope
 import com.combah.travel2.common.ui.modifier.skeletonLoader
@@ -56,6 +69,7 @@ import com.combah.travel2.ui.lodgingsearch.state.LodgingSearchResultState
 import com.combah.travel2.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
 import com.combah.travel2.ui.theme.AppTheme
 import com.combah.travel2.ui.trip.creation.composable.ConfirmationDialog
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import java.text.NumberFormat
 
@@ -67,6 +81,8 @@ private fun LodgingSearch(
     onLodgingClosed: (String) -> Unit,
     onAddLodgingTapped: (String) -> Unit,
     onContinueBrowsingTapped: () -> Unit,
+    onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit,
+    onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit,
 ) {
     if (state.localState.showAddConfirmation) {
         ConfirmationDialog(
@@ -87,7 +103,10 @@ private fun LodgingSearch(
             onLodgingTapped = { lodging ->
                 onLodgingTapped(lodging)
                 navigate(lodging.id)
-            })
+            },
+            onSortOptionSelected = onSortOptionSelected,
+            onFiltersApplied = onFiltersApplied,
+        )
     }
     TabbedHost(startDestination = "search") {
         tab("search", icon = { Icon(Icons.Outlined.Search, contentDescription = null) }) {
@@ -108,19 +127,30 @@ private fun LodgingSearch(
     }
 }
 
+enum class ControlsVisible {
+    NONE,
+    FILTERS,
+    SORT,
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LodgingSearchResults(
     navController: NavController,
     state: LodgingSearchViewModel.UiState,
-    onLodgingTapped: (LodgingSearchResultState) -> Unit = {},
     scrollState: LazyListState = rememberLazyListState(),
+    onLodgingTapped: (LodgingSearchResultState) -> Unit = {},
+    onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit = {},
+    onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit = { _, _, _ -> },
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    var controlsVisible by remember { mutableStateOf(ControlsVisible.NONE) }
     Scaffold(topBar = {
         Column(
             modifier = Modifier
                 .background(color = MaterialTheme.colorScheme.surface)
                 .padding(bottom = 8.dp)
+                .animateContentSize()
         ) {
             TopAppBar(title = { Text("Lodging Search") }, navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
@@ -140,6 +170,97 @@ fun LodgingSearchResults(
                 onLocationSearchResultSelected = {},
                 onLocationSearchTextChanged = {},
             )
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                TextButton(onClick = {
+                    controlsVisible = ControlsVisible.FILTERS
+                }) {
+                    Icon(
+                        painterResource(R.drawable.tune_baseline_24),
+                        contentDescription = null
+                    )
+                    Text("Filter")
+                }
+                TextButton(onClick = {
+                    controlsVisible = ControlsVisible.SORT
+                }) {
+                    Icon(
+                        painterResource(R.drawable.sort_baseline_24),
+                        contentDescription = null
+                    )
+                    Text("Sort")
+                }
+            }
+            AnimatedContent(
+                targetState = controlsVisible,
+                transitionSpec = {
+                    val direction = if (initialState == ControlsVisible.NONE) {
+                        AnimatedContentTransitionScope.SlideDirection.Down
+                    } else {
+                        when (targetState) {
+                            ControlsVisible.SORT -> AnimatedContentTransitionScope.SlideDirection.Start
+                            ControlsVisible.FILTERS -> AnimatedContentTransitionScope.SlideDirection.End
+                            ControlsVisible.NONE -> AnimatedContentTransitionScope.SlideDirection.Up
+                        }
+                    }
+                    val slideSpec = spring<IntOffset>(stiffness = Spring.StiffnessMediumLow)
+                    (fadeIn() + slideIntoContainer(direction, slideSpec)).togetherWith(
+                        slideOutOfContainer(direction, slideSpec) + fadeOut()
+                    )
+                },
+            ) { currentControls ->
+                when (currentControls) {
+                    ControlsVisible.FILTERS -> {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            val filterState = FilterOptionsState(
+                                minRating = state.sortAndFilterState.minRating,
+                                minStars = state.sortAndFilterState.minStars,
+                                priceRange = state.sortAndFilterState.priceRange
+                            )
+                            FilterOptions(
+                                state = filterState,
+                                valueRange = state.sortAndFilterState.availablePriceRange,
+                            )
+                            Row(modifier = Modifier.align(Alignment.End)) {
+                                TextButton(onClick = {
+                                    controlsVisible = ControlsVisible.NONE
+                                }) {
+                                    Text(
+                                        "Cancel",
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                TextButton(onClick = {
+                                    controlsVisible = ControlsVisible.NONE
+                                    onFiltersApplied(
+                                        filterState.minRating.toDouble(),
+                                        filterState.minStars,
+                                        filterState.priceRange.start.toDouble()..filterState.priceRange.endInclusive.toDouble(),
+                                    )
+                                }) {
+                                    Text("Apply")
+                                }
+                            }
+                        }
+                    }
+
+                    ControlsVisible.SORT -> SortOptionSelector(
+                        state.sortAndFilterState,
+                        onSortOptionSelected = { option ->
+                            onSortOptionSelected(option)
+                            controlsVisible = ControlsVisible.NONE
+                            coroutineScope.launch {
+                                scrollState.animateScrollToItem(0)
+                            }
+                        })
+
+                    ControlsVisible.NONE -> {}
+                }
+            }
         }
     }) { paddingValues ->
         LazyColumn(
@@ -278,6 +399,10 @@ fun LodgingSearch(
         onLodgingClosed = { viewModel.onLodgingClosed(it) },
         onAddLodgingTapped = { viewModel.onAddLodgingTapped(it) },
         onContinueBrowsingTapped = { viewModel.onContinueBrowsingTapped() },
+        onSortOptionSelected = { viewModel.onSortOptionSelected(it) },
+        onFiltersApplied = { minRating, minStars, priceRange ->
+            viewModel.onFiltersApplied(minRating, minStars, priceRange)
+        }
     )
 }
 
@@ -292,6 +417,7 @@ fun PreviewLodgingSearch() {
                 checkOut = Time("2025-08-15T00:00 -0500"),
                 locationText = "New York, United States",
             ),
+            sortAndFilterState = LodgingSearchViewModel.SortAndFilterState(),
             results = List(10) { index ->
                 LodgingSearchResultState(
                     id = index.toString(),
@@ -303,7 +429,7 @@ fun PreviewLodgingSearch() {
                     price = index * 12.4,
                 )
             },
-            openedResults = details
+            openedResults = details,
         )
         val loadingState = LodgingSearchViewModel.UiState.Loading(
             LodgingSearchViewModel.SearchParamsState(
@@ -312,7 +438,7 @@ fun PreviewLodgingSearch() {
                 locationText = "New York, United States",
             ),
         )
-        var state by remember { mutableStateOf<LodgingSearchViewModel.UiState>(loadingState) }
+        var state by remember { mutableStateOf<LodgingSearchViewModel.UiState>(loadedState) }
         LodgingSearch(
             navController = rememberNavController(),
             state = state,
@@ -335,13 +461,17 @@ fun PreviewLodgingSearch() {
                     )
                 }
             },
+            onSortOptionSelected = {},
+            onFiltersApplied = { _, _, _ -> },
             onLodgingClosed = {},
             onAddLodgingTapped = {},
             onContinueBrowsingTapped = {},
         )
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
             Button(
                 onClick = {
                     state = if (state == loadingState) loadedState else loadingState
