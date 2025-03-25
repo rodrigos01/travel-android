@@ -1,5 +1,13 @@
 package com.combah.travel2.ui.lodgingsearch.composable
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -19,8 +27,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Search
@@ -29,7 +35,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -48,8 +53,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -77,6 +82,7 @@ private fun LodgingSearch(
     onAddLodgingTapped: (String) -> Unit,
     onContinueBrowsingTapped: () -> Unit,
     onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit,
+    onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit,
 ) {
     if (state.localState.showAddConfirmation) {
         ConfirmationDialog(
@@ -99,6 +105,7 @@ private fun LodgingSearch(
                 navigate(lodging.id)
             },
             onSortOptionSelected = onSortOptionSelected,
+            onFiltersApplied = onFiltersApplied,
         )
     }
     TabbedHost(startDestination = "search") {
@@ -120,6 +127,12 @@ private fun LodgingSearch(
     }
 }
 
+enum class ControlsVisible {
+    NONE,
+    FILTERS,
+    SORT,
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LodgingSearchResults(
@@ -128,15 +141,16 @@ fun LodgingSearchResults(
     scrollState: LazyListState = rememberLazyListState(),
     onLodgingTapped: (LodgingSearchResultState) -> Unit = {},
     onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit = {},
+    onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit = { _, _, _ -> },
 ) {
     val coroutineScope = rememberCoroutineScope()
-    var showFilterDialog by remember { mutableStateOf(false) }
-    var showSortDialog by remember { mutableStateOf(false) }
+    var controlsVisible by remember { mutableStateOf(ControlsVisible.NONE) }
     Scaffold(topBar = {
         Column(
             modifier = Modifier
                 .background(color = MaterialTheme.colorScheme.surface)
                 .padding(bottom = 8.dp)
+                .animateContentSize()
         ) {
             TopAppBar(title = { Text("Lodging Search") }, navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
@@ -162,13 +176,89 @@ fun LodgingSearchResults(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
             ) {
-                TextButton(onClick = { showFilterDialog = true }) {
-                    Icon(painterResource(R.drawable.tune_baseline_24), contentDescription = null)
+                TextButton(onClick = {
+                    controlsVisible = ControlsVisible.FILTERS
+                }) {
+                    Icon(
+                        painterResource(R.drawable.tune_baseline_24),
+                        contentDescription = null
+                    )
                     Text("Filter")
                 }
-                TextButton(onClick = { showSortDialog = true }) {
-                    Icon(painterResource(R.drawable.sort_baseline_24), contentDescription = null)
+                TextButton(onClick = {
+                    controlsVisible = ControlsVisible.SORT
+                }) {
+                    Icon(
+                        painterResource(R.drawable.sort_baseline_24),
+                        contentDescription = null
+                    )
                     Text("Sort")
+                }
+            }
+            AnimatedContent(
+                targetState = controlsVisible,
+                transitionSpec = {
+                    val direction = if (initialState == ControlsVisible.NONE) {
+                        AnimatedContentTransitionScope.SlideDirection.Down
+                    } else {
+                        when (targetState) {
+                            ControlsVisible.SORT -> AnimatedContentTransitionScope.SlideDirection.Start
+                            ControlsVisible.FILTERS -> AnimatedContentTransitionScope.SlideDirection.End
+                            ControlsVisible.NONE -> AnimatedContentTransitionScope.SlideDirection.Up
+                        }
+                    }
+                    val slideSpec = spring<IntOffset>(stiffness = Spring.StiffnessMediumLow)
+                    (fadeIn() + slideIntoContainer(direction, slideSpec)).togetherWith(
+                        slideOutOfContainer(direction, slideSpec) + fadeOut()
+                    )
+                },
+            ) { currentControls ->
+                when (currentControls) {
+                    ControlsVisible.FILTERS -> {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            val filterState = FilterOptionsState(
+                                minRating = state.sortAndFilterState.minRating,
+                                minStars = state.sortAndFilterState.minStars,
+                                priceRange = state.sortAndFilterState.priceRange
+                            )
+                            FilterOptions(
+                                state = filterState,
+                                valueRange = state.sortAndFilterState.availablePriceRange,
+                            )
+                            Row(modifier = Modifier.align(Alignment.End)) {
+                                TextButton(onClick = {
+                                    controlsVisible = ControlsVisible.NONE
+                                }) {
+                                    Text(
+                                        "Cancel",
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                TextButton(onClick = {
+                                    controlsVisible = ControlsVisible.NONE
+                                    onFiltersApplied(
+                                        filterState.minRating.toDouble(),
+                                        filterState.minStars,
+                                        filterState.priceRange.start.toDouble()..filterState.priceRange.endInclusive.toDouble(),
+                                    )
+                                }) {
+                                    Text("Apply")
+                                }
+                            }
+                        }
+                    }
+
+                    ControlsVisible.SORT -> SortOptionSelector(
+                        state.sortAndFilterState,
+                        onSortOptionSelected = { option ->
+                            onSortOptionSelected(option)
+                            controlsVisible = ControlsVisible.NONE
+                            coroutineScope.launch {
+                                scrollState.animateScrollToItem(0)
+                            }
+                        })
+
+                    ControlsVisible.NONE -> {}
                 }
             }
         }
@@ -186,48 +276,6 @@ fun LodgingSearchResults(
 
                 is LodgingSearchViewModel.UiState.Loaded -> {
                     loaded(state, onLodgingTapped)
-                }
-            }
-        }
-    }
-    if (showSortDialog) {
-        Dialog(onDismissRequest = { showSortDialog = false }) {
-            Surface(
-                shape = MaterialTheme.shapes.large,
-                tonalElevation = 16.dp,
-                shadowElevation = 16.dp,
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier
-                        .selectableGroup()
-                        .padding(16.dp)
-                ) {
-                    LodgingSearchViewModel.SortOption.entries.forEach { option ->
-                        val selected = state.sortAndFilterState.sortOption == option
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier = Modifier.selectable(
-                                selected = selected,
-                                onClick = {
-                                    onSortOptionSelected(option)
-                                    showSortDialog = false
-                                    coroutineScope.launch {
-                                        scrollState.animateScrollToItem(0)
-                                    }
-                                },
-                            )
-                        ) {
-                            RadioButton(selected = selected, onClick = null)
-                            val label = when (option) {
-                                LodgingSearchViewModel.SortOption.BEST -> "Best"
-                                LodgingSearchViewModel.SortOption.RATING -> "Rating"
-                                LodgingSearchViewModel.SortOption.PRICE_LOW_TO_HIGH -> "Price: Low to High"
-                                LodgingSearchViewModel.SortOption.PRICE_HIGH_TO_LOW -> "Price: High to Low"
-                            }
-                            Text(label, style = MaterialTheme.typography.bodyLarge)
-                        }
-                    }
                 }
             }
         }
@@ -352,6 +400,9 @@ fun LodgingSearch(
         onAddLodgingTapped = { viewModel.onAddLodgingTapped(it) },
         onContinueBrowsingTapped = { viewModel.onContinueBrowsingTapped() },
         onSortOptionSelected = { viewModel.onSortOptionSelected(it) },
+        onFiltersApplied = { minRating, minStars, priceRange ->
+            viewModel.onFiltersApplied(minRating, minStars, priceRange)
+        }
     )
 }
 
@@ -411,6 +462,7 @@ fun PreviewLodgingSearch() {
                 }
             },
             onSortOptionSelected = {},
+            onFiltersApplied = { _, _, _ -> },
             onLodgingClosed = {},
             onAddLodgingTapped = {},
             onContinueBrowsingTapped = {},
