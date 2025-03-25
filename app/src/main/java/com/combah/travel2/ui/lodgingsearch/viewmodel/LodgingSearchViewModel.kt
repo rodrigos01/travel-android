@@ -67,10 +67,18 @@ class LodgingSearchViewModel(
 
     data class SortAndFilterState(
         val sortOption: SortOption = SortOption.BEST,
+        val minRating: Double = 0.0,
+        val minStars: Int = 0,
+        val availablePriceRange: ClosedFloatingPointRange<Double> = 0.0..10000.0,
+        val priceRange: ClosedFloatingPointRange<Double> = availablePriceRange,
     )
 
     enum class SortOption {
         BEST, RATING, PRICE_LOW_TO_HIGH, PRICE_HIGH_TO_LOW
+    }
+
+    enum class StarOption(val stars: Int) {
+        ANY(0), THREE(3), FOUR(4), FIVE(5)
     }
 
     private val location =
@@ -113,18 +121,22 @@ class LodgingSearchViewModel(
                 UiState.Loaded(
                     searchState = params,
                     localState = localState,
-                    sortAndFilterState = sortAndFilter,
-                    results = results.sortedBy { it.sortValue(sortAndFilter.sortOption) }.map {
-                        LodgingSearchResultState(
-                            id = it.id,
-                            name = it.name,
-                            coverImage = it.coverImage,
-                            address = it.address,
-                            rating = it.rating,
-                            lodgingType = "${it.stars}-star hotel",
-                            price = it.price,
-                        )
-                    },
+                    sortAndFilterState = sortAndFilter.copy(
+                        availablePriceRange = results.minOf { it.price }..results.maxOf { it.price }
+                    ),
+                    results = results.asSequence()
+                        .sortedBy { it.sortValue(sortAndFilter.sortOption) }
+                        .filter { it.passesFilter(sortAndFilter) }.map {
+                            LodgingSearchResultState(
+                                id = it.id,
+                                name = it.name,
+                                coverImage = it.coverImage,
+                                address = it.address,
+                                rating = it.rating,
+                                lodgingType = "${it.stars}-star hotel",
+                                price = it.price,
+                            )
+                        }.toList(),
                     openedResults = openedResults,
                 )
             }
@@ -145,6 +157,22 @@ class LodgingSearchViewModel(
             SortOption.PRICE_LOW_TO_HIGH -> price
             SortOption.PRICE_HIGH_TO_LOW -> -price
         }
+    }
+
+    fun onFiltersApplied(
+        minRating: Double,
+        minStars: Int,
+        priceRange: ClosedFloatingPointRange<Double>
+    ) {
+        sortAndFilterState.value = sortAndFilterState.value.copy(
+            minRating = minRating,
+            minStars = minStars,
+            priceRange = priceRange,
+        )
+    }
+
+    private fun LodgingSearchResult.passesFilter(filters: SortAndFilterState): Boolean {
+        return rating >= filters.minRating && stars >= filters.minStars && price in filters.priceRange
     }
 
     fun onLodgingTapped(lodgingId: String) {
