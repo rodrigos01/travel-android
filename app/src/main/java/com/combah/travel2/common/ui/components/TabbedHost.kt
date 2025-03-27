@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -37,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -94,6 +94,7 @@ class TabbedGraphBuilder {
 @Composable
 fun TabbedHost(
     startDestination: String,
+    tabBarListState: LazyListState = rememberLazyListState(),
     builder: TabbedGraphBuilder.() -> Unit
 ) {
     var currentTabId by remember { mutableStateOf(startDestination) }
@@ -116,12 +117,11 @@ fun TabbedHost(
                 )
                 .windowInsetsPadding(WindowInsets.navigationBars)
         ) {
-            val tabBarState = rememberLazyListState()
-            LaunchedEffect(currentTabId) {
-                tabBarState.animateScrollToItem(scope.tabs.indexOfFirst { it.id == currentTabId })
-            }
+//            LaunchedEffect(currentTabId) {
+//                tabBarListState.animateScrollToItem(scope.tabs.indexOfFirst { it.id == currentTabId })
+//            }
             LazyRow(
-                state = tabBarState,
+                state = tabBarListState,
             ) {
                 items(scope.tabs, key = { it.id }) { tab ->
                     val selected = tab.id == currentTabId

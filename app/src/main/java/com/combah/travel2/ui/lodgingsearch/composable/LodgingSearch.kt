@@ -42,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -98,6 +99,13 @@ private fun LodgingSearch(
         }
     }
     val searchTabListState = rememberLazyListState()
+    val tabBarListState = rememberLazyListState()
+    var openedResultId by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(openedResultId) {
+        if (openedResultId != null && state is LodgingSearchViewModel.UiState.Loaded) {
+            tabBarListState.animateScrollToItem(state.openedResults.keys.indexOf(openedResultId))
+        }
+    }
     val searchResults: @Composable TabbedHostScope.() -> Unit = {
         LodgingSearchResults(
             navController,
@@ -106,13 +114,14 @@ private fun LodgingSearch(
             onLodgingTapped = { lodging ->
                 onLodgingTapped(lodging)
                 navigate(lodging.id)
+                openedResultId = lodging.id
             },
             onSortOptionSelected = onSortOptionSelected,
             onFiltersApplied = onFiltersApplied,
         )
     }
     val screenWidth = LocalConfiguration.current.screenWidthDp
-    TabbedHost(startDestination = "search") {
+    TabbedHost(startDestination = "search", tabBarListState = tabBarListState) {
         tab("search", icon = { Icon(Icons.Outlined.Search, contentDescription = null) }) {
             searchResults()
         }
