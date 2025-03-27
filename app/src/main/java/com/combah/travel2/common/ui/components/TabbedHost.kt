@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -57,6 +58,7 @@ class TabbedHostScope(
         val id: String,
         val icon: @Composable () -> Unit = {},
         val title: @Composable () -> Unit = {},
+        val modifier: Modifier = Modifier,
         val content: @Composable TabbedHostScope.() -> Unit,
     )
 
@@ -82,9 +84,10 @@ class TabbedGraphBuilder {
         tabId: String,
         icon: @Composable () -> Unit = {},
         title: @Composable () -> Unit = {},
+        modifier: Modifier = Modifier,
         content: @Composable TabbedHostScope.() -> Unit,
     ) {
-        opps.add { add(Tab(tabId, icon, title, content)) }
+        opps.add { add(Tab(tabId, icon, title, modifier, content)) }
     }
 }
 
@@ -137,7 +140,7 @@ fun TabbedHost(
                             ButtonDefaults.outlinedButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                         },
                         shape = MaterialTheme.shapes.medium,
-                        modifier = Modifier
+                        modifier = tab.modifier
                             .onPlaced {
                                 targetOffsetX = 0F
                             }
