@@ -6,6 +6,8 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,13 +16,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -43,7 +49,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -55,9 +60,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
@@ -65,6 +68,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.combah.travel2.R
+import com.combah.travel2.common.ui.components.ImageGallery
+import com.combah.travel2.common.ui.modifier.matchWidthToHeight
 import com.combah.travel2.common.ui.modifier.skeletonLoader
 import com.combah.travel2.extensions.Time
 import com.combah.travel2.ui.lodgingsearch.state.LodgingDetailsState
@@ -83,6 +88,9 @@ import com.google.maps.android.compose.rememberMarkerState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripTapped: () -> Unit) {
+    var showImageGallery by remember(state) { mutableStateOf(false) }
+    var imageGalleryModels by remember(state) { mutableStateOf(emptyList<String>()) }
+    var selectedGalleryModel by remember(state) { mutableStateOf<String?>(null) }
     Scaffold(topBar = {
         Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
             TopAppBar(title = {
@@ -125,7 +133,11 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                         rememberAsyncImagePainter(model = it, contentScale = ContentScale.Crop),
                         modifier = Modifier
                             .weight(1F)
-                            .fillMaxHeight(),
+                            .fillMaxHeight().clickable {
+                                showImageGallery = true
+                                imageGalleryModels = state.photos
+                                selectedGalleryModel = it
+                            },
                     )
                 }
                 AnimatedVisibility(state.photos.size >= 3) {
@@ -139,24 +151,40 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                             ),
                             modifier = Modifier
                                 .weight(1F)
-                                .matchWidthToHeight(),
+                                .matchWidthToHeight().clickable {
+                                    showImageGallery = true
+                                    imageGalleryModels = state.photos
+                                    selectedGalleryModel = state.photos[1]
+                                },
                         )
-                        LodgingImage(
-                            rememberAsyncImagePainter(
-                                model = state.photos[2],
-                                contentScale = ContentScale.Crop
-                            ),
-                            colorFilter = ColorFilter.tint(
-                                MaterialTheme.colorScheme.scrim.copy(
-                                    alpha = 0.3F
-                                ),
-                                blendMode = BlendMode.SrcAtop,
-                            ),
+                        Box(
                             modifier = Modifier
                                 .weight(1F)
                                 .matchWidthToHeight()
-                                .clickable { },
-                        )
+                                .clickable {
+                                    showImageGallery = true
+                                    imageGalleryModels = state.photos
+                                },
+                        ) {
+                            LodgingImage(
+                                rememberAsyncImagePainter(
+                                    model = state.photos[2],
+                                    contentScale = ContentScale.Crop
+                                ),
+                                colorFilter = ColorFilter.tint(
+                                    MaterialTheme.colorScheme.scrim.copy(
+                                        alpha = 0.3F
+                                    ),
+                                    blendMode = BlendMode.SrcAtop,
+                                ),
+                            )
+                            Text(
+                                text = "+${state.photos.size - 2}",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.inverseOnSurface,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
                     }
                 }
             }
@@ -205,7 +233,12 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                                             model = roomCoverPhoto,
                                             contentScale = ContentScale.Crop
                                         ),
-                                        modifier = Modifier.size(64.dp),
+                                        modifier = Modifier.size(64.dp)
+                                            .clickable {
+                                                imageGalleryModels = room.photos
+                                                selectedGalleryModel = roomCoverPhoto
+                                                showImageGallery = true
+                                            },
                                     )
                                 } else {
                                     LodgingImage(
@@ -336,6 +369,33 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
             }
         }
     }
+    AnimatedVisibility(
+        showImageGallery && imageGalleryModels.isNotEmpty(),
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        Column(
+            modifier = Modifier.background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.7F))
+                .fillMaxSize()
+        ) {
+            Spacer(Modifier.windowInsetsTopHeight(WindowInsets.safeDrawing))
+            IconButton(
+                onClick = { showImageGallery = false },
+                modifier = Modifier.align(Alignment.End).padding(top = 8.dp, end = 8.dp)
+            ) {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = "",
+                    tint = MaterialTheme.colorScheme.inverseOnSurface
+                )
+            }
+            ImageGallery(
+                imageGalleryModels,
+                selectedInitially = selectedGalleryModel,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+    }
 }
 
 @Composable
@@ -378,19 +438,6 @@ private fun LodgingImage(
     )
 }
 
-@Composable
-private fun Int.toDp() = with(LocalDensity.current) { toDp() }
-
-@Composable
-private fun Modifier.matchWidthToHeight(): Modifier {
-    var width by remember { mutableIntStateOf(0) }
-    return this
-        .width(width.toDp())
-        .onPlaced {
-            width = it.size.height
-        }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun LodgingDetailsPreview() {
@@ -410,10 +457,10 @@ fun LodgingDetailsPreview() {
         isLoading = true,
     )
     val loadedState = initialState.copy(
-        photos = List(10) { index -> "" },
+        photos = List(54) { index -> "photo$index" },
         rooms = List(7) { index ->
             LodgingRoomOfferState(
-                photos = if (index % 2 == 0) List(10) { "" } else emptyList(),
+                photos = if (index % 2 == 0) List(35) { "roomPhoto$it" } else emptyList(),
                 description = "Room $index",
                 breakfastIncluded = index % 2 == 0,
                 refundable = index % 2 != 0,

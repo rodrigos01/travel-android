@@ -450,7 +450,7 @@ fun PreviewLodgingSearch() {
                 rating = lodging.rating,
                 reviewCountText = "",
                 lodgingType = lodging.lodgingType,
-                photos = listOf(lodging.coverImage),
+                photos = listOf(lodging.coverImage) + List(32) { index -> "photo$index" },
                 checkIn = Time("2025-08-10T00:00 -0500"),
                 checkOut = Time("2025-08-15T00:00 -0500"),
                 price = lodging.price,
