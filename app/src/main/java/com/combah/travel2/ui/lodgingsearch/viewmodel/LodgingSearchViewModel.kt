@@ -92,59 +92,54 @@ class LodgingSearchViewModel(
             locationText = location.name,
         )
     )
-    private val searchResultState = searchParamsState
-        .onEach { loadingState.value = true }
-        .map {
+    private val searchResultState = searchParamsState.onEach { loadingState.value = true }.map {
             it to repository.search(
                 locationId = location.id,
                 checkIn = it.checkIn,
                 checkOut = it.checkOut,
             )
-        }
-        .onEach {
+        }.onEach {
             loadingState.value = false
         }
     private val sortAndFilterState = MutableStateFlow(SortAndFilterState())
     private val localState = MutableStateFlow(LocalState())
     private val openedResultsState = MutableMapStateFlow<String, LodgingDetailsState>()
-    val uiState =
-        combine(
-            searchResultState,
-            openedResultsState,
-            loadingState,
-            sortAndFilterState,
-            localState,
-        ) { (params, results), openedResults, loading, sortAndFilter, localState ->
-            if (loading) {
-                UiState.Loading(searchState = params, localState = localState)
-            } else {
-                UiState.Loaded(
-                    searchState = params,
-                    localState = localState,
-                    sortAndFilterState = sortAndFilter.copy(
-                        availablePriceRange = results.minOf { it.price }..results.maxOf { it.price }
-                    ),
-                    results = results.asSequence()
-                        .sortedBy { it.sortValue(sortAndFilter.sortOption) }
-                        .filter { it.passesFilter(sortAndFilter) }.map {
-                            LodgingSearchResultState(
-                                id = it.id,
-                                name = it.name,
-                                coverImage = it.coverImage,
-                                address = it.address,
-                                rating = it.rating,
-                                lodgingType = "${it.stars}-star hotel",
-                                price = it.price,
-                            )
-                        }.toList(),
-                    openedResults = openedResults,
-                )
-            }
-        }.stateIn(
-            viewModelScope, SharingStarted.Eagerly, UiState.Loading(
-                searchState = searchParamsState.value, localState = localState.value
+    val uiState = combine(
+        searchResultState,
+        openedResultsState,
+        loadingState,
+        sortAndFilterState,
+        localState,
+    ) { (params, results), openedResults, loading, sortAndFilter, localState ->
+        if (loading) {
+            UiState.Loading(searchState = params, localState = localState)
+        } else {
+            UiState.Loaded(
+                searchState = params,
+                localState = localState,
+                sortAndFilterState = if (results.isNotEmpty()) {
+                    sortAndFilter.copy(availablePriceRange = results.minOf { it.price }..results.maxOf { it.price })
+                } else sortAndFilter,
+                results = results.asSequence().sortedBy { it.sortValue(sortAndFilter.sortOption) }
+                    .filter { it.passesFilter(sortAndFilter) }.map {
+                        LodgingSearchResultState(
+                            id = it.id,
+                            name = it.name,
+                            coverImage = it.coverImage,
+                            address = it.address,
+                            rating = it.rating,
+                            lodgingType = "${it.stars}-star hotel",
+                            price = it.price,
+                        )
+                    }.toList(),
+                openedResults = openedResults,
             )
+        }
+    }.stateIn(
+        viewModelScope, SharingStarted.Eagerly, UiState.Loading(
+            searchState = searchParamsState.value, localState = localState.value
         )
+    )
 
     fun onSortOptionSelected(option: SortOption) {
         sortAndFilterState.value = sortAndFilterState.value.copy(sortOption = option)
@@ -160,9 +155,7 @@ class LodgingSearchViewModel(
     }
 
     fun onFiltersApplied(
-        minRating: Double,
-        minStars: Int,
-        priceRange: ClosedFloatingPointRange<Double>
+        minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>
     ) {
         sortAndFilterState.value = sortAndFilterState.value.copy(
             minRating = minRating,
@@ -195,13 +188,9 @@ class LodgingSearchViewModel(
         )
         openedResultsState[lodgingId] = initialState
         viewModelScope.launch {
-            val lodging =
-                repository.details(
-                    lodgingId,
-                    searchParamsState.value.checkIn,
-                    searchParamsState.value.checkOut
-                )
-                    ?: return@launch
+            val lodging = repository.details(
+                lodgingId, searchParamsState.value.checkIn, searchParamsState.value.checkOut
+            ) ?: return@launch
             openedResultsState[lodgingId] = initialState.copy(
                 photos = initialState.photos + lodging.photos.subList(1, lodging.photos.size),
                 reviewCountText = lodging.reviewCount.toString(),

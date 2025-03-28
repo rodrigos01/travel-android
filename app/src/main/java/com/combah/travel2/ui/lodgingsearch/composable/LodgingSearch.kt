@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -41,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,8 +52,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -95,6 +99,13 @@ private fun LodgingSearch(
         }
     }
     val searchTabListState = rememberLazyListState()
+    val tabBarListState = rememberLazyListState()
+    var openedResultId by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(openedResultId) {
+        if (openedResultId != null && state is LodgingSearchViewModel.UiState.Loaded) {
+            tabBarListState.animateScrollToItem(state.openedResults.keys.indexOf(openedResultId))
+        }
+    }
     val searchResults: @Composable TabbedHostScope.() -> Unit = {
         LodgingSearchResults(
             navController,
@@ -103,25 +114,37 @@ private fun LodgingSearch(
             onLodgingTapped = { lodging ->
                 onLodgingTapped(lodging)
                 navigate(lodging.id)
+                openedResultId = lodging.id
             },
             onSortOptionSelected = onSortOptionSelected,
             onFiltersApplied = onFiltersApplied,
         )
     }
-    TabbedHost(startDestination = "search") {
+    val screenWidth = LocalConfiguration.current.screenWidthDp
+    TabbedHost(startDestination = "search", tabBarListState = tabBarListState) {
         tab("search", icon = { Icon(Icons.Outlined.Search, contentDescription = null) }) {
             searchResults()
         }
         if (state is LodgingSearchViewModel.UiState.Loaded) {
             state.openedResults.forEach { (id, lodging) ->
-                tab(id, title = { Text(lodging.name) }, content = {
-                    LodgingDetails(lodging, onClose = {
-                        onLodgingClosed(id)
-                        navigate("search")
-                    }, onAddToTripTapped = {
-                        onAddLodgingTapped(id)
+                tab(
+                    id,
+                    title = {
+                        Text(
+                            text = lodging.name,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                    modifier = Modifier.widthIn(max = (screenWidth / 2).dp),
+                    content = {
+                        LodgingDetails(lodging, onClose = {
+                            onLodgingClosed(id)
+                            navigate("search")
+                        }, onAddToTripTapped = {
+                            onAddLodgingTapped(id)
+                        })
                     })
-                })
             }
         }
     }
@@ -410,7 +433,34 @@ fun LodgingSearch(
 @Composable
 fun PreviewLodgingSearch() {
     AppTheme {
-        var details by remember { mutableStateOf(mapOf<String, LodgingDetailsState>()) }
+        val results = List(10) { index ->
+            LodgingSearchResultState(
+                id = index.toString(),
+                name = "Some super large Hotel name $index",
+                address = "$index Street, City, ${index * 1023}",
+                coverImage = "",
+                rating = index * 1.2,
+                lodgingType = "Hotel",
+                price = index * 12.4,
+            )
+        }
+        val details = results.take(5).associate { lodging ->
+            lodging.id to LodgingDetailsState(
+                name = lodging.name,
+                rating = lodging.rating,
+                reviewCountText = "",
+                lodgingType = lodging.lodgingType,
+                photos = listOf(lodging.coverImage),
+                checkIn = Time("2025-08-10T00:00 -0500"),
+                checkOut = Time("2025-08-15T00:00 -0500"),
+                price = lodging.price,
+                rooms = emptyList(),
+                address = lodging.address,
+                latitude = 0.0,
+                longitude = 0.0,
+                isLoading = false,
+            )
+        }.toMutableMap()
         val loadedState = LodgingSearchViewModel.UiState.Loaded(
             LodgingSearchViewModel.SearchParamsState(
                 checkIn = Time("2025-08-10T00:00 -0500"),
@@ -418,17 +468,7 @@ fun PreviewLodgingSearch() {
                 locationText = "New York, United States",
             ),
             sortAndFilterState = LodgingSearchViewModel.SortAndFilterState(),
-            results = List(10) { index ->
-                LodgingSearchResultState(
-                    id = index.toString(),
-                    name = "Hotel $index",
-                    address = "$index Street, City, ${index * 1023}",
-                    coverImage = "",
-                    rating = index * 1.2,
-                    lodgingType = "Hotel",
-                    price = index * 12.4,
-                )
-            },
+            results = results,
             openedResults = details,
         )
         val loadingState = LodgingSearchViewModel.UiState.Loading(
@@ -442,25 +482,7 @@ fun PreviewLodgingSearch() {
         LodgingSearch(
             navController = rememberNavController(),
             state = state,
-            onLodgingTapped = { lodging ->
-                details = details.toMutableMap().also {
-                    it[lodging.id] = LodgingDetailsState(
-                        name = lodging.name,
-                        rating = lodging.rating,
-                        reviewCountText = "",
-                        lodgingType = lodging.lodgingType,
-                        photos = listOf(lodging.coverImage),
-                        checkIn = Time("2025-08-10T00:00 -0500"),
-                        checkOut = Time("2025-08-15T00:00 -0500"),
-                        price = lodging.price,
-                        rooms = emptyList(),
-                        address = lodging.address,
-                        latitude = 0.0,
-                        longitude = 0.0,
-                        isLoading = false,
-                    )
-                }
-            },
+            onLodgingTapped = { },
             onSortOptionSelected = {},
             onFiltersApplied = { _, _, _ -> },
             onLodgingClosed = {},
