@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -62,7 +63,7 @@ import com.combah.travel2.extensions.Time
 import com.combah.travel2.ui.lodgingsearch.state.LodgingDetailsState
 import com.combah.travel2.ui.lodgingsearch.state.LodgingRoomOfferState
 import com.combah.travel2.ui.theme.AppTheme
-import com.combah.travel2.ui.trip.creation.composable.ConfirmationDialog
+import com.google.android.gms.maps.GoogleMapOptions
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -75,34 +76,29 @@ import com.google.maps.android.compose.rememberMarkerState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripTapped: () -> Unit) {
-    Scaffold(
-        topBar = {
-            Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
-                TopAppBar(
-                    title = {
-                        Text(state.name)
-                    },
-                    actions = {
-                        IconButton(onClick = { onClose() }) {
-                            Icon(Icons.Filled.Close, contentDescription = "")
-                        }
-                    }
-                )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = spacedBy(8.dp),
-                    modifier = Modifier.padding(all = 16.dp)
-                ) {
-                    LodgingRating(state.rating)
-                    AnimatedVisibility(visible = state.reviewCountText.isNotEmpty()) {
-                        Text(state.reviewCountText)
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(state.lodgingType)
+    Scaffold(topBar = {
+        Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
+            TopAppBar(title = {
+                Text(state.name)
+            }, actions = {
+                IconButton(onClick = { onClose() }) {
+                    Icon(Icons.Filled.Close, contentDescription = "")
                 }
+            })
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = spacedBy(8.dp),
+                modifier = Modifier.padding(all = 16.dp)
+            ) {
+                LodgingRating(state.rating)
+                AnimatedVisibility(visible = state.reviewCountText.isNotEmpty()) {
+                    Text(state.reviewCountText)
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Text(state.lodgingType)
             }
         }
-    ) { paddingValues ->
+    }) { paddingValues ->
         Column(
             verticalArrangement = spacedBy(8.dp),
             modifier = Modifier
@@ -133,19 +129,15 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                                 .weight(1F)
                                 .matchWidthToHeight()
                         )
-                        LodgingImage(
-                            state.photos[2],
-                            colorFilter = ColorFilter.tint(
-                                MaterialTheme.colorScheme.scrim.copy(
-                                    alpha = 0.3F
-                                ),
-                                blendMode = BlendMode.SrcAtop,
+                        LodgingImage(state.photos[2], colorFilter = ColorFilter.tint(
+                            MaterialTheme.colorScheme.scrim.copy(
+                                alpha = 0.3F
                             ),
-                            modifier = Modifier
-                                .weight(1F)
-                                .matchWidthToHeight()
-                                .clickable { }
-                        )
+                            blendMode = BlendMode.SrcAtop,
+                        ), modifier = Modifier
+                            .weight(1F)
+                            .matchWidthToHeight()
+                            .clickable { })
                     }
                 }
             }
@@ -188,8 +180,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                         ) {
                             room.photos.firstOrNull()?.let {
                                 LodgingImage(
-                                    it, modifier = Modifier
-                                        .size(64.dp)
+                                    it, modifier = Modifier.size(64.dp)
                                 )
                             }
                             Column(
@@ -247,12 +238,17 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                     )
                 } else {
                     val marker = LatLng(state.latitude, state.longitude)
-                    val cameraPositionState =
-                        rememberCameraPositionState(key = "${state.latitude},${state.longitude}") {
-                            position = CameraPosition.fromLatLngZoom(marker, 15f)
-                        }
+                    val cameraPositionState = rememberCameraPositionState()
+                    val markerState = rememberMarkerState(position = marker)
+                    LaunchedEffect(marker) {
+                        cameraPositionState.position = CameraPosition.fromLatLngZoom(marker, 15f)
+                        markerState.position = marker
+                    }
                     GoogleMap(
                         cameraPositionState = cameraPositionState,
+                        googleMapOptionsFactory = {
+                            GoogleMapOptions().liteMode(true)
+                        },
                         uiSettings = MapUiSettings(
                             indoorLevelPickerEnabled = false,
                             myLocationButtonEnabled = false,
@@ -269,9 +265,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                             .background(color = MaterialTheme.colorScheme.surfaceContainer)
                     ) {
                         Marker(
-                            state = rememberMarkerState(position = marker),
-                            title = state.name,
-                            snippet = state.address
+                            state = markerState, title = state.name, snippet = state.address
                         )
                     }
                 }
@@ -295,8 +289,7 @@ private fun ButtonContent(
             Icon(icon, contentDescription = iconContentDescription)
         } else if (iconResId != null) {
             Icon(
-                painterResource(iconResId),
-                contentDescription = iconContentDescription
+                painterResource(iconResId), contentDescription = iconContentDescription
             )
         }
         Text(text)
@@ -305,9 +298,7 @@ private fun ButtonContent(
 
 @Composable
 private fun LodgingImage(
-    model: String,
-    modifier: Modifier = Modifier,
-    colorFilter: ColorFilter? = null
+    model: String, modifier: Modifier = Modifier, colorFilter: ColorFilter? = null
 ) {
     val painter = rememberAsyncImagePainter(model = model, contentScale = ContentScale.Crop)
     Image(
