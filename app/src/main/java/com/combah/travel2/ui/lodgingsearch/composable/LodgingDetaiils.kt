@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -38,17 +39,20 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -56,21 +60,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.combah.travel2.R
 import com.combah.travel2.common.ui.components.ImageGallery
+import com.combah.travel2.common.ui.components.Overlay
 import com.combah.travel2.common.ui.modifier.matchWidthToHeight
 import com.combah.travel2.common.ui.modifier.skeletonLoader
+import com.combah.travel2.common.ui.preview.PreviewLightDarkSystemUI
 import com.combah.travel2.extensions.Time
 import com.combah.travel2.ui.lodgingsearch.state.LodgingDetailsState
 import com.combah.travel2.ui.lodgingsearch.state.LodgingRoomOfferState
@@ -83,6 +93,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import kotlin.math.roundToInt
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,6 +102,8 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
     var showImageGallery by remember(state) { mutableStateOf(false) }
     var imageGalleryModels by remember(state) { mutableStateOf(emptyList<String>()) }
     var selectedGalleryModel by remember(state) { mutableStateOf<String?>(null) }
+    var showExpandedMap by remember(state) { mutableStateOf(false) }
+    val marker = LatLng(state.latitude, state.longitude)
     Scaffold(topBar = {
         Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
             TopAppBar(title = {
@@ -117,9 +130,12 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
         Column(
             verticalArrangement = spacedBy(8.dp),
             modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(top = paddingValues.calculateTopPadding())
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(
+                    top = paddingValues.calculateTopPadding() + 16.dp,
+                    bottom = paddingValues.calculateBottomPadding() + 16.dp
+                )
                 .animateContentSize(),
         ) {
             Row(
@@ -218,7 +234,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                             .skeletonLoader()
                     )
                 } else {
-                    Column {
+                    Column(modifier = Modifier.animateContentSize()) {
                         var expandRooms by remember { mutableStateOf(false) }
                         val rooms = if (expandRooms) state.rooms else state.rooms.take(1)
                         rooms.forEach { room ->
@@ -334,36 +350,44 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                             .skeletonLoader(startDelayMillis = 300)
                     )
                 } else {
-                    val marker = LatLng(state.latitude, state.longitude)
-                    val cameraPositionState = rememberCameraPositionState()
-                    val markerState = rememberMarkerState(position = marker)
-                    LaunchedEffect(marker) {
-                        cameraPositionState.position = CameraPosition.fromLatLngZoom(marker, 15f)
-                        markerState.position = marker
-                    }
-                    GoogleMap(
-                        cameraPositionState = cameraPositionState,
-                        googleMapOptionsFactory = {
-                            GoogleMapOptions().liteMode(true)
-                        },
-                        uiSettings = MapUiSettings(
-                            indoorLevelPickerEnabled = false,
-                            myLocationButtonEnabled = false,
-                            scrollGesturesEnabled = false,
-                            rotationGesturesEnabled = false,
-                            tiltGesturesEnabled = false,
-                            zoomGesturesEnabled = false,
-                            zoomControlsEnabled = false,
-                        ),
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(6 / 4f)
                             .clip(MaterialTheme.shapes.large)
                             .background(color = MaterialTheme.colorScheme.surfaceContainer)
                     ) {
-                        Marker(
-                            state = markerState, title = state.name, snippet = state.address
-                        )
+                        val cameraPositionState = rememberCameraPositionState()
+                        val markerState = rememberMarkerState(position = marker)
+                        LaunchedEffect(marker) {
+                            cameraPositionState.position =
+                                CameraPosition.fromLatLngZoom(marker, 15f)
+                            markerState.position = marker
+                        }
+                        GoogleMap(
+                            cameraPositionState = cameraPositionState,
+                            googleMapOptionsFactory = {
+                                GoogleMapOptions().liteMode(true)
+                            },
+                            uiSettings = MapUiSettings(
+                                indoorLevelPickerEnabled = false,
+                                myLocationButtonEnabled = false,
+                                scrollGesturesEnabled = false,
+                                rotationGesturesEnabled = false,
+                                tiltGesturesEnabled = false,
+                                zoomGesturesEnabled = false,
+                                zoomControlsEnabled = false,
+                                mapToolbarEnabled = false,
+                            ),
+                            modifier = Modifier.fillMaxSize(),
+                        ) {
+                            Marker(
+                                state = markerState, title = state.name, snippet = state.address
+                            )
+                        }
+                        Surface(color = Color.Transparent, onClick = {
+                            showExpandedMap = true
+                        }, modifier = Modifier.fillMaxSize()) {}
                     }
                 }
             }
@@ -374,26 +398,80 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
         enter = fadeIn(),
         exit = fadeOut(),
     ) {
-        Column(
-            modifier = Modifier.background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.7F))
-                .fillMaxSize()
-        ) {
-            Spacer(Modifier.windowInsetsTopHeight(WindowInsets.safeDrawing))
-            IconButton(
-                onClick = { showImageGallery = false },
-                modifier = Modifier.align(Alignment.End).padding(top = 8.dp, end = 8.dp)
-            ) {
-                Icon(
-                    Icons.Filled.Close,
-                    contentDescription = "",
-                    tint = MaterialTheme.colorScheme.inverseOnSurface
-                )
-            }
+        DismissableOverlay(onDismiss = {
+            showImageGallery = false
+        }) { topPadding ->
             ImageGallery(
                 imageGalleryModels,
                 selectedInitially = selectedGalleryModel,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier
+                    .padding(top = topPadding + 8.dp),
             )
+        }
+    }
+    AnimatedVisibility(
+        showExpandedMap, enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        DismissableOverlay(onDismiss = {
+            showExpandedMap = false
+        }) { topPadding ->
+            val cameraPositionState = rememberCameraPositionState()
+            val markerState = rememberMarkerState(position = marker)
+            LaunchedEffect(marker) {
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(marker, 15f)
+                markerState.position = marker
+            }
+            GoogleMap(
+                cameraPositionState = cameraPositionState,
+                uiSettings = MapUiSettings(
+                    indoorLevelPickerEnabled = false,
+                    myLocationButtonEnabled = false,
+                    rotationGesturesEnabled = false,
+                    tiltGesturesEnabled = false,
+                ),
+                modifier = Modifier
+                    .padding(horizontal = 8.dp).padding(top = topPadding + 8.dp)
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.8F)
+                    .clip(MaterialTheme.shapes.large)
+                    .background(color = MaterialTheme.colorScheme.surfaceContainer)
+            ) {
+                Marker(
+                    state = markerState, title = state.name, snippet = state.address
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DismissableOverlay(
+    onDismiss: () -> Unit,
+    content: @Composable (topPadding: Dp) -> Unit
+) {
+    Overlay {
+        Box {
+            var topPadding by remember { mutableIntStateOf(0) }
+            content(with(LocalDensity.current) { topPadding.toDp() })
+            Column(
+                modifier = Modifier.onGloballyPositioned {
+                    topPadding = it.size.height + it.positionInParent().y.roundToInt()
+                }.align(Alignment.TopEnd).padding(end = 8.dp)
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+            ) {
+                Spacer(Modifier.windowInsetsTopHeight(WindowInsets.safeDrawing))
+                FilledIconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.align(Alignment.End).padding(top = 8.dp, end = 8.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.Close,
+                        contentDescription = "",
+                        tint = MaterialTheme.colorScheme.inverseOnSurface
+                    )
+                }
+            }
         }
     }
 }
@@ -438,7 +516,7 @@ private fun LodgingImage(
     )
 }
 
-@Preview(showBackground = true)
+@PreviewLightDarkSystemUI
 @Composable
 fun LodgingDetailsPreview() {
     val initialState = LodgingDetailsState(
