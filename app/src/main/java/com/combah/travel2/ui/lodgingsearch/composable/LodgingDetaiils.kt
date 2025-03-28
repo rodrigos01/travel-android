@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -44,6 +45,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -58,6 +60,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -69,6 +72,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.combah.travel2.R
@@ -98,6 +102,8 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
     var showImageGallery by remember(state) { mutableStateOf(false) }
     var imageGalleryModels by remember(state) { mutableStateOf(emptyList<String>()) }
     var selectedGalleryModel by remember(state) { mutableStateOf<String?>(null) }
+    var showExpandedMap by remember(state) { mutableStateOf(false) }
+    val marker = LatLng(state.latitude, state.longitude)
     Scaffold(topBar = {
         Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
             TopAppBar(title = {
@@ -341,36 +347,44 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                             .skeletonLoader(startDelayMillis = 300)
                     )
                 } else {
-                    val marker = LatLng(state.latitude, state.longitude)
-                    val cameraPositionState = rememberCameraPositionState()
-                    val markerState = rememberMarkerState(position = marker)
-                    LaunchedEffect(marker) {
-                        cameraPositionState.position = CameraPosition.fromLatLngZoom(marker, 15f)
-                        markerState.position = marker
-                    }
-                    GoogleMap(
-                        cameraPositionState = cameraPositionState,
-                        googleMapOptionsFactory = {
-                            GoogleMapOptions().liteMode(true)
-                        },
-                        uiSettings = MapUiSettings(
-                            indoorLevelPickerEnabled = false,
-                            myLocationButtonEnabled = false,
-                            scrollGesturesEnabled = false,
-                            rotationGesturesEnabled = false,
-                            tiltGesturesEnabled = false,
-                            zoomGesturesEnabled = false,
-                            zoomControlsEnabled = false,
-                        ),
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(6 / 4f)
                             .clip(MaterialTheme.shapes.large)
                             .background(color = MaterialTheme.colorScheme.surfaceContainer)
                     ) {
-                        Marker(
-                            state = markerState, title = state.name, snippet = state.address
-                        )
+                        val cameraPositionState = rememberCameraPositionState()
+                        val markerState = rememberMarkerState(position = marker)
+                        LaunchedEffect(marker) {
+                            cameraPositionState.position =
+                                CameraPosition.fromLatLngZoom(marker, 15f)
+                            markerState.position = marker
+                        }
+                        GoogleMap(
+                            cameraPositionState = cameraPositionState,
+                            googleMapOptionsFactory = {
+                                GoogleMapOptions().liteMode(true)
+                            },
+                            uiSettings = MapUiSettings(
+                                indoorLevelPickerEnabled = false,
+                                myLocationButtonEnabled = false,
+                                scrollGesturesEnabled = false,
+                                rotationGesturesEnabled = false,
+                                tiltGesturesEnabled = false,
+                                zoomGesturesEnabled = false,
+                                zoomControlsEnabled = false,
+                                mapToolbarEnabled = false,
+                            ),
+                            modifier = Modifier.fillMaxSize(),
+                        ) {
+                            Marker(
+                                state = markerState, title = state.name, snippet = state.address
+                            )
+                        }
+                        Surface(color = Color.Transparent, onClick = {
+                            showExpandedMap = true
+                        }, modifier = Modifier.fillMaxSize()) {}
                     }
                 }
             }
@@ -381,32 +395,78 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
         enter = fadeIn(),
         exit = fadeOut(),
     ) {
-        Overlay {
-            Box {
-                var topGalleryPadding by remember { mutableIntStateOf(0) }
-                ImageGallery(
-                    imageGalleryModels,
-                    selectedInitially = selectedGalleryModel,
-                    modifier = Modifier
-                        .padding(top = with(LocalDensity.current) { topGalleryPadding.toDp() } + 8.dp),
+        DismissableOverlay(onDismiss = {
+            showImageGallery = false
+        }) { topPadding ->
+            ImageGallery(
+                imageGalleryModels,
+                selectedInitially = selectedGalleryModel,
+                modifier = Modifier
+                    .padding(top = topPadding + 8.dp),
+            )
+        }
+    }
+    AnimatedVisibility(
+        showExpandedMap, enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        DismissableOverlay(onDismiss = {
+            showExpandedMap = false
+        }) { topPadding ->
+            val cameraPositionState = rememberCameraPositionState()
+            val markerState = rememberMarkerState(position = marker)
+            LaunchedEffect(marker) {
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(marker, 15f)
+                markerState.position = marker
+            }
+            GoogleMap(
+                cameraPositionState = cameraPositionState,
+                uiSettings = MapUiSettings(
+                    indoorLevelPickerEnabled = false,
+                    myLocationButtonEnabled = false,
+                    rotationGesturesEnabled = false,
+                    tiltGesturesEnabled = false,
+                ),
+                modifier = Modifier
+                    .padding(horizontal = 8.dp).padding(top = topPadding + 8.dp)
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.8F)
+                    .clip(MaterialTheme.shapes.large)
+                    .background(color = MaterialTheme.colorScheme.surfaceContainer)
+            ) {
+                Marker(
+                    state = markerState, title = state.name, snippet = state.address
                 )
-                Column(
-                    modifier = Modifier.onGloballyPositioned {
-                        topGalleryPadding = it.size.height + it.positionInParent().y.roundToInt()
-                    }.align(Alignment.TopEnd).padding(end = 8.dp)
-                        .windowInsetsPadding(WindowInsets.safeDrawing)
+            }
+        }
+    }
+}
+
+@Composable
+private fun DismissableOverlay(
+    onDismiss: () -> Unit,
+    content: @Composable (topPadding: Dp) -> Unit
+) {
+    Overlay {
+        Box {
+            var topPadding by remember { mutableIntStateOf(0) }
+            content(with(LocalDensity.current) { topPadding.toDp() })
+            Column(
+                modifier = Modifier.onGloballyPositioned {
+                    topPadding = it.size.height + it.positionInParent().y.roundToInt()
+                }.align(Alignment.TopEnd).padding(end = 8.dp)
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+            ) {
+                Spacer(Modifier.windowInsetsTopHeight(WindowInsets.safeDrawing))
+                FilledIconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.align(Alignment.End).padding(top = 8.dp, end = 8.dp)
                 ) {
-                    Spacer(Modifier.windowInsetsTopHeight(WindowInsets.safeDrawing))
-                    FilledIconButton(
-                        onClick = { showImageGallery = false },
-                        modifier = Modifier.align(Alignment.End).padding(top = 8.dp, end = 8.dp)
-                    ) {
-                        Icon(
-                            Icons.Filled.Close,
-                            contentDescription = "",
-                            tint = MaterialTheme.colorScheme.inverseOnSurface
-                        )
-                    }
+                    Icon(
+                        Icons.Filled.Close,
+                        contentDescription = "",
+                        tint = MaterialTheme.colorScheme.inverseOnSurface
+                    )
                 }
             }
         }
