@@ -1,9 +1,13 @@
 package com.combah.travel2.ui.lodgingsearch.composable
 
+import android.content.Intent
+import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,18 +16,24 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -39,7 +49,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -48,16 +57,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.combah.travel2.R
+import com.combah.travel2.common.ui.components.ImageGallery
+import com.combah.travel2.common.ui.modifier.matchWidthToHeight
 import com.combah.travel2.common.ui.modifier.skeletonLoader
 import com.combah.travel2.extensions.Time
 import com.combah.travel2.ui.lodgingsearch.state.LodgingDetailsState
@@ -76,6 +88,9 @@ import com.google.maps.android.compose.rememberMarkerState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripTapped: () -> Unit) {
+    var showImageGallery by remember(state) { mutableStateOf(false) }
+    var imageGalleryModels by remember(state) { mutableStateOf(emptyList<String>()) }
+    var selectedGalleryModel by remember(state) { mutableStateOf<String?>(null) }
     Scaffold(topBar = {
         Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
             TopAppBar(title = {
@@ -115,9 +130,14 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
             ) {
                 state.photos.firstOrNull()?.let {
                     LodgingImage(
-                        it, modifier = Modifier
+                        rememberAsyncImagePainter(model = it, contentScale = ContentScale.Crop),
+                        modifier = Modifier
                             .weight(1F)
-                            .fillMaxHeight()
+                            .fillMaxHeight().clickable {
+                                showImageGallery = true
+                                imageGalleryModels = state.photos
+                                selectedGalleryModel = it
+                            },
                     )
                 }
                 AnimatedVisibility(state.photos.size >= 3) {
@@ -125,19 +145,46 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                         verticalArrangement = spacedBy(8.dp),
                     ) {
                         LodgingImage(
-                            state.photos[1], modifier = Modifier
+                            rememberAsyncImagePainter(
+                                model = state.photos[1],
+                                contentScale = ContentScale.Crop
+                            ),
+                            modifier = Modifier
+                                .weight(1F)
+                                .matchWidthToHeight().clickable {
+                                    showImageGallery = true
+                                    imageGalleryModels = state.photos
+                                    selectedGalleryModel = state.photos[1]
+                                },
+                        )
+                        Box(
+                            modifier = Modifier
                                 .weight(1F)
                                 .matchWidthToHeight()
-                        )
-                        LodgingImage(state.photos[2], colorFilter = ColorFilter.tint(
-                            MaterialTheme.colorScheme.scrim.copy(
-                                alpha = 0.3F
-                            ),
-                            blendMode = BlendMode.SrcAtop,
-                        ), modifier = Modifier
-                            .weight(1F)
-                            .matchWidthToHeight()
-                            .clickable { })
+                                .clickable {
+                                    showImageGallery = true
+                                    imageGalleryModels = state.photos
+                                },
+                        ) {
+                            LodgingImage(
+                                rememberAsyncImagePainter(
+                                    model = state.photos[2],
+                                    contentScale = ContentScale.Crop
+                                ),
+                                colorFilter = ColorFilter.tint(
+                                    MaterialTheme.colorScheme.scrim.copy(
+                                        alpha = 0.3F
+                                    ),
+                                    blendMode = BlendMode.SrcAtop,
+                                ),
+                            )
+                            Text(
+                                text = "+${state.photos.size - 2}",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.inverseOnSurface,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
                     }
                 }
             }
@@ -171,51 +218,101 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                             .skeletonLoader()
                     )
                 } else {
-                    var expandRooms by remember { mutableStateOf(false) }
-                    val rooms = if (expandRooms) state.rooms else state.rooms.take(1)
-                    rooms.forEach { room ->
-                        Row(
-                            horizontalArrangement = spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            room.photos.firstOrNull()?.let {
-                                LodgingImage(
-                                    it, modifier = Modifier.size(64.dp)
-                                )
-                            }
-                            Column(
-                                modifier = Modifier
-                                    .weight(1F)
-                                    .align(Alignment.Top)
+                    Column {
+                        var expandRooms by remember { mutableStateOf(false) }
+                        val rooms = if (expandRooms) state.rooms else state.rooms.take(1)
+                        rooms.forEach { room ->
+                            Row(
+                                horizontalArrangement = spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                val features = listOf(
-                                    "Breakfast Included" to room.breakfastIncluded,
-                                    "Refundable" to room.refundable,
-                                    "No pre-payment required" to !room.prePaymentRequired,
-                                    "All inclusive" to room.isAllInclusive,
-                                ).filter { it.second }.map { it.first }
-                                Text(room.description, style = MaterialTheme.typography.labelLarge)
-                                features.forEach { feature ->
+                                val roomCoverPhoto = room.photos.firstOrNull()
+                                if (roomCoverPhoto != null) {
+                                    LodgingImage(
+                                        rememberAsyncImagePainter(
+                                            model = roomCoverPhoto,
+                                            contentScale = ContentScale.Crop
+                                        ),
+                                        modifier = Modifier.size(64.dp)
+                                            .clickable {
+                                                imageGalleryModels = room.photos
+                                                selectedGalleryModel = roomCoverPhoto
+                                                showImageGallery = true
+                                            },
+                                    )
+                                } else {
+                                    LodgingImage(
+                                        painterResource(R.drawable.ic_hotel_black_24dp),
+                                        contentScale = ContentScale.None,
+                                        colorFilter = ColorFilter.tint(
+                                            MaterialTheme.colorScheme.onSurface.copy(
+                                                alpha = 0.3F
+                                            )
+                                        ),
+                                        modifier = Modifier.size(64.dp),
+                                    )
+                                }
+
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1F)
+                                        .align(Alignment.Top)
+                                ) {
+                                    val features = listOf(
+                                        "Breakfast Included" to room.breakfastIncluded,
+                                        "Refundable" to room.refundable,
+                                        "No pre-payment required" to !room.prePaymentRequired,
+                                        "All inclusive" to room.isAllInclusive,
+                                    ).filter { it.second }.map { it.first }
                                     Text(
-                                        text = AnnotatedString.Builder().apply {
-                                            append("\u2022")
-                                            append("\u0009")
-                                            append(feature)
-                                        }.toAnnotatedString(),
-                                        style = MaterialTheme.typography.bodySmall
+                                        room.description,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
                                     )
+                                    features.forEach { feature ->
+                                        Text(
+                                            text = AnnotatedString.Builder().apply {
+                                                append("\u2022")
+                                                append("\u0009")
+                                                append(feature)
+                                            }.toAnnotatedString(),
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                }
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.width(112.dp)
+                                ) {
+                                    PriceText(room.price)
+                                    val context = LocalContext.current
+                                    TextButton(onClick = {
+                                        context.startActivity(
+                                            Intent(
+                                                Intent.ACTION_VIEW,
+                                                Uri.parse(room.bookingUrl),
+                                            )
+                                        )
+                                    }) {
+                                        ButtonContent(
+                                            iconResId = R.drawable.open_in_new_outline_24,
+                                            iconContentDescription = "Open offer button icon",
+                                            text = room.bookingAgency
+                                        )
+                                    }
                                 }
                             }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                PriceText(room.price)
-                                TextButton(onClick = {}) {
-                                    ButtonContent(
-                                        iconResId = R.drawable.open_in_new_outline_24,
-                                        iconContentDescription = "Open offer button icon",
-                                        text = room.bookingAgency
-                                    )
-                                }
-                            }
+                        }
+                        TextButton(
+                            onClick = { expandRooms = !expandRooms },
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        ) {
+                            Icon(
+                                if (expandRooms) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                                contentDescription = null
+                            )
+                            Text(if (expandRooms) "See less offers" else "Show ${state.rooms.size} more offers")
                         }
                     }
                 }
@@ -272,6 +369,33 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
             }
         }
     }
+    AnimatedVisibility(
+        showImageGallery && imageGalleryModels.isNotEmpty(),
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        Column(
+            modifier = Modifier.background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.7F))
+                .fillMaxSize()
+        ) {
+            Spacer(Modifier.windowInsetsTopHeight(WindowInsets.safeDrawing))
+            IconButton(
+                onClick = { showImageGallery = false },
+                modifier = Modifier.align(Alignment.End).padding(top = 8.dp, end = 8.dp)
+            ) {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = "",
+                    tint = MaterialTheme.colorScheme.inverseOnSurface
+                )
+            }
+            ImageGallery(
+                imageGalleryModels,
+                selectedInitially = selectedGalleryModel,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+    }
 }
 
 @Composable
@@ -292,37 +416,26 @@ private fun ButtonContent(
                 painterResource(iconResId), contentDescription = iconContentDescription
             )
         }
-        Text(text)
+        Text(text, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
 @Composable
 private fun LodgingImage(
-    model: String, modifier: Modifier = Modifier, colorFilter: ColorFilter? = null
+    painter: Painter,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Crop,
+    colorFilter: ColorFilter? = null
 ) {
-    val painter = rememberAsyncImagePainter(model = model, contentScale = ContentScale.Crop)
     Image(
         modifier = modifier
             .clip(MaterialTheme.shapes.large)
             .background(color = MaterialTheme.colorScheme.surfaceContainer),
         painter = painter,
         contentDescription = "Lodging Image Description",
-        contentScale = ContentScale.Crop,
+        contentScale = contentScale,
         colorFilter = colorFilter,
     )
-}
-
-@Composable
-private fun Int.toDp() = with(LocalDensity.current) { toDp() }
-
-@Composable
-private fun Modifier.matchWidthToHeight(): Modifier {
-    var width by remember { mutableIntStateOf(0) }
-    return this
-        .width(width.toDp())
-        .onPlaced {
-            width = it.size.height
-        }
 }
 
 @Preview(showBackground = true)
@@ -344,10 +457,10 @@ fun LodgingDetailsPreview() {
         isLoading = true,
     )
     val loadedState = initialState.copy(
-        photos = List(10) { index -> "" },
+        photos = List(54) { index -> "photo$index" },
         rooms = List(7) { index ->
             LodgingRoomOfferState(
-                photos = List(10) { "" },
+                photos = if (index % 2 == 0) List(35) { "roomPhoto$it" } else emptyList(),
                 description = "Room $index",
                 breakfastIncluded = index % 2 == 0,
                 refundable = index % 2 != 0,
@@ -355,7 +468,7 @@ fun LodgingDetailsPreview() {
                 isAllInclusive = index % 2 != 0,
                 price = 123.4 * index,
                 bookingUrl = "",
-                bookingAgency = listOf("Expedia", "Booking", "Agoda")[index % 3],
+                bookingAgency = listOf("Expedia", "Booking", "Agoda", "ZenHotels.com")[index % 4],
             )
         },
         latitude = 37.56521,
@@ -365,7 +478,7 @@ fun LodgingDetailsPreview() {
     AppTheme {
         Box {
             var state by remember {
-                mutableStateOf(initialState)
+                mutableStateOf(loadedState)
             }
             LodgingDetails(
                 state = state,
