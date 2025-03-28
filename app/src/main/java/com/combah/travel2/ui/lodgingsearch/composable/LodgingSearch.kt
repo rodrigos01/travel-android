@@ -69,6 +69,7 @@ import com.combah.travel2.common.ui.modifier.skeletonLoader
 import com.combah.travel2.common.ui.preview.PreviewLightDarkSystemUI
 import com.combah.travel2.extensions.Time
 import com.combah.travel2.ui.lodgingsearch.state.LodgingDetailsState
+import com.combah.travel2.ui.lodgingsearch.state.LodgingRoomOfferState
 import com.combah.travel2.ui.lodgingsearch.state.LodgingSearchResultState
 import com.combah.travel2.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
 import com.combah.travel2.ui.theme.AppTheme
@@ -455,7 +456,19 @@ fun LodgingSearchPreview() {
                 checkIn = Time("2025-08-10T00:00 -0500"),
                 checkOut = Time("2025-08-15T00:00 -0500"),
                 price = lodging.price,
-                rooms = emptyList(),
+                rooms = List(2) {
+                    LodgingRoomOfferState(
+                        photos = emptyList(),
+                        description = "Room description",
+                        false,
+                        false,
+                        false,
+                        false,
+                        123.0,
+                        "",
+                        "Expedia",
+                    )
+                },
                 address = lodging.address,
                 latitude = 0.0,
                 longitude = 0.0,
