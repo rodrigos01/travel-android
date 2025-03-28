@@ -6,12 +6,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ContextualFlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,9 +26,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -41,9 +46,10 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import com.combah.travel2.common.ui.preview.PreviewLightDarkSystemUI
+import com.combah.travel2.ui.theme.AppTheme
 
 private const val MAX_ITEMS_PER_LINE = 3
 
@@ -67,7 +73,7 @@ fun ImageGallery(
                 ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth().wrapContentHeight(align = Alignment.Top)
-                    .verticalScroll(galleryScrollState).then(modifier),
+                    .verticalScroll(galleryScrollState).then(modifier).padding(horizontal = 16.dp),
             ) { index ->
                 val width = maxWidthInLine / (MAX_ITEMS_PER_LINE - indexInLine) - 8.dp
                 GalleryItem(
@@ -79,26 +85,38 @@ fun ImageGallery(
         } else {
             Column(
                 verticalArrangement = Arrangement.SpaceAround,
-                modifier = Modifier.fillMaxHeight()
+                modifier = Modifier.fillMaxHeight().then(modifier)
             ) {
-                TextButton(
-                    onClick = { selectedModel = null },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.inverseOnSurface),
-                    modifier = Modifier.padding(top = 8.dp, start = 8.dp).align(Alignment.Start),
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Back")
-                    Text(text = "All Photos", style = MaterialTheme.typography.labelLarge)
-                }
-                Image(
+                Box(
                     modifier = Modifier.fillMaxWidth()
-                        .fillMaxHeight(0.6F),
-                    painter = rememberAsyncImagePainter(
-                        selectedModel,
-                        contentScale = ContentScale.Fit
-                    ),
-                    contentDescription = "Lodging Image Description",
-                    contentScale = ContentScale.Fit,
-                )
+                        .fillMaxHeight(0.6F)
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(
+                            selectedModel,
+                            contentScale = ContentScale.Fit
+                        ),
+                        contentDescription = "Lodging Image Description",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    TextButton(
+                        onClick = { selectedModel = null },
+                        modifier = Modifier.padding(top = 8.dp, start = 8.dp)
+                            .align(Alignment.TopStart),
+                        colors = if (!isSystemInDarkTheme()) {
+                            ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.inverseOnSurface)
+                        } else {
+                            ButtonDefaults.textButtonColors()
+                        }
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                            contentDescription = "Back"
+                        )
+                        Text(text = "All Photos", style = MaterialTheme.typography.labelLarge)
+                    }
+                }
                 val scrollState = rememberLazyListState()
                 LazyRow(
                     state = scrollState,
@@ -165,10 +183,21 @@ fun GalleryItem(model: String, modifier: Modifier = Modifier, colorFilter: Color
 }
 
 @Composable
-@Preview
+@PreviewLightDarkSystemUI
 fun ImageGalleryPreview() {
     val models = List(54, { index ->
         "https://example.com/image$index.jpg"
     })
-    ImageGallery(models = models, modifier = Modifier.padding(16.dp))
+    AppTheme {
+        Surface {
+            Overlay {
+                Box {
+                    ImageGallery(models = models, modifier = Modifier.padding(top = 96.dp))
+                    Button(onClick = {}, modifier = Modifier.align(Alignment.TopStart)) {
+                        Text("Some Button")
+                    }
+                }
+            }
+        }
+    }
 }

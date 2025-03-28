@@ -19,13 +19,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +50,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -60,17 +62,21 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.combah.travel2.R
 import com.combah.travel2.common.ui.components.ImageGallery
+import com.combah.travel2.common.ui.components.Overlay
 import com.combah.travel2.common.ui.modifier.matchWidthToHeight
 import com.combah.travel2.common.ui.modifier.skeletonLoader
+import com.combah.travel2.common.ui.preview.PreviewLightDarkSystemUI
 import com.combah.travel2.extensions.Time
 import com.combah.travel2.ui.lodgingsearch.state.LodgingDetailsState
 import com.combah.travel2.ui.lodgingsearch.state.LodgingRoomOfferState
@@ -83,6 +89,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import kotlin.math.roundToInt
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -118,7 +125,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
             verticalArrangement = spacedBy(8.dp),
             modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .padding(top = paddingValues.calculateTopPadding())
+                .padding(top = paddingValues.calculateTopPadding() + 16.dp)
                 .verticalScroll(rememberScrollState())
                 .animateContentSize(),
         ) {
@@ -374,26 +381,34 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
         enter = fadeIn(),
         exit = fadeOut(),
     ) {
-        Column(
-            modifier = Modifier.background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.7F))
-                .fillMaxSize()
-        ) {
-            Spacer(Modifier.windowInsetsTopHeight(WindowInsets.safeDrawing))
-            IconButton(
-                onClick = { showImageGallery = false },
-                modifier = Modifier.align(Alignment.End).padding(top = 8.dp, end = 8.dp)
-            ) {
-                Icon(
-                    Icons.Filled.Close,
-                    contentDescription = "",
-                    tint = MaterialTheme.colorScheme.inverseOnSurface
+        Overlay {
+            Box {
+                var topGalleryPadding by remember { mutableIntStateOf(0) }
+                ImageGallery(
+                    imageGalleryModels,
+                    selectedInitially = selectedGalleryModel,
+                    modifier = Modifier
+                        .padding(top = with(LocalDensity.current) { topGalleryPadding.toDp() } + 8.dp),
                 )
+                Column(
+                    modifier = Modifier.onGloballyPositioned {
+                        topGalleryPadding = it.size.height + it.positionInParent().y.roundToInt()
+                    }.align(Alignment.TopEnd).padding(end = 8.dp)
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                ) {
+                    Spacer(Modifier.windowInsetsTopHeight(WindowInsets.safeDrawing))
+                    FilledIconButton(
+                        onClick = { showImageGallery = false },
+                        modifier = Modifier.align(Alignment.End).padding(top = 8.dp, end = 8.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.Close,
+                            contentDescription = "",
+                            tint = MaterialTheme.colorScheme.inverseOnSurface
+                        )
+                    }
+                }
             }
-            ImageGallery(
-                imageGalleryModels,
-                selectedInitially = selectedGalleryModel,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
         }
     }
 }
@@ -438,7 +453,7 @@ private fun LodgingImage(
     )
 }
 
-@Preview(showBackground = true)
+@PreviewLightDarkSystemUI
 @Composable
 fun LodgingDetailsPreview() {
     val initialState = LodgingDetailsState(

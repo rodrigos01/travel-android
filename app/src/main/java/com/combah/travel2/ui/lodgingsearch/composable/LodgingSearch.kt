@@ -56,7 +56,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -67,6 +66,7 @@ import com.combah.travel2.R
 import com.combah.travel2.common.ui.components.TabbedHost
 import com.combah.travel2.common.ui.components.TabbedHostScope
 import com.combah.travel2.common.ui.modifier.skeletonLoader
+import com.combah.travel2.common.ui.preview.PreviewLightDarkSystemUI
 import com.combah.travel2.extensions.Time
 import com.combah.travel2.ui.lodgingsearch.state.LodgingDetailsState
 import com.combah.travel2.ui.lodgingsearch.state.LodgingSearchResultState
@@ -429,9 +429,10 @@ fun LodgingSearch(
     )
 }
 
-@Preview(showBackground = true)
+
+@PreviewLightDarkSystemUI
 @Composable
-fun PreviewLodgingSearch() {
+fun LodgingSearchPreview() {
     AppTheme {
         val results = List(10) { index ->
             LodgingSearchResultState(
