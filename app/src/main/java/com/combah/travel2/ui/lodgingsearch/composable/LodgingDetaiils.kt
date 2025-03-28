@@ -130,9 +130,12 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
         Column(
             verticalArrangement = spacedBy(8.dp),
             modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(top = paddingValues.calculateTopPadding() + 16.dp)
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(
+                    top = paddingValues.calculateTopPadding() + 16.dp,
+                    bottom = paddingValues.calculateBottomPadding() + 16.dp
+                )
                 .animateContentSize(),
         ) {
             Row(
@@ -231,7 +234,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                             .skeletonLoader()
                     )
                 } else {
-                    Column {
+                    Column(modifier = Modifier.animateContentSize()) {
                         var expandRooms by remember { mutableStateOf(false) }
                         val rooms = if (expandRooms) state.rooms else state.rooms.take(1)
                         rooms.forEach { room ->
