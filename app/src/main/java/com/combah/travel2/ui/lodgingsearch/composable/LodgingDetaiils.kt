@@ -1,5 +1,7 @@
 package com.combah.travel2.ui.lodgingsearch.composable
 
+import android.content.Intent
+import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -24,6 +26,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -51,6 +55,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
@@ -171,51 +176,73 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                             .skeletonLoader()
                     )
                 } else {
-                    var expandRooms by remember { mutableStateOf(false) }
-                    val rooms = if (expandRooms) state.rooms else state.rooms.take(1)
-                    rooms.forEach { room ->
-                        Row(
-                            horizontalArrangement = spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            room.photos.firstOrNull()?.let {
-                                LodgingImage(
-                                    it, modifier = Modifier.size(64.dp)
-                                )
-                            }
-                            Column(
-                                modifier = Modifier
-                                    .weight(1F)
-                                    .align(Alignment.Top)
+                    Column {
+                        var expandRooms by remember { mutableStateOf(false) }
+                        val rooms = if (expandRooms) state.rooms else state.rooms.take(1)
+                        rooms.forEach { room ->
+                            Row(
+                                horizontalArrangement = spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                val features = listOf(
-                                    "Breakfast Included" to room.breakfastIncluded,
-                                    "Refundable" to room.refundable,
-                                    "No pre-payment required" to !room.prePaymentRequired,
-                                    "All inclusive" to room.isAllInclusive,
-                                ).filter { it.second }.map { it.first }
-                                Text(room.description, style = MaterialTheme.typography.labelLarge)
-                                features.forEach { feature ->
+                                room.photos.firstOrNull()?.let {
+                                    LodgingImage(
+                                        it, modifier = Modifier.size(64.dp)
+                                    )
+                                }
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1F)
+                                        .align(Alignment.Top)
+                                ) {
+                                    val features = listOf(
+                                        "Breakfast Included" to room.breakfastIncluded,
+                                        "Refundable" to room.refundable,
+                                        "No pre-payment required" to !room.prePaymentRequired,
+                                        "All inclusive" to room.isAllInclusive,
+                                    ).filter { it.second }.map { it.first }
                                     Text(
-                                        text = AnnotatedString.Builder().apply {
-                                            append("\u2022")
-                                            append("\u0009")
-                                            append(feature)
-                                        }.toAnnotatedString(),
-                                        style = MaterialTheme.typography.bodySmall
+                                        room.description,
+                                        style = MaterialTheme.typography.labelLarge
                                     )
+                                    features.forEach { feature ->
+                                        Text(
+                                            text = AnnotatedString.Builder().apply {
+                                                append("\u2022")
+                                                append("\u0009")
+                                                append(feature)
+                                            }.toAnnotatedString(),
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    PriceText(room.price)
+                                    TextButton(onClick = {
+                                        LocalContext.current.startActivity(
+                                            Intent(
+                                                Intent.ACTION_VIEW,
+                                                Uri.parse(room.bookingUrl),
+                                            )
+                                        )
+                                    }) {
+                                        ButtonContent(
+                                            iconResId = R.drawable.open_in_new_outline_24,
+                                            iconContentDescription = "Open offer button icon",
+                                            text = room.bookingAgency
+                                        )
+                                    }
                                 }
                             }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                PriceText(room.price)
-                                TextButton(onClick = {}) {
-                                    ButtonContent(
-                                        iconResId = R.drawable.open_in_new_outline_24,
-                                        iconContentDescription = "Open offer button icon",
-                                        text = room.bookingAgency
-                                    )
-                                }
-                            }
+                        }
+                        TextButton(
+                            onClick = { expandRooms = !expandRooms },
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        ) {
+                            Icon(
+                                if (expandRooms) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                                contentDescription = null
+                            )
+                            Text(if (expandRooms) "See less offers" else "Show ${state.rooms.size} more offers")
                         }
                     }
                 }
@@ -365,7 +392,7 @@ fun LodgingDetailsPreview() {
     AppTheme {
         Box {
             var state by remember {
-                mutableStateOf(initialState)
+                mutableStateOf(loadedState)
             }
             LodgingDetails(
                 state = state,
