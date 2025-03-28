@@ -56,7 +56,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -67,8 +66,10 @@ import com.combah.travel2.R
 import com.combah.travel2.common.ui.components.TabbedHost
 import com.combah.travel2.common.ui.components.TabbedHostScope
 import com.combah.travel2.common.ui.modifier.skeletonLoader
+import com.combah.travel2.common.ui.preview.PreviewLightDarkSystemUI
 import com.combah.travel2.extensions.Time
 import com.combah.travel2.ui.lodgingsearch.state.LodgingDetailsState
+import com.combah.travel2.ui.lodgingsearch.state.LodgingRoomOfferState
 import com.combah.travel2.ui.lodgingsearch.state.LodgingSearchResultState
 import com.combah.travel2.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
 import com.combah.travel2.ui.theme.AppTheme
@@ -429,9 +430,10 @@ fun LodgingSearch(
     )
 }
 
-@Preview(showBackground = true)
+
+@PreviewLightDarkSystemUI
 @Composable
-fun PreviewLodgingSearch() {
+fun LodgingSearchPreview() {
     AppTheme {
         val results = List(10) { index ->
             LodgingSearchResultState(
@@ -454,7 +456,19 @@ fun PreviewLodgingSearch() {
                 checkIn = Time("2025-08-10T00:00 -0500"),
                 checkOut = Time("2025-08-15T00:00 -0500"),
                 price = lodging.price,
-                rooms = emptyList(),
+                rooms = List(2) {
+                    LodgingRoomOfferState(
+                        photos = emptyList(),
+                        description = "Room description",
+                        false,
+                        false,
+                        false,
+                        false,
+                        123.0,
+                        "",
+                        "Expedia",
+                    )
+                },
                 address = lodging.address,
                 latitude = 0.0,
                 longitude = 0.0,
