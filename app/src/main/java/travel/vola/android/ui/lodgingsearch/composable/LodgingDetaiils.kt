@@ -83,16 +83,16 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
-import com.vola.android.R
-import com.vola.android.common.ui.components.ImageGallery
-import com.vola.android.common.ui.components.Overlay
-import com.vola.android.common.ui.modifier.matchWidthToHeight
-import com.vola.android.common.ui.modifier.skeletonLoader
-import com.vola.android.common.ui.preview.PreviewLightDarkSystemUI
-import com.vola.android.extensions.Time
-import com.vola.android.ui.lodgingsearch.state.LodgingDetailsState
-import com.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
-import com.vola.android.ui.theme.AppTheme
+import travel.vola.android.R
+import travel.vola.android.common.ui.components.ImageGallery
+import travel.vola.android.common.ui.components.Overlay
+import travel.vola.android.common.ui.modifier.matchWidthToHeight
+import travel.vola.android.common.ui.modifier.skeletonLoader
+import travel.vola.android.common.ui.preview.PreviewLightDarkSystemUI
+import travel.vola.android.extensions.Time
+import travel.vola.android.ui.lodgingsearch.state.LodgingDetailsState
+import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
+import travel.vola.android.ui.theme.AppTheme
 import kotlin.math.roundToInt
 
 
@@ -168,7 +168,8 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                             ),
                             modifier = Modifier
                                 .weight(1F)
-                                .matchWidthToHeight().clickable {
+                                .matchWidthToHeight()
+                                .clickable {
                                     showImageGallery = true
                                     imageGalleryModels = state.photos
                                     selectedGalleryModel = state.photos[1]

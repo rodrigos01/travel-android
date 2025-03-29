@@ -1,10 +1,5 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import com.vola.android.extensions.get
-import com.vola.android.test.UnconfinedDispatcherTestRule
-import com.vola.android.ui.trip.creation.usecase.AddPlanItemStore
-import com.vola.android.ui.trip.creation.usecase.PendingData
-import com.vola.android.ui.trip.state.AddPlanItemState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.test.TestScope
@@ -13,6 +8,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+import travel.vola.android.extensions.get
+import travel.vola.android.test.UnconfinedDispatcherTestRule
+import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
+import travel.vola.android.ui.trip.creation.usecase.PendingData
+import travel.vola.android.ui.trip.state.AddPlanItemState
 
 class AddPlanItemStoreTest {
 

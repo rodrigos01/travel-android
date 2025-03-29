@@ -6,13 +6,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
-import com.vola.android.extensions.Time
-import com.vola.android.extensions.now
-import com.vola.android.model.data.Time
-import com.vola.android.ui.theme.AppTheme
-import com.vola.android.ui.trip.state.AddFlightItemState
-import com.vola.android.ui.trip.state.ManualAddPlanState
-import com.vola.android.ui.trip.state.ManualStartEndAddPlanState
+import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.now
+import travel.vola.android.model.data.Time
+import travel.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.trip.state.AddFlightItemState
+import travel.vola.android.ui.trip.state.ManualAddPlanState
+import travel.vola.android.ui.trip.state.ManualStartEndAddPlanState
 
 data class StartEndAddPlanListItemState(
     val startState: AddPlanRowState,

@@ -1,12 +1,12 @@
 package travel.vola.android.model.repository.mock
 
-import com.vola.android.model.data.Flight
-import com.vola.android.model.data.Lodging
-import com.vola.android.model.data.Trip
-import com.vola.android.model.firebase.toAppDataModel
-import com.vola.android.model.repository.TripRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import travel.vola.android.model.data.Flight
+import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.Trip
+import travel.vola.android.model.firebase.toAppDataModel
+import travel.vola.android.model.repository.TripRepository
 
 class MockTripRepository : TripRepository {
     override val trips: Flow<List<Trip>>

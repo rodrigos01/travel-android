@@ -25,10 +25,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.vola.android.ui.theme.AppTheme
-import com.vola.android.ui.trip.creation.composable.AddPlanType
-import com.vola.android.ui.trip.creation.composable.ConfirmationDialog
-import com.vola.android.ui.trip.creation.composable.TypeSelectorButton
+import travel.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.trip.creation.composable.AddPlanType
+import travel.vola.android.ui.trip.creation.composable.ConfirmationDialog
+import travel.vola.android.ui.trip.creation.composable.TypeSelectorButton
 
 @Composable
 fun AddPlanScaffold(

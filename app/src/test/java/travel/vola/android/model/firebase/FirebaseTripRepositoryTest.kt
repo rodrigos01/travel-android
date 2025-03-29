@@ -7,8 +7,6 @@ import com.google.firebase.firestore.EventListener
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.QuerySnapshot
-import com.vola.android.extensions.expectItem
-import com.vola.android.model.repository.mock.MockData
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Test
@@ -17,6 +15,8 @@ import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
+import travel.vola.android.extensions.expectItem
+import travel.vola.android.model.repository.mock.MockData
 
 class FirebaseTripRepositoryTest {
 

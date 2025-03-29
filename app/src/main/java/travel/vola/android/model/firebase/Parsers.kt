@@ -1,13 +1,13 @@
 package travel.vola.android.model.firebase
 
-import com.vola.android.extensions.Time
-import com.vola.android.model.data.Airport
-import com.vola.android.model.data.Flight
-import com.vola.android.model.data.FlightSegment
-import com.vola.android.model.data.Lodging
-import com.vola.android.model.data.Place
-import com.vola.android.model.data.Time
-import com.vola.android.model.data.Trip
+import travel.vola.android.extensions.Time
+import travel.vola.android.model.data.Airport
+import travel.vola.android.model.data.Flight
+import travel.vola.android.model.data.FlightSegment
+import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.Time
+import travel.vola.android.model.data.Trip
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

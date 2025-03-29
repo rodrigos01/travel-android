@@ -1,6 +1,7 @@
 package travel.vola.android.ui.triplist.composable
 
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
@@ -12,10 +13,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.vola.android.model.repository.mock.MockTripRepository
-import com.vola.android.ui.theme.AppTheme
-import com.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
-import com.vola.android.ui.triplist.TripListViewModel
+import travel.vola.android.model.repository.mock.MockTripRepository
+import travel.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
+import travel.vola.android.ui.triplist.TripListViewModel
 
 @Composable
 fun TripList(viewModel: TripListViewModel, navController: NavController) {

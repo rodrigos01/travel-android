@@ -9,12 +9,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.vola.android.extensions.Time
-import com.vola.android.model.data.Time
-import com.vola.android.ui.lodgingsearch.composable.LodgingSearchParams
-import com.vola.android.ui.theme.AppTheme
-import com.vola.android.ui.trip.creation.composable.AddPlanType
-import com.vola.android.ui.trip.state.SearchResultItemState
+import travel.vola.android.extensions.Time
+import travel.vola.android.model.data.Time
+import travel.vola.android.ui.lodgingsearch.composable.LodgingSearchParams
+import travel.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.trip.creation.composable.AddPlanType
+import travel.vola.android.ui.trip.state.SearchResultItemState
 
 @Composable
 fun LodgingSearchListItem(

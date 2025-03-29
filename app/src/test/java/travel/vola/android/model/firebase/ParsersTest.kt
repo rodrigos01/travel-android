@@ -1,8 +1,8 @@
 package travel.vola.android.model.firebase
 
-import com.vola.android.extensions.Time
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import travel.vola.android.extensions.Time
 
 class ParsersTest {
 

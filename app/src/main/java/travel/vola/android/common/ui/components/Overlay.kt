@@ -13,8 +13,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.vola.android.common.ui.preview.PreviewLightDarkSystemUI
-import com.vola.android.ui.theme.AppTheme
+import travel.vola.android.common.ui.preview.PreviewLightDarkSystemUI
+import travel.vola.android.ui.theme.AppTheme
 
 @Composable
 fun Overlay(content: @Composable () -> Unit) {

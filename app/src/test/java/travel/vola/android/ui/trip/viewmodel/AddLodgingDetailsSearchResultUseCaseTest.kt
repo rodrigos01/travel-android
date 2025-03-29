@@ -1,15 +1,5 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import com.vola.android.extensions.toMidnight
-import com.vola.android.model.data.Place
-import com.vola.android.model.data.SimplePlace
-import com.vola.android.model.data.Time
-import com.vola.android.model.repository.LodgingSearchRepository
-import com.vola.android.test.Mocks.mockTime
-import com.vola.android.test.UnconfinedDispatcherTestRule
-import com.vola.android.ui.trip.creation.usecase.AddPlanItemStore
-import com.vola.android.ui.trip.creation.usecase.PendingData.PendingLodging
-import com.vola.android.ui.trip.state.ManualAddLodgingItemState
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -24,6 +14,16 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
+import travel.vola.android.extensions.toMidnight
+import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.SimplePlace
+import travel.vola.android.model.data.Time
+import travel.vola.android.model.repository.LodgingSearchRepository
+import travel.vola.android.test.Mocks.mockTime
+import travel.vola.android.test.UnconfinedDispatcherTestRule
+import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
+import travel.vola.android.ui.trip.creation.usecase.PendingData.PendingLodging
+import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import java.util.concurrent.TimeUnit
 
 class AddLodgingDetailsSearchResultUseCaseTest {

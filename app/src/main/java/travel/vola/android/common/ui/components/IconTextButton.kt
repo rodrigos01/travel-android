@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.theme.AppTheme
 
 @Composable
 fun IconTextButton(

@@ -1,6 +1,6 @@
 package travel.vola.android.extensions
 
-import com.vola.android.model.data.Time
+import travel.vola.android.model.data.Time
 import java.text.DateFormat
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat

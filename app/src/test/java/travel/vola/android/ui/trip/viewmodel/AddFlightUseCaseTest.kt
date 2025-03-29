@@ -1,17 +1,5 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import com.vola.android.extensions.Time
-import com.vola.android.extensions.TimeFormatter
-import com.vola.android.extensions.set
-import com.vola.android.model.data.Airport
-import com.vola.android.model.data.Time
-import com.vola.android.model.repository.AddFlightRepository
-import com.vola.android.test.Captor
-import com.vola.android.test.Mocks.mockTime
-import com.vola.android.test.UnconfinedDispatcherTestRule
-import com.vola.android.ui.trip.creation.usecase.AddPlanItemStore
-import com.vola.android.ui.trip.creation.usecase.PendingData.PendingFlight
-import com.vola.android.ui.trip.state.AddFlightItemState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -25,6 +13,18 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
+import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.TimeFormatter
+import travel.vola.android.extensions.set
+import travel.vola.android.model.data.Airport
+import travel.vola.android.model.data.Time
+import travel.vola.android.model.repository.AddFlightRepository
+import travel.vola.android.test.Captor
+import travel.vola.android.test.Mocks.mockTime
+import travel.vola.android.test.UnconfinedDispatcherTestRule
+import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
+import travel.vola.android.ui.trip.creation.usecase.PendingData.PendingFlight
+import travel.vola.android.ui.trip.state.AddFlightItemState
 import java.util.TimeZone
 
 class AddFlightUseCaseTest {

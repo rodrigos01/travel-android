@@ -1,15 +1,15 @@
 package travel.vola.android.model.repository
 
-import com.vola.android.extensions.asISO8601DateString
-import com.vola.android.model.data.LodgingSearchResult
-import com.vola.android.model.data.Place
-import com.vola.android.model.data.SimplePlace
-import com.vola.android.model.data.Time
-import com.vola.android.model.network.ApiData
-import com.vola.android.model.network.ApiResponse
-import com.vola.android.model.network.request
-import com.vola.android.model.network.toAppDataModel
 import io.ktor.http.appendPathSegments
+import travel.vola.android.extensions.asISO8601DateString
+import travel.vola.android.model.data.LodgingSearchResult
+import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.SimplePlace
+import travel.vola.android.model.data.Time
+import travel.vola.android.model.network.ApiData
+import travel.vola.android.model.network.ApiResponse
+import travel.vola.android.model.network.request
+import travel.vola.android.model.network.toAppDataModel
 import java.util.Currency
 import java.util.Locale
 

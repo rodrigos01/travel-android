@@ -1,6 +1,6 @@
 package travel.vola.android.ui.lodgingsearch.state
 
-import com.vola.android.model.data.Time
+import travel.vola.android.model.data.Time
 
 data class LodgingSearchResultState(
     val id: String,

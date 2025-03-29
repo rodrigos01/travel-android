@@ -1,21 +1,21 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import com.vola.android.common.coroutines.MutexScope
-import com.vola.android.extensions.MapFlow
-import com.vola.android.extensions.plus
-import com.vola.android.extensions.toMidnight
-import com.vola.android.model.PlaceRepository
-import com.vola.android.model.data.Lodging
-import com.vola.android.model.data.Time
-import com.vola.android.model.repository.LodgingSearchRepository
-import com.vola.android.ui.lodgingsearch.composable.LodgingSearchDestination
-import com.vola.android.ui.trip.creation.usecase.AddPlanItemStore
-import com.vola.android.ui.trip.creation.usecase.LodgingSearchItemActionHandler
-import com.vola.android.ui.trip.creation.usecase.PendingData
-import com.vola.android.ui.trip.state.LodgingSearchItemState
-import com.vola.android.ui.trip.state.SearchResultItemState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import travel.vola.android.common.coroutines.MutexScope
+import travel.vola.android.extensions.MapFlow
+import travel.vola.android.extensions.plus
+import travel.vola.android.extensions.toMidnight
+import travel.vola.android.model.PlaceRepository
+import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.Time
+import travel.vola.android.model.repository.LodgingSearchRepository
+import travel.vola.android.ui.lodgingsearch.composable.LodgingSearchDestination
+import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
+import travel.vola.android.ui.trip.creation.usecase.LodgingSearchItemActionHandler
+import travel.vola.android.ui.trip.creation.usecase.PendingData
+import travel.vola.android.ui.trip.state.LodgingSearchItemState
+import travel.vola.android.ui.trip.state.SearchResultItemState
 import kotlin.time.Duration.Companion.days
 
 interface LodgingSearchParamsFactory {

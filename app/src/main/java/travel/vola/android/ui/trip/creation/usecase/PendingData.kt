@@ -1,9 +1,9 @@
 package travel.vola.android.ui.trip.creation.usecase
 
-import com.vola.android.model.data.Airport
-import com.vola.android.model.data.Place
-import com.vola.android.model.data.SimplePlace
-import com.vola.android.model.data.Time
+import travel.vola.android.model.data.Airport
+import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.SimplePlace
+import travel.vola.android.model.data.Time
 
 sealed interface PendingData {
     val id: String

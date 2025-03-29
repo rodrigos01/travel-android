@@ -2,28 +2,6 @@
 
 package travel.vola.android.ui.trip.viewmodel
 
-import com.vola.android.extensions.Time
-import com.vola.android.extensions.TimeFormatter
-import com.vola.android.model.data.Airport
-import com.vola.android.model.data.Flight
-import com.vola.android.model.data.FlightSegment
-import com.vola.android.model.data.Lodging
-import com.vola.android.model.data.Place
-import com.vola.android.model.data.Time
-import com.vola.android.model.data.Trip
-import com.vola.android.model.repository.TripRepository
-import com.vola.android.test.UnconfinedDispatcherTestRule
-import com.vola.android.ui.trip.state.AddFlightItemState
-import com.vola.android.ui.trip.state.AddPlanItemState
-import com.vola.android.ui.trip.state.TripItemState
-import com.vola.android.ui.trip.state.TripItemState.DateRangeItemState
-import com.vola.android.ui.trip.state.TripItemState.EmptyDateItemState
-import com.vola.android.ui.trip.state.TripItemState.FlightArrivalItemState
-import com.vola.android.ui.trip.state.TripItemState.FlightDepartureItemState
-import com.vola.android.ui.trip.state.TripItemState.HotelCheckInItemState
-import com.vola.android.ui.trip.state.TripItemState.HotelCheckOutItemState
-import com.vola.android.ui.trip.state.TripItemState.MonthItemState
-import com.vola.android.ui.trip.state.TripItemState.PlaceItemState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -36,6 +14,28 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
+import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.TimeFormatter
+import travel.vola.android.model.data.Airport
+import travel.vola.android.model.data.Flight
+import travel.vola.android.model.data.FlightSegment
+import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.Time
+import travel.vola.android.model.data.Trip
+import travel.vola.android.model.repository.TripRepository
+import travel.vola.android.test.UnconfinedDispatcherTestRule
+import travel.vola.android.ui.trip.state.AddFlightItemState
+import travel.vola.android.ui.trip.state.AddPlanItemState
+import travel.vola.android.ui.trip.state.TripItemState
+import travel.vola.android.ui.trip.state.TripItemState.DateRangeItemState
+import travel.vola.android.ui.trip.state.TripItemState.EmptyDateItemState
+import travel.vola.android.ui.trip.state.TripItemState.FlightArrivalItemState
+import travel.vola.android.ui.trip.state.TripItemState.FlightDepartureItemState
+import travel.vola.android.ui.trip.state.TripItemState.HotelCheckInItemState
+import travel.vola.android.ui.trip.state.TripItemState.HotelCheckOutItemState
+import travel.vola.android.ui.trip.state.TripItemState.MonthItemState
+import travel.vola.android.ui.trip.state.TripItemState.PlaceItemState
 import java.util.TimeZone
 import kotlin.contracts.ExperimentalContracts
 

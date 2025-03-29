@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -61,20 +62,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
-import com.vola.android.R
-import com.vola.android.common.ui.components.TabbedHost
-import com.vola.android.common.ui.components.TabbedHostScope
-import com.vola.android.common.ui.modifier.skeletonLoader
-import com.vola.android.common.ui.preview.PreviewLightDarkSystemUI
-import com.vola.android.extensions.Time
-import com.vola.android.ui.lodgingsearch.state.LodgingDetailsState
-import com.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
-import com.vola.android.ui.lodgingsearch.state.LodgingSearchResultState
-import com.vola.android.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
-import com.vola.android.ui.theme.AppTheme
-import com.vola.android.ui.trip.creation.composable.ConfirmationDialog
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import travel.vola.android.R
+import travel.vola.android.common.ui.components.TabbedHost
+import travel.vola.android.common.ui.components.TabbedHostScope
+import travel.vola.android.common.ui.modifier.skeletonLoader
+import travel.vola.android.common.ui.preview.PreviewLightDarkSystemUI
+import travel.vola.android.extensions.Time
+import travel.vola.android.ui.lodgingsearch.state.LodgingDetailsState
+import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
+import travel.vola.android.ui.lodgingsearch.state.LodgingSearchResultState
+import travel.vola.android.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
+import travel.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.trip.creation.composable.ConfirmationDialog
 import java.text.NumberFormat
 
 @Composable

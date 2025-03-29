@@ -27,7 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.vola.android.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
+import travel.vola.android.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
 import java.text.NumberFormat
 import kotlin.math.roundToInt
 

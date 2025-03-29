@@ -11,18 +11,18 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.toRoute
-import com.vola.android.di.ServiceLocator
-import com.vola.android.extensions.viewModel
-import com.vola.android.model.repository.LodgingSearchRepository
-import com.vola.android.ui.lodgingsearch.composable.LodgingSearch
-import com.vola.android.ui.lodgingsearch.composable.LodgingSearchDestination
-import com.vola.android.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
-import com.vola.android.ui.theme.AppTheme
-import com.vola.android.ui.trip.eventlist.composable.TripDetails
-import com.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
-import com.vola.android.ui.triplist.TripListViewModel
-import com.vola.android.ui.triplist.composable.TripList
-import com.vola.android.ui.triplist.composable.TripListDestination
+import travel.vola.android.di.ServiceLocator
+import travel.vola.android.extensions.viewModel
+import travel.vola.android.model.repository.LodgingSearchRepository
+import travel.vola.android.ui.lodgingsearch.composable.LodgingSearch
+import travel.vola.android.ui.lodgingsearch.composable.LodgingSearchDestination
+import travel.vola.android.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
+import travel.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.trip.eventlist.composable.TripDetails
+import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
+import travel.vola.android.ui.triplist.TripListViewModel
+import travel.vola.android.ui.triplist.composable.TripList
+import travel.vola.android.ui.triplist.composable.TripListDestination
 
 @ExperimentalMaterial3Api
 class MainActivity : AppCompatActivity() {

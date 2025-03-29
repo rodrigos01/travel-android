@@ -1,19 +1,19 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import com.vola.android.extensions.MapStateFlow
-import com.vola.android.extensions.get
-import com.vola.android.extensions.mergeMaps
-import com.vola.android.model.PlaceRepository
-import com.vola.android.model.data.Lodging
-import com.vola.android.model.data.Time
-import com.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandler
-import com.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandlerBase
-import com.vola.android.ui.trip.state.AddLodgingItemState
-import com.vola.android.ui.trip.state.LodgingSearchItemState
-import com.vola.android.ui.trip.state.ManualAddLodgingItemState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import travel.vola.android.extensions.MapStateFlow
+import travel.vola.android.extensions.get
+import travel.vola.android.extensions.mergeMaps
+import travel.vola.android.model.PlaceRepository
+import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.Time
+import travel.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandler
+import travel.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandlerBase
+import travel.vola.android.ui.trip.state.AddLodgingItemState
+import travel.vola.android.ui.trip.state.LodgingSearchItemState
+import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 
 class AddLodgingUseCase(
     placeRepository: PlaceRepository,

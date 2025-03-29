@@ -2,19 +2,6 @@ package travel.vola.android.ui.lodgingsearch.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vola.android.extensions.MutableMapStateFlow
-import com.vola.android.extensions.get
-import com.vola.android.extensions.remove
-import com.vola.android.extensions.set
-import com.vola.android.model.PlaceRepository
-import com.vola.android.model.data.Lodging
-import com.vola.android.model.data.LodgingSearchResult
-import com.vola.android.model.data.Time
-import com.vola.android.model.repository.LodgingSearchRepository
-import com.vola.android.model.repository.TripRepository
-import com.vola.android.ui.lodgingsearch.state.LodgingDetailsState
-import com.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
-import com.vola.android.ui.lodgingsearch.state.LodgingSearchResultState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -22,6 +9,19 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import travel.vola.android.extensions.MutableMapStateFlow
+import travel.vola.android.extensions.get
+import travel.vola.android.extensions.remove
+import travel.vola.android.extensions.set
+import travel.vola.android.model.PlaceRepository
+import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.LodgingSearchResult
+import travel.vola.android.model.data.Time
+import travel.vola.android.model.repository.LodgingSearchRepository
+import travel.vola.android.model.repository.TripRepository
+import travel.vola.android.ui.lodgingsearch.state.LodgingDetailsState
+import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
+import travel.vola.android.ui.lodgingsearch.state.LodgingSearchResultState
 import java.util.TimeZone
 
 class LodgingSearchViewModel(

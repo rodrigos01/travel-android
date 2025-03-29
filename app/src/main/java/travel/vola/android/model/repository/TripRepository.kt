@@ -1,9 +1,9 @@
 package travel.vola.android.model.repository
 
-import com.vola.android.model.data.Flight
-import com.vola.android.model.data.Lodging
-import com.vola.android.model.data.Trip
 import kotlinx.coroutines.flow.Flow
+import travel.vola.android.model.data.Flight
+import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.Trip
 
 interface TripRepository {
     val trips: Flow<List<Trip>>

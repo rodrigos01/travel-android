@@ -17,7 +17,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.theme.AppTheme
 
 @Composable
 fun Modifier.skeletonLoader(

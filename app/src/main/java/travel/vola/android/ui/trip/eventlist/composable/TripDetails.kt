@@ -5,6 +5,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -36,21 +37,21 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.vola.android.model.PlaceRepository
-import com.vola.android.model.data.Identifiable
-import com.vola.android.model.repository.mock.MockTripRepository
-import com.vola.android.ui.theme.AppTheme
-import com.vola.android.ui.trip.creation.composable.ConfirmationDialog
-import com.vola.android.ui.trip.state.AddPlanItemState
-import com.vola.android.ui.trip.state.TripItemState
-import com.vola.android.ui.trip.state.TripItemState.DateRangeItemState
-import com.vola.android.ui.trip.state.TripItemState.EmptyDateItemState
-import com.vola.android.ui.trip.state.TripItemState.FlightArrivalItemState
-import com.vola.android.ui.trip.state.TripItemState.FlightDepartureItemState
-import com.vola.android.ui.trip.state.TripItemState.HotelCheckInItemState
-import com.vola.android.ui.trip.state.TripItemState.HotelCheckOutItemState
-import com.vola.android.ui.trip.state.TripItemState.MonthItemState
-import com.vola.android.ui.trip.state.TripItemState.PlaceItemState
+import travel.vola.android.model.PlaceRepository
+import travel.vola.android.model.data.Identifiable
+import travel.vola.android.model.repository.mock.MockTripRepository
+import travel.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.trip.creation.composable.ConfirmationDialog
+import travel.vola.android.ui.trip.state.AddPlanItemState
+import travel.vola.android.ui.trip.state.TripItemState
+import travel.vola.android.ui.trip.state.TripItemState.DateRangeItemState
+import travel.vola.android.ui.trip.state.TripItemState.EmptyDateItemState
+import travel.vola.android.ui.trip.state.TripItemState.FlightArrivalItemState
+import travel.vola.android.ui.trip.state.TripItemState.FlightDepartureItemState
+import travel.vola.android.ui.trip.state.TripItemState.HotelCheckInItemState
+import travel.vola.android.ui.trip.state.TripItemState.HotelCheckOutItemState
+import travel.vola.android.ui.trip.state.TripItemState.MonthItemState
+import travel.vola.android.ui.trip.state.TripItemState.PlaceItemState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

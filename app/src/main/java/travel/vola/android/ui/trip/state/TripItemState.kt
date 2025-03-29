@@ -1,7 +1,7 @@
 package travel.vola.android.ui.trip.state
 
-import com.vola.android.model.data.Identifiable
-import com.vola.android.model.data.Time
+import travel.vola.android.model.data.Identifiable
+import travel.vola.android.model.data.Time
 
 sealed interface TripItemState {
 
