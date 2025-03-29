@@ -55,10 +55,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -83,14 +85,18 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import kotlinx.coroutines.launch
 import travel.vola.android.R
+import travel.vola.android.common.ui.components.CollapsableText
 import travel.vola.android.common.ui.components.ImageGallery
 import travel.vola.android.common.ui.components.Overlay
 import travel.vola.android.common.ui.modifier.matchWidthToHeight
 import travel.vola.android.common.ui.modifier.skeletonLoader
 import travel.vola.android.common.ui.preview.PreviewLightDarkSystemUI
+import travel.vola.android.common.ui.preview.loremIpsum
 import travel.vola.android.extensions.Time
 import travel.vola.android.ui.lodgingsearch.state.LodgingDetailsState
+import travel.vola.android.ui.lodgingsearch.state.LodgingReviewState
 import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
 import travel.vola.android.ui.theme.AppTheme
 import kotlin.math.roundToInt
@@ -104,6 +110,12 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
     var selectedGalleryModel by remember(state) { mutableStateOf<String?>(null) }
     var showExpandedMap by remember(state) { mutableStateOf(false) }
     val marker = LatLng(state.latitude, state.longitude)
+    val scrollState = rememberScrollState()
+    var reviewsOffset by remember { mutableStateOf<Offset?>(null) }
+
+    val coroutineScope = rememberCoroutineScope()
+
+    val context = LocalContext.current
     Scaffold(topBar = {
         Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
             TopAppBar(title = {
@@ -119,7 +131,13 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                 modifier = Modifier.padding(all = 16.dp)
             ) {
                 LodgingRating(state.rating)
-                Text(state.reviewCount.reviewCountString())
+                Text(state.reviewCount.reviewCountString(), modifier = Modifier.clickable {
+                    reviewsOffset?.y?.let {
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(it.roundToInt())
+                        }
+                    }
+                }.padding(vertical = 8.dp))
                 Spacer(modifier = Modifier.weight(1f))
                 Text(state.lodgingType)
             }
@@ -128,7 +146,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
         Column(
             verticalArrangement = spacedBy(8.dp),
             modifier = Modifier
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp)
                 .padding(
                     top = paddingValues.calculateTopPadding() + 16.dp,
@@ -303,7 +321,6 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                                     modifier = Modifier.width(112.dp)
                                 ) {
                                     PriceText(room.price)
-                                    val context = LocalContext.current
                                     TextButton(onClick = {
                                         context.startActivity(
                                             Intent(
@@ -339,10 +356,10 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                 var hasMoreText by remember { mutableStateOf(false) }
                 Text(
                     description,
-                    maxLines = if (expanded) Int.MAX_VALUE else 5,
+                    maxLines = if (expanded) Int.MAX_VALUE else 6,
                     overflow = TextOverflow.Ellipsis,
                     onTextLayout = {
-                        if (!hasMoreText && it.lineCount > 5) {
+                        if (!hasMoreText && it.lineCount > 6) {
                             hasMoreText = true
                             expanded = false
                         }
@@ -414,6 +431,31 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                             showExpandedMap = true
                         }, modifier = Modifier.fillMaxSize()) {}
                     }
+                }
+            }
+            if (state.reviews.isNotEmpty()) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.onGloballyPositioned {
+                    reviewsOffset = it.positionInParent()
+                }) {
+                    Text("Reviews", style = MaterialTheme.typography.titleLarge)
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(onClick = {
+                        context.startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse(state.reviewsUrl),
+                            )
+                        )
+                    }) {
+                        ButtonContent(
+                            iconResId = R.drawable.open_in_new_outline_24,
+                            iconContentDescription = "Open reviews button icon",
+                            text = "View all on ${state.reviewsSource}"
+                        )
+                    }
+                }
+                state.reviews.forEach { review ->
+                    LodgingReviewItem(review)
                 }
             }
         }
@@ -560,7 +602,7 @@ fun LodgingDetailsPreview() {
         checkOut = Time("2025-08-15T00:00 -0500"),
         price = 123.4,
         rooms = emptyList(),
-        description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        description = loremIpsum(),
         address = "123 Street, City, 1234",
         latitude = 0.0,
         longitude = 0.0,
@@ -583,6 +625,21 @@ fun LodgingDetailsPreview() {
         },
         latitude = 37.56521,
         longitude = 126.98073,
+        reviewsUrl = "",
+        reviewsSource = "Tripadvisor",
+        reviews = List(5) {
+            LodgingReviewState(
+                rating = 4.5,
+                ratingImageUrl = "",
+                tripDate = Time("2023-08-15T00:00 GMT"),
+                reviewTime = Time("2023-08-31T10:52 GMT"),
+                authorAvatarUrl = null,
+                authorName = "Author",
+                authorLocation = "Author Location",
+                title = "A lovely stay",
+                review = loremIpsum(),
+            )
+        },
         isLoading = false,
     )
     AppTheme {

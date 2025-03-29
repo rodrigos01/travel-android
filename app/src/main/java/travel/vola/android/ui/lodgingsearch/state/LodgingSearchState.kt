@@ -29,6 +29,9 @@ data class LodgingDetailsState(
     val address: String,
     val latitude: Double,
     val longitude: Double,
+    val reviewsUrl: String? = null,
+    val reviewsSource: String? = null,
+    val reviews: List<LodgingReviewState> = emptyList(),
     val isLoading: Boolean,
 )
 
@@ -42,4 +45,16 @@ data class LodgingRoomOfferState(
     val price: Double,
     val bookingUrl: String,
     val bookingAgency: String,
+)
+
+data class LodgingReviewState(
+    val reviewTime: Time,
+    val tripDate: Time,
+    val rating: Double,
+    val ratingImageUrl: String,
+    val authorAvatarUrl: String?,
+    val authorName: String,
+    val authorLocation: String,
+    val title: String,
+    val review: String,
 )

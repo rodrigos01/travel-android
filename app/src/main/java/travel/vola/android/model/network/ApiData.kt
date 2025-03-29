@@ -84,6 +84,9 @@ interface ApiData {
         val photos: List<String>,
         val rooms: List<LodgingOffer>,
         val description: String?,
+        val reviewsUrl: String,
+        val reviewsSource: String,
+        val reviews: List<LodgingReview>,
     )
 
     @Serializable
@@ -103,5 +106,18 @@ interface ApiData {
         val refundable: Boolean,
         val prePayment: Boolean,
         val allInclusive: Boolean,
+    )
+
+    @Serializable
+    data class LodgingReview(
+        val rating: Double,
+        val ratingImageUrl: String,
+        val reviewTime: String,
+        val travelDate: String,
+        val avatarUrl: String?,
+        val userName: String,
+        val userLocation: String,
+        val title: String,
+        val text: String,
     )
 }
