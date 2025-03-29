@@ -3,7 +3,7 @@
     "project_number": "898859757403",
     "firebase_url": "https://travel-164715.firebaseio.com",
     "project_id": "travel-164715",
-    "storage_bucket": "travel-164715.appspot.com"
+    "storage_bucket": "travel-164715.firebasestorage.app"
   },
   "client": [
     {
@@ -37,24 +37,46 @@
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCrQExxJAk6lwTNLqJ8rkO2MXmIOGPB47U"
+          "current_key": "AIzaSyB7Ghuggf5bZMP9SDUQJUwZpchREZ1DZk0"
         }
       ],
       "services": {
-        "analytics_service": {
-          "status": 1
-        },
         "appinvite_service": {
-          "status": 2,
           "other_platform_oauth_client": [
             {
-              "client_id": "898859757403-nkopqu5a189mjmlnqh1gtd9a1d4a9hmv.apps.googleusercontent.com",
+              "client_id": "898859757403-cn3t1reiacdteihqo07grlc1hb3p9ri5.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
-        },
-        "ads_service": {
-          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:898859757403:android:c842b1b764b705edd4747e",
+        "android_client_info": {
+          "package_name": "travel.vola.android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "898859757403-nkopqu5a189mjmlnqh1gtd9a1d4a9hmv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7Ghuggf5bZMP9SDUQJUwZpchREZ1DZk0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "898859757403-cn3t1reiacdteihqo07grlc1hb3p9ri5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
