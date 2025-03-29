@@ -1,0 +1,73 @@
+package travel.vola.android.ui.trip.eventlist.composable
+
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.now
+import travel.vola.android.model.data.Time
+import travel.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.trip.state.AddFlightItemState
+import travel.vola.android.ui.trip.state.ManualAddPlanState
+import travel.vola.android.ui.trip.state.ManualStartEndAddPlanState
+
+@Composable
+fun AddFlightListItem(
+    uiState: ManualStartEndAddPlanState,
+    startEndAddPlanState: StartEndAddPlanListItemState,
+    onAirportFromTextChanged: (CharSequence) -> Unit,
+    onAirportToTextChanged: (CharSequence) -> Unit,
+) {
+    StartEndAddPlanListItem(
+        uiState = uiState,
+        state = startEndAddPlanState,
+        startTitle = { Text("Departure") },
+        startTimeSelectorLabel = "Choose Departure Time",
+        startLabelText = "from",
+        startPlaceHolder = "Enter City or Airport",
+        onStartTextChanged = onAirportFromTextChanged,
+        endTitle = { Text("Arrival") },
+        endTimeSelectorLabel = "Choose Arrival Time",
+        endLabelText = "to",
+        endPlaceHolder = "Enter City or Airport",
+        onEndTextChanged = onAirportToTextChanged,
+    )
+}
+
+@Composable
+@Preview
+fun AddFlightListItemPreview() {
+    AppTheme {
+        Surface {
+            AddFlightListItem(
+                uiState = AddFlightItemState(
+                    "", Time.now(),
+                    typeSelectionEnabled = false,
+                    startState = ManualAddPlanState(
+                        time = Time("2025-06-12T05:00 -0300"),
+                        minTime = Time.now(),
+                        dateSelectionEnabled = false,
+                        locationText = null,
+                        searchResults = emptyList()
+                    ),
+                    endState = ManualAddPlanState(
+                        time = Time("2025-06-12T05:00 -0300"),
+                        minTime = Time.now(),
+                        dateSelectionEnabled = true,
+                        locationText = "Somewhere",
+                        searchResults = emptyList()
+                    ),
+                    deleteButtonEnabled = true,
+                    saveButtonEnabled = true,
+                ),
+                startEndAddPlanState = rememberStartEndAddPlanListItemState(
+                    rememberAddPlanRowState(),
+                    rememberAddPlanRowState()
+                ),
+                onAirportFromTextChanged = {},
+                onAirportToTextChanged = {},
+            )
+        }
+    }
+}
