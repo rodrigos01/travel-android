@@ -14,11 +14,11 @@ val composeVersion = "1.7.7"
 val navigationVersion = "2.8.6"
 
 android {
-    namespace = "com.combah.travel2"
+    namespace = "travel.vola.android"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.combah.travel2"
+        applicationId = "travel.vola.android"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
