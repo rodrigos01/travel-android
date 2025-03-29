@@ -390,8 +390,10 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                         )
                     }
                 }
-                state.reviews.forEach { review ->
-                    LodgingReviewItem(review)
+                Column(verticalArrangement = spacedBy(24.dp)) {
+                    state.reviews.forEach { review ->
+                        LodgingReviewItem(review)
+                    }
                 }
             }
             if (state.rooms.size > 1) {
@@ -546,14 +548,14 @@ fun LodgingDetailsPreview() {
         reviews = List(5) {
             LodgingReviewState(
                 rating = 4.5,
-                ratingImageUrl = "",
+                ratingImageUrl = "https://www.tripadvisor.com/img/cdsi/img2/ratings/traveler/s5.0-66827-5.svg",
                 tripDate = Time("2023-08-15T00:00 GMT"),
                 reviewTime = Time("2023-08-31T10:52 GMT"),
-                authorAvatarUrl = null,
+                authorAvatarUrl = "https://media-cdn.tripadvisor.com/media/photo-l/1a/f6/e4/2d/default-avatar-2020-48.jpg",
                 authorName = "Author",
                 authorLocation = "Author Location",
-                title = "A lovely stay",
                 review = loremIpsum(),
+                title = "A Lovely stay"
             )
         },
         isLoading = false,
