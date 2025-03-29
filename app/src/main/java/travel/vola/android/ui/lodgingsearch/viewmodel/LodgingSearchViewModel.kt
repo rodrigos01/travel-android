@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import travel.vola.android.extensions.MutableMapStateFlow
+import travel.vola.android.extensions.Time
 import travel.vola.android.extensions.get
 import travel.vola.android.extensions.remove
 import travel.vola.android.extensions.set
@@ -20,6 +21,7 @@ import travel.vola.android.model.data.Time
 import travel.vola.android.model.repository.LodgingSearchRepository
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.lodgingsearch.state.LodgingDetailsState
+import travel.vola.android.ui.lodgingsearch.state.LodgingReviewState
 import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
 import travel.vola.android.ui.lodgingsearch.state.LodgingSearchResultState
 import java.util.TimeZone
@@ -218,6 +220,21 @@ class LodgingSearchViewModel(
                     )
                 },
                 description = lodging.description,
+                reviewsSource = lodging.reviewsSource,
+                reviewsUrl = lodging.reviewsUrl,
+                reviews = lodging.reviews.map {
+                    LodgingReviewState(
+                        rating = it.rating,
+                        ratingImageUrl = it.ratingImageUrl,
+                        reviewTime = Time(it.reviewTime),
+                        tripDate = Time(it.travelDate),
+                        authorAvatarUrl = it.avatarUrl,
+                        authorName = it.userName,
+                        authorLocation = it.userLocation,
+                        title = it.title,
+                        review = it.text,
+                    )
+                },
                 isLoading = false,
             )
         }
