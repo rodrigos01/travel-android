@@ -31,6 +31,6 @@
 # This rule will properly ProGuard all the model classes in
 # the package com.yourcompany.models.
 # Modify this rule to fit the structure of your app.
--keepclassmembers class com.combah.travel2.model.firebase.** {
+-keepclassmembers class com.vola.android.model.firebase.** {
   *;
 }
