@@ -444,6 +444,8 @@ fun LodgingSearchPreview() {
                 rating = index * 1.2,
                 lodgingType = "Hotel",
                 price = index * 12.4,
+                latitude = 0.0,
+                longitude = 0.0,
             )
         }
         val details = results.take(5).associate { lodging ->
@@ -470,6 +472,7 @@ fun LodgingSearchPreview() {
                     )
                 },
                 address = lodging.address,
+                description = null,
                 latitude = 0.0,
                 longitude = 0.0,
                 isLoading = false,

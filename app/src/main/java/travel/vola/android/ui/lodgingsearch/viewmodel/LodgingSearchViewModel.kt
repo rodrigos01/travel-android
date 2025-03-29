@@ -130,6 +130,8 @@ class LodgingSearchViewModel(
                             rating = it.rating,
                             lodgingType = "${it.stars}-star hotel",
                             price = it.price,
+                            latitude = it.latitude,
+                            longitude = it.longitude,
                         )
                     }.toList(),
                 openedResults = openedResults,
@@ -181,15 +183,20 @@ class LodgingSearchViewModel(
             checkOut = state.searchState.checkOut,
             price = existingState.price,
             rooms = emptyList(),
+            description = null,
             address = existingState.address,
-            latitude = 0.0,
-            longitude = 0.0,
+            latitude = existingState.latitude,
+            longitude = existingState.longitude,
             isLoading = true,
         )
         openedResultsState[lodgingId] = initialState
         viewModelScope.launch {
             val lodging = repository.details(
-                lodgingId, searchParamsState.value.checkIn, searchParamsState.value.checkOut
+                lodgingId,
+                searchParamsState.value.checkIn,
+                searchParamsState.value.checkOut,
+                latitude = initialState.latitude,
+                initialState.longitude
             ) ?: return@launch
             openedResultsState[lodgingId] = initialState.copy(
                 photos = initialState.photos + lodging.photos.subList(1, lodging.photos.size),
@@ -209,6 +216,7 @@ class LodgingSearchViewModel(
                         bookingAgency = offer.bookingAgency,
                     )
                 },
+                description = lodging.description,
                 isLoading = false,
             )
         }

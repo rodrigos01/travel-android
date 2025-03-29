@@ -10,6 +10,8 @@ data class LodgingSearchResultState(
     val rating: Double,
     val lodgingType: String,
     val price: Double,
+    val latitude: Double,
+    val longitude: Double,
 )
 
 data class LodgingDetailsState(
@@ -22,6 +24,7 @@ data class LodgingDetailsState(
     val checkOut: Time,
     val price: Double,
     val rooms: List<LodgingRoomOfferState>,
+    val description: String?,
     val address: String,
     val latitude: Double,
     val longitude: Double,
