@@ -116,7 +116,7 @@ interface ApiData {
         val travelDate: String,
         val avatarUrl: String?,
         val userName: String,
-        val userLocation: String,
+        val userLocation: String?,
         val title: String,
         val text: String,
     )

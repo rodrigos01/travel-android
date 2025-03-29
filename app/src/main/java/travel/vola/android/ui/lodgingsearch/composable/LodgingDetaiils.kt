@@ -2,7 +2,6 @@ package travel.vola.android.ui.lodgingsearch.composable
 
 import android.content.Intent
 import android.net.Uri
-import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -24,8 +23,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.rememberScrollState
@@ -34,7 +31,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -64,15 +60,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -87,7 +79,6 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import kotlinx.coroutines.launch
 import travel.vola.android.R
-import travel.vola.android.common.ui.components.CollapsableText
 import travel.vola.android.common.ui.components.ImageGallery
 import travel.vola.android.common.ui.components.Overlay
 import travel.vola.android.common.ui.modifier.matchWidthToHeight
@@ -108,10 +99,17 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
     var showImageGallery by remember(state) { mutableStateOf(false) }
     var imageGalleryModels by remember(state) { mutableStateOf(emptyList<String>()) }
     var selectedGalleryModel by remember(state) { mutableStateOf<String?>(null) }
+    fun onRoomCoverImageTapped(state: LodgingRoomOfferState, url: String) {
+        imageGalleryModels = state.photos
+        selectedGalleryModel = url
+        showImageGallery = true
+    }
+
     var showExpandedMap by remember(state) { mutableStateOf(false) }
     val marker = LatLng(state.latitude, state.longitude)
     val scrollState = rememberScrollState()
     var reviewsOffset by remember { mutableStateOf<Offset?>(null) }
+    var roomsOffset by remember { mutableStateOf<Offset?>(null) }
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -131,13 +129,15 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                 modifier = Modifier.padding(all = 16.dp)
             ) {
                 LodgingRating(state.rating)
-                Text(state.reviewCount.reviewCountString(), modifier = Modifier.clickable {
-                    reviewsOffset?.y?.let {
-                        coroutineScope.launch {
-                            scrollState.animateScrollTo(it.roundToInt())
+                Text(state.reviewCount.reviewCountString(), modifier = Modifier
+                    .clickable {
+                        reviewsOffset?.y?.let {
+                            coroutineScope.launch {
+                                scrollState.animateScrollTo(it.roundToInt())
+                            }
                         }
                     }
-                }.padding(vertical = 8.dp))
+                    .padding(vertical = 8.dp))
                 Spacer(modifier = Modifier.weight(1f))
                 Text(state.lodgingType)
             }
@@ -251,102 +251,36 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                             .clip(MaterialTheme.shapes.large)
                             .skeletonLoader()
                     )
-                } else {
-                    Column(modifier = Modifier.animateContentSize()) {
-                        var expandRooms by remember { mutableStateOf(false) }
-                        val rooms = if (expandRooms) state.rooms else state.rooms.take(1)
-                        rooms.forEach { room ->
-                            Row(
-                                horizontalArrangement = spacedBy(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                val roomCoverPhoto = room.photos.firstOrNull()
-                                if (roomCoverPhoto != null) {
-                                    LodgingImage(
-                                        rememberAsyncImagePainter(
-                                            model = roomCoverPhoto,
-                                            contentScale = ContentScale.Crop
-                                        ),
-                                        modifier = Modifier
-                                            .size(64.dp)
-                                            .clickable {
-                                                imageGalleryModels = room.photos
-                                                selectedGalleryModel = roomCoverPhoto
-                                                showImageGallery = true
-                                            },
-                                    )
-                                } else {
-                                    LodgingImage(
-                                        painterResource(R.drawable.ic_hotel_black_24dp),
-                                        contentScale = ContentScale.None,
-                                        colorFilter = ColorFilter.tint(
-                                            MaterialTheme.colorScheme.onSurface.copy(
-                                                alpha = 0.3F
-                                            )
-                                        ),
-                                        modifier = Modifier.size(64.dp),
-                                    )
-                                }
-
-                                Column(
-                                    modifier = Modifier
-                                        .weight(1F)
-                                        .align(Alignment.Top)
-                                ) {
-                                    val features = listOf(
-                                        "Breakfast Included" to room.breakfastIncluded,
-                                        "Refundable" to room.refundable,
-                                        "No pre-payment required" to !room.prePaymentRequired,
-                                        "All inclusive" to room.isAllInclusive,
-                                    ).filter { it.second }.map { it.first }
-                                    Text(
-                                        room.description,
-                                        style = MaterialTheme.typography.labelLarge,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                    features.forEach { feature ->
-                                        Text(
-                                            text = AnnotatedString.Builder().apply {
-                                                append("\u2022")
-                                                append("\u0009")
-                                                append(feature)
-                                            }.toAnnotatedString(),
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
-                                    }
-                                }
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.width(112.dp)
-                                ) {
-                                    PriceText(room.price)
-                                    TextButton(onClick = {
-                                        context.startActivity(
-                                            Intent(
-                                                Intent.ACTION_VIEW,
-                                                Uri.parse(room.bookingUrl),
-                                            )
-                                        )
-                                    }) {
-                                        ButtonContent(
-                                            iconResId = R.drawable.open_in_new_outline_24,
-                                            iconContentDescription = "Open offer button icon",
-                                            text = room.bookingAgency
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        TextButton(
-                            onClick = { expandRooms = !expandRooms },
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        ) {
-                            Icon(
-                                if (expandRooms) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                                contentDescription = null
+                } else if (state.rooms.isNotEmpty()) {
+                    Column {
+                        val room = state.rooms.first()
+                        RoomOfferItem(room, onCoverImageTapped = { coverImage ->
+                            onRoomCoverImageTapped(room, coverImage)
+                        }, onViewOfferTapped = {
+                            context.startActivity(
+                                Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse(room.bookingUrl),
+                                )
                             )
-                            Text(if (expandRooms) "See less offers" else "Show ${state.rooms.size} more offers")
+                        })
+                        if (state.rooms.size > 1) {
+                            TextButton(
+                                onClick = {
+                                    coroutineScope.launch {
+                                        scrollState.animateScrollTo(
+                                            roomsOffset?.y?.roundToInt() ?: 0
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            ) {
+                                Icon(
+                                    Icons.Filled.KeyboardArrowDown,
+                                    contentDescription = null
+                                )
+                                Text("See ${state.rooms.size - 1} more offers")
+                            }
                         }
                     }
                 }
@@ -434,9 +368,11 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                 }
             }
             if (state.reviews.isNotEmpty()) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.onGloballyPositioned {
-                    reviewsOffset = it.positionInParent()
-                }) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.onGloballyPositioned {
+                        reviewsOffset = it.positionInParent()
+                    }) {
                     Text("Reviews", style = MaterialTheme.typography.titleLarge)
                     Spacer(modifier = Modifier.weight(1f))
                     TextButton(onClick = {
@@ -456,6 +392,26 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                 }
                 state.reviews.forEach { review ->
                     LodgingReviewItem(review)
+                }
+            }
+            if (state.rooms.size > 1) {
+                Text(
+                    "Rooms",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.onGloballyPositioned {
+                        roomsOffset = it.positionInParent()
+                    })
+                state.rooms.subList(1, state.rooms.size).forEach { room ->
+                    RoomOfferItem(room, onCoverImageTapped = { coverImage ->
+                        onRoomCoverImageTapped(room, coverImage)
+                    }, onViewOfferTapped = {
+                        context.startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse(room.bookingUrl),
+                            )
+                        )
+                    })
                 }
             }
         }
@@ -547,46 +503,6 @@ private fun DismissableOverlay(
             }
         }
     }
-}
-
-@Composable
-private fun ButtonContent(
-    @DrawableRes iconResId: Int? = null,
-    icon: ImageVector? = null,
-    iconContentDescription: String,
-    text: String
-) {
-    Row(
-        horizontalArrangement = spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (icon != null) {
-            Icon(icon, contentDescription = iconContentDescription)
-        } else if (iconResId != null) {
-            Icon(
-                painterResource(iconResId), contentDescription = iconContentDescription
-            )
-        }
-        Text(text, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }
-}
-
-@Composable
-private fun LodgingImage(
-    painter: Painter,
-    modifier: Modifier = Modifier,
-    contentScale: ContentScale = ContentScale.Crop,
-    colorFilter: ColorFilter? = null
-) {
-    Image(
-        modifier = modifier
-            .clip(MaterialTheme.shapes.large)
-            .background(color = MaterialTheme.colorScheme.surfaceContainer),
-        painter = painter,
-        contentDescription = "Lodging Image Description",
-        contentScale = contentScale,
-        colorFilter = colorFilter,
-    )
 }
 
 @PreviewLightDarkSystemUI

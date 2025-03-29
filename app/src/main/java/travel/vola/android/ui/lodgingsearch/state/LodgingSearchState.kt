@@ -54,7 +54,7 @@ data class LodgingReviewState(
     val ratingImageUrl: String,
     val authorAvatarUrl: String?,
     val authorName: String,
-    val authorLocation: String,
+    val authorLocation: String?,
     val title: String,
     val review: String,
 )
