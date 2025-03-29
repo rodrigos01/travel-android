@@ -17,4 +17,11 @@
     <string name="add_train_option">Train</string>
     <string name="add_bus_option">Bus</string>
 
+    <!--    Lodging details-->
+    <plurals name="review_count">
+        <item quantity="one">%1$s review</item>
+        <item quantity="other">%1$s reviews</item>
+    </plurals>
+    <string name="review_count_thousands">%1$.1fk reviews</string>
+    <string name="review_count_millions">%1$.1fm reviews</string>
 </resources>
