@@ -83,6 +83,7 @@ interface ApiData {
         val longitude: Double,
         val photos: List<String>,
         val rooms: List<LodgingOffer>,
+        val description: String?,
     )
 
     @Serializable

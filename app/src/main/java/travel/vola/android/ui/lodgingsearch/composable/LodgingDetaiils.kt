@@ -336,6 +336,30 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                     }
                 }
             }
+            state.description?.let { description ->
+                var expanded by remember { mutableStateOf(true) }
+                var hasMoreText by remember { mutableStateOf(false) }
+                Text(
+                    description,
+                    maxLines = if (expanded) Int.MAX_VALUE else 5,
+                    overflow = TextOverflow.Ellipsis,
+                    onTextLayout = {
+                        if (!hasMoreText && it.lineCount > 5) {
+                            hasMoreText = true
+                            expanded = false
+                        }
+                    },
+                    modifier = Modifier.animateContentSize(),
+                )
+                if (hasMoreText) {
+                    TextButton(
+                        onClick = { expanded = !expanded },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text(if (expanded) "Read less" else "Read more")
+                    }
+                }
+            }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = spacedBy(8.dp)
@@ -538,6 +562,7 @@ fun LodgingDetailsPreview() {
         checkOut = Time("2025-08-15T00:00 -0500"),
         price = 123.4,
         rooms = emptyList(),
+        description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         address = "123 Street, City, 1234",
         latitude = 0.0,
         longitude = 0.0,
@@ -564,29 +589,11 @@ fun LodgingDetailsPreview() {
     )
     AppTheme {
         Box {
-            var state by remember {
-                mutableStateOf(loadedState)
-            }
             LodgingDetails(
-                state = state,
+                state = loadedState,
                 onClose = {},
                 onAddToTripTapped = {},
             )
-            if (state != loadedState) {
-                Button(
-                    onClick = { state = loadedState },
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                ) {
-                    Text("load")
-                }
-            } else {
-                Button(
-                    onClick = { state = initialState },
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                ) {
-                    Text("reset")
-                }
-            }
         }
     }
 }

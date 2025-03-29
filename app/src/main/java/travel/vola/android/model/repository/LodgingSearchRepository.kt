@@ -53,6 +53,8 @@ class LodgingSearchRepository {
         lodgingId: String,
         checkIn: Time,
         checkOut: Time,
+        latitude: Double? = null,
+        longitude: Double? = null,
     ): ApiData.LodgingDetails? {
         return request("/lodging/") {
             url {
@@ -61,6 +63,8 @@ class LodgingSearchRepository {
                 parameters.append("checkout", checkOut.asISO8601DateString())
                 parameters.append("adults", "1")
                 parameters.append("children", "0")
+                parameters.append("lat", latitude.toString())
+                parameters.append("lon", longitude.toString())
                 parameters.append(
                     "currency", Currency.getInstance(Locale.getDefault()).currencyCode
                 )

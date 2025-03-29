@@ -2,9 +2,6 @@ package travel.vola.android.model.network
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.BearerTokens
-import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.forms.submitForm
@@ -56,23 +53,24 @@ private val client = HttpClient {
             explicitNulls = false
         })
     }
-    install(Auth) {
-        bearer {
-            loadTokens {
-                val validToken =
-                    token?.takeIf { it.expiration > System.currentTimeMillis() }
-                        ?: fetchToken().also { token = it }
-                BearerTokens(validToken.accessToken, refreshToken = null)
-            }
-            refreshTokens {
-                val newToken = fetchToken().also { token = it }
-                BearerTokens(newToken.accessToken, refreshToken = null)
-            }
-        }
-    }
+//    install(Auth) {
+//        bearer {
+//            loadTokens {
+//                val validToken =
+//                    token?.takeIf { it.expiration > System.currentTimeMillis() }
+//                        ?: fetchToken().also { token = it }
+//                BearerTokens(validToken.accessToken, refreshToken = null)
+//            }
+//            refreshTokens {
+//                val newToken = fetchToken().also { token = it }
+//                BearerTokens(newToken.accessToken, refreshToken = null)
+//            }
+//        }
+//    }
 }
 
-private const val SERVER_URL = "https://travel-api-master-rlbhlyi7ja-uc.a.run.app"
+//private const val SERVER_URL = "https://travel-api-master-rlbhlyi7ja-uc.a.run.app"
+private const val SERVER_URL = "http://10.0.2.2:5000"
 fun httpClient() = client
 
 suspend inline fun <reified T> request(
