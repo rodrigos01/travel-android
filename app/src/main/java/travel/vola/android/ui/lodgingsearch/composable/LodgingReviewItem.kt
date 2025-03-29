@@ -7,8 +7,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -25,7 +28,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
-import travel.vola.android.common.ui.components.CollapsableText
 import travel.vola.android.common.ui.preview.loremIpsum
 import travel.vola.android.extensions.Time
 import travel.vola.android.ui.lodgingsearch.state.LodgingReviewState
@@ -34,7 +36,10 @@ import travel.vola.android.ui.theme.AppTheme
 @Composable
 fun LodgingReviewItem(state: LodgingReviewState) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             LodgingRating(state.rating)
             Text(state.title, style = MaterialTheme.typography.titleMedium)
         }
@@ -45,7 +50,7 @@ fun LodgingReviewItem(state: LodgingReviewState) {
             maxLines = if (expanded) Int.MAX_VALUE else 6,
             overflow = TextOverflow.Ellipsis,
             onTextLayout = {
-                if (!hasMoreText && it.lineCount > 6) {
+                if (!hasMoreText && it.lineCount > 20) {
                     hasMoreText = true
                     expanded = false
                 }
@@ -53,14 +58,27 @@ fun LodgingReviewItem(state: LodgingReviewState) {
             modifier = Modifier.animateContentSize(),
         )
 
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.height(ButtonDefaults.MinHeight)
+        ) {
             Image(
                 painter = rememberAsyncImagePainter(state.authorAvatarUrl),
                 contentDescription = null,
-                modifier = Modifier.size(24.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant)
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             )
             Text(state.authorName, style = MaterialTheme.typography.labelLarge)
-            Text(state.authorLocation, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+            state.authorLocation?.let { location ->
+                Text(
+                    location,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
             if (hasMoreText) {
                 Spacer(modifier = Modifier.weight(1f))
                 TextButton(
