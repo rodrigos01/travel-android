@@ -22,9 +22,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
-import com.vola.android.R
-import com.vola.android.common.ui.components.IconTextButton
-import com.vola.android.ui.theme.AppTheme
+import travel.vola.android.R
+import travel.vola.android.common.ui.components.IconTextButton
+import travel.vola.android.ui.theme.AppTheme
 
 enum class AddPlanType(
     @DrawableRes internal val drawableId: Int,

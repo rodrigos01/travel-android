@@ -10,7 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.tooling.preview.Preview
-import com.vola.android.extensions.format
+import travel.vola.android.extensions.format
 import java.text.DateFormat
 import java.util.Date
 import java.util.TimeZone

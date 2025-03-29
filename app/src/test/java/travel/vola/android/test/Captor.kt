@@ -1,12 +1,12 @@
 package travel.vola.android.test
 
-import com.vola.android.ui.trip.creation.usecase.AddPlanItemStore
-import com.vola.android.ui.trip.creation.usecase.PendingData
-import com.vola.android.ui.trip.state.AddPlanItemState
 import org.mockito.kotlin.KArgumentCaptor
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
+import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
+import travel.vola.android.ui.trip.creation.usecase.PendingData
+import travel.vola.android.ui.trip.state.AddPlanItemState
 
 object Captor {
     inline fun <reified T : Any> capture(block: KArgumentCaptor<T>.() -> Unit): T {

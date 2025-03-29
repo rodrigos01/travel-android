@@ -1,10 +1,10 @@
 package travel.vola.android.test
 
-import com.vola.android.model.data.Time
 import org.mockito.kotlin.KStubbing
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+import travel.vola.android.model.data.Time
 import java.util.TimeZone
 
 object Mocks {

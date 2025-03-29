@@ -48,8 +48,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
-import com.vola.android.common.ui.preview.PreviewLightDarkSystemUI
-import com.vola.android.ui.theme.AppTheme
+import travel.vola.android.common.ui.preview.PreviewLightDarkSystemUI
+import travel.vola.android.ui.theme.AppTheme
 
 private const val MAX_ITEMS_PER_LINE = 3
 

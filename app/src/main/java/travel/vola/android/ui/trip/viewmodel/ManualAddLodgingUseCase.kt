@@ -1,19 +1,19 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import com.vola.android.extensions.MapFlow
-import com.vola.android.extensions.plus
-import com.vola.android.extensions.toMidnight
-import com.vola.android.extensions.update
-import com.vola.android.model.data.Lodging
-import com.vola.android.model.data.Time
-import com.vola.android.model.repository.LodgingSearchRepository
-import com.vola.android.ui.trip.creation.usecase.AddPlanItemStore
-import com.vola.android.ui.trip.creation.usecase.ManualAddPlanItemActionHandler
-import com.vola.android.ui.trip.creation.usecase.PendingData.PendingLodging
-import com.vola.android.ui.trip.state.ManualAddLodgingItemState
-import com.vola.android.ui.trip.state.ManualAddPlanState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import travel.vola.android.extensions.MapFlow
+import travel.vola.android.extensions.plus
+import travel.vola.android.extensions.toMidnight
+import travel.vola.android.extensions.update
+import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.Time
+import travel.vola.android.model.repository.LodgingSearchRepository
+import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
+import travel.vola.android.ui.trip.creation.usecase.ManualAddPlanItemActionHandler
+import travel.vola.android.ui.trip.creation.usecase.PendingData.PendingLodging
+import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
+import travel.vola.android.ui.trip.state.ManualAddPlanState
 import kotlin.time.Duration.Companion.days
 
 class ManualAddLodgingUseCase(

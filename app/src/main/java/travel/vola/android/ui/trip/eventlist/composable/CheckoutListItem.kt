@@ -3,8 +3,8 @@ package travel.vola.android.ui.trip.eventlist.composable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.vola.android.R
-import com.vola.android.ui.theme.AppTheme
+import travel.vola.android.R
+import travel.vola.android.ui.theme.AppTheme
 
 @Composable
 fun CheckoutListItem(

@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.PopupProperties
-import com.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.theme.AppTheme
 
 data class AutoCompleteTextFieldState<T>(
     val text: String?,

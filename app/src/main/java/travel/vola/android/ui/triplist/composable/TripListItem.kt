@@ -14,7 +14,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.theme.AppTheme
 
 @Composable
 fun TripListItem(name: String?, coverImageUrl: String?, onClick: () -> Unit) {

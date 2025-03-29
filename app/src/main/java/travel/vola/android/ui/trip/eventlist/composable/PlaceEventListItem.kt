@@ -24,8 +24,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
-import com.vola.android.R
-import com.vola.android.ui.theme.AppTheme
+import travel.vola.android.R
+import travel.vola.android.ui.theme.AppTheme
 
 @Composable
 fun PlaceEventListItem(imageUrl: String, placeName: String, startDate: String, endDate: String) {

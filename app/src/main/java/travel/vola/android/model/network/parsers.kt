@@ -1,9 +1,9 @@
 package travel.vola.android.model.network
 
-import com.vola.android.model.data.Airport
-import com.vola.android.model.data.LodgingSearchResult
-import com.vola.android.model.data.Place
-import com.vola.android.model.data.SimplePlace
+import travel.vola.android.model.data.Airport
+import travel.vola.android.model.data.LodgingSearchResult
+import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.SimplePlace
 import java.util.TimeZone
 
 fun ApiData.Airport.toAppDataModel() = Airport(

@@ -41,11 +41,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.vola.android.common.ui.components.TabbedHostScope.Tab
-import com.vola.android.ui.theme.AppTheme
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import travel.vola.android.common.ui.components.TabbedHostScope.Tab
+import travel.vola.android.ui.theme.AppTheme
 import kotlin.math.max
 import kotlin.math.roundToInt
 

@@ -1,7 +1,7 @@
 package travel.vola.android.ui.trip.creation.usecase
 
-import com.vola.android.model.data.Time
-import com.vola.android.ui.trip.state.AddPlanItemState
+import travel.vola.android.model.data.Time
+import travel.vola.android.ui.trip.state.AddPlanItemState
 
 interface AddPlanItemActionHandler : AddLodgingItemActionHandler,
     AddFlightItemActionHandler {

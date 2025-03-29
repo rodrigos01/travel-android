@@ -3,13 +3,13 @@ package travel.vola.android.ui.triplist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.vola.android.model.data.Trip
-import com.vola.android.model.repository.TripRepository
-import com.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import travel.vola.android.model.data.Trip
+import travel.vola.android.model.repository.TripRepository
+import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
 
 class TripListViewModel(
     private val repository: TripRepository,

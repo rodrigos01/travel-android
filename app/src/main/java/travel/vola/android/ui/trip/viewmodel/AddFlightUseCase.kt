@@ -1,22 +1,22 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import com.vola.android.extensions.MapFlow
-import com.vola.android.extensions.atTimeZone
-import com.vola.android.extensions.now
-import com.vola.android.extensions.plus
-import com.vola.android.extensions.toMidnight
-import com.vola.android.extensions.update
-import com.vola.android.model.data.Flight
-import com.vola.android.model.data.FlightSegment
-import com.vola.android.model.data.Time
-import com.vola.android.model.repository.AddFlightRepository
-import com.vola.android.ui.trip.creation.usecase.AddFlightItemActionHandler
-import com.vola.android.ui.trip.creation.usecase.AddPlanItemStore
-import com.vola.android.ui.trip.creation.usecase.PendingData.PendingFlight
-import com.vola.android.ui.trip.state.AddFlightItemState
-import com.vola.android.ui.trip.state.ManualAddPlanState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import travel.vola.android.extensions.MapFlow
+import travel.vola.android.extensions.atTimeZone
+import travel.vola.android.extensions.now
+import travel.vola.android.extensions.plus
+import travel.vola.android.extensions.toMidnight
+import travel.vola.android.extensions.update
+import travel.vola.android.model.data.Flight
+import travel.vola.android.model.data.FlightSegment
+import travel.vola.android.model.data.Time
+import travel.vola.android.model.repository.AddFlightRepository
+import travel.vola.android.ui.trip.creation.usecase.AddFlightItemActionHandler
+import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
+import travel.vola.android.ui.trip.creation.usecase.PendingData.PendingFlight
+import travel.vola.android.ui.trip.state.AddFlightItemState
+import travel.vola.android.ui.trip.state.ManualAddPlanState
 import kotlin.time.Duration.Companion.hours
 
 class AddFlightUseCase(

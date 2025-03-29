@@ -1,11 +1,11 @@
 package travel.vola.android.model.repository.mock
 
-import com.vola.android.model.firebase.FirebaseData.Airport
-import com.vola.android.model.firebase.FirebaseData.Flight
-import com.vola.android.model.firebase.FirebaseData.FlightSegment
-import com.vola.android.model.firebase.FirebaseData.Lodging
-import com.vola.android.model.firebase.FirebaseData.Place
-import com.vola.android.model.firebase.FirebaseData.Trip
+import travel.vola.android.model.firebase.FirebaseData.Airport
+import travel.vola.android.model.firebase.FirebaseData.Flight
+import travel.vola.android.model.firebase.FirebaseData.FlightSegment
+import travel.vola.android.model.firebase.FirebaseData.Lodging
+import travel.vola.android.model.firebase.FirebaseData.Place
+import travel.vola.android.model.firebase.FirebaseData.Trip
 
 private const val EAST_DAYLIGHT = "GMT-04:00"
 private const val WESTERN_EUROPEAN_SUMMER = "GMT+01:00"

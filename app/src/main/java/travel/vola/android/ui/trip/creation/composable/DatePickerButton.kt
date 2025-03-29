@@ -25,12 +25,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
-import com.vola.android.extensions.Time
-import com.vola.android.extensions.now
-import com.vola.android.extensions.update
-import com.vola.android.model.data.Time
-import com.vola.android.ui.theme.AppTheme
 import kotlinx.coroutines.launch
+import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.now
+import travel.vola.android.extensions.update
+import travel.vola.android.model.data.Time
+import travel.vola.android.ui.theme.AppTheme
 import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)

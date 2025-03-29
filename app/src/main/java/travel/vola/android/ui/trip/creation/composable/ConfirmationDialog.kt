@@ -18,7 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.theme.AppTheme
 
 @Composable
 fun ConfirmationDialog(
@@ -49,9 +49,11 @@ fun ConfirmationDialog(
                 ) {
                     content()
                 }
-                Row(modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(end = 8.dp, bottom = 8.dp)) {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(end = 8.dp, bottom = 8.dp)
+                ) {
                     TextButton(
                         onClick = onDismiss,
                     ) {

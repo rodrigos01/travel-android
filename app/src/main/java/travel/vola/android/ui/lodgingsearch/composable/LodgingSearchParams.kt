@@ -27,12 +27,12 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.vola.android.R
-import com.vola.android.common.ui.components.IconTextButton
-import com.vola.android.extensions.dateString
-import com.vola.android.model.data.Time
-import com.vola.android.ui.trip.creation.composable.DatePickerButton
-import com.vola.android.ui.trip.state.SearchResultItemState
+import travel.vola.android.R
+import travel.vola.android.common.ui.components.IconTextButton
+import travel.vola.android.extensions.dateString
+import travel.vola.android.model.data.Time
+import travel.vola.android.ui.trip.creation.composable.DatePickerButton
+import travel.vola.android.ui.trip.state.SearchResultItemState
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)

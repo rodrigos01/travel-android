@@ -3,15 +3,15 @@ package travel.vola.android.model.firebase
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
-import com.vola.android.extensions.asFlow
-import com.vola.android.model.data.Flight
-import com.vola.android.model.data.Lodging
-import com.vola.android.model.data.Trip
-import com.vola.android.model.repository.TripRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import travel.vola.android.extensions.asFlow
+import travel.vola.android.model.data.Flight
+import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.Trip
+import travel.vola.android.model.repository.TripRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FirebaseTripRepository(private val firestore: FirebaseFirestore) : TripRepository {

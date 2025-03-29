@@ -1,13 +1,5 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import com.vola.android.model.data.Flight
-import com.vola.android.model.data.Lodging
-import com.vola.android.model.data.Time
-import com.vola.android.test.Assertions.assertType
-import com.vola.android.test.UnconfinedDispatcherTestRule
-import com.vola.android.ui.trip.state.AddFlightItemState
-import com.vola.android.ui.trip.state.AddPlanItemState
-import com.vola.android.ui.trip.state.ManualAddLodgingItemState
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -23,6 +15,14 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
+import travel.vola.android.model.data.Flight
+import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.Time
+import travel.vola.android.test.Assertions.assertType
+import travel.vola.android.test.UnconfinedDispatcherTestRule
+import travel.vola.android.ui.trip.state.AddFlightItemState
+import travel.vola.android.ui.trip.state.AddPlanItemState
+import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import kotlin.contracts.ExperimentalContracts
 
 @OptIn(ExperimentalContracts::class)
