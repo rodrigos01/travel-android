@@ -198,6 +198,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                                 .clickable {
                                     showImageGallery = true
                                     imageGalleryModels = state.photos
+                                    selectedGalleryModel = null
                                 },
                         ) {
                             LodgingImage(
