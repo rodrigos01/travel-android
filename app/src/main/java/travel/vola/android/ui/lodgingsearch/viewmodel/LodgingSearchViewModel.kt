@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import travel.vola.android.extensions.MutableMapStateFlow
+import travel.vola.android.extensions.Time
 import travel.vola.android.extensions.get
 import travel.vola.android.extensions.remove
 import travel.vola.android.extensions.set
@@ -20,6 +21,7 @@ import travel.vola.android.model.data.Time
 import travel.vola.android.model.repository.LodgingSearchRepository
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.lodgingsearch.state.LodgingDetailsState
+import travel.vola.android.ui.lodgingsearch.state.LodgingReviewState
 import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
 import travel.vola.android.ui.lodgingsearch.state.LodgingSearchResultState
 import java.util.TimeZone
@@ -128,8 +130,11 @@ class LodgingSearchViewModel(
                             coverImage = it.coverImage,
                             address = it.address,
                             rating = it.rating,
+                            reviewCount = it.reviewCount,
                             lodgingType = "${it.stars}-star hotel",
                             price = it.price,
+                            latitude = it.latitude,
+                            longitude = it.longitude,
                         )
                     }.toList(),
                 openedResults = openedResults,
@@ -174,26 +179,31 @@ class LodgingSearchViewModel(
         val initialState = LodgingDetailsState(
             name = existingState.name,
             rating = existingState.rating,
-            reviewCountText = "",
+            reviewCount = existingState.reviewCount,
             lodgingType = existingState.lodgingType,
             photos = listOf(existingState.coverImage),
             checkIn = state.searchState.checkIn,
             checkOut = state.searchState.checkOut,
             price = existingState.price,
             rooms = emptyList(),
+            description = null,
             address = existingState.address,
-            latitude = 0.0,
-            longitude = 0.0,
+            latitude = existingState.latitude,
+            longitude = existingState.longitude,
             isLoading = true,
         )
         openedResultsState[lodgingId] = initialState
         viewModelScope.launch {
             val lodging = repository.details(
-                lodgingId, searchParamsState.value.checkIn, searchParamsState.value.checkOut
+                lodgingId,
+                searchParamsState.value.checkIn,
+                searchParamsState.value.checkOut,
+                latitude = initialState.latitude,
+                initialState.longitude
             ) ?: return@launch
             openedResultsState[lodgingId] = initialState.copy(
                 photos = initialState.photos + lodging.photos.subList(1, lodging.photos.size),
-                reviewCountText = lodging.reviewCount.toString(),
+                reviewCount = lodging.reviewCount,
                 latitude = lodging.latitude,
                 longitude = lodging.longitude,
                 rooms = lodging.rooms.map { offer ->
@@ -207,6 +217,22 @@ class LodgingSearchViewModel(
                         price = offer.price,
                         bookingUrl = offer.bookingUrl,
                         bookingAgency = offer.bookingAgency,
+                    )
+                },
+                description = lodging.description,
+                reviewsSource = lodging.reviewsSource,
+                reviewsUrl = lodging.reviewsUrl,
+                reviews = lodging.reviews.map {
+                    LodgingReviewState(
+                        rating = it.rating,
+                        ratingImageUrl = it.ratingImageUrl,
+                        reviewTime = Time(it.reviewTime),
+                        tripDate = Time(it.travelDate),
+                        authorAvatarUrl = it.avatarUrl,
+                        authorName = it.userName,
+                        authorLocation = it.userLocation,
+                        title = it.title,
+                        review = it.text,
                     )
                 },
                 isLoading = false,

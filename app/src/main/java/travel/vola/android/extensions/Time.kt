@@ -8,6 +8,7 @@ import java.util.TimeZone
 import kotlin.time.Duration
 
 fun Time(source: String): Time {
+    SimpleDateFormat.getDateTimeInstance()
     val date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm Z", Locale.getDefault()).parse(source)
         ?: error("Invalid Date Format")
     val offsetString = source.split(" ").getOrNull(1) ?: "GMT"
