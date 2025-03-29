@@ -119,9 +119,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                 modifier = Modifier.padding(all = 16.dp)
             ) {
                 LodgingRating(state.rating)
-                AnimatedVisibility(visible = state.reviewCountText.isNotEmpty()) {
-                    Text(state.reviewCountText)
-                }
+                Text(state.reviewCount.reviewCountString())
                 Spacer(modifier = Modifier.weight(1f))
                 Text(state.lodgingType)
             }
@@ -555,7 +553,7 @@ fun LodgingDetailsPreview() {
     val initialState = LodgingDetailsState(
         name = "A very long Hotel name that might span multiple lines",
         rating = 4.5,
-        reviewCountText = "123 reviews",
+        reviewCount = 13450,
         lodgingType = "5-Star Hotel",
         photos = List(1) { index -> "" },
         checkIn = Time("2025-08-10T00:00 -0500"),

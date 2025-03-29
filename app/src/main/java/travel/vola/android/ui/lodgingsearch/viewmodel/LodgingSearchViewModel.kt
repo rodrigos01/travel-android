@@ -128,6 +128,7 @@ class LodgingSearchViewModel(
                             coverImage = it.coverImage,
                             address = it.address,
                             rating = it.rating,
+                            reviewCount = it.reviewCount,
                             lodgingType = "${it.stars}-star hotel",
                             price = it.price,
                             latitude = it.latitude,
@@ -176,7 +177,7 @@ class LodgingSearchViewModel(
         val initialState = LodgingDetailsState(
             name = existingState.name,
             rating = existingState.rating,
-            reviewCountText = "",
+            reviewCount = existingState.reviewCount,
             lodgingType = existingState.lodgingType,
             photos = listOf(existingState.coverImage),
             checkIn = state.searchState.checkIn,
@@ -200,7 +201,7 @@ class LodgingSearchViewModel(
             ) ?: return@launch
             openedResultsState[lodgingId] = initialState.copy(
                 photos = initialState.photos + lodging.photos.subList(1, lodging.photos.size),
-                reviewCountText = lodging.reviewCount.toString(),
+                reviewCount = lodging.reviewCount,
                 latitude = lodging.latitude,
                 longitude = lodging.longitude,
                 rooms = lodging.rooms.map { offer ->
