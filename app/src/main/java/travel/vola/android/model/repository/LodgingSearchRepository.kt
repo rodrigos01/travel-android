@@ -1,0 +1,70 @@
+package travel.vola.android.model.repository
+
+import com.vola.android.extensions.asISO8601DateString
+import com.vola.android.model.data.LodgingSearchResult
+import com.vola.android.model.data.Place
+import com.vola.android.model.data.SimplePlace
+import com.vola.android.model.data.Time
+import com.vola.android.model.network.ApiData
+import com.vola.android.model.network.ApiResponse
+import com.vola.android.model.network.request
+import com.vola.android.model.network.toAppDataModel
+import io.ktor.http.appendPathSegments
+import java.util.Currency
+import java.util.Locale
+
+class LodgingSearchRepository {
+
+    suspend fun autocomplete(query: String): List<SimplePlace> {
+        return request<ApiResponse.PlaceAutoComplete>("/places/autocomplete") {
+            url {
+                parameters.append("query", query)
+                parameters.append("types", "lodging")
+            }
+        }?.data?.map { it.toAppDataModel() } ?: emptyList()
+    }
+
+    suspend fun autocompleteCity(query: String): List<Place> {
+        return request<ApiResponse.CityAutoComplete>("/lodging/autocomplete") {
+            url {
+                parameters.append("query", query)
+            }
+        }?.data?.map { it.toAppDataModel() } ?: emptyList()
+    }
+
+    suspend fun search(
+        locationId: String, checkIn: Time, checkOut: Time
+    ): List<LodgingSearchResult> {
+        return request<ApiResponse.LodgingSearch>("/lodging/search") {
+            url {
+                parameters.append("cityId", locationId)
+                parameters.append("checkin", checkIn.asISO8601DateString())
+                parameters.append("checkout", checkOut.asISO8601DateString())
+                parameters.append("adults", "1")
+                parameters.append("children", "0")
+                parameters.append(
+                    "currency", Currency.getInstance(Locale.getDefault()).currencyCode
+                )
+            }
+        }?.hotels?.map { it.toAppDataModel() } ?: emptyList()
+    }
+
+    suspend fun details(
+        lodgingId: String,
+        checkIn: Time,
+        checkOut: Time,
+    ): ApiData.LodgingDetails? {
+        return request("/lodging/") {
+            url {
+                appendPathSegments(lodgingId)
+                parameters.append("checkin", checkIn.asISO8601DateString())
+                parameters.append("checkout", checkOut.asISO8601DateString())
+                parameters.append("adults", "1")
+                parameters.append("children", "0")
+                parameters.append(
+                    "currency", Currency.getInstance(Locale.getDefault()).currencyCode
+                )
+            }
+        }
+    }
+}
