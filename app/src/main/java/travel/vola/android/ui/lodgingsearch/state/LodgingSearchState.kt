@@ -8,6 +8,7 @@ data class LodgingSearchResultState(
     val coverImage: String,
     val address: String,
     val rating: Double,
+    val reviewCount: Int,
     val lodgingType: String,
     val price: Double,
     val latitude: Double,
@@ -17,7 +18,7 @@ data class LodgingSearchResultState(
 data class LodgingDetailsState(
     val name: String,
     val rating: Double,
-    val reviewCountText: String,
+    val reviewCount: Int,
     val lodgingType: String,
     val photos: List<String>,
     val checkIn: Time,

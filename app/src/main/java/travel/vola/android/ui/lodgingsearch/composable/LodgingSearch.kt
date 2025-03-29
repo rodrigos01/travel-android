@@ -442,6 +442,7 @@ fun LodgingSearchPreview() {
                 address = "$index Street, City, ${index * 1023}",
                 coverImage = "",
                 rating = index * 1.2,
+                reviewCount = index * 1234,
                 lodgingType = "Hotel",
                 price = index * 12.4,
                 latitude = 0.0,
@@ -452,7 +453,7 @@ fun LodgingSearchPreview() {
             lodging.id to LodgingDetailsState(
                 name = lodging.name,
                 rating = lodging.rating,
-                reviewCountText = "",
+                reviewCount = lodging.reviewCount,
                 lodgingType = lodging.lodgingType,
                 photos = listOf(lodging.coverImage) + List(32) { index -> "photo$index" },
                 checkIn = Time("2025-08-10T00:00 -0500"),
