@@ -7,4 +7,5 @@ plugins {
     kotlin("plugin.serialization") version "2.1.10"
 
     id("com.google.firebase.appdistribution") version "5.1.1" apply false
+    id("com.google.firebase.crashlytics") version "3.0.3" apply false
 }

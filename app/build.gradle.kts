@@ -7,6 +7,7 @@ plugins {
     id("kotlinx-serialization")
     id("org.jetbrains.kotlin.plugin.compose") version "2.1.10"
     id("com.google.firebase.appdistribution")
+    id("com.google.firebase.crashlytics")
 }
 
 val ktorVersion = "3.0.3"
@@ -93,8 +94,10 @@ dependencies {
     implementation("io.coil-kt:coil-svg:2.5.0")
     // Firebase
     implementation("com.google.android.gms:play-services-auth:21.3.0")
-    implementation("com.google.firebase:firebase-core:21.1.1")
-    implementation("com.google.firebase:firebase-firestore:25.1.1")
+    implementation(platform("com.google.firebase:firebase-bom:33.11.0"))
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-crashlytics")
+    implementation("com.google.firebase:firebase-analytics")
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
     // Compose
