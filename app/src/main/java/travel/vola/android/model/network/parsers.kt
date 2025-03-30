@@ -1,6 +1,7 @@
 package travel.vola.android.model.network
 
 import travel.vola.android.model.data.Airport
+import travel.vola.android.model.data.AirportSearchResult
 import travel.vola.android.model.data.LodgingSearchResult
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.SimplePlace
@@ -13,10 +14,15 @@ fun ApiData.Airport.toAppDataModel() = Airport(
     city = city.toAppDataModel(),
 )
 
+fun ApiData.AirportSearchResult.toAppDataModel() = AirportSearchResult(
+    iata = iata,
+    name = name,
+)
+
 fun ApiData.SimplePlace.toAppDataModel() = SimplePlace(
+    id = id,
     name = name,
     address = address,
-    city = city.toAppDataModel(),
 )
 
 fun ApiData.Place.toAppDataModel() = Place(

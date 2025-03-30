@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 interface ApiResponse {
     @Serializable
     data class AirportAutoComplete(
-        val data: List<ApiData.Airport>,
+        val data: List<ApiData.AirportSearchResult>,
     )
 
     @Serializable
@@ -35,6 +35,12 @@ interface ApiData {
     )
 
     @Serializable
+    data class AirportSearchResult(
+        val iata: String,
+        val name: String,
+    )
+
+    @Serializable
     data class Place(
         val id: String,
         val name: String,
@@ -48,9 +54,9 @@ interface ApiData {
 
     @Serializable
     data class SimplePlace(
+        val id: String,
         val name: String?,
         val address: String,
-        val city: Place
     )
 
     @Serializable

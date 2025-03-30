@@ -1,6 +1,7 @@
 package travel.vola.android.ui.trip.creation.usecase
 
 import travel.vola.android.model.data.Airport
+import travel.vola.android.model.data.AirportSearchResult
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.SimplePlace
 import travel.vola.android.model.data.Time
@@ -15,8 +16,8 @@ sealed interface PendingData {
         val airportFrom: Airport? = null,
         val airportTo: Airport? = null,
         val arrival: Time? = null,
-        val airportFromSearchResults: List<Airport> = emptyList(),
-        val airportToSearchResults: List<Airport> = emptyList(),
+        val airportFromSearchResults: List<AirportSearchResult> = emptyList(),
+        val airportToSearchResults: List<AirportSearchResult> = emptyList(),
     ) : PendingData
 
     data class PendingLodging(

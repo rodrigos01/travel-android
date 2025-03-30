@@ -69,14 +69,12 @@ data class Place(
 data class AirportSearchResult(
     val iata: String,
     val name: String,
-    val timeZone: TimeZone,
-    val city: Place,
 )
 
 data class SimplePlace(
+    val id: String,
     val name: String?,
     val address: String,
-    val city: Place,
 )
 
 data class LodgingSearchResult(

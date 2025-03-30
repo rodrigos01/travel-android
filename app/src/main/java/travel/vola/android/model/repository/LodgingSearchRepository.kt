@@ -15,13 +15,23 @@ import java.util.Locale
 
 class LodgingSearchRepository {
 
-    suspend fun autocomplete(query: String): List<SimplePlace> {
+    suspend fun autocomplete(query: String, autocompleteKey: String): List<SimplePlace> {
         return request<ApiResponse.PlaceAutoComplete>("/places/autocomplete") {
             url {
                 parameters.append("query", query)
                 parameters.append("types", "lodging")
+                parameters.append("sessionId", autocompleteKey)
             }
         }?.data?.map { it.toAppDataModel() } ?: emptyList()
+    }
+
+    suspend fun placeCity(placeId: String, autocompleteKey: String): Place? {
+        return request<ApiData.Place>("/places/cities") {
+            url {
+                parameters.append("placeId", placeId)
+                parameters.append("autocompleteSessionId", autocompleteKey)
+            }
+        }?.toAppDataModel()
     }
 
     suspend fun autocompleteCity(query: String): List<Place> {
