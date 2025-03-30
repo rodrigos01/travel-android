@@ -91,7 +91,7 @@ steps:
   #
   - name: 'gcr.io/$PROJECT_ID/android:35'
     id: build
-    args: [ "./gradlew", ":app:assembleRelease" ]
+    args: [ "./gradlew", ":app:assembleProdRelease" ]
     <<: &env
       env:
         - 'TERM=dumb'
