@@ -39,7 +39,6 @@ import travel.vola.android.R
 import travel.vola.android.extensions.Time
 import travel.vola.android.extensions.dayOfMonthString
 import travel.vola.android.extensions.dayOfWeekString
-import travel.vola.android.extensions.now
 import travel.vola.android.extensions.timeString
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.update

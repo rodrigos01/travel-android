@@ -19,7 +19,6 @@ import travel.vola.android.common.coroutines.createUseCaseScope
 import travel.vola.android.di.ServiceLocator
 import travel.vola.android.extensions.TimeFormatter
 import travel.vola.android.extensions.minus
-import travel.vola.android.extensions.now
 import travel.vola.android.extensions.plus
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.model.PlaceRepository
@@ -52,7 +51,7 @@ class TripViewModel(
     private val navController: NavController,
     private val timeFormatter: TimeFormatter = TimeFormatter(),
     private val useCaseScope: CoroutineScope = createUseCaseScope(),
-    private val addPlanUseCase: travel.vola.android.ui.trip.viewmodel.AddPlanUseCase = travel.vola.android.ui.trip.viewmodel.AddPlanUseCase(
+    private val addPlanUseCase: AddPlanUseCase = AddPlanUseCase(
         placeRepository = placeRepository,
         coroutineScope = useCaseScope,
     ),
@@ -85,7 +84,7 @@ class TripViewModel(
     private val trip = repository.findTripById(tripId)
         .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
     private val eventsFromTrip = trip.filterNotNull().map {
-        travel.vola.android.ui.trip.viewmodel.TripViewModel.ViewState(
+        ViewState(
             title = it.name ?: "Untitled Trip",
             items = genItems(it),
         )
@@ -97,7 +96,7 @@ class TripViewModel(
             }
         }
     }
-    val viewState: StateFlow<travel.vola.android.ui.trip.viewmodel.TripViewModel.ViewState> =
+    val viewState: StateFlow<ViewState> =
         eventsFromTrip.combine(addPlanItemsState) { state, addPlanItems ->
             val items = state.items.map { item ->
                 if (item is TripItemState.Replaceable) {
@@ -109,13 +108,9 @@ class TripViewModel(
                 }
             }
             state.copy(items = items)
-        }
-            .stateIn(
-                viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = travel.vola.android.ui.trip.viewmodel.TripViewModel.ViewState(
-                    title = "",
-                    items = emptyList()
+        }.stateIn(
+                viewModelScope, started = SharingStarted.Eagerly, initialValue = ViewState(
+                    title = "", items = emptyList()
                 )
             )
 
@@ -133,8 +128,7 @@ class TripViewModel(
     }
 
     fun addButtonTapped(itemId: String) {
-        val tapped =
-            viewState.value.items.find { it is Identifiable && it.id == itemId }
+        val tapped = viewState.value.items.find { it is Identifiable && it.id == itemId }
         val allowStartDateSelection =
             tapped is TripItemState.DateRangeItemState || tapped is TripItemState.InitialAddPlanItemState
         addPlanUseCase.createAddPlanItem(
@@ -145,8 +139,7 @@ class TripViewModel(
     }
 
     fun emptyDateRowTapped(itemId: String) {
-        val tapped =
-            viewState.value.items.find { it is Identifiable && it.id == itemId }
+        val tapped = viewState.value.items.find { it is Identifiable && it.id == itemId }
         addPlanUseCase.createAddPlanItem(
             id = (tapped as Identifiable).id,
             time = (tapped as TripItemState.Timeable).timestamp,
@@ -221,9 +214,8 @@ class TripViewModel(
                 is Lodging -> listOf(event.checkIn to event, event.checkout to event)
             }
         }.sortedBy { (time, event) ->
-            travel.vola.android.ui.trip.viewmodel.EventComparable(
-                time,
-                event
+            EventComparable(
+                time, event
             )
         }
         val items = pairs.flatMapIndexed { index, (time, event) ->
@@ -440,8 +432,8 @@ private val Time.dateString
 
 private class EventComparable(
     private val time: Time, private val event: Any
-) : Comparable<travel.vola.android.ui.trip.viewmodel.EventComparable> {
-    override fun compareTo(other: travel.vola.android.ui.trip.viewmodel.EventComparable): Int {
+) : Comparable<EventComparable> {
+    override fun compareTo(other: EventComparable): Int {
         if (time.dateString != other.time.dateString) {
             return time.compareTo(other.time)
         }
@@ -453,14 +445,14 @@ private class EventComparable(
         }
     }
 
-    val type: travel.vola.android.ui.trip.viewmodel.EventComparable.EventType
+    val type: EventType
         get() {
             return when {
-                event is Lodging && time == event.checkout -> travel.vola.android.ui.trip.viewmodel.EventComparable.EventType.CHECKOUT
-                event is Lodging && time == event.checkIn -> travel.vola.android.ui.trip.viewmodel.EventComparable.EventType.CHECKIN
-                event is FlightSegment && time == event.arrival -> travel.vola.android.ui.trip.viewmodel.EventComparable.EventType.ARRIVAL
-                event is FlightSegment && time == event.departure -> travel.vola.android.ui.trip.viewmodel.EventComparable.EventType.DEPARTURE
-                else -> travel.vola.android.ui.trip.viewmodel.EventComparable.EventType.UNKNOWN
+                event is Lodging && time == event.checkout -> EventType.CHECKOUT
+                event is Lodging && time == event.checkIn -> EventType.CHECKIN
+                event is FlightSegment && time == event.arrival -> EventType.ARRIVAL
+                event is FlightSegment && time == event.departure -> EventType.DEPARTURE
+                else -> EventType.UNKNOWN
             }
         }
 

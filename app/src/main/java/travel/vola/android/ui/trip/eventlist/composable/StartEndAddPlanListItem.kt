@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import travel.vola.android.extensions.Time
-import travel.vola.android.extensions.now
 import travel.vola.android.model.data.Time
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.AddFlightItemState
