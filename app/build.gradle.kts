@@ -38,10 +38,6 @@ android {
                 ?.let { ".$it" }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField(
-            "String", "SERVER_URL", "\"https://travel-api-master-rlbhlyi7ja-uc.a.run.app\""
-        )
-        buildConfigField("boolean", "REQUIRES_AUTH", "true")
     }
     buildTypes {
         release {
@@ -63,6 +59,13 @@ android {
     }
     flavorDimensions += "host"
     productFlavors {
+        create("prod") {
+            dimension = "host"
+            buildConfigField(
+                "String", "SERVER_URL", "\"https://travel-api-master-rlbhlyi7ja-uc.a.run.app\""
+            )
+            buildConfigField("boolean", "REQUIRES_AUTH", "true")
+        }
         create("local") {
             dimension = "host"
             buildConfigField("String", "SERVER_URL", "\"http://10.0.2.2:5000\"")

@@ -53,8 +53,11 @@ class ManualAddLodgingUseCase(
     }
 
     override fun locationTextChanged(itemId: String, content: CharSequence) {
+        if (content.length < 3) {
+            return
+        }
         coroutineScope.launch {
-            val results = repository.autocomplete(content.toString())
+            val results = repository.autocomplete(content.toString(), autocompleteKey = itemId)
             itemStore.update(itemId) { data ->
                 data.copy(
                     searchResults = results
@@ -64,14 +67,19 @@ class ManualAddLodgingUseCase(
     }
 
     override fun locationSearchResultTapped(itemId: String, index: Int) {
+        val selected = itemStore.getData(itemId)?.searchResults?.getOrNull(index) ?: return
         itemStore.update(itemId) { data ->
-            val selected = data.searchResults.getOrNull(index)
             data.copy(
-                name = selected?.name,
-                address = selected?.address,
-                city = selected?.city,
+                name = selected.name,
+                address = selected.address,
                 searchResults = emptyList(),
             )
+        }
+        coroutineScope.launch {
+            val city = repository.placeCity(selected.id, autocompleteKey = itemId)
+            itemStore.update(itemId) { data ->
+                data.copy(city = city)
+            }
         }
     }
 
@@ -126,8 +134,7 @@ class ManualAddLodgingUseCase(
                 locationText = null,
                 searchResults = emptyList(),
             ),
-            saveButtonEnabled = data.checkOut > data.checkIn && (data.name
-                ?: data.address) != null,
+            saveButtonEnabled = data.checkOut > data.checkIn && (data.name ?: data.address) != null,
             deleteButtonEnabled = stateParams.deleteEnabled,
             typeSelectionEnabled = stateParams.typeSelectionEnabled,
         )
@@ -138,8 +145,8 @@ class ManualAddLodgingUseCase(
     }
 
     override fun createEntity(item: ManualAddLodgingItemState): Lodging {
-        val data = itemStore.getData(item.id)
-            ?: error("item has no pending data associated with it")
+        val data =
+            itemStore.getData(item.id) ?: error("item has no pending data associated with it")
         data.address ?: error("address from is not set")
         data.city ?: error("lodging city is not set")
         data.checkOut

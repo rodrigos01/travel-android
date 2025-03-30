@@ -2,6 +2,7 @@ package travel.vola.android.ui.trip.viewmodel
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import travel.vola.android.common.coroutines.MutexScope
 import travel.vola.android.extensions.MapFlow
 import travel.vola.android.extensions.atTimeZone
 import travel.vola.android.extensions.plus
@@ -56,10 +57,14 @@ class AddFlightUseCase(
         }
     }
 
+    private val autoCompleteScope = MutexScope(coroutineScope.coroutineContext)
     override fun airportFromSearchTextChanged(
         itemId: String, content: CharSequence
     ) {
-        coroutineScope.launch {
+        if (content.length < 3) {
+            return
+        }
+        autoCompleteScope.launch {
             val results = repository.autocomplete(content.toString())
             itemStore.update(itemId) {
                 it.copy(airportFromSearchResults = results)
@@ -68,19 +73,30 @@ class AddFlightUseCase(
     }
 
     override fun airportFromSearchResultTapped(itemId: String, index: Int) {
-        itemStore.update(itemId) {
-            val selected = it.airportFromSearchResults.getOrNull(index)
-            it.copy(
-                airportFrom = selected,
-                airportFromSearchResults = emptyList()
-            )
+        val selected =
+            itemStore.getData(itemId)?.airportFromSearchResults?.getOrNull(index) ?: return
+        itemStore.update(itemId) { data ->
+            data.copy(airportFrom = null, airportFromSearchResults = emptyList())
+        }
+        coroutineScope.launch {
+            val airport = repository.airportDetails(selected.iata)
+            itemStore.update(itemId) { data ->
+                data.copy(
+                    airportFrom = airport,
+                    arrival = data.arrival?.update(timeZone = airport.timeZone.toZoneId()),
+                    airportFromSearchResults = emptyList(),
+                )
+            }
         }
     }
 
     override fun airportToSearchTextChanged(
         itemId: String, content: CharSequence
     ) {
-        coroutineScope.launch {
+        if (content.length < 3) {
+            return
+        }
+        autoCompleteScope.launch {
             val results = repository.autocomplete(content.toString())
             itemStore.update(itemId) {
                 it.copy(airportToSearchResults = results)
@@ -89,14 +105,19 @@ class AddFlightUseCase(
     }
 
     override fun airportToSearchResultTapped(itemId: String, index: Int) {
+        val selected = itemStore.getData(itemId)?.airportToSearchResults?.getOrNull(index) ?: return
         itemStore.update(itemId) { data ->
-            val selected = data.airportToSearchResults.getOrNull(index)
-            data.copy(
-                airportTo = selected,
-                arrival = selected?.timeZone?.let { data.arrival?.update(timeZone = it.toZoneId()) }
-                    ?: data.arrival,
-                airportToSearchResults = emptyList(),
-            )
+            data.copy(airportTo = null, airportToSearchResults = emptyList())
+        }
+        coroutineScope.launch {
+            val airport = repository.airportDetails(selected.iata)
+            itemStore.update(itemId) { data ->
+                data.copy(
+                    airportTo = airport,
+                    arrival = data.arrival?.update(timeZone = airport.timeZone.toZoneId()),
+                    airportToSearchResults = emptyList(),
+                )
+            }
         }
     }
 
