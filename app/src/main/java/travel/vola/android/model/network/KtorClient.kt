@@ -18,6 +18,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
+import travel.vola.android.BuildConfig
 import java.util.Locale
 
 @Serializable
@@ -56,31 +57,30 @@ private val client = HttpClient {
             explicitNulls = false
         })
     }
-    install(Auth) {
-        bearer {
-            loadTokens {
-                val validToken =
-                    token?.takeIf { it.expiration > System.currentTimeMillis() }
+    if (BuildConfig.REQUIRES_AUTH) {
+        install(Auth) {
+            bearer {
+                loadTokens {
+                    val validToken = token?.takeIf { it.expiration > System.currentTimeMillis() }
                         ?: fetchToken().also { token = it }
-                BearerTokens(validToken.accessToken, refreshToken = null)
-            }
-            refreshTokens {
-                val newToken = fetchToken().also { token = it }
-                BearerTokens(newToken.accessToken, refreshToken = null)
+                    BearerTokens(validToken.accessToken, refreshToken = null)
+                }
+                refreshTokens {
+                    val newToken = fetchToken().also { token = it }
+                    BearerTokens(newToken.accessToken, refreshToken = null)
+                }
             }
         }
     }
 }
 
-private const val SERVER_URL = "https://travel-api-master-rlbhlyi7ja-uc.a.run.app"
+private const val SERVER_URL = BuildConfig.SERVER_URL
 fun httpClient() = client
 
 suspend inline fun <reified T> request(
-    path: String,
-    noinline builder: HttpRequestBuilder.() -> Unit
+    path: String, noinline builder: HttpRequestBuilder.() -> Unit
 ): T? {
-    val response =
-        get(path, builder)
+    val response = get(path, builder)
     return if (response.status == HttpStatusCode.OK) {
         response.body<T>()
     } else {
@@ -89,8 +89,7 @@ suspend inline fun <reified T> request(
 }
 
 suspend fun get(
-    path: String,
-    builder: HttpRequestBuilder.() -> Unit
+    path: String, builder: HttpRequestBuilder.() -> Unit
 ) = httpClient().get(SERVER_URL) {
     url { path(path) }
     headers {
