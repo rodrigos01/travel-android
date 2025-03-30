@@ -99,7 +99,8 @@ class ManualAddLodgingUseCase(
             name = entity.name,
             address = entity.address,
             checkIn = entity.checkIn,
-            checkOut = entity.checkout
+            checkOut = entity.checkout,
+            city = entity.city,
         )
         itemStore.addItem(data, params)
     }
@@ -140,7 +141,7 @@ class ManualAddLodgingUseCase(
         val data = itemStore.getData(item.id)
             ?: error("item has no pending data associated with it")
         data.address ?: error("address from is not set")
-        data.city ?: error("city from is not set")
+        data.city ?: error("lodging city is not set")
         data.checkOut
         return Lodging(
             id = data.entityId ?: data.id,
