@@ -18,6 +18,16 @@ android {
     namespace = "travel.vola.android"
     compileSdk = 35
 
+    signingConfigs {
+        create("release") {
+            // You need to specify either an absolute path or include the
+            // keystore file in the same directory as the build.gradle file.
+            storeFile = file("travel-release.jks")
+            storePassword = "SZoyCEhfiC1mBX10"
+            keyAlias = "travel-release-key"
+            keyPassword = "SZoyCEhfiC1mBX10"
+        }
+    }
     defaultConfig {
         applicationId = "travel.vola.android"
         minSdk = 26
@@ -28,16 +38,10 @@ android {
                 ?.let { ".$it" }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-    signingConfigs {
-        create("release") {
-            // You need to specify either an absolute path or include the
-            // keystore file in the same directory as the build.gradle file.
-            storeFile = file("travel-release.jks")
-            storePassword = "SZoyCEhfiC1mBX10"
-            keyAlias = "travel-release-key"
-            keyPassword = "SZoyCEhfiC1mBX10"
-        }
+        buildConfigField(
+            "String", "SERVER_URL", "\"https://travel-api-master-rlbhlyi7ja-uc.a.run.app\""
+        )
+        buildConfigField("boolean", "REQUIRES_AUTH", "true")
     }
     buildTypes {
         release {
@@ -57,8 +61,17 @@ android {
             applicationIdSuffix = ".debug"
         }
     }
+    flavorDimensions += "host"
+    productFlavors {
+        create("local") {
+            dimension = "host"
+            buildConfigField("String", "SERVER_URL", "\"http://10.0.2.2:5000\"")
+            buildConfigField("boolean", "REQUIRES_AUTH", "false")
+        }
+    }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
