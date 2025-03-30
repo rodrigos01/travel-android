@@ -4,7 +4,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import travel.vola.android.extensions.MapFlow
 import travel.vola.android.extensions.atTimeZone
-import travel.vola.android.extensions.now
 import travel.vola.android.extensions.plus
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.update
@@ -94,7 +93,7 @@ class AddFlightUseCase(
             val selected = data.airportToSearchResults.getOrNull(index)
             data.copy(
                 airportTo = selected,
-                arrival = selected?.timeZone?.let { data.arrival?.update(timeZone = it) }
+                arrival = selected?.timeZone?.let { data.arrival?.update(timeZone = it.toZoneId()) }
                     ?: data.arrival,
                 airportToSearchResults = emptyList(),
             )

@@ -27,11 +27,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.launch
 import travel.vola.android.extensions.Time
-import travel.vola.android.extensions.now
+import travel.vola.android.extensions.timeInMillis
 import travel.vola.android.extensions.update
 import travel.vola.android.model.data.Time
 import travel.vola.android.ui.theme.AppTheme
-import java.util.TimeZone
+import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,8 +43,8 @@ fun DatePickerButton(
     content: @Composable () -> Unit,
 ) {
     val minTimeInDeviceTimeZone =
-        minimumSelectableTime?.update(timeZone = TimeZone.getTimeZone("UTC"))
-    val selectedTimeInDeviceTimeZone = selectedTime?.update(timeZone = TimeZone.getTimeZone("UTC"))
+        minimumSelectableTime?.update(timeZone = ZoneId.of("UTC"))
+    val selectedTimeInDeviceTimeZone = selectedTime?.update(timeZone = ZoneId.of("UTC"))
     var showDatePicker by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val interactionSource = remember { MutableInteractionSource() }

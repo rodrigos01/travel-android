@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -37,7 +38,7 @@ import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.monthAndYearString
 import travel.vola.android.ui.lodgingsearch.state.LodgingReviewState
 import travel.vola.android.ui.theme.AppTheme
-import java.text.DateFormat
+import java.time.format.FormatStyle
 
 @Composable
 fun LodgingReviewItem(state: LodgingReviewState) {
@@ -49,7 +50,7 @@ fun LodgingReviewItem(state: LodgingReviewState) {
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
-                    state.reviewTime.dateString(style = DateFormat.LONG),
+                    state.reviewTime.dateString(style = FormatStyle.LONG),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium
                 )

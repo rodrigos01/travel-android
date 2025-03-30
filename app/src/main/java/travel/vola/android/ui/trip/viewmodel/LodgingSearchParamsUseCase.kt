@@ -5,6 +5,7 @@ import kotlinx.coroutines.launch
 import travel.vola.android.common.coroutines.MutexScope
 import travel.vola.android.extensions.MapFlow
 import travel.vola.android.extensions.plus
+import travel.vola.android.extensions.timeInMillis
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Lodging
@@ -123,7 +124,7 @@ class LodgingSearchParamsUseCase(
                     checkIn = it.checkIn.timeInMillis,
                     checkOut = it.checkOut.timeInMillis,
                     locationId = it.city.id,
-                    timeZoneId = it.checkIn.timeZone.id
+                    timeZoneId = it.checkIn.zone.id
                 )
             } else {
                 null

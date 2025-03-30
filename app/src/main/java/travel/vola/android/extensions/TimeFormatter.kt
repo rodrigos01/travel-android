@@ -1,11 +1,9 @@
 package travel.vola.android.extensions
 
 import travel.vola.android.model.data.Time
-import java.text.DateFormat
 import java.text.DateFormatSymbols
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 class TimeFormatter {
     fun dayOfMonthString(time: Time): String = time.dayOfMonthString()
@@ -16,42 +14,24 @@ class TimeFormatter {
 
     fun timeString(time: Time): String = time.timeString()
 
-    fun monthString(time: Time): String = DateFormatSymbols.getInstance().months[time.month - 1]
+    fun monthString(time: Time): String =
+        DateFormatSymbols.getInstance().months[time.monthValue - 1]
 }
 
 fun Time.dayOfMonthString(): String = dayOfMonth.toString()
 
-fun Time.dateString(style: Int = DateFormat.SHORT): String =
-    SimpleDateFormat.getDateInstance(style).apply { timeZone = this@dateString.timeZone }
-        .format(Date(timeInMillis))
+fun Time.dateString(style: FormatStyle = FormatStyle.SHORT): String =
+    format(DateTimeFormatter.ofLocalizedDate(style))
 
-fun Time.monthAndYearString(): String =
-    SimpleDateFormat("MMMM yyyy", Locale.getDefault()).apply {
-        timeZone = this@monthAndYearString.timeZone
-    }.format(Date(timeInMillis))
+fun Time.monthAndYearString(): String = format(DateTimeFormatter.ofPattern("MMMM yyyy"))
 
-fun Time.dayAndMonthString(): String =
-    SimpleDateFormat("MMM d", Locale.getDefault()).apply {
-        timeZone = this@dayAndMonthString.timeZone
-    }.format(Date(timeInMillis))
+fun Time.dayAndMonthString(): String = format(DateTimeFormatter.ofPattern("MMM d"))
 
 fun Time.dayOfWeekString(): String =
-    DateFormatSymbols.getInstance().shortWeekdays[dayOfWeek]
+    DateFormatSymbols.getInstance().shortWeekdays[dayOfWeek.value]
 
-fun Time.timeString(): String {
-    val formatter = SimpleDateFormat.getTimeInstance(DateFormat.SHORT).apply {
-        timeZone = this@timeString.timeZone
-    }
-    val date = Date(timeInMillis)
-    return formatter.format(date)
-}
+fun Time.timeString(): String = format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
 
-fun Time.asISO8601DateString(): String =
-    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).also {
-        it.timeZone = timeZone
-    }.format(Date(timeInMillis))
+fun Time.asISO8601DateString(): String = format(DateTimeFormatter.ISO_LOCAL_DATE)
 
-fun Time.asISO8601String(): String =
-    SimpleDateFormat("yyyy-MM-dd'T'HH:mm Z", Locale.getDefault()).also {
-        it.timeZone = timeZone
-    }.format(Date(timeInMillis))
+fun Time.asISO8601String(): String = format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)

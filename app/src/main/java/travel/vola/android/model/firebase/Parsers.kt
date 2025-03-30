@@ -1,6 +1,7 @@
 package travel.vola.android.model.firebase
 
 import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.asISO8601String
 import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
@@ -8,9 +9,6 @@ import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.Trip
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import java.util.TimeZone
 
 fun FirebaseData.Trip.toAppDataModel(): Trip {
@@ -87,7 +85,7 @@ fun FlightSegment.toFirebaseDataModel() = FirebaseData.FlightSegment(
 fun Airport.toFirebaseDataModel() = FirebaseData.Airport(
     iata = iata,
     name = name,
-    timezone = timeZone?.id,
+    timezone = timeZone.id,
     city = city.toFirebaseDataModel(),
 )
 
@@ -113,7 +111,4 @@ fun Place.toFirebaseDataModel() = FirebaseData.Place(
 
 fun String.toTime(): Time = Time(this)
 
-fun Time.toFirebaseDataModel() =
-    SimpleDateFormat("yyyy-MM-dd'T'HH:mm Z", Locale.getDefault()).also {
-        it.timeZone = timeZone
-    }.format(Date(timeInMillis))
+fun Time.toFirebaseDataModel() = this.asISO8601String()
