@@ -51,6 +51,11 @@ android {
                 groups = "developers"
             }
         }
+        debug {
+            isMinifyEnabled = false
+            isDebuggable = true
+            applicationIdSuffix = ".debug"
+        }
     }
     buildFeatures {
         compose = true
