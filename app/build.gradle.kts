@@ -11,8 +11,8 @@ plugins {
 }
 
 val ktorVersion = "3.0.3"
-val composeVersion = "1.7.7"
-val navigationVersion = "2.8.6"
+val composeVersion = "1.7.8"
+val navigationVersion = "2.8.9"
 
 android {
     namespace = "travel.vola.android"
@@ -75,8 +75,6 @@ composeCompiler {
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.1.10")
     implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("androidx.cardview:cardview:1.0.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.2.0")
     implementation("com.google.android.material:material:1.12.0")
     // Lifecycle
     implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
@@ -106,10 +104,10 @@ dependencies {
     implementation("androidx.compose.foundation:foundation:$composeVersion")
     implementation("androidx.compose.runtime:runtime-livedata:$composeVersion")
     implementation("androidx.compose.material3:material3:1.3.1")
-    implementation("androidx.activity:activity-compose:1.10.0")
+    implementation("androidx.activity:activity-compose:1.10.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
-    implementation("androidx.constraintlayout:constraintlayout-compose:1.1.0")
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.1.1")
     // Google Maps
     implementation("com.google.maps.android:maps-compose:6.4.1")
     // Ktor
