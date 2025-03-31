@@ -17,6 +17,7 @@ fun ApiData.Airport.toAppDataModel() = Airport(
 fun ApiData.AirportSearchResult.toAppDataModel() = AirportSearchResult(
     iata = iata,
     name = name,
+    location = location,
 )
 
 fun ApiData.SimplePlace.toAppDataModel() = SimplePlace(

@@ -12,6 +12,7 @@ import travel.vola.android.model.repository.LodgingSearchRepository
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
 import travel.vola.android.ui.trip.creation.usecase.ManualAddPlanItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.PendingData.PendingLodging
+import travel.vola.android.ui.trip.state.AutoCompleteResultState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
 import kotlin.time.Duration.Companion.days
@@ -125,7 +126,11 @@ class ManualAddLodgingUseCase(
                 minTime = data.checkIn.toMidnight(),
                 dateSelectionEnabled = stateParams.dateSelectionEnabled,
                 locationText = data.name ?: data.address,
-                searchResults = data.searchResults.map { it.name ?: it.address },
+                searchResults = data.searchResults.map {
+                    AutoCompleteResultState(
+                        it.name, subtitle = it.address,
+                    )
+                },
             ),
             endState = ManualAddPlanState(
                 time = data.checkOut,

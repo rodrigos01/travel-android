@@ -36,7 +36,8 @@ fun <T> AutoCompleteTextField(
     onTextChanged: (String) -> Unit,
     onOptionSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    itemContent: (T) -> String
+    itemText: (T) -> String,
+    itemContent: @Composable (T) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
     Box(
@@ -49,7 +50,7 @@ fun <T> AutoCompleteTextField(
             mutableStateOf(null)
         }
         val text = remember(state.text, input, selection) {
-            input ?: selection?.let { itemContent(it) } ?: state.text.orEmpty()
+            input ?: selection?.let { itemText(it) } ?: state.text.orEmpty()
         }
         OutlinedTextField(
             value = text,
@@ -74,7 +75,7 @@ fun <T> AutoCompleteTextField(
         ) {
             state.suggestions.forEachIndexed { index, option ->
                 DropdownMenuItem(
-                    text = { Text(itemContent(option)) },
+                    text = { itemContent(option) },
                     onClick = {
                         showSuggestions = false
                         input = null
@@ -100,7 +101,8 @@ fun AutoCompleteTextFieldPreview() {
                 placeHolder = null,
                 onTextChanged = {},
                 onOptionSelected = {},
-                itemContent = { it }
+                itemText = { it },
+                itemContent = { Text(it) }
             )
         }
     }
