@@ -50,6 +50,7 @@ import travel.vola.android.ui.trip.creation.composable.TimePickerButton
 import travel.vola.android.ui.trip.creation.composable.TimePickerTextButton
 import travel.vola.android.ui.trip.creation.composable.rememberAutoCompleteTextFieldState
 import travel.vola.android.ui.trip.creation.composable.rememberTimePickerDialogState
+import travel.vola.android.ui.trip.state.AutoCompleteResultState
 import java.util.TimeZone
 
 class AddPlanRowState(
@@ -76,7 +77,7 @@ fun rememberAddPlanRowState(
 fun AddPlanRow(
     state: AddPlanRowState,
     minTime: Time?,
-    searchResults: List<String>,
+    searchResults: List<AutoCompleteResultState>,
     title: @Composable () -> Unit,
     timeSelectorLabel: String,
     text: String? = null,
@@ -169,7 +170,19 @@ fun AddPlanRow(
                     placeHolder = placeHolder,
                     onTextChanged,
                     onOptionSelected = { state.selectedSearchResultIndex = it },
-                    itemContent = { it },
+                    itemText = { it.title },
+                    itemContent = { result ->
+                        Column {
+                            Text(result.title)
+                            result.subtitle?.let {
+                                Text(
+                                    it,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    },
                 )
             } else {
                 val showTimePicker = remember {

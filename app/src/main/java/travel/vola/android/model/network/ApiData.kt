@@ -38,6 +38,7 @@ interface ApiData {
     data class AirportSearchResult(
         val iata: String,
         val name: String,
+        val location: String,
     )
 
     @Serializable
@@ -55,7 +56,7 @@ interface ApiData {
     @Serializable
     data class SimplePlace(
         val id: String,
-        val name: String?,
+        val name: String,
         val address: String,
     )
 

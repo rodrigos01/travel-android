@@ -16,6 +16,7 @@ import travel.vola.android.ui.trip.creation.usecase.AddFlightItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
 import travel.vola.android.ui.trip.creation.usecase.PendingData.PendingFlight
 import travel.vola.android.ui.trip.state.AddFlightItemState
+import travel.vola.android.ui.trip.state.AutoCompleteResultState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
 import kotlin.time.Duration.Companion.hours
 
@@ -161,14 +162,21 @@ class AddFlightUseCase(
                 minTime = Time.now().toMidnight(),
                 dateSelectionEnabled = stateParams.dateSelectionEnabled,
                 locationText = data.airportFrom?.name,
-                searchResults = data.airportFromSearchResults.map { it.name },
+                searchResults = data.airportFromSearchResults.map {
+                    AutoCompleteResultState(it.name, it.location)
+                },
             ),
             endState = ManualAddPlanState(
                 time = data.arrival?.takeIf { it >= minArrival },
                 minTime = minArrival,
                 dateSelectionEnabled = true,
                 locationText = data.airportTo?.name,
-                searchResults = data.airportToSearchResults.map { it.name },
+                searchResults = data.airportToSearchResults.map {
+                    AutoCompleteResultState(
+                        it.name,
+                        it.location
+                    )
+                },
             ),
             typeSelectionEnabled = stateParams.typeSelectionEnabled,
             deleteButtonEnabled = stateParams.deleteEnabled,

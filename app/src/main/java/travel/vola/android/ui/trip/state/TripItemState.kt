@@ -118,7 +118,7 @@ data class ManualAddPlanState(
     val minTime: Time,
     val dateSelectionEnabled: Boolean,
     val locationText: String?,
-    val searchResults: List<String>
+    val searchResults: List<AutoCompleteResultState>
 )
 
 sealed interface AddPlanItemState : TripItemState, Identifiable,
@@ -146,6 +146,8 @@ sealed interface ManualStartEndAddPlanState : AddPlanItemState {
 }
 
 sealed interface AddLodgingItemState : AddPlanItemState
+
+data class AutoCompleteResultState(val title: String, val subtitle: String?)
 
 data class ManualAddLodgingItemState(
     override val id: String,
