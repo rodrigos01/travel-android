@@ -154,7 +154,7 @@ steps:
     id: deploy_to_beta
     args:
       - 'appdistribution:distribute'
-      - 'app/build/outputs/apk/release/app-release.apk'
+      - 'app/build/outputs/apk/release/app-prod-release.apk'
       - '--app'
       - '$_FIREBASE_APP_ID'
       - '--groups'
