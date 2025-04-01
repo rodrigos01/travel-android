@@ -1,7 +1,11 @@
 package travel.vola.android.ui
 
+import android.content.Context
 import android.os.Bundle
+import android.view.View
+import android.view.ViewTreeObserver
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
@@ -24,15 +28,37 @@ import travel.vola.android.ui.triplist.TripListViewModel
 import travel.vola.android.ui.triplist.composable.TripList
 import travel.vola.android.ui.triplist.composable.TripListDestination
 
+lateinit var applicationContext: Context
+    private set
+
+private fun setApplicationContext(context: Context) {
+    applicationContext = context
+}
+
 @ExperimentalMaterial3Api
 class MainActivity : AppCompatActivity() {
 
     private val serviceLocator: ServiceLocator by lazy { ServiceLocator() }
 
+    private val viewModel: StartupViewModel by viewModels(factoryProducer = { StartupViewModel.Factory() })
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        setApplicationContext(this.applicationContext)
         super.onCreate(savedInstanceState)
 
         setContent { MainScreen() }
+        val content = findViewById<View>(android.R.id.content)
+        content.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                if (viewModel.uiState.value.isLoaded) {
+                    content.viewTreeObserver.removeOnPreDrawListener(this)
+                    return true
+                } else {
+                    return false
+                }
+            }
+        })
+
     }
 
     @ExperimentalMaterial3Api

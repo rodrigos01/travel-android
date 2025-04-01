@@ -1,10 +1,16 @@
 package travel.vola.android.model.network
 
+import android.content.Context
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
+import io.ktor.client.plugins.compression.ContentEncoding
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.forms.submitForm
@@ -14,11 +20,14 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
 import io.ktor.http.path
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import travel.vola.android.BuildConfig
+import travel.vola.android.ui.applicationContext
 import java.util.Locale
 
 @Serializable
@@ -29,8 +38,11 @@ private const val AUTH_URL = "https://us-central1-travel-164715.cloudfunctions.n
 private const val CLIENT_ID = "travel-app-android"
 private const val CLIENT_SECRET = "QzD70JbccmYDyI4GjqpUlt4MrpBU259iI0ho"
 
-private suspend fun fetchToken(): Token {
+private suspend fun updateToken(): Token {
     val response = HttpClient {
+        install(ContentEncoding) {
+            gzip()
+        }
         install(ContentNegotiation) {
             json(Json {
                 ignoreUnknownKeys = true
@@ -44,12 +56,18 @@ private suspend fun fetchToken(): Token {
         append("client_secret", CLIENT_SECRET)
         append("scope", SERVER_URL)
     }).body<AuthResponse>()
-    return Token(response.accessToken, System.currentTimeMillis() + response.expiresIn)
+    val newToken = Token(response.accessToken, System.currentTimeMillis() + response.expiresIn)
+    applicationContext.dataStore.edit {
+        it[stringPreferencesKey("token")] = newToken.accessToken
+        it[longPreferencesKey("expiration")] = newToken.expiration
+    }
+    return newToken
 }
+
+private val Context.dataStore by preferencesDataStore("auth")
 
 @OptIn(ExperimentalSerializationApi::class)
 private val client = HttpClient {
-    var token: Token? = null
     install(ContentNegotiation) {
         json(Json {
             ignoreUnknownKeys = true
@@ -61,12 +79,19 @@ private val client = HttpClient {
         install(Auth) {
             bearer {
                 loadTokens {
-                    val validToken = token?.takeIf { it.expiration > System.currentTimeMillis() }
-                        ?: fetchToken().also { token = it }
-                    BearerTokens(validToken.accessToken, refreshToken = null)
+                    val token = applicationContext.dataStore.data.map { preferences ->
+                        val token = preferences[stringPreferencesKey("token")]
+                        val expiration = preferences[longPreferencesKey("expiration")]
+                        if (token != null && expiration != null) {
+                            Token(token, expiration)
+                        } else {
+                            null
+                        }
+                    }.firstOrNull() ?: updateToken()
+                    BearerTokens(token.accessToken, refreshToken = null)
                 }
                 refreshTokens {
-                    val newToken = fetchToken().also { token = it }
+                    val newToken = updateToken()
                     BearerTokens(newToken.accessToken, refreshToken = null)
                 }
             }
@@ -78,7 +103,7 @@ private const val SERVER_URL = BuildConfig.SERVER_URL
 fun httpClient() = client
 
 suspend inline fun <reified T> request(
-    path: String, noinline builder: HttpRequestBuilder.() -> Unit
+    path: String, noinline builder: HttpRequestBuilder.() -> Unit = {}
 ): T? {
     val response = get(path, builder)
     return if (response.status == HttpStatusCode.OK) {
@@ -89,7 +114,7 @@ suspend inline fun <reified T> request(
 }
 
 suspend fun get(
-    path: String, builder: HttpRequestBuilder.() -> Unit
+    path: String, builder: HttpRequestBuilder.() -> Unit = {}
 ) = httpClient().get(SERVER_URL) {
     url { path(path) }
     headers {
