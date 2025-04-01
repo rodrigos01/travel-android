@@ -3,6 +3,11 @@ package travel.vola.android.model.data
 import kotlinx.serialization.Serializable
 import java.util.TimeZone
 
+enum class ServerStatus {
+    OK,
+    UNAVAILABLE,
+}
+
 interface Identifiable {
     val id: String
 }

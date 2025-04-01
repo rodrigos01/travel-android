@@ -2,6 +2,9 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
+        <!--        Splash Screen-->
+        <item name="android:windowSplashScreenBackground">#FFBA31</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
