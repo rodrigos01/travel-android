@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -99,7 +98,6 @@ private fun LodgingSearch(
             Text("Added to your trip. Do you want to continue browsing?")
         }
     }
-    val searchTabListState = rememberLazyListState()
     val tabBarListState = rememberLazyListState()
     var openedResultId by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(openedResultId) {
@@ -111,7 +109,6 @@ private fun LodgingSearch(
         LodgingSearchResults(
             navController,
             state,
-            scrollState = searchTabListState,
             onLodgingTapped = { lodging ->
                 onLodgingTapped(lodging)
                 navigate(lodging.id)
@@ -162,13 +159,13 @@ enum class ControlsVisible {
 fun LodgingSearchResults(
     navController: NavController,
     state: LodgingSearchViewModel.UiState,
-    scrollState: LazyListState = rememberLazyListState(),
     onLodgingTapped: (LodgingSearchResultState) -> Unit = {},
     onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit = {},
     onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit = { _, _, _ -> },
 ) {
     val coroutineScope = rememberCoroutineScope()
     var controlsVisible by remember { mutableStateOf(ControlsVisible.NONE) }
+    val scrollState = rememberLazyListState()
     Scaffold(topBar = {
         Column(
             modifier = Modifier

@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -98,6 +99,7 @@ fun TabbedHost(
 ) {
     var currentTabId by remember { mutableStateOf(startDestination) }
     val scope = TabbedHostScope(builder, navigate = { currentTabId = it })
+    val stateHolder = rememberSaveableStateHolder()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -108,7 +110,9 @@ fun TabbedHost(
                 .weight(1F)
                 .fillMaxWidth()
         ) {
-            scope.findTab(currentTabId).content(scope)
+            stateHolder.SaveableStateProvider(currentTabId) {
+                scope.findTab(currentTabId).content(scope)
+            }
         }
         AnimatedVisibility(
             visible = scope.tabs.size > 1, modifier = Modifier
@@ -118,9 +122,6 @@ fun TabbedHost(
                 )
                 .windowInsetsPadding(WindowInsets.navigationBars)
         ) {
-//            LaunchedEffect(currentTabId) {
-//                tabBarListState.animateScrollToItem(scope.tabs.indexOfFirst { it.id == currentTabId })
-//            }
             LazyRow(
                 state = tabBarListState,
             ) {
