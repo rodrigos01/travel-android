@@ -52,6 +52,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -96,16 +97,16 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripTapped: () -> Unit) {
-    var showImageGallery by remember(state) { mutableStateOf(false) }
-    var imageGalleryModels by remember(state) { mutableStateOf(emptyList<String>()) }
-    var selectedGalleryModel by remember(state) { mutableStateOf<String?>(null) }
+    var showImageGallery by rememberSaveable(state) { mutableStateOf(false) }
+    var imageGalleryModels by rememberSaveable(state) { mutableStateOf(emptyList<String>()) }
+    var selectedGalleryModel by rememberSaveable(state) { mutableStateOf<String?>(null) }
     fun onRoomCoverImageTapped(state: LodgingRoomOfferState, url: String) {
         imageGalleryModels = state.photos
         selectedGalleryModel = url
         showImageGallery = true
     }
 
-    var showExpandedMap by remember(state) { mutableStateOf(false) }
+    var showExpandedMap by rememberSaveable(state) { mutableStateOf(false) }
     val marker = LatLng(state.latitude, state.longitude)
     val scrollState = rememberScrollState()
     var reviewsOffset by remember { mutableStateOf<Offset?>(null) }
@@ -287,16 +288,15 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                 }
             }
             state.description?.let { description ->
-                var expanded by remember { mutableStateOf(true) }
-                var hasMoreText by remember { mutableStateOf(false) }
+                var expanded by rememberSaveable { mutableStateOf(false) }
+                var hasMoreText by rememberSaveable { mutableStateOf(false) }
                 Text(
                     description,
                     maxLines = if (expanded) Int.MAX_VALUE else 6,
                     overflow = TextOverflow.Ellipsis,
                     onTextLayout = {
-                        if (!hasMoreText && it.lineCount > 6) {
+                        if (it.didOverflowHeight) {
                             hasMoreText = true
-                            expanded = false
                         }
                     },
                     modifier = Modifier.animateContentSize(),
