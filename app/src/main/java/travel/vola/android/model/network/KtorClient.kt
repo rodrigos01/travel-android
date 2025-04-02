@@ -16,8 +16,10 @@ import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
+import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
+import io.ktor.http.parsing.ParseException
 import io.ktor.http.path
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.firstOrNull
@@ -114,11 +116,23 @@ suspend inline fun <reified T> request(
 }
 
 suspend fun get(
-    path: String, builder: HttpRequestBuilder.() -> Unit = {}
-) = httpClient().get(SERVER_URL) {
-    url { path(path) }
-    headers {
-        append("accept-language", Locale.getDefault().language)
+    path: String, builder: HttpRequestBuilder.() -> Unit = {}, isRetry: Boolean = false,
+): HttpResponse {
+    try {
+        return httpClient().get(SERVER_URL) {
+            url { path(path) }
+            headers {
+                append("accept-language", Locale.getDefault().language)
+            }
+            builder()
+        }
+    } catch (e: ParseException) {
+        if (!isRetry) {
+            // Ktor can't handle malformed auth 401 headers so we have to handle them ourselves
+            updateToken()
+            return get(path, builder, isRetry = true)
+        } else {
+            throw e
+        }
     }
-    builder()
 }
