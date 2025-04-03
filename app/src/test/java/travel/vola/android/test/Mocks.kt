@@ -7,19 +7,24 @@ import org.mockito.kotlin.mock
 import travel.vola.android.model.data.Time
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalTime
 import java.time.ZoneId
 
 object Mocks {
     fun mockTime(stubbing: KStubbing<Time>.(Time) -> Unit = {}): Time {
-        val timeZoneMock: ZoneId = mock()
         val instant: Instant = mock {
             on { toEpochMilli() } doReturn 0L
         }
+        val localTime = mock<LocalTime> {
+            on { nano } doReturn 0
+        }
         return mock {
-            on { zone } doReturn timeZoneMock
+            on { zone } doReturn ZoneId.systemDefault()
             on { minus(any<Duration>()) } doReturn it
             on { plus(any<Duration>()) } doReturn it
             on { toInstant() } doReturn instant
+            on { withHour(0) } doReturn it
+            on { toLocalTime() } doReturn localTime
             stubbing(it)
         }
     }
