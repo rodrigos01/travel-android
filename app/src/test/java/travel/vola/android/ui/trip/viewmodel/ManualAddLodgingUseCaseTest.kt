@@ -5,15 +5,22 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.test.TestScope
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.fail
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
+import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.set
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.SimplePlace
@@ -24,22 +31,36 @@ import travel.vola.android.test.UnconfinedDispatcherTestRule
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
 import travel.vola.android.ui.trip.creation.usecase.PendingData.PendingLodging
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 
-class AddLodgingDetailsSearchResultUseCaseTest {
+class ManualAddLodgingUseCaseTest {
     @get:Rule
     val rule = UnconfinedDispatcherTestRule()
 
+    private val testScope = TestScope(rule.dispatcher)
+
     private val repository: LodgingSearchRepository = mock()
-    private val itemFlow = MutableStateFlow(mapOf<String, ManualAddLodgingItemState>())
+    private val dataFlow = MutableStateFlow(mapOf<String, PendingLodging>())
     private val itemStore =
         mock<AddPlanItemStore<PendingLodging, ManualAddLodgingItemState>> {
-            on { items(any()) } doReturn itemFlow
+            on { items(any<(PendingLodging, AddPlanUseCase.StateParams) -> ManualAddLodgingItemState>()) } doAnswer { invocation ->
+                val transform =
+                    invocation.arguments.first() as (PendingLodging) -> ManualAddLodgingItemState
+                dataFlow.map {
+                    it.entries.associate { (key, value) ->
+                        key to transform(value)
+                    }
+                }
+            }
+            on { addItem(any(), any()) } doAnswer {
+                dataFlow[(it.arguments[0] as PendingLodging).id] = it.arguments[0] as PendingLodging
+            }
         }
-    private val subject = AddLodgingUseCase(itemStore, repository)
+    private val subject = ManualAddLodgingUseCase(testScope, itemStore, repository)
 
     private val items = subject.items.stateIn(
-        TestScope(rule.dispatcher), started = SharingStarted.Eagerly, initialValue = emptyMap()
+        testScope, started = SharingStarted.Eagerly, initialValue = emptyMap()
     )
 
     @Test
@@ -47,36 +68,40 @@ class AddLodgingDetailsSearchResultUseCaseTest {
         val item = mock<ManualAddLodgingItemState> {
             on { id } doReturn "lodging_id"
         }
-        itemFlow.value = mapOf("lodging_id" to item)
+        dataFlow.value = mapOf("lodging_id" to PendingLodging("lodging_id", mock(), mock(), mock()))
         assertThat(items.value["lodging_id"]).isEqualTo(item)
     }
 
     @Test
     fun `added item should be initialized empty`() {
         val time = mockTime()
-        val data = subject.addItem(time, mock())
-        assertThat(data.startState.locationText).isNull()
-        assertThat(data.startState.searchResults).isEmpty()
+        subject.addItem("lodging_id", time, mock())
+        val item = items.value["lodging_id"] ?: fail()
+
+        assertThat(item.startState.locationText).isNull()
+        assertThat(item.startState.searchResults).isEmpty()
     }
 
     @Test
     fun `added item should be initialized with initial time as check-in`() {
         val initialTime = mockTime()
-        val data = subject.addItem(initialTime, mock())
-        assertThat(data.startState.time).isEqualTo(initialTime)
+        subject.addItem("lodging_id", initialTime, mock())
+        val item = items.value["lodging_id"] ?: fail()
+        assertThat(item.startState.time).isEqualTo(initialTime)
     }
 
     @Test
     fun `added item should be initialized with day after initial time as check-out`() {
         val expected = mockTime()
         val midnightTime = mockTime {
-            on { plus(TimeUnit.DAYS.toMillis(1)) } doReturn expected
+            on { plus(Duration.ofMillis(TimeUnit.DAYS.toMillis(1))) } doReturn expected
         }
         mockkStatic("com.combah.travel2.extensions.TimeKt")
         val initialTime = mockk<Time>()
         every { initialTime.toMidnight() } returns midnightTime
-        val data = subject.addItem(initialTime, mock())
-        assertThat(data.endState.time).isEqualTo(expected)
+        subject.addItem("lodging_id", initialTime, mock())
+        val item = items.value["lodging_id"] ?: fail()
+        assertThat(item.endState.time).isEqualTo(expected)
     }
 
     @Test
@@ -87,45 +112,23 @@ class AddLodgingDetailsSearchResultUseCaseTest {
     }
 
     @Test
-    fun `set check-in time should update departure time`() {
+    fun `set check-in time should update check-in time`() {
         val newTime = mockTime()
-        val originalTime = mockTime {
-            on { copy(hour = 10, minute = 52) } doReturn newTime
-        }
+        val originalTime = Time("2025-10-17T15:23:00+01:00")
         val originalData =
             PendingLodging(id = "lodging_id", checkIn = originalTime, checkOut = mock())
-        subject.setCheckInTime("lodging_id", hour = 10, minute = 52)
+        subject.setCheckInTime("lodging_id", Time("2025-10-17T10:52:00+01:00"))
         val result = getUpdateResult(originalData)
         assertThat(result.checkIn).isEqualTo(newTime)
     }
 
     @Test
-    fun `set arrival day should update arrival day`() {
+    fun `set check-out time should update check-out time`() {
         val newTime = mockTime()
-        val originalTime = mockTime {
-            on { copy(dayOfMonth = 21, month = 4, year = 2024) } doReturn newTime
-        }
-        val receivedTime = mockTime {
-            on { dayOfMonth } doReturn 21
-            on { month } doReturn 4
-            on { year } doReturn 2024
-        }
+        val originalTime = Time("2025-10-17T15:23:00+01:00")
         val originalData =
-            PendingLodging(id = "lodging_id", checkIn = mockTime(), checkOut = originalTime)
-        subject.setCheckOutDate("lodging_id", receivedTime)
-        val result = getUpdateResult(originalData)
-        assertThat(result.checkOut).isEqualTo(newTime)
-    }
-
-    @Test
-    fun `set arrival time should update arrival time`() {
-        val newTime = mockTime()
-        val originalTime = mockTime {
-            on { copy(hour = 11, minute = 43) } doReturn newTime
-        }
-        val originalData =
-            PendingLodging(id = "lodging_id", checkIn = mockTime(), checkOut = originalTime)
-        subject.setCheckoutTime("lodging_id", hour = 11, minute = 43)
+            PendingLodging(id = "lodging_id", checkIn = mock(), checkOut = originalTime)
+        subject.setCheckOutTime("lodging_id", Time("2025-10-17T10:52:00+01:00"))
         val result = getUpdateResult(originalData)
         assertThat(result.checkOut).isEqualTo(newTime)
     }
@@ -133,10 +136,13 @@ class AddLodgingDetailsSearchResultUseCaseTest {
     @Test
     fun `lodging search result tapped should update item with selected lodging`() {
         val paris = mock<Place>()
+        repository.stub {
+            onBlocking { placeCity("hotel_id", "lodging_id") } doReturn paris
+        }
         val expected: SimplePlace = mock {
+            on { id } doReturn "hotel_id"
             on { name } doReturn "Hotel Novotel Paris Les Halles"
             on { address } doReturn "Blvd Les Halles, 45"
-            on { city } doReturn paris
         }
         val originalData =
             PendingLodging(
@@ -157,6 +163,8 @@ class AddLodgingDetailsSearchResultUseCaseTest {
     }
 
     private fun getUpdateResult(originalData: PendingLodging): PendingLodging {
-        return getUpdateResult(itemStore, originalData)
+        val captor = argumentCaptor<(PendingLodging) -> PendingLodging>()
+        verify(itemStore).update(any(), captor.capture())
+        return captor.firstValue(originalData)
     }
 }
