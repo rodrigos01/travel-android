@@ -97,7 +97,7 @@ class ManualAddLodgingUseCaseTest {
         val midnightTime = mockTime {
             on { plus(Duration.ofMillis(TimeUnit.DAYS.toMillis(1))) } doReturn expected
         }
-        mockkStatic("com.combah.travel2.extensions.TimeKt")
+        mockkStatic("travel.vola.android.extensions.TimeKt")
         val initialTime = mockk<Time>()
         every { initialTime.toMidnight() } returns midnightTime
         subject.addItem("lodging_id", initialTime, mock())
