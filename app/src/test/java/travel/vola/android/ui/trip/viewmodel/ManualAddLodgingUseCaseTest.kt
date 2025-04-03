@@ -46,10 +46,10 @@ class ManualAddLodgingUseCaseTest {
         mock<AddPlanItemStore<PendingLodging, ManualAddLodgingItemState>> {
             on { items(any<(PendingLodging, AddPlanUseCase.StateParams) -> ManualAddLodgingItemState>()) } doAnswer { invocation ->
                 val transform =
-                    invocation.arguments.first() as (PendingLodging) -> ManualAddLodgingItemState
+                    invocation.arguments.first() as (PendingLodging, AddPlanUseCase.StateParams) -> ManualAddLodgingItemState
                 dataFlow.map {
                     it.entries.associate { (key, value) ->
-                        key to transform(value)
+                        key to transform(value, mock())
                     }
                 }
             }
@@ -68,7 +68,8 @@ class ManualAddLodgingUseCaseTest {
         val item = mock<ManualAddLodgingItemState> {
             on { id } doReturn "lodging_id"
         }
-        dataFlow.value = mapOf("lodging_id" to PendingLodging("lodging_id", mock(), mock(), mock()))
+        dataFlow.value =
+            mapOf("lodging_id" to PendingLodging("lodging_id", "entity", mock(), mock()))
         assertThat(items.value["lodging_id"]).isEqualTo(item)
     }
 
