@@ -15,7 +15,6 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
 import travel.vola.android.extensions.Time
-import travel.vola.android.extensions.TimeFormatter
 import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
@@ -54,12 +53,14 @@ class TripViewModelTest {
         on { items } doReturn addPlanItems
     }
     private val subject =
-        travel.vola.android.ui.trip.viewmodel.TripViewModel(
+        TripViewModel(
             repository,
+            mock(),
             "tripId",
+            mock(),
+            mock(),
+            mock(),
             addPlanUseCase,
-            TimeFormatter(),
-            mock()
         )
 
     private fun String?.asTime(): Time = this?.let { Time(this) } ?: Time(0L, TimeZone.getDefault())
@@ -702,7 +703,10 @@ class TripViewModelTest {
             subject.viewState.value.items.first { it is HotelCheckOutItemState && it.hotelName == lodgingName } as TripItemState.EventItemState
         subject.addButtonTapped(checkOutItem.id)
         verify(addPlanUseCase).createAddPlanItem(
-            eq(Time("2024-05-30T11:00 +0200")), dateSelectionEnabled = eq(false), type = any()
+            eq("originalItemId"),
+            eq(Time("2024-05-30T11:00 +0200")),
+            dateSelectionEnabled = eq(false),
+            type = any(),
         )
     }
 
@@ -750,7 +754,8 @@ class TripViewModelTest {
             subject.viewState.value.items.filterIsInstance<DateRangeItemState>().first()
         subject.addButtonTapped(originalItem.id)
         verify(addPlanUseCase).createAddPlanItem(
-            time = any(), dateSelectionEnabled = eq(true), type = any()
+            id = eq("originalItemId"),
+            time = any(), dateSelectionEnabled = eq(true), type = any(),
         )
     }
 
@@ -958,7 +963,6 @@ class TripViewModelTest {
         addPlanUseCase.stub {
             on { createAddPlanItem(any(), any(), any()) } doAnswer {
                 addPlanItems.value = mapOf(addPlanItem.id to addPlanItem)
-                addPlanItem
             }
         }
     }
@@ -994,14 +998,14 @@ class TripViewModelTest {
                 airportFrom = Airport(
                     iata = airportFromIata,
                     name = airportFromName,
-                    timeZone = null,
+                    timeZone = TimeZone.getDefault(),
                     city = Place(cityFromName),
                 ),
                 departure = departure.asTime(),
                 airportTo = Airport(
                     iata = airportToIata,
                     name = airportToName,
-                    timeZone = null,
+                    timeZone = TimeZone.getDefault(),
                     city = Place(cityToName),
                 ),
                 arrival = arrival.asTime(),

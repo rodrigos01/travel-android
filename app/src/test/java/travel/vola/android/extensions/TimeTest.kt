@@ -2,7 +2,7 @@ package travel.vola.android.extensions
 
 import org.assertj.core.api.Assertions
 import org.junit.Test
-import java.util.TimeZone
+import java.time.ZoneId
 
 class TimeTest {
     @Test
@@ -13,6 +13,6 @@ class TimeTest {
         Assertions.assertThat(time.dayOfMonth).isEqualTo(21)
         Assertions.assertThat(time.hour).isEqualTo(16)
         Assertions.assertThat(time.minute).isEqualTo(50)
-        Assertions.assertThat(time.timeZone).isEqualTo(TimeZone.getTimeZone("GMT+2"))
+        Assertions.assertThat(time.zone).isEqualTo(ZoneId.of("GMT+2"))
     }
 }

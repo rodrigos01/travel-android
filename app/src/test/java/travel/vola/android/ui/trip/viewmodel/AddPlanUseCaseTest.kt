@@ -43,26 +43,23 @@ class AddPlanUseCaseTest {
     private val addLodgingUseCase: AddLodgingUseCase = mock {
         on { items } doReturn addLodgingItems
     }
-    private val subject = AddPlanUseCase(addFlightUseCase, addLodgingUseCase)
+    private val subject = AddPlanUseCase(mock(), testScope, addFlightUseCase, addLodgingUseCase)
 
     @Test
     fun `added plan item should be initialized as Flight`() {
         val original = mock<AddFlightItemState>()
-        addFlightUseCase.stub {
-            on { addItem(any<Time>(), any()) } doReturn original
-        }
-        val addedItem = subject.createAddPlanItem(mock<Time>())
+        val addedItem = subject.createAddPlanItem("item_id", mock<Time>())
         assertType<AddFlightItemState>(addedItem)
     }
 
     @Test
     fun `added plan item with entity should be initialized as entity type`() {
         val flight = mock<Flight>()
-        subject.createAddPlanItem(flight)
-        verify(addFlightUseCase.addItem(eq(flight), any()))
+        subject.createAddPlanItem("item_id", flight)
+        verify(addFlightUseCase.addItem(eq("item_id"), eq(flight), any()))
         val lodging = mock<Lodging>()
-        subject.createAddPlanItem(lodging)
-        verify(addLodgingUseCase).addItem(eq(lodging), any())
+        subject.createAddPlanItem("item_id", lodging)
+        verify(addLodgingUseCase).addItem(eq("item_id"), eq(lodging), any())
     }
 
     @Test
@@ -73,13 +70,9 @@ class AddPlanUseCaseTest {
             on { id } doReturn "originalId"
             on { timestamp } doReturn initialTime
         }
-        addFlightUseCase.stub {
-            on { addItem(eq(initialTime), any()) } doReturn original
-        }
-        addLodgingUseCase.stub { on { addItem(eq(initialTime), any()) } doReturn expected }
         val newItem = subject.addPlanTypeChanged("originalId", AddPlanItemState.Type.Lodging)
         verify(addFlightUseCase).removeItem(original)
-        verify(addLodgingUseCase).addItem(eq(initialTime), any())
+        verify(addLodgingUseCase).addItem(eq("item_id"), eq(initialTime), any())
         assertThat(newItem).isEqualTo(expected)
     }
 
@@ -88,9 +81,6 @@ class AddPlanUseCaseTest {
         val initialTime: Time = mock()
         val original = mock<AddFlightItemState> {
             on { id } doReturn "originalId"
-        }
-        addFlightUseCase.stub {
-            on { addItem(eq(initialTime), any()) } doReturn original
         }
         subject.addPlanTypeChanged("originalId", AddPlanItemState.Type.Flight)
         verifyNoInteractions(addFlightUseCase)
