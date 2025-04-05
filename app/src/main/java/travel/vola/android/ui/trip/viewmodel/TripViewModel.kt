@@ -71,7 +71,24 @@ class TripViewModel(
     data class ViewState(
         val title: String,
         val items: List<TripItemState>,
+        val places: List<PlaceState>,
     )
+
+    data class PlaceState(
+        val listIndex: Int,
+        val markers: List<MarkerState>,
+    )
+
+    data class MarkerState(
+        val position: Pair<Double, Double>,
+        val name: String,
+        val type: MarkerType,
+    )
+
+    enum class MarkerType {
+        City,
+        Lodging,
+    }
 
     private val reversibleItems = mutableMapOf<String, TripItemState>()
 
@@ -83,10 +100,24 @@ class TripViewModel(
 
     private val trip = repository.findTripById(tripId)
         .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
-    private val eventsFromTrip = trip.filterNotNull().map {
+    private val eventsFromTrip = trip.filterNotNull().map { currentTrip ->
+        val items = genItems(currentTrip)
         ViewState(
-            title = it.name ?: "Untitled Trip",
-            items = genItems(it),
+            title = currentTrip.name ?: "Untitled Trip",
+            items = genItems(currentTrip),
+            places = (currentTrip.lodgings.map { it.city })
+                .map { place ->
+                    PlaceState(
+                        listIndex = items.indexOfFirst { it is TripItemState.PlaceItemState && place.name == it.placeName },
+                        markers = listOf(
+                            MarkerState(
+                                position = Pair(place.latitude, place.longitude),
+                                name = place.name,
+                                type = MarkerType.City,
+                            )
+                        ),
+                    )
+                }
         )
     }
     private val addPlanItemsState = addPlanUseCase.items.onEach { state ->
@@ -109,10 +140,10 @@ class TripViewModel(
             }
             state.copy(items = items)
         }.stateIn(
-                viewModelScope, started = SharingStarted.Eagerly, initialValue = ViewState(
-                    title = "", items = emptyList()
-                )
+            viewModelScope, started = SharingStarted.Eagerly, initialValue = ViewState(
+                title = "", items = emptyList(), places = emptyList()
             )
+        )
 
     fun tripNameChanged(newName: String) {
         viewModelScope.launch {
