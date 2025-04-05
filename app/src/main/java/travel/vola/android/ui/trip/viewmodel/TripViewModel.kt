@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import travel.vola.android.common.coroutines.createUseCaseScope
+import travel.vola.android.common.ui.state.MarkerType
+import travel.vola.android.common.ui.state.MarkerViewState
 import travel.vola.android.di.ServiceLocator
 import travel.vola.android.extensions.TimeFormatter
 import travel.vola.android.extensions.minus
@@ -76,19 +78,8 @@ class TripViewModel(
 
     data class PlaceState(
         val listIndex: Int,
-        val markers: List<MarkerState>,
+        val markers: List<MarkerViewState>,
     )
-
-    data class MarkerState(
-        val position: Pair<Double, Double>,
-        val name: String,
-        val type: MarkerType,
-    )
-
-    enum class MarkerType {
-        City,
-        Lodging,
-    }
 
     private val reversibleItems = mutableMapOf<String, TripItemState>()
 
@@ -110,7 +101,7 @@ class TripViewModel(
                     PlaceState(
                         listIndex = items.indexOfFirst { it is TripItemState.PlaceItemState && place.name == it.placeName },
                         markers = listOf(
-                            MarkerState(
+                            MarkerViewState(
                                 position = Pair(place.latitude, place.longitude),
                                 name = place.name,
                                 type = MarkerType.City,
