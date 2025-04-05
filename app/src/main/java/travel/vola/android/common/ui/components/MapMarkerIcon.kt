@@ -25,12 +25,14 @@ import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.ui.theme.AppTheme
 
 private const val MARKER_SIZE = 24
+private const val MARKER_SELECTED_SIZE = 32
 
 @Composable
 fun mapMarkerIcon(
     type: MarkerType,
+    selected: Boolean = false,
 ): Bitmap {
-    val markerSizePx = MARKER_SIZE.dp.toPx().toInt()
+    val markerSizePx = (if (selected) MARKER_SELECTED_SIZE else MARKER_SIZE).dp.toPx().toInt()
     val paddingPx = 4.dp.toPx().toInt()
     val iconSizePx = markerSizePx - paddingPx
     val bitmap = Bitmap.createBitmap(
@@ -38,6 +40,16 @@ fun mapMarkerIcon(
         markerSizePx,
         Bitmap.Config.ARGB_8888
     )
+    val backgroundColor = if (selected) {
+        MaterialTheme.colorScheme.tertiary
+    } else {
+        MaterialTheme.colorScheme.tertiaryContainer
+    }
+    val contentColor = if (selected) {
+        MaterialTheme.colorScheme.onTertiary
+    } else {
+        MaterialTheme.colorScheme.onTertiaryContainer
+    }
     val icon = when (type) {
         MarkerType.Lodging -> R.drawable.ic_hotel_black_24dp
         MarkerType.City -> R.drawable.baseline_location_city_24
@@ -45,11 +57,11 @@ fun mapMarkerIcon(
         AppCompatResources.getDrawable(LocalContext.current, resId)
     }?.also {
         it.setBounds(paddingPx, paddingPx, iconSizePx, iconSizePx)
-        DrawableCompat.setTint(it, MaterialTheme.colorScheme.onTertiaryContainer.toArgb())
+        DrawableCompat.setTint(it, contentColor.toArgb())
     }
     Canvas(bitmap).apply {
         drawCircle(markerSizePx / 2F, markerSizePx / 2F, markerSizePx / 2F, Paint().apply {
-            color = MaterialTheme.colorScheme.tertiaryContainer.toArgb()
+            color = backgroundColor.toArgb()
         })
         icon?.draw(this@apply)
     }
@@ -66,7 +78,7 @@ fun MapMarkerIconPreview() {
     AppTheme {
         Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
             Image(
-                bitmap = mapMarkerIcon(MarkerType.Lodging).asImageBitmap(),
+                bitmap = mapMarkerIcon(MarkerType.Lodging, selected = true).asImageBitmap(),
                 contentDescription = null
             )
         }

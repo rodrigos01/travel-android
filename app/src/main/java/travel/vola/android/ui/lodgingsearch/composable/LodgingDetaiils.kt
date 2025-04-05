@@ -515,6 +515,7 @@ private fun DismissableOverlay(
 @Composable
 fun LodgingDetailsPreview() {
     val initialState = LodgingDetailsState(
+        id = "lodgingId",
         name = "A very long Hotel name that might span multiple lines",
         rating = 4.5,
         reviewCount = 13450,
