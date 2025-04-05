@@ -4,9 +4,6 @@ import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -30,7 +27,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SnapshotMutationPolicy
@@ -48,7 +44,6 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import androidx.window.core.layout.WindowSizeClass
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -57,6 +52,8 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import travel.vola.android.common.ui.components.MapScaffold
+import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Identifiable
 import travel.vola.android.model.repository.mock.MockTripRepository
@@ -80,9 +77,6 @@ fun TripDetails(
     navController: NavController,
 ) {
     val state by viewModel.viewState.collectAsStateWithLifecycle()
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val isLargeScreen =
-        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
     val listScrollState = rememberLazyListState()
     val currentPlaceIndex by remember {
         derivedStateOf(policy =
@@ -105,25 +99,13 @@ fun TripDetails(
     val focusedPlace by produceState<TripViewModel.PlaceState?>(null, currentPlaceIndex) {
         value = state.places.firstOrNull { it.listIndex == currentPlaceIndex }
     }
-    if (isLargeScreen) {
-        val maxListWidth = when {
-            windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) -> 400.dp
-            else -> 320.dp
-        }
-        Row(Modifier.fillMaxWidth()) {
-            List(
-                state,
-                listScrollState,
-                viewModel,
-                navController,
-                modifier = Modifier.widthIn(max = maxListWidth),
-            )
-            Map(places = state.places, focusedPlace = focusedPlace, modifier = Modifier.weight(1F))
-        }
-    } else {
-        List(
-            state, listScrollState, viewModel, navController
-        )
+    val allMarkers = state.places.flatMap { it.markers }
+    val boundingMarkers = focusedPlace?.markers ?: allMarkers
+    MapScaffold(
+        allMarkers.filter { it.type != MarkerType.City },
+        boundingMarkers.map { LatLng(it.position.first, it.position.second) }
+    ) {
+        List(state, listScrollState, viewModel, navController)
     }
 }
 
@@ -299,53 +281,6 @@ private fun TripDetailItem(
             event,
             actionHandler = viewModel,
         )
-    }
-}
-
-@Composable
-private fun Details(modifier: Modifier = Modifier) {
-
-}
-
-@Composable
-private fun Map(
-    places: List<TripViewModel.PlaceState>,
-    focusedPlace: TripViewModel.PlaceState?,
-    modifier: Modifier = Modifier,
-) {
-    if (places.isEmpty()) return
-    val allMarkers = places.flatMap { it.markers }
-    val boundingMarkers = focusedPlace?.markers ?: allMarkers
-    val boundingBox = boundingMarkers.fold(LatLngBounds.Builder()) { builder, marker ->
-        builder.include(LatLng(marker.position.first, marker.position.second))
-    }.build()
-    val cameraPositionState = rememberCameraPositionState()
-    LaunchedEffect(boundingBox) {
-        val update = if (boundingMarkers.size > 1) {
-            CameraUpdateFactory.newLatLngBounds(boundingBox, 64.dp.value.toInt())
-        } else {
-            CameraUpdateFactory.newLatLngZoom(boundingBox.center, 15F)
-        }
-        cameraPositionState.animate(update)
-    }
-    GoogleMap(
-        cameraPositionState = cameraPositionState,
-        uiSettings = MapUiSettings(
-            indoorLevelPickerEnabled = false,
-            myLocationButtonEnabled = false,
-            rotationGesturesEnabled = false,
-            tiltGesturesEnabled = false,
-        ),
-        modifier = modifier
-            .background(color = MaterialTheme.colorScheme.surfaceContainer)
-    ) {
-        allMarkers.filter { it.type != TripViewModel.MarkerType.City }.forEach { markerState ->
-            val position = LatLng(markerState.position.first, markerState.position.second)
-            Marker(
-                state = rememberMarkerState(key = position.toString(), position = position),
-                title = markerState.name,
-            )
-        }
     }
 }
 
