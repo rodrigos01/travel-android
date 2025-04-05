@@ -130,7 +130,9 @@ private fun LodgingSearch(
         val boundsMarkers = openedResult?.let {
             listOf(LatLng(it.latitude, it.longitude))
         } ?: markers.map { LatLng(it.position.first, it.position.second) }
-        MapScaffold(markers, boundsMarkers,
+        MapScaffold(
+            markers = markers,
+            boundsPoints = boundsMarkers,
             onMarkerTapped = { marker ->
                 val index = markers.indexOf(marker)
                 loadedState?.results?.getOrNull(index)?.let {
