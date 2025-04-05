@@ -10,10 +10,12 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.GoogleMap
@@ -85,6 +87,8 @@ private fun Map(
             Marker(
                 state = rememberMarkerState(key = position.toString(), position = position),
                 title = markerState.name,
+                icon = BitmapDescriptorFactory.fromBitmap(mapMarkerIcon(markerState.type)),
+                anchor = Offset(0.5F, 0.5F)
             )
         }
     }
