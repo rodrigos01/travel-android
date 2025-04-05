@@ -3,6 +3,7 @@ package travel.vola.android.common.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
@@ -29,26 +30,46 @@ import travel.vola.android.common.ui.state.MarkerViewState
 fun MapScaffold(
     markers: List<MarkerViewState>,
     boundsPoints: List<LatLng>,
-    content: @Composable () -> Unit,
+    additionalContent: @Composable () -> Unit = {},
+    content: @Composable () -> Unit
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val isLargeScreen =
         windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
-    if (isLargeScreen) {
-        val maxListWidth = when {
-            windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) -> 400.dp
-            else -> 320.dp
+    val isExpandedWindowSize =
+        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
+    val contentWidth = when {
+        isExpandedWindowSize -> 400.dp
+        else -> 320.dp
+    }
+    Row(Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier.then(
+                if (!isLargeScreen) {
+                    Modifier.weight(1F)
+                } else {
+                    Modifier.widthIn(max = contentWidth)
+                }
+            ).fillMaxHeight()
+        ) {
+            content()
         }
-        Row(Modifier.fillMaxSize()) {
+        if (isLargeScreen) {
             Box(
-                modifier = Modifier.widthIn(max = maxListWidth),
+                modifier = Modifier.then(
+                    if (isExpandedWindowSize) {
+                        Modifier.widthIn(max = contentWidth)
+                    } else {
+                        Modifier.weight(1F)
+                    }
+                )
             ) {
-                content()
+                additionalContent()
             }
-            Map(markers, boundsPoints, modifier = Modifier.weight(1F))
+            if (isExpandedWindowSize) {
+                Map(markers, boundsPoints, modifier = Modifier.weight(1F))
+            }
         }
-    } else {
-        content()
     }
 }
 
@@ -94,9 +115,24 @@ private fun Map(
     }
 }
 
+@Preview(name = "1 - Phone")
+@Preview(name = "2 - Portrait Tablet", device = "spec:parent=pixel_tablet,orientation=portrait")
+@Preview(name = "3 - Landscape Tablet", device = "id:pixel_tablet")
+annotation class PhoneTabletPreview
+
 @Composable
-@Preview(device = "spec:parent=pixel_tablet,orientation=portrait")
-@Preview(device = "id:pixel_tablet")
+@PhoneTabletPreview
 fun MapScaffoldPreview() {
-    MapScaffold(markers = emptyList(), boundsPoints = listOf(LatLng(0.0, 0.0))) {}
+    MapScaffold(markers = emptyList(), boundsPoints = listOf(LatLng(0.0, 0.0)), content = {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
+        )
+    }, additionalContent = {
+        Box(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surface)
+        )
+    })
 }
