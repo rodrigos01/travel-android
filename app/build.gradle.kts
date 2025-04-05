@@ -130,6 +130,11 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.1.1")
+    implementation("androidx.compose.material3:material3-window-size-class-android:1.3.1")
+    implementation("androidx.compose.material3.adaptive:adaptive-android:1.1.0")
+    implementation("androidx.compose.material3.adaptive:adaptive-layout:1.1.0")
+    implementation("androidx.compose.material3.adaptive:adaptive-layout-android:1.1.0")
+    implementation("androidx.window:window:1.4.0-rc01")
     // Google Maps
     implementation("com.google.maps.android:maps-compose:6.4.1")
     // Ktor
