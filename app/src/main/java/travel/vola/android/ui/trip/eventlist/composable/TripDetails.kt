@@ -5,9 +5,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -38,7 +36,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -47,7 +44,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.window.core.layout.WindowSizeClass
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
@@ -68,12 +68,14 @@ import travel.vola.android.ui.trip.state.TripItemState.HotelCheckInItemState
 import travel.vola.android.ui.trip.state.TripItemState.HotelCheckOutItemState
 import travel.vola.android.ui.trip.state.TripItemState.MonthItemState
 import travel.vola.android.ui.trip.state.TripItemState.PlaceItemState
+import travel.vola.android.ui.trip.viewmodel.TripViewModel
 
 @Composable
 fun TripDetails(
-    viewModel: travel.vola.android.ui.trip.viewmodel.TripViewModel,
+    viewModel: TripViewModel,
     navController: NavController,
 ) {
+    val state by viewModel.viewState.collectAsStateWithLifecycle()
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val isLargeScreen =
         windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
@@ -84,13 +86,13 @@ fun TripDetails(
         }
         Row(Modifier.fillMaxWidth()) {
             List(
-                viewModel, navController, modifier = Modifier.widthIn(max = maxListWidth)
+                state, viewModel, navController, modifier = Modifier.widthIn(max = maxListWidth)
             )
-            Map(modifier = Modifier.weight(1F))
+            Map(places = state.places, focusedPlace = null, modifier = Modifier.weight(1F))
         }
     } else {
         List(
-            viewModel, navController
+            state, viewModel, navController
         )
     }
 }
@@ -98,11 +100,11 @@ fun TripDetails(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun List(
-    viewModel: travel.vola.android.ui.trip.viewmodel.TripViewModel,
+    state: TripViewModel.ViewState,
+    viewModel: TripViewModel,
     navController: NavController,
     modifier: Modifier = Modifier,
 ) {
-    val state by viewModel.viewState.collectAsStateWithLifecycle()
     var isInEditMode by remember {
         mutableStateOf(false)
     }
@@ -194,7 +196,7 @@ fun List(
 
 @Composable
 private fun TripDetailItem(
-    event: TripItemState, viewModel: travel.vola.android.ui.trip.viewmodel.TripViewModel
+    event: TripItemState, viewModel: TripViewModel
 ) {
     when (event) {
         is MonthItemState -> MonthEventListItem(event.month, event.year)
@@ -275,8 +277,25 @@ private fun Details(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Map(modifier: Modifier = Modifier) {
-    val cameraPositionState = rememberCameraPositionState()
+private fun Map(
+    places: List<TripViewModel.PlaceState>,
+    focusedPlace: TripViewModel.PlaceState?,
+    modifier: Modifier = Modifier,
+) {
+    if (places.isEmpty()) return
+    val allMarkers = places.flatMap { it.markers }
+    val boundingMarkers = focusedPlace?.markers ?: allMarkers
+    val boundingBox = boundingMarkers.fold(LatLngBounds.Builder()) { builder, marker ->
+        builder.include(LatLng(marker.position.first, marker.position.second))
+    }.build()
+    val cameraPositionState = rememberCameraPositionState(boundingBox.toString()) {
+        this.position = CameraPosition.fromLatLngZoom(boundingBox.center, 5F)
+    }
+    LaunchedEffect(boundingBox) {
+        cameraPositionState.animate(
+            CameraUpdateFactory.newLatLngBounds(boundingBox, 64.dp.value.toInt()),
+        )
+    }
     GoogleMap(
         cameraPositionState = cameraPositionState,
         uiSettings = MapUiSettings(
@@ -288,7 +307,13 @@ private fun Map(modifier: Modifier = Modifier) {
         modifier = modifier
             .background(color = MaterialTheme.colorScheme.surfaceContainer)
     ) {
-
+        allMarkers.forEach { markerState ->
+            val position = LatLng(markerState.position.first, markerState.position.second)
+            Marker(
+                state = rememberMarkerState(key = position.toString(), position = position),
+                title = markerState.name,
+            )
+        }
     }
 }
 
@@ -300,7 +325,7 @@ fun TripDetailsPreview() {
     AppTheme(dynamicColor = false) {
         val navController = rememberNavController()
         TripDetails(
-            travel.vola.android.ui.trip.viewmodel.TripViewModel(
+            TripViewModel(
                 MockTripRepository(),
                 PlaceRepository(),
                 "minhaTrip",
