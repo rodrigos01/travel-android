@@ -174,6 +174,9 @@ class LodgingSearchViewModel(
     }
 
     fun onLodgingTapped(lodgingId: String) {
+        if (openedResultsState[lodgingId] != null) {
+            return
+        }
         val state = uiState.value as? UiState.Loaded ?: return
         val existingState = state.results.firstOrNull { it.id == lodgingId } ?: return
         val initialState = LodgingDetailsState(

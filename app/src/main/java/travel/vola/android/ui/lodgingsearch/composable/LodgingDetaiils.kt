@@ -96,7 +96,7 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripTapped: () -> Unit) {
+fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripTapped: () -> Unit, showMap: Boolean = true) {
     var showImageGallery by rememberSaveable(state) { mutableStateOf(false) }
     var imageGalleryModels by rememberSaveable(state) { mutableStateOf(emptyList<String>()) }
     var selectedGalleryModel by rememberSaveable(state) { mutableStateOf<String?>(null) }
@@ -155,13 +155,14 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                 )
                 .animateContentSize(),
         ) {
+            val photos = state.photos
             Row(
                 horizontalArrangement = spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(16F / 9F)
             ) {
-                state.photos.firstOrNull()?.let {
+                photos.firstOrNull()?.let {
                     LodgingImage(
                         rememberAsyncImagePainter(model = it, contentScale = ContentScale.Crop),
                         modifier = Modifier
@@ -174,13 +175,13 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                             },
                     )
                 }
-                AnimatedVisibility(state.photos.size >= 3) {
+                AnimatedVisibility(photos.size >= 3) {
                     Column(
                         verticalArrangement = spacedBy(8.dp),
                     ) {
                         LodgingImage(
                             rememberAsyncImagePainter(
-                                model = state.photos[1],
+                                model = photos[1],
                                 contentScale = ContentScale.Crop
                             ),
                             modifier = Modifier
@@ -204,7 +205,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                         ) {
                             LodgingImage(
                                 rememberAsyncImagePainter(
-                                    model = state.photos[2],
+                                    model = photos[2],
                                     contentScale = ContentScale.Crop
                                 ),
                                 colorFilter = ColorFilter.tint(
@@ -317,54 +318,56 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                 Image(Icons.Filled.Place, contentDescription = "Location icon")
                 Text(state.address, style = MaterialTheme.typography.labelLarge)
             }
-            AnimatedContent(state.isLoading) { isLoading ->
-                if (isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(6 / 4f)
-                            .clip(MaterialTheme.shapes.large)
-                            .skeletonLoader(startDelayMillis = 300)
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(6 / 4f)
-                            .clip(MaterialTheme.shapes.large)
-                            .background(color = MaterialTheme.colorScheme.surfaceContainer)
-                    ) {
-                        val cameraPositionState = rememberCameraPositionState()
-                        val markerState = rememberMarkerState(position = marker)
-                        LaunchedEffect(marker) {
-                            cameraPositionState.position =
-                                CameraPosition.fromLatLngZoom(marker, 15f)
-                            markerState.position = marker
-                        }
-                        GoogleMap(
-                            cameraPositionState = cameraPositionState,
-                            googleMapOptionsFactory = {
-                                GoogleMapOptions().liteMode(true)
-                            },
-                            uiSettings = MapUiSettings(
-                                indoorLevelPickerEnabled = false,
-                                myLocationButtonEnabled = false,
-                                scrollGesturesEnabled = false,
-                                rotationGesturesEnabled = false,
-                                tiltGesturesEnabled = false,
-                                zoomGesturesEnabled = false,
-                                zoomControlsEnabled = false,
-                                mapToolbarEnabled = false,
-                            ),
-                            modifier = Modifier.fillMaxSize(),
+            if (showMap) {
+                AnimatedContent(state.isLoading) { isLoading ->
+                    if (isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(6 / 4f)
+                                .clip(MaterialTheme.shapes.large)
+                                .skeletonLoader(startDelayMillis = 300)
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(6 / 4f)
+                                .clip(MaterialTheme.shapes.large)
+                                .background(color = MaterialTheme.colorScheme.surfaceContainer)
                         ) {
-                            Marker(
-                                state = markerState, title = state.name, snippet = state.address
-                            )
+                            val cameraPositionState = rememberCameraPositionState()
+                            val markerState = rememberMarkerState(position = marker)
+                            LaunchedEffect(marker) {
+                                cameraPositionState.position =
+                                    CameraPosition.fromLatLngZoom(marker, 15f)
+                                markerState.position = marker
+                            }
+                            GoogleMap(
+                                cameraPositionState = cameraPositionState,
+                                googleMapOptionsFactory = {
+                                    GoogleMapOptions().liteMode(true)
+                                },
+                                uiSettings = MapUiSettings(
+                                    indoorLevelPickerEnabled = false,
+                                    myLocationButtonEnabled = false,
+                                    scrollGesturesEnabled = false,
+                                    rotationGesturesEnabled = false,
+                                    tiltGesturesEnabled = false,
+                                    zoomGesturesEnabled = false,
+                                    zoomControlsEnabled = false,
+                                    mapToolbarEnabled = false,
+                                ),
+                                modifier = Modifier.fillMaxSize(),
+                            ) {
+                                Marker(
+                                    state = markerState, title = state.name, snippet = state.address
+                                )
+                            }
+                            Surface(color = Color.Transparent, onClick = {
+                                showExpandedMap = true
+                            }, modifier = Modifier.fillMaxSize()) {}
                         }
-                        Surface(color = Color.Transparent, onClick = {
-                            showExpandedMap = true
-                        }, modifier = Modifier.fillMaxSize()) {}
                     }
                 }
             }
