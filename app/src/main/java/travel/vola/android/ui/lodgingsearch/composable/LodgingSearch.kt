@@ -7,11 +7,8 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideIn
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOut
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -22,8 +19,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -36,7 +31,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +43,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -111,9 +106,11 @@ private fun LodgingSearch(
         }
     }
     val tabBarListState = rememberLazyListState()
-    var openedResultId by remember { mutableStateOf<String?>(null) }
+    val loadedState = state as? LodgingSearchViewModel.UiState.Loaded
+    val openedResult = loadedState?.selectedResult
+    val openedResultId = openedResult?.id
     LaunchedEffect(openedResultId) {
-        if (openedResultId != null && state is LodgingSearchViewModel.UiState.Loaded) {
+        if (openedResultId != null) {
             tabBarListState.animateScrollToItem(state.openedResults.keys.indexOf(openedResultId))
         }
     }
@@ -121,57 +118,64 @@ private fun LodgingSearch(
     val isLargeScreen =
         currentWindowAdaptiveInfo().windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
     if (isLargeScreen) {
-        val loadedState = state as? LodgingSearchViewModel.UiState.Loaded
         val markers = loadedState?.results?.map {
             MarkerViewState(
                 position = Pair(it.latitude, it.longitude),
                 name = it.name,
-                type = MarkerType.Lodging
+                type = MarkerType.Lodging,
+                selected = it.id == openedResultId,
             )
         } ?: emptyList()
-        val openedResult = loadedState?.openedResults?.get(openedResultId)
+
         val boundsMarkers = openedResult?.let {
             listOf(LatLng(it.latitude, it.longitude))
         } ?: markers.map { LatLng(it.position.first, it.position.second) }
-        MapScaffold(markers, boundsMarkers, content = {
-            LodgingSearchResults(
-                navController,
-                state,
-                onLodgingTapped = { lodging ->
-                    openedResultId = lodging.id
-                    onLodgingTapped(lodging)
-                },
-                onSortOptionSelected = onSortOptionSelected,
-                onFiltersApplied = onFiltersApplied,
-            )
-        }, additionalContent = {
-            AnimatedContent(
-                targetState = Pair(openedResultId, openedResult),
-                transitionSpec = {
-                    (fadeIn() + slideIn(initialOffset = {
-                        IntOffset(0, 0)
-                    })).togetherWith(
-                        (fadeOut() + slideOut(targetOffset = {
-                            IntOffset(0, 0)
-                        }))
-                    )
-                },
-            ) { (lodgingId, lodging) ->
-                if (lodgingId != null && lodging != null) {
-                    LodgingDetails(
-                        lodging,
-                        onClose = {
-                            openedResultId = null
-                            onLodgingClosed(lodgingId)
-                        },
-                        onAddToTripTapped = {
-                            onAddLodgingTapped(lodgingId)
-                        },
-                        showMap = false,
-                    )
+        MapScaffold(markers, boundsMarkers,
+            onMarkerTapped = { marker ->
+                val index = markers.indexOf(marker)
+                loadedState?.results?.getOrNull(index)?.let {
+                    onLodgingTapped(it)
                 }
-            }
-        })
+            },
+            minZoom = 17F,
+            content = {
+                LodgingSearchResults(
+                    navController,
+                    state,
+                    onLodgingTapped = { lodging ->
+                        onLodgingTapped(lodging)
+                    },
+                    onSortOptionSelected = onSortOptionSelected,
+                    onFiltersApplied = onFiltersApplied,
+                )
+            },
+            additionalContent = {
+                AnimatedContent(
+                    targetState = Pair(openedResultId, openedResult),
+                    transitionSpec = {
+                        (fadeIn() + slideIn(initialOffset = {
+                            IntOffset(0, 0)
+                        })).togetherWith(
+                            (fadeOut() + slideOut(targetOffset = {
+                                IntOffset(0, 0)
+                            }))
+                        )
+                    },
+                ) { (lodgingId, lodging) ->
+                    if (lodgingId != null && lodging != null) {
+                        LodgingDetails(
+                            lodging,
+                            onClose = {
+                                onLodgingClosed(lodgingId)
+                            },
+                            onAddToTripTapped = {
+                                onAddLodgingTapped(lodgingId)
+                            },
+                            showMap = false,
+                        )
+                    }
+                }
+            })
     } else {
         val searchResults: @Composable TabbedHostScope.() -> Unit = {
             LodgingSearchResults(
@@ -180,7 +184,6 @@ private fun LodgingSearch(
                 onLodgingTapped = { lodging ->
                     onLodgingTapped(lodging)
                     navigate(lodging.id)
-                    openedResultId = lodging.id
                 },
                 onSortOptionSelected = onSortOptionSelected,
                 onFiltersApplied = onFiltersApplied,
@@ -483,7 +486,10 @@ fun LodgingSearch(
 @PhoneTabletPreview
 fun LodgingSearchPreview() {
     AppTheme {
+        var selectedResultId by remember { mutableStateOf<String?>(null) }
         val results = List(10) { index ->
+            val latMultipliers = listOf(1, 0, -1)
+            val lonMultipliers = listOf(0, 1, -1)
             LodgingSearchResultState(
                 id = index.toString(),
                 name = "Some super large Hotel name $index",
@@ -493,12 +499,13 @@ fun LodgingSearchPreview() {
                 reviewCount = index * 1234,
                 lodgingType = "Hotel",
                 price = index * 12.4,
-                latitude = 0.0,
-                longitude = 0.0,
+                latitude = 40.7453466 + index * 0.0005 * latMultipliers[index % latMultipliers.size],
+                longitude = -73.9899909 + index * 0.0005 * latMultipliers[index % lonMultipliers.size],
             )
         }
         val details = results.take(5).associate { lodging ->
             lodging.id to LodgingDetailsState(
+                id = lodging.id,
                 name = lodging.name,
                 rating = lodging.rating,
                 reviewCount = lodging.reviewCount,
@@ -522,52 +529,36 @@ fun LodgingSearchPreview() {
                 },
                 address = lodging.address,
                 description = null,
-                latitude = 0.0,
-                longitude = 0.0,
+                latitude = lodging.latitude,
+                longitude = lodging.longitude,
                 isLoading = false,
             )
         }.toMutableMap()
-        val loadedState = LodgingSearchViewModel.UiState.Loaded(
-            LodgingSearchViewModel.SearchParamsState(
-                checkIn = Time("2025-08-10T00:00 -0500"),
-                checkOut = Time("2025-08-15T00:00 -0500"),
-                locationText = "New York, United States",
-            ),
-            sortAndFilterState = LodgingSearchViewModel.SortAndFilterState(),
-            results = results,
-            openedResults = details,
-        )
-        val loadingState = LodgingSearchViewModel.UiState.Loading(
-            LodgingSearchViewModel.SearchParamsState(
-                checkIn = Time("2025-08-10T00:00 -0500"),
-                checkOut = Time("2025-08-15T00:00 -0500"),
-                locationText = "New York, United States",
-            ),
-        )
-        var state by remember { mutableStateOf<LodgingSearchViewModel.UiState>(loadedState) }
+        val state by remember {
+            derivedStateOf {
+                LodgingSearchViewModel.UiState.Loaded(
+                    LodgingSearchViewModel.SearchParamsState(
+                        checkIn = Time("2025-08-10T00:00 -0500"),
+                        checkOut = Time("2025-08-15T00:00 -0500"),
+                        locationText = "New York, United States",
+                    ),
+                    sortAndFilterState = LodgingSearchViewModel.SortAndFilterState(),
+                    results = results,
+                    openedResults = details,
+                    selectedResult = details[selectedResultId]
+                )
+            }
+        }
         LodgingSearch(
             navController = rememberNavController(),
             state = state,
-            onLodgingTapped = { },
+            onLodgingTapped = { selectedResultId = it.id },
             onSortOptionSelected = {},
             onFiltersApplied = { _, _, _ -> },
-            onLodgingClosed = {},
+            onLodgingClosed = { selectedResultId = null },
             onAddLodgingTapped = {},
             onContinueBrowsingTapped = {},
         )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Button(
-                onClick = {
-                    state = if (state == loadingState) loadedState else loadingState
-                }, modifier = Modifier.align(Alignment.BottomCenter)
-            ) {
-                Text(if (state == loadingState) "Load" else "Reset")
-            }
-        }
     }
 }
 

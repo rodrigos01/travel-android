@@ -30,8 +30,10 @@ import travel.vola.android.common.ui.state.MarkerViewState
 fun MapScaffold(
     markers: List<MarkerViewState>,
     boundsPoints: List<LatLng>,
+    minZoom: Float? = 15F,
+    onMarkerTapped: (MarkerViewState) -> Unit = {},
     additionalContent: @Composable () -> Unit = {},
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val isLargeScreen =
@@ -44,13 +46,15 @@ fun MapScaffold(
     }
     Row(Modifier.fillMaxSize()) {
         Box(
-            modifier = Modifier.then(
-                if (!isLargeScreen) {
-                    Modifier.weight(1F)
-                } else {
-                    Modifier.widthIn(max = contentWidth)
-                }
-            ).fillMaxHeight()
+            modifier = Modifier
+                .then(
+                    if (!isLargeScreen) {
+                        Modifier.weight(1F)
+                    } else {
+                        Modifier.widthIn(max = contentWidth)
+                    }
+                )
+                .fillMaxHeight()
         ) {
             content()
         }
@@ -67,7 +71,7 @@ fun MapScaffold(
                 additionalContent()
             }
             if (isExpandedWindowSize) {
-                Map(markers, boundsPoints, modifier = Modifier.weight(1F))
+                Map(markers, boundsPoints, onMarkerTapped, minZoom, modifier = Modifier.weight(1F))
             }
         }
     }
@@ -77,6 +81,8 @@ fun MapScaffold(
 private fun Map(
     markers: List<MarkerViewState>,
     boundsPoints: List<LatLng>,
+    onMarkerTapped: (MarkerViewState) -> Unit,
+    minZoom: Float?,
     modifier: Modifier = Modifier,
 ) {
     if (boundsPoints.isEmpty()) return
@@ -85,10 +91,10 @@ private fun Map(
     }.build()
     val cameraPositionState = rememberCameraPositionState()
     LaunchedEffect(boundingBox) {
-        val update = if (boundsPoints.size > 1) {
+        val update = if (boundsPoints.size > 1 || minZoom == null) {
             CameraUpdateFactory.newLatLngBounds(boundingBox, 64.dp.value.toInt())
         } else {
-            CameraUpdateFactory.newLatLngZoom(boundingBox.center, 15F)
+            CameraUpdateFactory.newLatLngZoom(boundingBox.center, minZoom)
         }
         cameraPositionState.animate(update)
     }
@@ -108,8 +114,17 @@ private fun Map(
             Marker(
                 state = rememberMarkerState(key = position.toString(), position = position),
                 title = markerState.name,
-                icon = BitmapDescriptorFactory.fromBitmap(mapMarkerIcon(markerState.type)),
-                anchor = Offset(0.5F, 0.5F)
+                icon = BitmapDescriptorFactory.fromBitmap(
+                    mapMarkerIcon(
+                        markerState.type,
+                        selected = markerState.selected
+                    )
+                ),
+                anchor = Offset(0.5F, 0.5F),
+                onClick = {
+                    onMarkerTapped(markerState)
+                    false
+                }
             )
         }
     }
