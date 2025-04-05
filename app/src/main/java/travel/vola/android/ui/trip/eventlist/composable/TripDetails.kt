@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -31,8 +33,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SnapshotMutationPolicy
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -45,7 +50,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.window.core.layout.WindowSizeClass
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.GoogleMap
@@ -79,6 +83,28 @@ fun TripDetails(
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val isLargeScreen =
         windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
+    val listScrollState = rememberLazyListState()
+    val currentPlaceIndex by remember {
+        derivedStateOf(policy =
+        object : SnapshotMutationPolicy<Int> {
+            override fun equivalent(a: Int, b: Int): Boolean {
+                val itemA = state.items.getOrNull(a)
+                val itemB = state.items.getOrNull(b)
+                return itemA != null && (itemA !is PlaceItemState || itemA == itemB)
+            }
+        }) {
+            if (!listScrollState.canScrollBackward) {
+                -1
+            } else if (!listScrollState.canScrollForward) {
+                state.places.maxOfOrNull { it.listIndex } ?: -1
+            } else {
+                listScrollState.firstVisibleItemIndex
+            }
+        }
+    }
+    val focusedPlace by produceState<TripViewModel.PlaceState?>(null, currentPlaceIndex) {
+        value = state.places.firstOrNull { it.listIndex == currentPlaceIndex }
+    }
     if (isLargeScreen) {
         val maxListWidth = when {
             windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) -> 400.dp
@@ -86,13 +112,17 @@ fun TripDetails(
         }
         Row(Modifier.fillMaxWidth()) {
             List(
-                state, viewModel, navController, modifier = Modifier.widthIn(max = maxListWidth)
+                state,
+                listScrollState,
+                viewModel,
+                navController,
+                modifier = Modifier.widthIn(max = maxListWidth),
             )
-            Map(places = state.places, focusedPlace = null, modifier = Modifier.weight(1F))
+            Map(places = state.places, focusedPlace = focusedPlace, modifier = Modifier.weight(1F))
         }
     } else {
         List(
-            state, viewModel, navController
+            state, listScrollState, viewModel, navController
         )
     }
 }
@@ -101,6 +131,7 @@ fun TripDetails(
 @Composable
 fun List(
     state: TripViewModel.ViewState,
+    scrollState: LazyListState,
     viewModel: TripViewModel,
     navController: NavController,
     modifier: Modifier = Modifier,
@@ -182,7 +213,7 @@ fun List(
             })
         },
     ) { paddingValues ->
-        LazyColumn(contentPadding = paddingValues) {
+        LazyColumn(contentPadding = paddingValues, state = scrollState) {
             items(state.items, key = { (it as? Identifiable)?.id ?: it.hashCode() }) { event ->
                 Box(
                     modifier = Modifier.animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
@@ -288,13 +319,14 @@ private fun Map(
     val boundingBox = boundingMarkers.fold(LatLngBounds.Builder()) { builder, marker ->
         builder.include(LatLng(marker.position.first, marker.position.second))
     }.build()
-    val cameraPositionState = rememberCameraPositionState(boundingBox.toString()) {
-        this.position = CameraPosition.fromLatLngZoom(boundingBox.center, 5F)
-    }
+    val cameraPositionState = rememberCameraPositionState()
     LaunchedEffect(boundingBox) {
-        cameraPositionState.animate(
-            CameraUpdateFactory.newLatLngBounds(boundingBox, 64.dp.value.toInt()),
-        )
+        val update = if (boundingMarkers.size > 1) {
+            CameraUpdateFactory.newLatLngBounds(boundingBox, 64.dp.value.toInt())
+        } else {
+            CameraUpdateFactory.newLatLngZoom(boundingBox.center, 15F)
+        }
+        cameraPositionState.animate(update)
     }
     GoogleMap(
         cameraPositionState = cameraPositionState,
@@ -307,7 +339,7 @@ private fun Map(
         modifier = modifier
             .background(color = MaterialTheme.colorScheme.surfaceContainer)
     ) {
-        allMarkers.forEach { markerState ->
+        allMarkers.filter { it.type != TripViewModel.MarkerType.City }.forEach { markerState ->
             val position = LatLng(markerState.position.first, markerState.position.second)
             Marker(
                 state = rememberMarkerState(key = position.toString(), position = position),
