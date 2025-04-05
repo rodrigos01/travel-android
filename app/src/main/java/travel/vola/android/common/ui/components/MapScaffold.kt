@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.GoogleMap
@@ -89,7 +90,9 @@ private fun Map(
     val boundingBox = boundsPoints.fold(LatLngBounds.Builder()) { builder, point ->
         builder.include(point)
     }.build()
-    val cameraPositionState = rememberCameraPositionState()
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(boundingBox.center, 15F)
+    }
     LaunchedEffect(boundingBox) {
         val update = if (boundsPoints.size > 1 || minZoom == null) {
             CameraUpdateFactory.newLatLngBounds(boundingBox, 64.dp.value.toInt())
