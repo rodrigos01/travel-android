@@ -40,6 +40,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,19 +56,24 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import androidx.window.core.layout.WindowSizeClass
 import coil.compose.rememberAsyncImagePainter
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import travel.vola.android.R
+import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.TabbedHost
 import travel.vola.android.common.ui.components.TabbedHostScope
 import travel.vola.android.common.ui.modifier.skeletonLoader
-import travel.vola.android.common.ui.preview.PreviewLightDarkSystemUI
+import travel.vola.android.common.ui.state.MarkerType
+import travel.vola.android.common.ui.state.MarkerViewState
 import travel.vola.android.extensions.Time
 import travel.vola.android.ui.lodgingsearch.state.LodgingDetailsState
 import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
@@ -105,44 +111,73 @@ private fun LodgingSearch(
             tabBarListState.animateScrollToItem(state.openedResults.keys.indexOf(openedResultId))
         }
     }
-    val searchResults: @Composable TabbedHostScope.() -> Unit = {
-        LodgingSearchResults(
-            navController,
-            state,
-            onLodgingTapped = { lodging ->
-                onLodgingTapped(lodging)
-                navigate(lodging.id)
-                openedResultId = lodging.id
-            },
-            onSortOptionSelected = onSortOptionSelected,
-            onFiltersApplied = onFiltersApplied,
-        )
-    }
-    val screenWidth = LocalConfiguration.current.screenWidthDp
-    TabbedHost(startDestination = "search", tabBarListState = tabBarListState) {
-        tab("search", icon = { Icon(Icons.Outlined.Search, contentDescription = null) }) {
-            searchResults()
+
+    val isLargeScreen =
+        currentWindowAdaptiveInfo().windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
+    if (isLargeScreen) {
+        val loadedState = state as? LodgingSearchViewModel.UiState.Loaded
+        val markers = loadedState?.results?.map {
+            MarkerViewState(
+                position = Pair(it.latitude, it.longitude),
+                name = it.name,
+                type = MarkerType.Lodging
+            )
+        } ?: emptyList()
+        val boundsMarkers = loadedState?.openedResults?.get(openedResultId)?.let {
+            listOf(LatLng(it.latitude, it.longitude))
+        } ?: markers.map { LatLng(it.position.first, it.position.second) }
+        MapScaffold(markers, boundsMarkers) {
+            LodgingSearchResults(
+                navController,
+                state,
+                onLodgingTapped = { lodging ->
+                    onLodgingTapped(lodging)
+                    openedResultId = lodging.id
+                },
+                onSortOptionSelected = onSortOptionSelected,
+                onFiltersApplied = onFiltersApplied,
+            )
         }
-        if (state is LodgingSearchViewModel.UiState.Loaded) {
-            state.openedResults.forEach { (id, lodging) ->
-                tab(
-                    id,
-                    title = {
-                        Text(
-                            text = lodging.name,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    },
-                    modifier = Modifier.widthIn(max = (screenWidth / 2).dp),
-                    content = {
-                        LodgingDetails(lodging, onClose = {
-                            onLodgingClosed(id)
-                            navigate("search")
-                        }, onAddToTripTapped = {
-                            onAddLodgingTapped(id)
+    } else {
+        val searchResults: @Composable TabbedHostScope.() -> Unit = {
+            LodgingSearchResults(
+                navController,
+                state,
+                onLodgingTapped = { lodging ->
+                    onLodgingTapped(lodging)
+                    navigate(lodging.id)
+                    openedResultId = lodging.id
+                },
+                onSortOptionSelected = onSortOptionSelected,
+                onFiltersApplied = onFiltersApplied,
+            )
+        }
+        val screenWidth = LocalConfiguration.current.screenWidthDp
+        TabbedHost(startDestination = "search", tabBarListState = tabBarListState) {
+            tab("search", icon = { Icon(Icons.Outlined.Search, contentDescription = null) }) {
+                searchResults()
+            }
+            if (state is LodgingSearchViewModel.UiState.Loaded) {
+                state.openedResults.forEach { (id, lodging) ->
+                    tab(
+                        id,
+                        title = {
+                            Text(
+                                text = lodging.name,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        },
+                        modifier = Modifier.widthIn(max = (screenWidth / 2).dp),
+                        content = {
+                            LodgingDetails(lodging, onClose = {
+                                onLodgingClosed(id)
+                                navigate("search")
+                            }, onAddToTripTapped = {
+                                onAddLodgingTapped(id)
+                            })
                         })
-                    })
+                }
             }
         }
     }
@@ -428,8 +463,10 @@ fun LodgingSearch(
 }
 
 
-@PreviewLightDarkSystemUI
 @Composable
+@Preview
+@Preview(device = "spec:parent=pixel_tablet,orientation=portrait")
+@Preview(device = "id:pixel_tablet")
 fun LodgingSearchPreview() {
     AppTheme {
         val results = List(10) { index ->
