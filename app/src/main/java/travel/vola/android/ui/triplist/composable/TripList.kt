@@ -74,7 +74,7 @@ private fun TripList(
                 name = trip.name,
                 coverImageUrl = trip.coverImage,
                 modifier = Modifier
-                    .weight(1F, fill = false)
+                    .weight(1F)
                     .widthIn(min = 260.dp, max = with(LocalDensity.current) { smallerWidth.toDp() })
                     .heightIn(min = 280.dp)
                     .shadow(elevation = 8.dp, shape = MaterialTheme.shapes.large)

@@ -23,8 +23,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -97,7 +95,12 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripTapped: () -> Unit, showMap: Boolean = true) {
+fun LodgingDetails(
+    state: LodgingDetailsState,
+    onClose: () -> Unit,
+    onAddToTripTapped: () -> Unit,
+    showMap: Boolean = true
+) {
     var showImageGallery by rememberSaveable(state) { mutableStateOf(false) }
     var imageGalleryModels by rememberSaveable(state) { mutableStateOf(emptyList<String>()) }
     var selectedGalleryModel by rememberSaveable(state) { mutableStateOf<String?>(null) }
@@ -436,7 +439,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                 imageGalleryModels,
                 selectedInitially = selectedGalleryModel,
                 modifier = Modifier
-                    .padding(top = topPadding + 8.dp),
+                    .padding(top = topPadding),
             )
         }
     }
@@ -463,7 +466,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                 ),
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
-                    .padding(top = topPadding + 8.dp)
+                    .padding(top = topPadding)
                     .fillMaxWidth()
                     .fillMaxHeight(0.8F)
                     .clip(MaterialTheme.shapes.large)
@@ -484,30 +487,25 @@ private fun DismissableOverlay(
 ) {
     Overlay {
         Box {
+            val windowInsetsTopPadding = with(LocalDensity.current) {
+                WindowInsets.safeDrawing.getTop(this).toDp()
+            }
             var topPadding by remember { mutableIntStateOf(0) }
             content(with(LocalDensity.current) { topPadding.toDp() })
-            Column(
+            FilledIconButton(
+                onClick = onDismiss,
                 modifier = Modifier
                     .onGloballyPositioned {
-                        topPadding = it.size.height + it.positionInParent().y.roundToInt()
+                        topPadding = (it.size.height + windowInsetsTopPadding.value).roundToInt()
                     }
                     .align(Alignment.TopEnd)
-                    .padding(end = 8.dp)
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .padding(end = 16.dp, top = windowInsetsTopPadding + 8.dp)
             ) {
-                Spacer(Modifier.windowInsetsTopHeight(WindowInsets.safeDrawing))
-                FilledIconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(top = 8.dp, end = 8.dp)
-                ) {
-                    Icon(
-                        Icons.Filled.Close,
-                        contentDescription = "",
-                        tint = MaterialTheme.colorScheme.inverseOnSurface
-                    )
-                }
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = "",
+                    tint = MaterialTheme.colorScheme.inverseOnSurface
+                )
             }
         }
     }
