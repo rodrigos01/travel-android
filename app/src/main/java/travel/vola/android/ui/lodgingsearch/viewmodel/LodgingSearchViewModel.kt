@@ -51,6 +51,7 @@ class LodgingSearchViewModel(
             override val searchState: SearchParamsState,
             val results: List<LodgingSearchResultState>,
             val openedResults: Map<String, LodgingDetailsState> = emptyMap(),
+            val selectedResult: LodgingDetailsState? = null,
             override val localState: LocalState = LocalState(),
             override val sortAndFilterState: SortAndFilterState,
         ) : UiState
@@ -58,6 +59,7 @@ class LodgingSearchViewModel(
 
     data class LocalState(
         val showAddConfirmation: Boolean = false,
+        val selectedResultId: String? = null,
     )
 
     data class SearchParamsState(
@@ -138,6 +140,7 @@ class LodgingSearchViewModel(
                         )
                     }.toList(),
                 openedResults = openedResults,
+                selectedResult = openedResults[localState.selectedResultId],
             )
         }
     }.stateIn(
@@ -174,9 +177,14 @@ class LodgingSearchViewModel(
     }
 
     fun onLodgingTapped(lodgingId: String) {
+        localState.value = localState.value.copy(selectedResultId = lodgingId)
+        if (openedResultsState[lodgingId] != null) {
+            return
+        }
         val state = uiState.value as? UiState.Loaded ?: return
         val existingState = state.results.firstOrNull { it.id == lodgingId } ?: return
         val initialState = LodgingDetailsState(
+            id = existingState.id,
             name = existingState.name,
             rating = existingState.rating,
             reviewCount = existingState.reviewCount,

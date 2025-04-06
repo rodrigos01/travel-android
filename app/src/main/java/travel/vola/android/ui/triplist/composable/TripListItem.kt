@@ -1,6 +1,6 @@
 package travel.vola.android.ui.triplist.composable
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,19 +11,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import travel.vola.android.ui.theme.AppTheme
 
 @Composable
-fun TripListItem(name: String?, coverImageUrl: String?, onClick: () -> Unit) {
-    Column(modifier = Modifier.clickable(onClick = onClick)) {
+fun TripListItem(name: String?, coverImageUrl: String?, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.background(MaterialTheme.colorScheme.surface)) {
         AsyncImage(
             model = coverImageUrl,
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(1.77f),
+                .aspectRatio(1.77f)
+                .then(
+                    if (LocalInspectionMode.current) {
+                        Modifier.background(MaterialTheme.colorScheme.tertiary)
+                    } else {
+                        Modifier
+                    }
+                ),
             contentDescription = "Place Description",
             contentScale = ContentScale.Crop
         )
@@ -45,7 +53,6 @@ fun EventListItemPreview() {
         TripListItem(
             name = "Trip to Barcelona, Paris, Grindewald and Zurich",
             coverImageUrl = "",
-            onClick = {},
         )
     }
 }
