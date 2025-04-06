@@ -50,7 +50,7 @@ class LodgingSearchRepository {
                 parameters.append("cityId", locationId)
                 parameters.append("checkin", checkIn.asISO8601DateString())
                 parameters.append("checkout", checkOut.asISO8601DateString())
-                parameters.append("adults", "1")
+                parameters.append("adults", "2")
                 parameters.append("children", "0")
                 parameters.append(
                     "currency", Currency.getInstance(Locale.getDefault()).currencyCode

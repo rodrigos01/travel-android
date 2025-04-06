@@ -21,6 +21,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import travel.vola.android.R
+import travel.vola.android.common.ui.components.asSizedImageTarget
+import travel.vola.android.common.ui.components.rememberSizedImageState
 import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
 
 @Composable
@@ -30,19 +32,19 @@ fun RoomOfferItem(
     onViewOfferTapped: () -> Unit
 ) {
     Row(
-        horizontalArrangement = spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth()
+        horizontalArrangement = spacedBy(8.dp), modifier = Modifier.fillMaxWidth()
     ) {
         val roomCoverPhoto = state.photos.firstOrNull()
         if (roomCoverPhoto != null) {
+            val sizedImageState = rememberSizedImageState(roomCoverPhoto)
             LodgingImage(
                 rememberAsyncImagePainter(
-                    model = roomCoverPhoto,
-                    contentScale = ContentScale.Crop
+                    model = sizedImageState.model, contentScale = ContentScale.Crop
                 ),
                 modifier = Modifier
                     .size(64.dp)
-                    .clickable { onCoverImageTapped(roomCoverPhoto) },
+                    .clickable { onCoverImageTapped(roomCoverPhoto) }
+                    .asSizedImageTarget(sizedImageState),
             )
         } else {
             LodgingImage(
@@ -80,14 +82,12 @@ fun RoomOfferItem(
                         append("\u2022")
                         append("\u0009")
                         append(feature)
-                    }.toAnnotatedString(),
-                    style = MaterialTheme.typography.bodySmall
+                    }.toAnnotatedString(), style = MaterialTheme.typography.bodySmall
                 )
             }
         }
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.width(112.dp)
+            horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(112.dp)
         ) {
             PriceText(state.price)
             TextButton(onClick = onViewOfferTapped) {
