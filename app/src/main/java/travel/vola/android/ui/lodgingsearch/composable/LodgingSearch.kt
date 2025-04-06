@@ -57,6 +57,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -69,9 +70,9 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import travel.vola.android.R
 import travel.vola.android.common.ui.components.MapScaffold
-import travel.vola.android.common.ui.components.PhoneTabletPreview
 import travel.vola.android.common.ui.components.TabbedHost
 import travel.vola.android.common.ui.components.TabbedHostScope
+import travel.vola.android.common.ui.components.TabletPreview
 import travel.vola.android.common.ui.modifier.skeletonLoader
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.common.ui.state.MarkerViewState
@@ -485,10 +486,11 @@ fun LodgingSearch(
 }
 
 @Composable
-@PhoneTabletPreview
+@Preview
+@TabletPreview
 fun LodgingSearchPreview() {
     AppTheme {
-        var selectedResultId by remember { mutableStateOf<String?>(null) }
+        var selectedResultId by remember { mutableStateOf<String?>("3") }
         val results = List(10) { index ->
             val latMultipliers = listOf(1, 0, -1)
             val lonMultipliers = listOf(0, 1, -1)

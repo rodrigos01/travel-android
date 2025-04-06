@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.window.core.layout.WindowSizeClass
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -61,13 +62,15 @@ fun MapScaffold(
         }
         if (isLargeScreen) {
             Box(
-                modifier = Modifier.then(
-                    if (isExpandedWindowSize) {
-                        Modifier.widthIn(max = contentWidth)
-                    } else {
-                        Modifier.weight(1F)
-                    }
-                )
+                modifier = Modifier
+                    .then(
+                        if (isExpandedWindowSize) {
+                            Modifier.widthIn(max = contentWidth)
+                        } else {
+                            Modifier.weight(1F)
+                        }
+                    )
+                    .zIndex(1F)
             ) {
                 additionalContent()
             }
@@ -110,7 +113,8 @@ private fun Map(
             tiltGesturesEnabled = false,
         ),
         modifier = modifier
-            .background(color = MaterialTheme.colorScheme.surfaceContainer)
+            .fillMaxSize()
+            .background(color = MaterialTheme.colorScheme.tertiaryContainer)
     ) {
         markers.forEach { markerState ->
             val position = LatLng(markerState.position.first, markerState.position.second)
@@ -133,13 +137,13 @@ private fun Map(
     }
 }
 
-@Preview(name = "1 - Phone")
 @Preview(name = "2 - Portrait Tablet", device = "spec:parent=pixel_tablet,orientation=portrait")
 @Preview(name = "3 - Landscape Tablet", device = "id:pixel_tablet")
-annotation class PhoneTabletPreview
+annotation class TabletPreview
 
 @Composable
-@PhoneTabletPreview
+@Preview
+@TabletPreview
 fun MapScaffoldPreview() {
     MapScaffold(markers = emptyList(), boundsPoints = listOf(LatLng(0.0, 0.0)), content = {
         Box(
@@ -151,6 +155,7 @@ fun MapScaffoldPreview() {
         Box(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.surface)
+                .fillMaxSize()
         )
     })
 }
