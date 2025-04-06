@@ -26,13 +26,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.window.core.layout.WindowSizeClass
 import coil.compose.rememberAsyncImagePainter
 import travel.vola.android.common.ui.preview.PreviewLightDarkSystemUI
 import travel.vola.android.ui.theme.AppTheme
@@ -62,6 +63,14 @@ fun ImageGallery(
 ) {
     var selectedModel by rememberSaveable { mutableStateOf(selectedInitially) }
     val galleryScrollState = rememberScrollState()
+
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val maxItemsPerLine = when {
+        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) -> 8
+        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) -> 5
+        else -> 3
+    }
+
     AnimatedContent(selectedModel, contentKey = { it != null }) { selected ->
         if (selected == null) {
             ContextualFlowRow(
@@ -99,14 +108,17 @@ fun ImageGallery(
                         .fillMaxWidth()
                         .fillMaxHeight(0.6F)
                 ) {
+                    val sizedImageState = rememberSizedImageState(selectedModel)
                     Image(
                         painter = rememberAsyncImagePainter(
-                            selectedModel,
+                            sizedImageState.model,
                             contentScale = ContentScale.Fit
                         ),
                         contentDescription = "Lodging Image Description",
                         contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .asSizedImageTarget(sizedImageState)
                     )
                     TextButton(
                         onClick = { selectedModel = null },
@@ -178,12 +190,14 @@ fun ImageGallery(
 
 @Composable
 fun GalleryItem(model: String, modifier: Modifier = Modifier, colorFilter: ColorFilter? = null) {
+    val sizedImageState = rememberSizedImageState(model)
     Image(
         modifier = modifier
             .clip(MaterialTheme.shapes.large)
-            .background(color = MaterialTheme.colorScheme.surfaceContainer),
+            .background(color = MaterialTheme.colorScheme.surfaceContainer)
+            .asSizedImageTarget(sizedImageState),
         painter = rememberAsyncImagePainter(
-            model,
+            sizedImageState.model,
             contentScale = ContentScale.Crop
         ),
         contentDescription = "Lodging Image Description",
@@ -195,17 +209,18 @@ fun GalleryItem(model: String, modifier: Modifier = Modifier, colorFilter: Color
 @Composable
 @PreviewLightDarkSystemUI
 fun ImageGalleryPreview() {
-    val models = List(54, { index ->
-        "https://example.com/image$index.jpg"
+    val models = List(46, { index ->
+        "https://photo.hotellook.com/image_v2/limit/h374703_${index % 23}/{width}/{height}.auto"
     })
     AppTheme {
         Surface {
             Overlay {
                 Box {
-                    ImageGallery(models = models, modifier = Modifier.padding(top = 96.dp))
-                    Button(onClick = {}, modifier = Modifier.align(Alignment.TopStart)) {
-                        Text("Some Button")
-                    }
+                    ImageGallery(
+                        models = models,
+//                        selectedInitially = models.first(),
+                        modifier = Modifier.padding(top = 96.dp)
+                    )
                 }
             }
         }
