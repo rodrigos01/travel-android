@@ -4,14 +4,15 @@ import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.drawable.Drawable
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -29,8 +30,18 @@ private const val MARKER_SELECTED_SIZE = 32
 
 @Composable
 fun mapMarkerIcon(
-    type: MarkerType,
+    markerDrawable: Drawable,
     selected: Boolean = false,
+    backgroundColor: Color = if (selected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.primaryContainer
+    },
+    contentColor: Color = if (selected) {
+        MaterialTheme.colorScheme.onPrimary
+    } else {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    },
 ): Bitmap {
     val markerSizePx = (if (selected) MARKER_SELECTED_SIZE else MARKER_SIZE).dp.toPx().toInt()
     val paddingPx = 4.dp.toPx().toInt()
@@ -40,22 +51,7 @@ fun mapMarkerIcon(
         markerSizePx,
         Bitmap.Config.ARGB_8888
     )
-    val backgroundColor = if (selected) {
-        MaterialTheme.colorScheme.tertiary
-    } else {
-        MaterialTheme.colorScheme.tertiaryContainer
-    }
-    val contentColor = if (selected) {
-        MaterialTheme.colorScheme.onTertiary
-    } else {
-        MaterialTheme.colorScheme.onTertiaryContainer
-    }
-    val icon = when (type) {
-        MarkerType.Lodging -> R.drawable.ic_hotel_black_24dp
-        MarkerType.City -> R.drawable.baseline_location_city_24
-    }.let { resId ->
-        AppCompatResources.getDrawable(LocalContext.current, resId)
-    }?.also {
+    val icon = markerDrawable.mutate().also {
         it.setBounds(paddingPx, paddingPx, iconSizePx, iconSizePx)
         DrawableCompat.setTint(it, contentColor.toArgb())
     }
@@ -63,9 +59,20 @@ fun mapMarkerIcon(
         drawCircle(markerSizePx / 2F, markerSizePx / 2F, markerSizePx / 2F, Paint().apply {
             color = backgroundColor.toArgb()
         })
-        icon?.draw(this@apply)
+        icon.draw(this@apply)
     }
     return bitmap
+}
+
+@Composable
+fun mapMarkerIcon(type: MarkerType, selected: Boolean = false): Bitmap {
+    val icon = when (type) {
+        MarkerType.Lodging -> R.drawable.ic_hotel_black_24dp
+        MarkerType.City -> R.drawable.baseline_location_city_24
+    }.let { resId ->
+        AppCompatResources.getDrawable(LocalContext.current, resId)
+    } ?: error("Marker icon not found")
+    return mapMarkerIcon(icon, selected)
 }
 
 @Composable

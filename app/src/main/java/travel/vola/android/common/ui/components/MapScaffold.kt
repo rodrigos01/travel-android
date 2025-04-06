@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.window.core.layout.WindowSizeClass
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -35,6 +36,9 @@ fun MapScaffold(
     minZoom: Float? = 15F,
     onMarkerTapped: (MarkerViewState) -> Unit = {},
     additionalContent: @Composable () -> Unit = {},
+    markerDescriptor: @Composable (MarkerViewState) -> BitmapDescriptor = {
+        BitmapDescriptorFactory.fromBitmap(mapMarkerIcon(it.type, selected = it.selected))
+    },
     content: @Composable () -> Unit,
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
@@ -75,7 +79,14 @@ fun MapScaffold(
                 additionalContent()
             }
             if (isExpandedWindowSize) {
-                Map(markers, boundsPoints, onMarkerTapped, minZoom, modifier = Modifier.weight(1F))
+                Map(
+                    markers,
+                    boundsPoints,
+                    onMarkerTapped,
+                    minZoom,
+                    markerDescriptor,
+                    modifier = Modifier.weight(1F)
+                )
             }
         }
     }
@@ -87,6 +98,7 @@ private fun Map(
     boundsPoints: List<LatLng>,
     onMarkerTapped: (MarkerViewState) -> Unit,
     minZoom: Float?,
+    markerDescriptor: @Composable (MarkerViewState) -> BitmapDescriptor,
     modifier: Modifier = Modifier,
 ) {
     if (boundsPoints.isEmpty()) return
@@ -121,13 +133,8 @@ private fun Map(
             Marker(
                 state = rememberMarkerState(key = position.toString(), position = position),
                 title = markerState.name,
-                icon = BitmapDescriptorFactory.fromBitmap(
-                    mapMarkerIcon(
-                        markerState.type,
-                        selected = markerState.selected
-                    )
-                ),
-                anchor = Offset(0.5F, 0.5F),
+                icon = markerDescriptor(markerState),
+                anchor = Offset(0.5F, 0F),
                 onClick = {
                     onMarkerTapped(markerState)
                     false

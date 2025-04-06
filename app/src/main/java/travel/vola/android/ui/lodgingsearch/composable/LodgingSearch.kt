@@ -65,6 +65,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.window.core.layout.WindowSizeClass
 import coil.compose.rememberAsyncImagePainter
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -73,6 +74,7 @@ import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.TabbedHost
 import travel.vola.android.common.ui.components.TabbedHostScope
 import travel.vola.android.common.ui.components.TabletPreview
+import travel.vola.android.common.ui.components.mapMarkerIcon
 import travel.vola.android.common.ui.modifier.skeletonLoader
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.common.ui.state.MarkerViewState
@@ -141,6 +143,17 @@ private fun LodgingSearch(
                 }
             },
             minZoom = 17F,
+            markerDescriptor = { marker ->
+                val index = markers.indexOf(marker)
+                val bitmap = loadedState?.results?.getOrNull(index)?.let {
+                    LodgingSearchMarkerIcon(
+                        NumberFormat.getCurrencyInstance().apply { maximumFractionDigits = 0 }
+                            .format(it.price),
+                        marker.selected
+                    )
+                } ?: mapMarkerIcon(MarkerType.Lodging, selected = marker.selected)
+                BitmapDescriptorFactory.fromBitmap(bitmap)
+            },
             content = {
                 LodgingSearchResults(
                     navController,
@@ -502,7 +515,7 @@ fun LodgingSearchPreview() {
                 rating = index * 1.2,
                 reviewCount = index * 1234,
                 lodgingType = "Hotel",
-                price = index * 12.4,
+                price = (index + 1) * 123.4,
                 latitude = 40.7453466 + index * 0.0005 * latMultipliers[index % latMultipliers.size],
                 longitude = -73.9899909 + index * 0.0005 * latMultipliers[index % lonMultipliers.size],
             )
