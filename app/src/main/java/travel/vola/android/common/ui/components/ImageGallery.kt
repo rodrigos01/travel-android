@@ -117,9 +117,10 @@ fun ImageGallery(
                     )
                     Text(text = "All Photos", style = MaterialTheme.typography.labelLarge)
                 }
+                val sizedImageState = rememberSizedImageState(selectedModel)
                 Image(
                     painter = rememberAsyncImagePainter(
-                        selectedModel,
+                        sizedImageState.model,
                         contentScale = ContentScale.Fit
                     ),
                     contentDescription = "Lodging Image Description",
@@ -134,6 +135,7 @@ fun ImageGallery(
                                 Modifier
                             }
                         )
+                        .asSizedImageTarget(sizedImageState)
                 )
                 val scrollState = rememberLazyListState()
                 LazyRow(
@@ -187,12 +189,14 @@ fun ImageGallery(
 
 @Composable
 fun GalleryItem(model: String, modifier: Modifier = Modifier, colorFilter: ColorFilter? = null) {
+    val sizedImageState = rememberSizedImageState(model)
     Image(
         modifier = modifier
             .clip(MaterialTheme.shapes.large)
-            .background(color = MaterialTheme.colorScheme.surfaceContainer),
+            .background(color = MaterialTheme.colorScheme.surfaceContainer)
+            .asSizedImageTarget(sizedImageState),
         painter = rememberAsyncImagePainter(
-            model,
+            sizedImageState.model,
             contentScale = ContentScale.Crop
         ),
         contentDescription = "Lodging Image Description",
