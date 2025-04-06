@@ -7,9 +7,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
@@ -20,6 +17,7 @@ import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.SimplePlace
 import travel.vola.android.model.repository.LodgingSearchRepository
+import travel.vola.android.test.Captor.getUpdateResult
 import travel.vola.android.test.Mocks.mockItemStore
 import travel.vola.android.test.UnconfinedDispatcherTestRule
 import travel.vola.android.ui.trip.creation.usecase.PendingData.PendingLodging
@@ -204,9 +202,7 @@ class ManualAddLodgingUseCaseTest {
             on { getData("lodging_id") } doReturn originalData
         }
         subject.locationSearchResultTapped("lodging_id", 1)
-        val result = argumentCaptor<(PendingLodging) -> PendingLodging> {
-            verify(itemStore, atLeastOnce()).update(any(), capture())
-        }.lastValue(originalData)
+        val result = itemStore.getUpdateResult(originalData)
         assertThat(result.city).isEqualTo(paris)
     }
 
