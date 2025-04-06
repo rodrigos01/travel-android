@@ -81,6 +81,8 @@ import kotlinx.coroutines.launch
 import travel.vola.android.R
 import travel.vola.android.common.ui.components.ImageGallery
 import travel.vola.android.common.ui.components.Overlay
+import travel.vola.android.common.ui.components.asSizedImageTarget
+import travel.vola.android.common.ui.components.rememberSizedImageState
 import travel.vola.android.common.ui.modifier.matchWidthToHeight
 import travel.vola.android.common.ui.modifier.skeletonLoader
 import travel.vola.android.common.ui.preview.PreviewLightDarkSystemUI
@@ -167,8 +169,9 @@ fun LodgingDetails(
                     .aspectRatio(16F / 9F)
             ) {
                 photos.firstOrNull()?.let {
+                    val heroSizedState = rememberSizedImageState(it)
                     LodgingImage(
-                        rememberAsyncImagePainter(model = it, contentScale = ContentScale.Crop),
+                        rememberAsyncImagePainter(model = heroSizedState.model, contentScale = ContentScale.Crop),
                         modifier = Modifier
                             .weight(1F)
                             .fillMaxHeight()
@@ -176,16 +179,18 @@ fun LodgingDetails(
                                 showImageGallery = true
                                 imageGalleryModels = state.photos
                                 selectedGalleryModel = it
-                            },
+                            }
+                            .asSizedImageTarget(heroSizedState),
                     )
                 }
                 AnimatedVisibility(photos.size >= 3) {
                     Column(
                         verticalArrangement = spacedBy(8.dp),
                     ) {
+                        val image2SizedState = rememberSizedImageState(photos[1])
                         LodgingImage(
                             rememberAsyncImagePainter(
-                                model = photos[1],
+                                model = image2SizedState.model,
                                 contentScale = ContentScale.Crop
                             ),
                             modifier = Modifier
@@ -195,7 +200,8 @@ fun LodgingDetails(
                                     showImageGallery = true
                                     imageGalleryModels = state.photos
                                     selectedGalleryModel = state.photos[1]
-                                },
+                                }
+                                .asSizedImageTarget(image2SizedState),
                         )
                         Box(
                             modifier = Modifier
@@ -207,9 +213,10 @@ fun LodgingDetails(
                                     selectedGalleryModel = null
                                 },
                         ) {
+                            val sizedImageState = rememberSizedImageState(photos[2])
                             LodgingImage(
                                 rememberAsyncImagePainter(
-                                    model = photos[2],
+                                    model = sizedImageState.model,
                                     contentScale = ContentScale.Crop
                                 ),
                                 colorFilter = ColorFilter.tint(
@@ -218,6 +225,7 @@ fun LodgingDetails(
                                     ),
                                     blendMode = BlendMode.SrcAtop,
                                 ),
+                                modifier = Modifier.asSizedImageTarget(sizedImageState)
                             )
                             Text(
                                 text = "+${state.photos.size - 2}",
