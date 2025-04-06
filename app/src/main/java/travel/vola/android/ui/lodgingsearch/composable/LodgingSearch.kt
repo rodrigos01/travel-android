@@ -74,7 +74,9 @@ import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.TabbedHost
 import travel.vola.android.common.ui.components.TabbedHostScope
 import travel.vola.android.common.ui.components.TabletPreview
+import travel.vola.android.common.ui.components.asSizedImageTarget
 import travel.vola.android.common.ui.components.mapMarkerIcon
+import travel.vola.android.common.ui.components.rememberSizedImageState
 import travel.vola.android.common.ui.modifier.skeletonLoader
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.common.ui.state.MarkerViewState
@@ -390,13 +392,15 @@ private fun LazyListScope.loaded(
             color = MaterialTheme.colorScheme.outlineVariant,
         ), modifier = Modifier.animateItem(), onClick = { onLodgingTapped(result) }) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                val sizedImageState = rememberSizedImageState(result.coverImage)
                 Image(
-                    painter = rememberAsyncImagePainter(model = result.coverImage),
+                    painter = rememberAsyncImagePainter(sizedImageState.model),
                     contentDescription = "Place Description",
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1.77f)
-                        .background(color = MaterialTheme.colorScheme.tertiary),
+                        .background(color = MaterialTheme.colorScheme.tertiary)
+                        .asSizedImageTarget(sizedImageState),
                     contentScale = ContentScale.Crop
                 )
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
