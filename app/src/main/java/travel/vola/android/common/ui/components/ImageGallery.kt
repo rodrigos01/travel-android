@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.ContextualFlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,13 +25,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,12 +45,12 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.window.core.layout.WindowSizeClass
 import coil.compose.rememberAsyncImagePainter
-import travel.vola.android.common.ui.preview.PreviewLightDarkSystemUI
 import travel.vola.android.ui.theme.AppTheme
-
-private const val MAX_ITEMS_PER_LINE = 3
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -62,11 +61,19 @@ fun ImageGallery(
 ) {
     var selectedModel by rememberSaveable { mutableStateOf(selectedInitially) }
     val galleryScrollState = rememberScrollState()
+
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val maxItemsPerLine = when {
+        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) -> 8
+        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) -> 5
+        else -> 3
+    }
+
     AnimatedContent(selectedModel, contentKey = { it != null }) { selected ->
         if (selected == null) {
             ContextualFlowRow(
                 models.size,
-                maxItemsInEachRow = MAX_ITEMS_PER_LINE,
+                maxItemsInEachRow = maxItemsPerLine,
                 horizontalArrangement = Arrangement.spacedBy(
                     8.dp,
                     alignment = Alignment.CenterHorizontally
@@ -79,7 +86,7 @@ fun ImageGallery(
                     .then(modifier)
                     .padding(horizontal = 16.dp),
             ) { index ->
-                val width = maxWidthInLine / (MAX_ITEMS_PER_LINE - indexInLine) - 8.dp
+                val width = maxWidthInLine / (maxItemsPerLine - indexInLine) - 8.dp
                 GalleryItem(
                     model = models[index],
                     modifier = Modifier
@@ -94,38 +101,40 @@ fun ImageGallery(
                     .fillMaxHeight()
                     .then(modifier)
             ) {
-                Box(
+                TextButton(
+                    onClick = { selectedModel = null },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.6F)
-                ) {
-                    Image(
-                        painter = rememberAsyncImagePainter(
-                            selectedModel,
-                            contentScale = ContentScale.Fit
-                        ),
-                        contentDescription = "Lodging Image Description",
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                    TextButton(
-                        onClick = { selectedModel = null },
-                        modifier = Modifier
-                            .padding(top = 8.dp, start = 8.dp)
-                            .align(Alignment.TopStart),
-                        colors = if (!isSystemInDarkTheme()) {
-                            ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.inverseOnSurface)
-                        } else {
-                            ButtonDefaults.textButtonColors()
-                        }
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                            contentDescription = "Back"
-                        )
-                        Text(text = "All Photos", style = MaterialTheme.typography.labelLarge)
+                        .padding(start = 8.dp),
+                    colors = if (!isSystemInDarkTheme()) {
+                        ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.inverseOnSurface)
+                    } else {
+                        ButtonDefaults.textButtonColors()
                     }
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = "Back"
+                    )
+                    Text(text = "All Photos", style = MaterialTheme.typography.labelLarge)
                 }
+                Image(
+                    painter = rememberAsyncImagePainter(
+                        selectedModel,
+                        contentScale = ContentScale.Fit
+                    ),
+                    contentDescription = "Lodging Image Description",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .weight(1F)
+                        .fillMaxWidth()
+                        .then(
+                            if (LocalInspectionMode.current) {
+                                Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
+                            } else {
+                                Modifier
+                            }
+                        )
+                )
                 val scrollState = rememberLazyListState()
                 LazyRow(
                     state = scrollState,
@@ -193,19 +202,21 @@ fun GalleryItem(model: String, modifier: Modifier = Modifier, colorFilter: Color
 }
 
 @Composable
-@PreviewLightDarkSystemUI
+@Preview
+@TabletPreview
 fun ImageGalleryPreview() {
-    val models = List(54, { index ->
-        "https://example.com/image$index.jpg"
+    val models = List(46, { index ->
+        "https://photo.hotellook.com/image_v2/limit/h374703_${index % 23}/1024/768.auto"
     })
     AppTheme {
         Surface {
             Overlay {
                 Box {
-                    ImageGallery(models = models, modifier = Modifier.padding(top = 96.dp))
-                    Button(onClick = {}, modifier = Modifier.align(Alignment.TopStart)) {
-                        Text("Some Button")
-                    }
+                    ImageGallery(
+                        models = models,
+//                        selectedInitially = models.first(),
+                        modifier = Modifier.padding(top = 96.dp)
+                    )
                 }
             }
         }

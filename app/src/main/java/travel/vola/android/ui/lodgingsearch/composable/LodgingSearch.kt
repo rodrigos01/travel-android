@@ -498,7 +498,7 @@ fun LodgingSearchPreview() {
                 id = index.toString(),
                 name = "Some super large Hotel name $index",
                 address = "$index Street, City, ${index * 1023}",
-                coverImage = "",
+                coverImage = "https://photo.hotellook.com/image_v2/limit/h374703_0/1024/768.auto",
                 rating = index * 1.2,
                 reviewCount = index * 1234,
                 lodgingType = "Hotel",
@@ -514,7 +514,9 @@ fun LodgingSearchPreview() {
                 rating = lodging.rating,
                 reviewCount = lodging.reviewCount,
                 lodgingType = lodging.lodgingType,
-                photos = listOf(lodging.coverImage) + List(32) { index -> "photo$index" },
+                photos = listOf(lodging.coverImage) + List(44, { index ->
+                    "https://photo.hotellook.com/image_v2/limit/h374703_${(index + 1) % 23}/1024/768.auto"
+                }),
                 checkIn = Time("2025-08-10T00:00 -0500"),
                 checkOut = Time("2025-08-15T00:00 -0500"),
                 price = lodging.price,
