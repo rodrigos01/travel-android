@@ -1,6 +1,5 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.test.TestScope
@@ -11,20 +10,18 @@ import org.junit.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.atLeastOnce
-import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
 import travel.vola.android.extensions.Time
 import travel.vola.android.extensions.get
-import travel.vola.android.extensions.set
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.SimplePlace
 import travel.vola.android.model.repository.LodgingSearchRepository
+import travel.vola.android.test.Mocks.mockItemStore
 import travel.vola.android.test.UnconfinedDispatcherTestRule
-import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
 import travel.vola.android.ui.trip.creation.usecase.PendingData.PendingLodging
 import travel.vola.android.ui.trip.state.AutoCompleteResultState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
@@ -36,28 +33,7 @@ class ManualAddLodgingUseCaseTest {
     private val testScope = TestScope(rule.dispatcher)
 
     private val repository: LodgingSearchRepository = mock()
-    private val dataFlow = MutableStateFlow<Map<String, PendingLodging>>(emptyMap())
-    private val itemFlow = MutableStateFlow<Map<String, ManualAddLodgingItemState>>(emptyMap())
-    private val itemStore = mock<AddPlanItemStore<PendingLodging, ManualAddLodgingItemState>> {
-        val captor =
-            argumentCaptor<(PendingLodging, AddPlanUseCase.StateParams) -> ManualAddLodgingItemState>()
-        on { items(captor.capture()) } doReturn itemFlow
-        on { addItem(any(), any()) } doAnswer {
-            val data = it.getArgument<PendingLodging>(0)
-            val params = it.getArgument<AddPlanUseCase.StateParams>(1)
-            dataFlow[data.id] = data
-            itemFlow[data.id] = captor.firstValue(data, params)
-        }
-        on { update(any(), any()) } doAnswer {
-            val id = it.getArgument<String>(0)
-            val updater = it.getArgument<(PendingLodging) -> PendingLodging>(1)
-            dataFlow[id]?.let { data ->
-                val updated = updater(data)
-                dataFlow[id] = updated
-                itemFlow[id] = captor.firstValue(updated, mock())
-            }
-        }
-    }
+    private val itemStore = mockItemStore<PendingLodging, ManualAddLodgingItemState>()
     private val subject = ManualAddLodgingUseCase(testScope, itemStore, repository)
 
     private val items = subject.items.stateIn(
@@ -65,12 +41,15 @@ class ManualAddLodgingUseCaseTest {
     )
 
     @Test
-    fun `itemStore items updated should update items`() {
-        val item = mock<ManualAddLodgingItemState> {
+    fun `itemStore data added should update items`() {
+        itemStore.addItem(mock {
             on { id } doReturn "lodging_id"
-        }
-        itemFlow["lodging_id"] = item
-        assertThat(items["lodging_id"]).isEqualTo(item)
+            on { checkIn } doReturn Time("2025-10-16T15:23:00+01:00")
+            on { checkOut } doReturn Time("2025-10-17T10:52:00+01:00")
+        }, mock())
+        assertThat(items["lodging_id"]?.id).isEqualTo("lodging_id")
+        assertThat(items["lodging_id"]?.startState?.time).isEqualTo(Time("2025-10-16T15:23:00+01:00"))
+        assertThat(items["lodging_id"]?.endState?.time).isEqualTo(Time("2025-10-17T10:52:00+01:00"))
     }
 
     @Test
