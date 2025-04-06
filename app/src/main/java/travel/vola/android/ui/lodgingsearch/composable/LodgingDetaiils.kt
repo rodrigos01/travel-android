@@ -23,8 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -82,6 +81,8 @@ import kotlinx.coroutines.launch
 import travel.vola.android.R
 import travel.vola.android.common.ui.components.ImageGallery
 import travel.vola.android.common.ui.components.Overlay
+import travel.vola.android.common.ui.components.asSizedImageTarget
+import travel.vola.android.common.ui.components.rememberSizedImageState
 import travel.vola.android.common.ui.modifier.matchWidthToHeight
 import travel.vola.android.common.ui.modifier.skeletonLoader
 import travel.vola.android.common.ui.preview.PreviewLightDarkSystemUI
@@ -96,7 +97,12 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripTapped: () -> Unit) {
+fun LodgingDetails(
+    state: LodgingDetailsState,
+    onClose: () -> Unit,
+    onAddToTripTapped: () -> Unit,
+    showMap: Boolean = true
+) {
     var showImageGallery by rememberSaveable(state) { mutableStateOf(false) }
     var imageGalleryModels by rememberSaveable(state) { mutableStateOf(emptyList<String>()) }
     var selectedGalleryModel by rememberSaveable(state) { mutableStateOf<String?>(null) }
@@ -155,15 +161,17 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                 )
                 .animateContentSize(),
         ) {
+            val photos = state.photos
             Row(
                 horizontalArrangement = spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(16F / 9F)
             ) {
-                state.photos.firstOrNull()?.let {
+                photos.firstOrNull()?.let {
+                    val heroSizedState = rememberSizedImageState(it)
                     LodgingImage(
-                        rememberAsyncImagePainter(model = it, contentScale = ContentScale.Crop),
+                        rememberAsyncImagePainter(model = heroSizedState.model, contentScale = ContentScale.Crop),
                         modifier = Modifier
                             .weight(1F)
                             .fillMaxHeight()
@@ -171,16 +179,18 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                                 showImageGallery = true
                                 imageGalleryModels = state.photos
                                 selectedGalleryModel = it
-                            },
+                            }
+                            .asSizedImageTarget(heroSizedState),
                     )
                 }
-                AnimatedVisibility(state.photos.size >= 3) {
+                AnimatedVisibility(photos.size >= 3) {
                     Column(
                         verticalArrangement = spacedBy(8.dp),
                     ) {
+                        val image2SizedState = rememberSizedImageState(photos[1])
                         LodgingImage(
                             rememberAsyncImagePainter(
-                                model = state.photos[1],
+                                model = image2SizedState.model,
                                 contentScale = ContentScale.Crop
                             ),
                             modifier = Modifier
@@ -190,7 +200,8 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                                     showImageGallery = true
                                     imageGalleryModels = state.photos
                                     selectedGalleryModel = state.photos[1]
-                                },
+                                }
+                                .asSizedImageTarget(image2SizedState),
                         )
                         Box(
                             modifier = Modifier
@@ -202,9 +213,10 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                                     selectedGalleryModel = null
                                 },
                         ) {
+                            val sizedImageState = rememberSizedImageState(photos[2])
                             LodgingImage(
                                 rememberAsyncImagePainter(
-                                    model = state.photos[2],
+                                    model = sizedImageState.model,
                                     contentScale = ContentScale.Crop
                                 ),
                                 colorFilter = ColorFilter.tint(
@@ -213,6 +225,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                                     ),
                                     blendMode = BlendMode.SrcAtop,
                                 ),
+                                modifier = Modifier.asSizedImageTarget(sizedImageState)
                             )
                             Text(
                                 text = "+${state.photos.size - 2}",
@@ -317,54 +330,56 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                 Image(Icons.Filled.Place, contentDescription = "Location icon")
                 Text(state.address, style = MaterialTheme.typography.labelLarge)
             }
-            AnimatedContent(state.isLoading) { isLoading ->
-                if (isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(6 / 4f)
-                            .clip(MaterialTheme.shapes.large)
-                            .skeletonLoader(startDelayMillis = 300)
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(6 / 4f)
-                            .clip(MaterialTheme.shapes.large)
-                            .background(color = MaterialTheme.colorScheme.surfaceContainer)
-                    ) {
-                        val cameraPositionState = rememberCameraPositionState()
-                        val markerState = rememberMarkerState(position = marker)
-                        LaunchedEffect(marker) {
-                            cameraPositionState.position =
-                                CameraPosition.fromLatLngZoom(marker, 15f)
-                            markerState.position = marker
-                        }
-                        GoogleMap(
-                            cameraPositionState = cameraPositionState,
-                            googleMapOptionsFactory = {
-                                GoogleMapOptions().liteMode(true)
-                            },
-                            uiSettings = MapUiSettings(
-                                indoorLevelPickerEnabled = false,
-                                myLocationButtonEnabled = false,
-                                scrollGesturesEnabled = false,
-                                rotationGesturesEnabled = false,
-                                tiltGesturesEnabled = false,
-                                zoomGesturesEnabled = false,
-                                zoomControlsEnabled = false,
-                                mapToolbarEnabled = false,
-                            ),
-                            modifier = Modifier.fillMaxSize(),
+            if (showMap) {
+                AnimatedContent(state.isLoading) { isLoading ->
+                    if (isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(6 / 4f)
+                                .clip(MaterialTheme.shapes.large)
+                                .skeletonLoader(startDelayMillis = 300)
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(6 / 4f)
+                                .clip(MaterialTheme.shapes.large)
+                                .background(color = MaterialTheme.colorScheme.surfaceContainer)
                         ) {
-                            Marker(
-                                state = markerState, title = state.name, snippet = state.address
-                            )
+                            val cameraPositionState = rememberCameraPositionState()
+                            val markerState = rememberMarkerState(position = marker)
+                            LaunchedEffect(marker) {
+                                cameraPositionState.position =
+                                    CameraPosition.fromLatLngZoom(marker, 15f)
+                                markerState.position = marker
+                            }
+                            GoogleMap(
+                                cameraPositionState = cameraPositionState,
+                                googleMapOptionsFactory = {
+                                    GoogleMapOptions().liteMode(true)
+                                },
+                                uiSettings = MapUiSettings(
+                                    indoorLevelPickerEnabled = false,
+                                    myLocationButtonEnabled = false,
+                                    scrollGesturesEnabled = false,
+                                    rotationGesturesEnabled = false,
+                                    tiltGesturesEnabled = false,
+                                    zoomGesturesEnabled = false,
+                                    zoomControlsEnabled = false,
+                                    mapToolbarEnabled = false,
+                                ),
+                                modifier = Modifier.fillMaxSize(),
+                            ) {
+                                Marker(
+                                    state = markerState, title = state.name, snippet = state.address
+                                )
+                            }
+                            Surface(color = Color.Transparent, onClick = {
+                                showExpandedMap = true
+                            }, modifier = Modifier.fillMaxSize()) {}
                         }
-                        Surface(color = Color.Transparent, onClick = {
-                            showExpandedMap = true
-                        }, modifier = Modifier.fillMaxSize()) {}
                     }
                 }
             }
@@ -423,6 +438,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
         showImageGallery && imageGalleryModels.isNotEmpty(),
         enter = fadeIn(),
         exit = fadeOut(),
+        modifier = Modifier.wrapContentSize(unbounded = true)
     ) {
         DismissableOverlay(onDismiss = {
             showImageGallery = false
@@ -431,7 +447,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                 imageGalleryModels,
                 selectedInitially = selectedGalleryModel,
                 modifier = Modifier
-                    .padding(top = topPadding + 8.dp),
+                    .padding(top = topPadding),
             )
         }
     }
@@ -458,7 +474,7 @@ fun LodgingDetails(state: LodgingDetailsState, onClose: () -> Unit, onAddToTripT
                 ),
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
-                    .padding(top = topPadding + 8.dp)
+                    .padding(top = topPadding)
                     .fillMaxWidth()
                     .fillMaxHeight(0.8F)
                     .clip(MaterialTheme.shapes.large)
@@ -479,30 +495,25 @@ private fun DismissableOverlay(
 ) {
     Overlay {
         Box {
+            val windowInsetsTopPadding = with(LocalDensity.current) {
+                WindowInsets.safeDrawing.getTop(this).toDp()
+            }
             var topPadding by remember { mutableIntStateOf(0) }
             content(with(LocalDensity.current) { topPadding.toDp() })
-            Column(
+            FilledIconButton(
+                onClick = onDismiss,
                 modifier = Modifier
                     .onGloballyPositioned {
-                        topPadding = it.size.height + it.positionInParent().y.roundToInt()
+                        topPadding = (it.size.height + windowInsetsTopPadding.value).roundToInt()
                     }
                     .align(Alignment.TopEnd)
-                    .padding(end = 8.dp)
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .padding(end = 16.dp, top = windowInsetsTopPadding + 8.dp)
             ) {
-                Spacer(Modifier.windowInsetsTopHeight(WindowInsets.safeDrawing))
-                FilledIconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(top = 8.dp, end = 8.dp)
-                ) {
-                    Icon(
-                        Icons.Filled.Close,
-                        contentDescription = "",
-                        tint = MaterialTheme.colorScheme.inverseOnSurface
-                    )
-                }
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = "",
+                    tint = MaterialTheme.colorScheme.inverseOnSurface
+                )
             }
         }
     }
@@ -512,6 +523,7 @@ private fun DismissableOverlay(
 @Composable
 fun LodgingDetailsPreview() {
     val initialState = LodgingDetailsState(
+        id = "lodgingId",
         name = "A very long Hotel name that might span multiple lines",
         rating = 4.5,
         reviewCount = 13450,

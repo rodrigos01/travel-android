@@ -5,7 +5,9 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -26,17 +28,32 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SnapshotMutationPolicy
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
+import travel.vola.android.common.ui.components.MapScaffold
+import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Identifiable
 import travel.vola.android.model.repository.mock.MockTripRepository
@@ -52,14 +69,55 @@ import travel.vola.android.ui.trip.state.TripItemState.HotelCheckInItemState
 import travel.vola.android.ui.trip.state.TripItemState.HotelCheckOutItemState
 import travel.vola.android.ui.trip.state.TripItemState.MonthItemState
 import travel.vola.android.ui.trip.state.TripItemState.PlaceItemState
+import travel.vola.android.ui.trip.viewmodel.TripViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripDetails(
-    viewModel: travel.vola.android.ui.trip.viewmodel.TripViewModel,
+    viewModel: TripViewModel,
     navController: NavController,
 ) {
     val state by viewModel.viewState.collectAsStateWithLifecycle()
+    val listScrollState = rememberLazyListState()
+    val currentPlaceIndex by remember {
+        derivedStateOf(policy =
+        object : SnapshotMutationPolicy<Int> {
+            override fun equivalent(a: Int, b: Int): Boolean {
+                val itemA = state.items.getOrNull(a)
+                val itemB = state.items.getOrNull(b)
+                return itemA != null && (itemA !is PlaceItemState || itemA == itemB)
+            }
+        }) {
+            if (!listScrollState.canScrollBackward) {
+                -1
+            } else if (!listScrollState.canScrollForward) {
+                state.places.maxOfOrNull { it.listIndex } ?: -1
+            } else {
+                listScrollState.firstVisibleItemIndex
+            }
+        }
+    }
+    val focusedPlace by produceState<TripViewModel.PlaceState?>(null, currentPlaceIndex) {
+        value = state.places.firstOrNull { it.listIndex == currentPlaceIndex }
+    }
+    val allMarkers = state.places.flatMap { it.markers }
+    val boundingMarkers = focusedPlace?.markers ?: allMarkers
+    MapScaffold(
+        allMarkers.filter { it.type != MarkerType.City },
+        boundingMarkers.map { LatLng(it.position.first, it.position.second) }
+    ) {
+        List(state, listScrollState, viewModel, navController)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun List(
+    state: TripViewModel.ViewState,
+    scrollState: LazyListState,
+    viewModel: TripViewModel,
+    navController: NavController,
+    modifier: Modifier = Modifier,
+) {
     var isInEditMode by remember {
         mutableStateOf(false)
     }
@@ -85,7 +143,7 @@ fun TripDetails(
         }
     }
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.surface,
+        modifier = modifier,
         topBar = {
             TopAppBar(title = {
                 if (isInEditMode) {
@@ -136,12 +194,9 @@ fun TripDetails(
                 }
             })
         },
-        modifier = Modifier.background(MaterialTheme.colorScheme.surface),
     ) { paddingValues ->
-        LazyColumn(contentPadding = paddingValues) {
-            items(
-                state.items,
-                key = { (it as? Identifiable)?.id ?: it.hashCode() }) { event ->
+        LazyColumn(contentPadding = paddingValues, state = scrollState) {
+            items(state.items, key = { (it as? Identifiable)?.id ?: it.hashCode() }) { event ->
                 Box(
                     modifier = Modifier.animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
                 ) {
@@ -154,7 +209,7 @@ fun TripDetails(
 
 @Composable
 private fun TripDetailItem(
-    event: TripItemState, viewModel: travel.vola.android.ui.trip.viewmodel.TripViewModel
+    event: TripItemState, viewModel: TripViewModel
 ) {
     when (event) {
         is MonthItemState -> MonthEventListItem(event.month, event.year)
@@ -219,8 +274,7 @@ private fun TripDetailItem(
             showDivider = false,
             onAddButtonClick = { viewModel.addButtonTapped(event.id) })
 
-        is TripItemState.EmptyAddPlanItemState -> EmptyAddPlanListItem(
-            showDivider = event.showDivider,
+        is TripItemState.EmptyAddPlanItemState -> EmptyAddPlanListItem(showDivider = event.showDivider,
             onAddButtonClick = { viewModel.addButtonTapped(event.id) })
 
         is AddPlanItemState -> AddPlanListItem(
@@ -232,11 +286,13 @@ private fun TripDetailItem(
 
 @Composable
 @Preview
+@Preview(device = "spec:parent=pixel_tablet,orientation=portrait")
+@Preview(device = "id:pixel_tablet")
 fun TripDetailsPreview() {
     AppTheme(dynamicColor = false) {
         val navController = rememberNavController()
         TripDetails(
-            travel.vola.android.ui.trip.viewmodel.TripViewModel(
+            TripViewModel(
                 MockTripRepository(),
                 PlaceRepository(),
                 "minhaTrip",
