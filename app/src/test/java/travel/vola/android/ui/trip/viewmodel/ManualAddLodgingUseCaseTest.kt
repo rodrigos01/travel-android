@@ -23,7 +23,6 @@ import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.SimplePlace
 import travel.vola.android.model.repository.LodgingSearchRepository
-import travel.vola.android.test.Mocks.mockTime
 import travel.vola.android.test.UnconfinedDispatcherTestRule
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
 import travel.vola.android.ui.trip.creation.usecase.PendingData.PendingLodging
@@ -76,8 +75,7 @@ class ManualAddLodgingUseCaseTest {
 
     @Test
     fun `added item should be initialized empty`() {
-        val time = mockTime()
-        subject.addItem("lodging_id", time, mock())
+        subject.addItem("lodging_id", Time("2025-10-16T15:23:00+01:00"), mock())
         val item = items.value["lodging_id"] ?: fail()
 
         assertThat(item.startState.locationText).isNull()
@@ -117,7 +115,7 @@ class ManualAddLodgingUseCaseTest {
 
     @Test
     fun `added item should be initialized with initial time as check-in`() {
-        val initialTime = mockTime()
+        val initialTime = Time("2025-10-16T15:23:00+01:00")
         subject.addItem("lodging_id", initialTime, mock())
         val item = items.value["lodging_id"] ?: fail()
         assertThat(item.startState.time).isEqualTo(initialTime)

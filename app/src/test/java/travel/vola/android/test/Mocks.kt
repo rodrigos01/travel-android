@@ -11,6 +11,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 
 object Mocks {
+    @Deprecated("use the Time(String) constructor instead")
     fun mockTime(stubbing: KStubbing<Time>.(Time) -> Unit = {}): Time {
         val instant: Instant = mock {
             on { toEpochMilli() } doReturn 0L
