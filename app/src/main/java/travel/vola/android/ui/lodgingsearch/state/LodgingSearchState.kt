@@ -16,6 +16,7 @@ data class LodgingSearchResultState(
 )
 
 data class LodgingDetailsState(
+    val id: String,
     val name: String,
     val rating: Double,
     val reviewCount: Int,
