@@ -152,12 +152,12 @@ class ManualAddLodgingUseCase(
     override fun createEntity(item: ManualAddLodgingItemState): Lodging {
         val data =
             itemStore.getData(item.id) ?: error("item has no pending data associated with it")
-        data.address ?: error("address from is not set")
+        data.address ?: error("address is not set")
         data.city ?: error("lodging city is not set")
         data.checkOut
         return Lodging(
             id = data.entityId ?: data.id,
-            item.startState.locationText,
+            data.name,
             data.address,
             data.city,
             data.checkIn,
