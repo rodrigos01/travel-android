@@ -183,6 +183,7 @@ fun AddPlanRow(
                             }
                         }
                     },
+                    modifier = Modifier.weight(1f),
                 )
             } else {
                 val showTimePicker = remember {
