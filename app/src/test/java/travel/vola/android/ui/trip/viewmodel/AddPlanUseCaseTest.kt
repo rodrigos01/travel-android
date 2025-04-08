@@ -1,6 +1,5 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.test.TestScope
@@ -15,17 +14,15 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
+import travel.vola.android.extensions.set
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Time
-import travel.vola.android.test.Assertions.assertType
 import travel.vola.android.test.UnconfinedDispatcherTestRule
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
-import kotlin.contracts.ExperimentalContracts
 
-@OptIn(ExperimentalContracts::class)
 class AddPlanUseCaseTest {
 
     @get:Rule
@@ -47,16 +44,16 @@ class AddPlanUseCaseTest {
 
     @Test
     fun `added plan item should be initialized as Flight`() {
-        val original = mock<AddFlightItemState>()
-        val addedItem = subject.createAddPlanItem("item_id", mock<Time>())
-        assertType<AddFlightItemState>(addedItem)
+        val initialTime: Time = mock()
+        subject.createAddPlanItem("item_id", initialTime)
+        verify(addFlightUseCase).addItem(eq("item_id"), eq(initialTime), any())
     }
 
     @Test
     fun `added plan item with entity should be initialized as entity type`() {
         val flight = mock<Flight>()
         subject.createAddPlanItem("item_id", flight)
-        verify(addFlightUseCase.addItem(eq("item_id"), eq(flight), any()))
+        verify(addFlightUseCase).addItem(eq("item_id"), eq(flight), any())
         val lodging = mock<Lodging>()
         subject.createAddPlanItem("item_id", lodging)
         verify(addLodgingUseCase).addItem(eq("item_id"), eq(lodging), any())
@@ -70,6 +67,7 @@ class AddPlanUseCaseTest {
             on { id } doReturn "originalId"
             on { timestamp } doReturn initialTime
         }
+        addFlightItems["originalId"] = original
         val newItem = subject.addPlanTypeChanged("originalId", AddPlanItemState.Type.Lodging)
         verify(addFlightUseCase).removeItem(original)
         verify(addLodgingUseCase).addItem(eq("item_id"), eq(initialTime), any())
@@ -78,30 +76,29 @@ class AddPlanUseCaseTest {
 
     @Test
     fun `type selected should not change item if same type selected`() {
-        val initialTime: Time = mock()
         val original = mock<AddFlightItemState> {
             on { id } doReturn "originalId"
         }
+        addFlightItems["originalId"] = original
         subject.addPlanTypeChanged("originalId", AddPlanItemState.Type.Flight)
         verifyNoInteractions(addFlightUseCase)
         verifyNoInteractions(addLodgingItems)
     }
 
     @Test
-    fun `addFlightItem items changed should update existing item`() = testScope.runTest {
+    fun `addFlightItem items changed should update existing item`() = runTest {
         val addPlanItemId = "originalItemId"
         val addPlanItem: AddFlightItemState = mock {
             on { id } doReturn addPlanItemId
         }
         val items = subject.items.stateIn(this)
-        addFlightItems.value = mapOf(addPlanItemId to addPlanItem)
+        addFlightItems[addPlanItemId] = addPlanItem
         assertThat(items.value[addPlanItemId]).isEqualTo(addPlanItem)
         val newFlightItem: AddFlightItemState = mock {
             on { id } doReturn addPlanItemId
         }
-        addFlightItems.value = mapOf(addPlanItemId to newFlightItem)
+        addFlightItems[addPlanItemId] = newFlightItem
         assertThat(items.value[addPlanItemId]).isEqualTo(newFlightItem)
-        testScope.coroutineContext.cancelChildren()
     }
 
     @Test
@@ -110,6 +107,7 @@ class AddPlanUseCaseTest {
             on { id } doReturn "originalId"
         }
         val expected: Flight = mock()
+        addFlightItems["originalId"] = original
         addFlightUseCase.stub {
             on { createEntity(original) } doReturn expected
         }
@@ -123,6 +121,7 @@ class AddPlanUseCaseTest {
             on { id } doReturn "originalId"
         }
         val expected: Lodging = mock()
+        addLodgingItems["originalId"] = original
         addLodgingUseCase.stub {
             on { createEntity(original) } doReturn expected
         }
