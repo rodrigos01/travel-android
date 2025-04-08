@@ -8,6 +8,8 @@ import travel.vola.android.extensions.atTimeZone
 import travel.vola.android.extensions.plus
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.update
+import travel.vola.android.model.data.Airport
+import travel.vola.android.model.data.AirportSearchResult
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.data.Time
@@ -24,6 +26,10 @@ class AddFlightUseCase(
     private val coroutineScope: CoroutineScope,
     private val itemStore: AddPlanItemStore<PendingFlight, AddFlightItemState> = AddPlanItemStore(),
     private val repository: AddFlightRepository = AddFlightRepository(),
+    private val departureUseCase: ManualAddPlanUseCase<Airport, AirportSearchResult> = ManualAddPlanUseCase(
+        coroutineScope,
+        repository
+    )
 ) : AddPlanUseCase.AddItemUseCase<Flight, AddFlightItemState>,
     AddPlanUseCase.EntityFactory<Flight, AddFlightItemState>,
     AddFlightItemActionHandler {
@@ -31,17 +37,7 @@ class AddFlightUseCase(
     override val items: MapFlow<String, AddFlightItemState> = itemStore.items(::createItem)
 
     override fun setDepartureTime(itemId: String, time: Time) {
-        itemStore.update(itemId) {
-            it.copy(
-                departure = it.departure.update(
-                    dayOfMonth = time.dayOfMonth,
-                    month = time.month,
-                    year = time.year,
-                    hour = time.hour,
-                    minute = time.minute,
-                ),
-            )
-        }
+        departureUseCase.setTime(itemId, time)
     }
 
     override fun setArrivalTime(itemId: String, time: Time) {
@@ -62,31 +58,20 @@ class AddFlightUseCase(
     override fun airportFromSearchTextChanged(
         itemId: String, content: CharSequence
     ) {
-        if (content.length < 3) {
-            return
-        }
-        autoCompleteScope.launch {
-            val results = repository.autocomplete(content.toString())
-            itemStore.update(itemId) {
-                it.copy(airportFromSearchResults = results)
-            }
-        }
+        departureUseCase.textChanged(itemId, content)
     }
 
     override fun airportFromSearchResultTapped(itemId: String, index: Int) {
-        val selected =
-            itemStore.getData(itemId)?.airportFromSearchResults?.getOrNull(index) ?: return
         itemStore.update(itemId) { data ->
             data.copy(airportFrom = null, airportFromSearchResults = emptyList())
         }
-        coroutineScope.launch {
-            val airport = repository.airportDetails(selected.iata)
-            itemStore.update(itemId) { data ->
-                data.copy(
-                    airportFrom = airport,
-                    arrival = data.arrival?.update(timeZone = airport.timeZone.toZoneId()),
-                    airportFromSearchResults = emptyList(),
-                )
+        departureUseCase.searchResultTapped(itemId, index) { airportSearchResult ->
+            repository.airportDetails(airportSearchResult.iata).also { airport ->
+                itemStore.update(itemId) { data ->
+                    data.copy(
+                        arrival = data.arrival?.update(timeZone = airport.timeZone.toZoneId()),
+                    )
+                }
             }
         }
     }
@@ -132,6 +117,7 @@ class AddFlightUseCase(
             departure = time,
         )
         itemStore.addItem(id, data, params)
+        departureUseCase.addItem(id, time, params)
     }
 
     override fun addItem(id: String, entity: Flight, params: AddPlanUseCase.StateParams) {
@@ -145,6 +131,7 @@ class AddFlightUseCase(
                 segment.arrival
             )
             itemStore.addItem(id, data, params)
+            departureUseCase.addItem(id, segment.departure, params)
         }
     }
 
@@ -186,6 +173,7 @@ class AddFlightUseCase(
 
     override fun removeItem(item: AddFlightItemState) {
         itemStore.remove(item.id)
+        departureUseCase.remove(item.id)
     }
 
     override fun createEntity(item: AddFlightItemState): Flight {

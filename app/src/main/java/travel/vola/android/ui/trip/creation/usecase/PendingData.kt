@@ -9,6 +9,12 @@ import travel.vola.android.model.data.Time
 sealed interface PendingData {
     val id: String
 
+    data class PendingAddPlanData<T, S>(
+        val time: Time?,
+        val data: T,
+        val searchResults: List<S>,
+    )
+
     data class PendingFlight(
         override val id: String,
         val entityId: String? = null,
