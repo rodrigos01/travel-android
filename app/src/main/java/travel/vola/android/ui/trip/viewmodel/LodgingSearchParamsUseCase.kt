@@ -69,7 +69,7 @@ class LodgingSearchParamsUseCase(
             id = id,
             checkIn = time,
         )
-        itemStore.addItem(data, params)
+        itemStore.addItem(id, data, params)
     }
 
     override fun addItem(
@@ -82,11 +82,11 @@ class LodgingSearchParamsUseCase(
             checkIn = entity.checkIn,
             checkOut = entity.checkout,
         )
-        itemStore.addItem(data, params)
+        itemStore.addItem(id, data, params)
     }
 
     override fun removeItem(item: LodgingSearchItemState) {
-        itemStore.remove(item)
+        itemStore.remove(item.id)
     }
 
     private fun createItem(

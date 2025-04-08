@@ -94,7 +94,7 @@ class ManualAddLodgingUseCase(
             checkIn = time,
             checkOut = time.toMidnight() + 1.days,
         )
-        itemStore.addItem(data, params)
+        itemStore.addItem(id, data, params)
     }
 
     override fun addItem(
@@ -111,7 +111,7 @@ class ManualAddLodgingUseCase(
             checkOut = entity.checkout,
             city = entity.city,
         )
-        itemStore.addItem(data, params)
+        itemStore.addItem(id, data, params)
     }
 
     private fun createItem(
@@ -146,7 +146,7 @@ class ManualAddLodgingUseCase(
     }
 
     override fun removeItem(item: ManualAddLodgingItemState) {
-        itemStore.remove(item)
+        itemStore.remove(item.id)
     }
 
     override fun createEntity(item: ManualAddLodgingItemState): Lodging {

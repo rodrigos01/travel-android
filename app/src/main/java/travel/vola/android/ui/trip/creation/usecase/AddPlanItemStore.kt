@@ -6,12 +6,11 @@ import travel.vola.android.extensions.MutableMapStateFlow
 import travel.vola.android.extensions.get
 import travel.vola.android.extensions.remove
 import travel.vola.android.extensions.set
-import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.viewmodel.AddPlanUseCase
 
-class AddPlanItemStore<R : PendingData, T : AddPlanItemState> {
+class AddPlanItemStore<R, T> {
 
-    data class ItemStoreData<R : PendingData>(
+    data class ItemStoreData<R>(
         val data: R, val params: AddPlanUseCase.StateParams
     )
 
@@ -26,22 +25,18 @@ class AddPlanItemStore<R : PendingData, T : AddPlanItemState> {
             }
         }
 
-    fun addItem(data: R, stateParams: AddPlanUseCase.StateParams) =
+    fun addItem(key: String, data: R, stateParams: AddPlanUseCase.StateParams) =
         _items.set(
-            data.id,
+            key,
             ItemStoreData(data, stateParams)
         )
 
-    fun hasItem(itemId: String): Boolean {
-        return _items.value.containsKey(itemId)
+    fun getData(key: String): R? {
+        return _items[key]?.data
     }
 
-    fun getData(itemId: String): R? {
-        return _items[itemId]?.data
-    }
-
-    fun remove(item: T) {
-        _items.remove(item.id)
+    fun remove(key: String) {
+        _items.remove(key)
     }
 
     fun update(

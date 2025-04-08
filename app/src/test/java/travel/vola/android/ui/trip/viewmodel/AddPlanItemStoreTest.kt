@@ -32,7 +32,7 @@ class AddPlanItemStoreTest {
         val data: PendingData = mock()
         val item = mock<AddPlanItemState>()
         transformData = { _, _ -> item }
-        subject.addItem(data, stateParams = mock())
+        subject.addItem("newItem", data, stateParams = mock())
         assertThat(items["newItem"]).isEqualTo(item)
     }
 
@@ -41,13 +41,13 @@ class AddPlanItemStoreTest {
         val data = mock<PendingData> {
             on { id } doReturn "dataId"
         }
-        subject.addItem(data, stateParams = mock())
+        subject.addItem("dataId", data, stateParams = mock())
         assertThat(subject.getData("dataId")).isEqualTo(data)
     }
 
     @Test
     fun `update should set data at itemId`() {
-        subject.addItem(mock {
+        subject.addItem("item", mock {
             on { id } doReturn "item"
         }, stateParams = mock())
 
@@ -58,11 +58,10 @@ class AddPlanItemStoreTest {
 
     @Test
     fun `remove should remove item from items`() {
-        subject.addItem(mock {
+        subject.addItem("removed", mock {
             on { id } doReturn "removed"
         }, stateParams = mock())
-        val item = items["removed"] ?: error("item not found")
-        subject.remove(item)
+        subject.remove("removed")
         assertThat(items["removed"]).isNull()
     }
 

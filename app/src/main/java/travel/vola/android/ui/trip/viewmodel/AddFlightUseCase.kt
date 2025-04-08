@@ -131,7 +131,7 @@ class AddFlightUseCase(
             id = id,
             departure = time,
         )
-        itemStore.addItem(data, params)
+        itemStore.addItem(id, data, params)
     }
 
     override fun addItem(id: String, entity: Flight, params: AddPlanUseCase.StateParams) {
@@ -144,7 +144,7 @@ class AddFlightUseCase(
                 segment.airportTo,
                 segment.arrival
             )
-            itemStore.addItem(data, params)
+            itemStore.addItem(id, data, params)
         }
     }
 
@@ -185,7 +185,7 @@ class AddFlightUseCase(
     }
 
     override fun removeItem(item: AddFlightItemState) {
-        itemStore.remove(item)
+        itemStore.remove(item.id)
     }
 
     override fun createEntity(item: AddFlightItemState): Flight {

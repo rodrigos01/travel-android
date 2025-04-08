@@ -45,7 +45,7 @@ class AddFlightUseCaseTest {
 
     @Test
     fun `itemStore items updated should update items`() {
-        itemStore.addItem(mock {
+        itemStore.addItem("flight_id", mock {
             on { id } doReturn "flight_id"
             on { departure } doReturn Time("2024-10-16T18:25+02:00")
             on { arrival } doReturn Time("2024-10-16T16:15+02:00")
@@ -114,9 +114,11 @@ class AddFlightUseCaseTest {
 
     @Test
     fun `remove should call itemStore remove`() {
-        val item = mock<AddFlightItemState>()
+        val item = mock<AddFlightItemState> {
+            on { id } doReturn "item_id"
+        }
         subject.removeItem(item)
-        verify(itemStore).remove(item)
+        verify(itemStore).remove("item_id")
     }
 
     @Test

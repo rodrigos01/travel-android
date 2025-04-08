@@ -40,7 +40,7 @@ class ManualAddLodgingUseCaseTest {
 
     @Test
     fun `itemStore data added should update items`() {
-        itemStore.addItem(mock {
+        itemStore.addItem("lodging_id", mock {
             on { id } doReturn "lodging_id"
             on { checkIn } doReturn Time("2025-10-16T15:23:00+01:00")
             on { checkOut } doReturn Time("2025-10-17T10:52:00+01:00")
@@ -109,9 +109,11 @@ class ManualAddLodgingUseCaseTest {
 
     @Test
     fun `remove should call itemStore remove`() {
-        val item = mock<ManualAddLodgingItemState>()
+        val item = mock<ManualAddLodgingItemState> {
+            on { id } doReturn "lodging_id"
+        }
         subject.removeItem(item)
-        verify(itemStore).remove(item)
+        verify(itemStore).remove("lodging_id")
     }
 
     @Test
