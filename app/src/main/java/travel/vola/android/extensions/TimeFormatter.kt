@@ -5,32 +5,29 @@ import java.text.DateFormatSymbols
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-class TimeFormatter {
-    fun dayOfMonthString(time: Time): String = time.dayOfMonthString()
+val Time.monthString: String
+    get() = DateFormatSymbols.getInstance().months[monthValue - 1]
 
-    fun dayAndMonthString(time: Time): String = time.dayAndMonthString()
-
-    fun dayOfWeekString(time: Time): String = time.dayOfWeekString()
-
-    fun timeString(time: Time): String = time.timeString()
-
-    fun monthString(time: Time): String =
-        DateFormatSymbols.getInstance().months[time.monthValue - 1]
-}
-
-fun Time.dayOfMonthString(): String = dayOfMonth.toString()
+val Time.dayOfMonthString: String
+    get() = dayOfMonth.toString()
 
 fun Time.dateString(style: FormatStyle = FormatStyle.SHORT): String =
     format(DateTimeFormatter.ofLocalizedDate(style))
 
-fun Time.monthAndYearString(): String = format(DateTimeFormatter.ofPattern("MMMM yyyy"))
+val Time.dateString: String
+    get() = dateString()
 
-fun Time.dayAndMonthString(): String = format(DateTimeFormatter.ofPattern("MMM d"))
+val Time.monthAndYearString: String
+    get() = format(DateTimeFormatter.ofPattern("MMMM yyyy"))
 
-fun Time.dayOfWeekString(): String =
-    DateFormatSymbols.getInstance().shortWeekdays[dayOfWeek.value]
+val Time.dayAndMonthString: String
+    get() = format(DateTimeFormatter.ofPattern("MMM d"))
 
-fun Time.timeString(): String = format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
+val Time.dayOfWeekString: String
+    get() = DateFormatSymbols.getInstance().shortWeekdays[dayOfWeek.value]
+
+val Time.timeString: String
+    get() = format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
 
 fun Time.asISO8601DateString(): String = format(DateTimeFormatter.ISO_LOCAL_DATE)
 
