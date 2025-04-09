@@ -1,10 +1,7 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -13,19 +10,18 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
+import travel.vola.android.extensions.get
+import travel.vola.android.extensions.set
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Time
-import travel.vola.android.test.Assertions.assertType
 import travel.vola.android.test.UnconfinedDispatcherTestRule
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
-import kotlin.contracts.ExperimentalContracts
 
-@OptIn(ExperimentalContracts::class)
 class AddPlanUseCaseTest {
 
     @get:Rule
@@ -43,75 +39,62 @@ class AddPlanUseCaseTest {
     private val addLodgingUseCase: AddLodgingUseCase = mock {
         on { items } doReturn addLodgingItems
     }
-    private val subject = AddPlanUseCase(addFlightUseCase, addLodgingUseCase)
+    private val subject = AddPlanUseCase(mock(), testScope, addFlightUseCase, addLodgingUseCase)
 
     @Test
     fun `added plan item should be initialized as Flight`() {
-        val original = mock<AddFlightItemState>()
-        addFlightUseCase.stub {
-            on { addItem(any<Time>(), any()) } doReturn original
-        }
-        val addedItem = subject.createAddPlanItem(mock<Time>())
-        assertType<AddFlightItemState>(addedItem)
+        val initialTime: Time = mock()
+        subject.createAddPlanItem("item_id", initialTime)
+        verify(addFlightUseCase).addItem(eq("item_id"), eq(initialTime), any())
     }
 
     @Test
     fun `added plan item with entity should be initialized as entity type`() {
         val flight = mock<Flight>()
-        subject.createAddPlanItem(flight)
-        verify(addFlightUseCase.addItem(eq(flight), any()))
+        subject.createAddPlanItem("item_id", flight)
+        verify(addFlightUseCase).addItem(eq("item_id"), eq(flight), any())
         val lodging = mock<Lodging>()
-        subject.createAddPlanItem(lodging)
-        verify(addLodgingUseCase).addItem(eq(lodging), any())
+        subject.createAddPlanItem("item_id", lodging)
+        verify(addLodgingUseCase).addItem(eq("item_id"), eq(lodging), any())
     }
 
     @Test
     fun `type selected should change item`() {
-        val expected: ManualAddLodgingItemState = mock()
         val initialTime: Time = mock()
         val original = mock<AddFlightItemState> {
             on { id } doReturn "originalId"
             on { timestamp } doReturn initialTime
         }
-        addFlightUseCase.stub {
-            on { addItem(eq(initialTime), any()) } doReturn original
-        }
-        addLodgingUseCase.stub { on { addItem(eq(initialTime), any()) } doReturn expected }
-        val newItem = subject.addPlanTypeChanged("originalId", AddPlanItemState.Type.Lodging)
+        addFlightItems["originalId"] = original
+        subject.addPlanTypeChanged("originalId", AddPlanItemState.Type.Lodging)
         verify(addFlightUseCase).removeItem(original)
-        verify(addLodgingUseCase).addItem(eq(initialTime), any())
-        assertThat(newItem).isEqualTo(expected)
+        verify(addLodgingUseCase).addItem(eq("originalId"), eq(initialTime), any())
     }
 
     @Test
     fun `type selected should not change item if same type selected`() {
-        val initialTime: Time = mock()
         val original = mock<AddFlightItemState> {
             on { id } doReturn "originalId"
         }
-        addFlightUseCase.stub {
-            on { addItem(eq(initialTime), any()) } doReturn original
-        }
+        addFlightItems["originalId"] = original
         subject.addPlanTypeChanged("originalId", AddPlanItemState.Type.Flight)
-        verifyNoInteractions(addFlightUseCase)
-        verifyNoInteractions(addLodgingItems)
+        verify(addFlightUseCase, times(0)).removeItem(any())
+        verify(addLodgingUseCase, times(0)).addItem(any(), any<Time>(), any())
     }
 
     @Test
-    fun `addFlightItem items changed should update existing item`() = testScope.runTest {
+    fun `addFlightItem items changed should update existing item`() {
         val addPlanItemId = "originalItemId"
         val addPlanItem: AddFlightItemState = mock {
             on { id } doReturn addPlanItemId
         }
-        val items = subject.items.stateIn(this)
-        addFlightItems.value = mapOf(addPlanItemId to addPlanItem)
-        assertThat(items.value[addPlanItemId]).isEqualTo(addPlanItem)
+        addFlightItems[addPlanItemId] = addPlanItem
+        assertThat(subject.items[addPlanItemId]).isEqualTo(addPlanItem)
         val newFlightItem: AddFlightItemState = mock {
             on { id } doReturn addPlanItemId
         }
-        addFlightItems.value = mapOf(addPlanItemId to newFlightItem)
-        assertThat(items.value[addPlanItemId]).isEqualTo(newFlightItem)
-        testScope.coroutineContext.cancelChildren()
+        addFlightItems[addPlanItemId] = newFlightItem
+        assertThat(subject.items[addPlanItemId]).isEqualTo(newFlightItem)
     }
 
     @Test
@@ -120,6 +103,7 @@ class AddPlanUseCaseTest {
             on { id } doReturn "originalId"
         }
         val expected: Flight = mock()
+        addFlightItems["originalId"] = original
         addFlightUseCase.stub {
             on { createEntity(original) } doReturn expected
         }
@@ -133,6 +117,7 @@ class AddPlanUseCaseTest {
             on { id } doReturn "originalId"
         }
         val expected: Lodging = mock()
+        addLodgingItems["originalId"] = original
         addLodgingUseCase.stub {
             on { createEntity(original) } doReturn expected
         }
