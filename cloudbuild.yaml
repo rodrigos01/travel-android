@@ -101,8 +101,8 @@ steps:
         - 'BRANCH_NAME=$BRANCH_NAME'
     waitFor: [ 'setup_config' ]
     volumes:
-      #      - name: 'build_cache'
-      #        path: '/build_cache'
+      - name: 'build_cache'
+        path: '/build_cache'
       - name: 'config'
         path: '/config'
     # artifacts:
