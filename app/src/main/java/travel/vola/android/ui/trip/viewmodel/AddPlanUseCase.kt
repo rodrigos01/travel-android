@@ -56,7 +56,7 @@ class AddPlanUseCase(
     val items: MapStateFlow<String, AddPlanItemState> = mergeMaps(
         addFlightUseCase.items,
         addLodgingUseCase.items,
-    ).stateIn(coroutineScope, SharingStarted.Lazily, initialValue = emptyMap())
+    ).stateIn(coroutineScope, SharingStarted.Eagerly, initialValue = emptyMap())
 
     fun createAddPlanItem(
         id: String?,

@@ -1,8 +1,9 @@
 package travel.vola.android.test
 
 import org.mockito.kotlin.KArgumentCaptor
+import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.eq
+import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.verify
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
 import travel.vola.android.ui.trip.creation.usecase.PendingData
@@ -15,13 +16,9 @@ object Captor {
         return captor.lastValue
     }
 
-    fun <T : PendingData, E : AddPlanItemState> getUpdateResult(
-        itemStore: AddPlanItemStore<T, E>,
+    fun <T : PendingData, E : AddPlanItemState> AddPlanItemStore<T, E>.getUpdateResult(
         originalData: T,
-    ): T {
-        val updater = capture {
-            verify(itemStore).update(eq(originalData.id), capture())
-        }
-        return updater(originalData)
-    }
+    ): T = argumentCaptor<(T) -> T> {
+        verify(this@getUpdateResult, atLeastOnce()).update(any(), capture())
+    }.lastValue(originalData)
 }

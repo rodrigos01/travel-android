@@ -26,11 +26,9 @@ class AddPlanItemStore<R : PendingData, T : AddPlanItemState> {
             }
         }
 
-    fun addItem(data: R, stateParams: AddPlanUseCase.StateParams) =
-        _items.set(
-            data.id,
-            ItemStoreData(data, stateParams)
-        )
+    fun addItem(data: R, stateParams: AddPlanUseCase.StateParams) {
+        _items[data.id] = ItemStoreData(data, stateParams)
+    }
 
     fun hasItem(itemId: String): Boolean {
         return _items.value.containsKey(itemId)

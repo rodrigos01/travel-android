@@ -1,8 +1,8 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -21,17 +21,15 @@ class AddPlanItemStoreTest {
 
     private val subject = AddPlanItemStore<PendingData, AddPlanItemState>()
 
-    private var transformData: (PendingData, AddPlanUseCase.StateParams) -> AddPlanItemState =
-        ::mockItemCreation
-    private val items = subject.items(transformData).stateIn(
-        TestScope(rule.dispatcher), started = SharingStarted.Eagerly, initialValue = emptyMap()
-    )
+    private val testScope = TestScope(rule.dispatcher)
 
     @Test
-    fun `item in items should be result of transform`() {
-        val data: PendingData = mock()
+    fun `item in items should be result of transform`() = runTest {
         val item = mock<AddPlanItemState>()
-        transformData = { _, _ -> item }
+        val items = subject.items { _, _ -> item }.stateIn(testScope)
+        val data: PendingData = mock {
+            on { id } doReturn "newItem"
+        }
         subject.addItem(data, stateParams = mock())
         assertThat(items["newItem"]).isEqualTo(item)
     }
@@ -57,25 +55,17 @@ class AddPlanItemStoreTest {
     }
 
     @Test
-    fun `remove should remove item from items`() {
+    fun `remove should remove item from items`() = runTest {
+        val items = subject.items { _, _ ->
+            mock {
+                on { id } doReturn "removed"
+            }
+        }.stateIn(testScope)
         subject.addItem(mock {
             on { id } doReturn "removed"
         }, stateParams = mock())
         val item = items["removed"] ?: error("item not found")
         subject.remove(item)
         assertThat(items["removed"]).isNull()
-    }
-
-    private fun mockItemCreation(
-        data: PendingData,
-        params: AddPlanUseCase.StateParams,
-    ): AddPlanItemState {
-        val item = mock<AddPlanItemState> {
-            on { id } doReturn data.id
-            on { dateSelectionEnabled } doReturn params.dateSelectionEnabled
-            on { typeSelectionEnabled } doReturn params.typeSelectionEnabled
-            on { deleteButtonEnabled } doReturn params.deleteEnabled
-        }
-        return item
     }
 }
