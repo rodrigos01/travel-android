@@ -105,10 +105,6 @@ steps:
         path: '/build_cache'
       - name: 'config'
         path: '/config'
-    # artifacts:
-    #   objects:
-    #     location: 'gs://${_ARTIFACT_BUCKET}/'
-    #     paths: [ 'app/build/outputs/apk/release/app-release.apk' ]
 
   #
   # Save the APKs
@@ -136,7 +132,10 @@ steps:
 
   - name: 'gcr.io/cloud-builders/gsutil'
     id: store_unit_test_reports
-    args: [ '-q', 'cp', '-r', 'app/build/reports/tests/testProdReleaseUnitTest', 'gs://${_ARTIFACT_BUCKET}/$BRANCH_NAME-$BUILD_ID/tests/' ]
+    args: [ '-q', 'cp', '-r', 'app/build/reports/tests/testProdReleaseUnitTest/*', 'gs://${_UNIT_TESTS_BUCKET}/$BRANCH_NAME-$BUILD_ID/' ]
+    script: |
+      #!/usr/bin/env bash
+      echo "Test reports available at https://storage.googleapis.com/${_UNIT_TESTS_BUCKET}/${BRANCH_NAME}-${BUILD_ID}/index.html"
     waitFor: [ 'unit_tests' ]
 
   #
