@@ -18,10 +18,11 @@ steps:
   - name: 'gcr.io/$PROJECT_ID/tar'
     id: setup_config
     entrypoint: 'bash'
+    waitFor: [ 'unit_tests' ]
     args:
       - '-c'
       - |
-        echo "Unit test report available at https://storage.googleapis.com/${_UNIT_TESTS_BUCKET}/${BRANCH_NAME}-${BUILD_ID}/index.html
+        echo "Unit test report available at https://storage.googleapis.com/${_UNIT_TESTS_BUCKET}/${BRANCH_NAME}-${BUILD_ID}/index.html"
 
 artifacts:
   objects:
