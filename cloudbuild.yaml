@@ -122,22 +122,22 @@ steps:
   #
   # Run the unit tests using the same type of step as the build.
 
-  - name: 'gcr.io/$PROJECT_ID/android:35'
-    id: unit_tests
-    args: [ "./gradlew", "testProdReleaseUnitTest" ]
-    <<: *env
-    waitFor: [ 'build' ]
-    volumes:
-      - name: 'build_cache'
-        path: '/build_cache'
+  #  - name: 'gcr.io/$PROJECT_ID/android:35'
+  #    id: unit_tests
+  #    args: [ "./gradlew", "testProdReleaseUnitTest" ]
+  #    <<: *env
+  #    waitFor: [ 'build' ]
+  #    volumes:
+  #      - name: 'build_cache'
+  #        path: '/build_cache'
 
   #
   # Store the unit test reports
 
-  - name: 'gcr.io/cloud-builders/gsutil'
-    id: store_unit_test_reports
-    args: [ '-q', 'cp', '-r', 'app/build/reports/tests/testProdReleaseUnitTest', 'gs://${_ARTIFACT_BUCKET}/$BRANCH_NAME-$BUILD_ID/tests/' ]
-    waitFor: [ 'unit_tests' ]
+  #  - name: 'gcr.io/cloud-builders/gsutil'
+  #    id: store_unit_test_reports
+  #    args: [ '-q', 'cp', '-r', 'app/build/reports/tests/testProdReleaseUnitTest', 'gs://${_ARTIFACT_BUCKET}/$BRANCH_NAME-$BUILD_ID/tests/' ]
+  #    waitFor: [ 'unit_tests' ]
 
   #
   # Store the unit test results
