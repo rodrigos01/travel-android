@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalContracts::class)
-
 package travel.vola.android.ui.trip.viewmodel
 
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +13,8 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
 import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.remove
+import travel.vola.android.extensions.set
 import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
@@ -36,7 +36,6 @@ import travel.vola.android.ui.trip.state.TripItemState.HotelCheckOutItemState
 import travel.vola.android.ui.trip.state.TripItemState.MonthItemState
 import travel.vola.android.ui.trip.state.TripItemState.PlaceItemState
 import java.util.TimeZone
-import kotlin.contracts.ExperimentalContracts
 
 class TripViewModelTest {
 
@@ -561,7 +560,7 @@ class TripViewModelTest {
                 Lodging(
                     name = "Hôtel La Villa Nice Victor Hugo",
                     checkIn = "2024-05-30T13:00 +0200",
-                    checkout = "2024-06-1T11:00 +0200",
+                    checkout = "2024-06-01T11:00 +0200",
                     cityName = "Nice"
                 ),
             )
@@ -579,7 +578,7 @@ class TripViewModelTest {
                 Lodging(
                     name = "Hôtel La Villa Nice Victor Hugo",
                     checkIn = "2024-05-30T13:00 +0200",
-                    checkout = "2024-06-1T11:00 +0200",
+                    checkout = "2024-06-01T11:00 +0200",
                     cityName = "Nice"
                 ),
             )
@@ -688,21 +687,16 @@ class TripViewModelTest {
                 Lodging(
                     name = "Hôtel La Villa Nice Victor Hugo",
                     checkIn = "2024-05-30T13:00 +0200",
-                    checkout = "2024-06-1T11:00 +0200",
+                    checkout = "2024-06-01T11:00 +0200",
                     cityName = "Nice"
                 ),
             )
         )
-        val addPlanItemId = "originalItemId"
-        val expected: AddPlanItemState = mock {
-            on { id } doReturn addPlanItemId
-        }
-        mockAddPlanItem(expected)
         val checkOutItem =
             subject.viewState.value.items.first { it is HotelCheckOutItemState && it.hotelName == lodgingName } as TripItemState.EventItemState
         subject.addButtonTapped(checkOutItem.id)
         verify(addPlanUseCase).createAddPlanItem(
-            eq("originalItemId"),
+            any(),
             eq(Time("2024-05-30T11:00 +0200")),
             dateSelectionEnabled = eq(false),
             type = any(),
@@ -729,7 +723,7 @@ class TripViewModelTest {
             subject.viewState.value.items.filterIsInstance<DateRangeItemState>().first()
         val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
         subject.addButtonTapped(originalItem.id)
-        val addedItem = subject.viewState.value.items[originalItemIndex + 1]
+        val addedItem = subject.viewState.value.items[originalItemIndex]
         assertThat(addedItem).isEqualTo(expected)
     }
 
@@ -744,16 +738,11 @@ class TripViewModelTest {
                 ),
             )
         )
-        val addPlanItemId = "originalItemId"
-        val expected: AddPlanItemState = mock {
-            on { id } doReturn addPlanItemId
-        }
-        mockAddPlanItem(expected)
         val originalItem =
             subject.viewState.value.items.filterIsInstance<DateRangeItemState>().first()
         subject.addButtonTapped(originalItem.id)
         verify(addPlanUseCase).createAddPlanItem(
-            id = eq("originalItemId"),
+            id = eq(originalItem.id),
             time = any(), dateSelectionEnabled = eq(true), type = any(),
         )
     }
@@ -861,7 +850,7 @@ class TripViewModelTest {
         val newAddPlanItem = mock<AddFlightItemState> {
             on { id } doReturn addPlanItemId
         }
-        addPlanItems.value = mapOf(addPlanItemId to newAddPlanItem)
+        addPlanItems[originalItem.id] = newAddPlanItem
         val resultAddPlanItem = subject.viewState.value.items[originalItemIndex]
         assertThat(resultAddPlanItem).isEqualTo(newAddPlanItem)
     }
@@ -909,7 +898,7 @@ class TripViewModelTest {
     }
 
     @Test
-    fun `cancel should remove item from items`() {
+    fun `cancel should remove item from use case`() {
         tripFlow.value = Trip(
             lodgings = listOf(
                 Lodging(
@@ -920,19 +909,15 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val expected: AddPlanItemState = mock {
-            on { id } doReturn addPlanItemId
-        }
-        mockAddPlanItem(expected)
         val originalItem =
             subject.viewState.value.items.filterIsInstance<DateRangeItemState>().first()
         subject.addButtonTapped(originalItem.id)
         subject.cancelEdit(addPlanItemId)
-        assertThat(subject.viewState.value.items).doesNotContain(expected)
+        verify(addPlanUseCase).removeItem(addPlanItemId)
     }
 
     @Test
-    fun `cancel should reinsert replaceable item`() {
+    fun `item removed from usecase should reinsert replaceable item`() {
         tripFlow.value = Trip(
             lodgings = listOf(
                 Lodging(
@@ -954,14 +939,16 @@ class TripViewModelTest {
         val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
         subject.addButtonTapped(originalItem.id)
         subject.cancelEdit(addPlanItemId)
+        addPlanItems.remove(originalItem.id)
         val resultAddPlanItem = subject.viewState.value.items[originalItemIndex]
         assertThat(resultAddPlanItem).isEqualTo(originalItem)
     }
 
     private fun mockAddPlanItem(addPlanItem: AddPlanItemState) {
         addPlanUseCase.stub {
-            on { createAddPlanItem(any(), any(), any()) } doAnswer {
-                addPlanItems.value = mapOf(addPlanItem.id to addPlanItem)
+            on { createAddPlanItem(any(), any(), any(), any()) } doAnswer {
+                val id = it.getArgument<String>(0)
+                addPlanItems.value = mapOf(id to addPlanItem)
             }
         }
     }
