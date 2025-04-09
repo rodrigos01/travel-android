@@ -8,7 +8,7 @@ class ParsersTest {
 
     @Test
     fun `Time to firebase data model should format time as string with timezone`() {
-        val original = "2024-06-14T17:05 +0100"
+        val original = "2024-06-14T17:05:00+01:00"
         val time = Time(original)
         val result = time.toFirebaseDataModel()
         assertThat(result).isEqualTo(original)
