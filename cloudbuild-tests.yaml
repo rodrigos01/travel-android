@@ -1,0 +1,29 @@
+steps:
+  #
+  # Unit Tests
+  #
+
+  - name: 'gcr.io/$PROJECT_ID/android:35'
+    id: unit_tests
+    args: [ "./gradlew", "testProdReleaseUnitTest" ]
+    env:
+      - 'TERM=dumb'
+      - 'JAVA_TOOL_OPTIONS="-Xmx4g"'
+      - 'GRADLE_USER_HOME=/build_cache/.gradle'
+      - 'GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.workers.max=8 -Dkotlin.incremental=false"'
+      - 'BRANCH_NAME=$BRANCH_NAME'
+
+  #
+  # Print Unit test reports URL to log
+  - name: 'gcr.io/$PROJECT_ID/tar'
+    id: setup_config
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Unit test report available at https://storage.googleapis.com/${_UNIT_TESTS_BUCKET}/${BRANCH_NAME}-${BUILD_ID}/index.html
+
+artifacts:
+  objects:
+    location: 'gs://${_UNIT_TESTS_BUCKET}/$BRANCH_NAME-$BUILD_ID/'
+    paths: [ 'app/build/reports/tests/testProdReleaseUnitTest/*' ]
