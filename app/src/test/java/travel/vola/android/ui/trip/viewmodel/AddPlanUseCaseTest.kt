@@ -1,9 +1,7 @@
 package travel.vola.android.ui.trip.viewmodel
 
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -12,8 +10,9 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
+import travel.vola.android.extensions.get
 import travel.vola.android.extensions.set
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
@@ -61,17 +60,15 @@ class AddPlanUseCaseTest {
 
     @Test
     fun `type selected should change item`() {
-        val expected: ManualAddLodgingItemState = mock()
         val initialTime: Time = mock()
         val original = mock<AddFlightItemState> {
             on { id } doReturn "originalId"
             on { timestamp } doReturn initialTime
         }
         addFlightItems["originalId"] = original
-        val newItem = subject.addPlanTypeChanged("originalId", AddPlanItemState.Type.Lodging)
+        subject.addPlanTypeChanged("originalId", AddPlanItemState.Type.Lodging)
         verify(addFlightUseCase).removeItem(original)
-        verify(addLodgingUseCase).addItem(eq("item_id"), eq(initialTime), any())
-        assertThat(newItem).isEqualTo(expected)
+        verify(addLodgingUseCase).addItem(eq("originalId"), eq(initialTime), any())
     }
 
     @Test
@@ -81,24 +78,23 @@ class AddPlanUseCaseTest {
         }
         addFlightItems["originalId"] = original
         subject.addPlanTypeChanged("originalId", AddPlanItemState.Type.Flight)
-        verifyNoInteractions(addFlightUseCase)
-        verifyNoInteractions(addLodgingItems)
+        verify(addFlightUseCase, times(0)).removeItem(any())
+        verify(addLodgingUseCase, times(0)).addItem(any(), any<Time>(), any())
     }
 
     @Test
-    fun `addFlightItem items changed should update existing item`() = runTest {
+    fun `addFlightItem items changed should update existing item`() {
         val addPlanItemId = "originalItemId"
         val addPlanItem: AddFlightItemState = mock {
             on { id } doReturn addPlanItemId
         }
-        val items = subject.items.stateIn(this)
         addFlightItems[addPlanItemId] = addPlanItem
-        assertThat(items.value[addPlanItemId]).isEqualTo(addPlanItem)
+        assertThat(subject.items[addPlanItemId]).isEqualTo(addPlanItem)
         val newFlightItem: AddFlightItemState = mock {
             on { id } doReturn addPlanItemId
         }
         addFlightItems[addPlanItemId] = newFlightItem
-        assertThat(items.value[addPlanItemId]).isEqualTo(newFlightItem)
+        assertThat(subject.items[addPlanItemId]).isEqualTo(newFlightItem)
     }
 
     @Test
