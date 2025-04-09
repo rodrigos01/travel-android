@@ -59,7 +59,6 @@ class TripViewModelTest {
             "tripId",
             mock(),
             mock(),
-            mock(),
             addPlanUseCase,
         )
 

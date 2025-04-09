@@ -19,9 +19,13 @@ import travel.vola.android.common.coroutines.createUseCaseScope
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.common.ui.state.MarkerViewState
 import travel.vola.android.di.ServiceLocator
-import travel.vola.android.extensions.TimeFormatter
+import travel.vola.android.extensions.dayAndMonthString
+import travel.vola.android.extensions.dayOfMonthString
+import travel.vola.android.extensions.dayOfWeekString
 import travel.vola.android.extensions.minus
+import travel.vola.android.extensions.monthString
 import travel.vola.android.extensions.plus
+import travel.vola.android.extensions.timeString
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Flight
@@ -51,7 +55,6 @@ class TripViewModel(
     placeRepository: PlaceRepository,
     private val tripId: String,
     private val navController: NavController,
-    private val timeFormatter: TimeFormatter = TimeFormatter(),
     private val useCaseScope: CoroutineScope = createUseCaseScope(),
     private val addPlanUseCase: AddPlanUseCase = AddPlanUseCase(
         placeRepository = placeRepository,
@@ -416,21 +419,6 @@ class TripViewModel(
             }
         }
     }
-
-    private val Time.dayOfMonthString: String
-        get() = timeFormatter.dayOfMonthString(this)
-
-    private val Time.dayAndMonthString: String
-        get() = timeFormatter.dayAndMonthString(this)
-
-    private val Time.dayOfWeekString: String
-        get() = timeFormatter.dayOfWeekString(this)
-
-    private val Time.timeString: String
-        get() = timeFormatter.timeString(this)
-
-    private val Time.monthString: String
-        get() = timeFormatter.monthString(this)
 
     override fun onCleared() {
         super.onCleared()

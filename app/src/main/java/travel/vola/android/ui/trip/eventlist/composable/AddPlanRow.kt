@@ -110,7 +110,7 @@ fun AddPlanRow(
             }
             if (showTextField) {
                 TimePickerTextButton(
-                    text = state.selectedTime?.timeString() ?: timeSelectorLabel,
+                    text = state.selectedTime?.timeString ?: timeSelectorLabel,
                     onTimeSelected = { hour, minute ->
                         state.selectedTime = selectedTime.update(hour = hour, minute = minute)
                     },
@@ -143,8 +143,8 @@ fun AddPlanRow(
                             .padding(start = 24.dp, end = 4.dp, top = 8.dp, bottom = 8.dp)
                     ) {
                         LeadingDate(
-                            dayOfMonth = selectedTime.dayOfMonthString(),
-                            dayOfWeek = selectedTime.dayOfWeekString(),
+                            dayOfMonth = selectedTime.dayOfMonthString,
+                            dayOfWeek = selectedTime.dayOfWeekString,
                         )
                         Image(
                             painter = painterResource(id = R.drawable.ic_arrow_drop_down_24),
@@ -156,8 +156,8 @@ fun AddPlanRow(
                 }
             } else {
                 LeadingDate(
-                    dayOfMonth = selectedTime.dayOfMonthString(),
-                    dayOfWeek = selectedTime.dayOfWeekString(),
+                    dayOfMonth = selectedTime.dayOfMonthString,
+                    dayOfWeek = selectedTime.dayOfWeekString,
                     modifier = Modifier.width(80.dp),
                 )
             }
@@ -198,7 +198,8 @@ fun AddPlanRow(
                     showTimePickerState = showTimePicker,
                     timePickerDialogState = timePickerDialogState,
                 ) {
-                    OutlinedTextField(value = selectedTime.timeString(),
+                    OutlinedTextField(
+                        value = selectedTime.timeString,
                         label = { Text(timeSelectorLabel) },
                         placeholder = { placeHolder?.let { Text(it) } },
                         onValueChange = {},
