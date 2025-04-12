@@ -133,10 +133,18 @@ steps:
   - name: 'gcr.io/cloud-builders/gsutil'
     id: store_unit_test_reports
     args: [ '-q', 'cp', '-r', 'app/build/reports/tests/testProdReleaseUnitTest/*', 'gs://${_UNIT_TESTS_BUCKET}/$BRANCH_NAME-$BUILD_ID/' ]
-    script: |
-      #!/usr/bin/env bash
-      echo "Test reports available at https://storage.googleapis.com/${_UNIT_TESTS_BUCKET}/${BRANCH_NAME}-${BUILD_ID}/index.html"
     waitFor: [ 'unit_tests' ]
+
+  #
+  # Print Unit test reports URL to log
+  - name: 'gcr.io/$PROJECT_ID/tar'
+    id: print_unit_test_reports_url
+    entrypoint: 'bash'
+    waitFor: [ 'unit_tests' ]
+    args:
+      - '-c'
+      - |
+        echo "Unit test report available at https://storage.googleapis.com/${_UNIT_TESTS_BUCKET}/${BRANCH_NAME}-${BUILD_ID}/index.html"
 
   #
   # Store the unit test results
