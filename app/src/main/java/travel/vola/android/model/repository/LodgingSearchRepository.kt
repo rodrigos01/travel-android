@@ -45,7 +45,7 @@ class LodgingSearchRepository {
     suspend fun search(
         locationId: String, checkIn: Time, checkOut: Time
     ): List<LodgingSearchResult> {
-        return request<ApiResponse.LodgingSearch>("/lodging/search") {
+        return request<ApiResponse.LodgingSearch>("/lodging/searchV2") {
             url {
                 parameters.append("cityId", locationId)
                 parameters.append("checkin", checkIn.asISO8601DateString())
