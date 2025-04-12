@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -84,6 +86,22 @@ android {
     kotlinOptions {
         jvmTarget = "11"
         freeCompilerArgs = listOf("-Xcontext-receivers")
+    }
+    testOptions {
+        unitTests {
+            all {
+                it.testLogging {
+                    it.outputs.upToDateWhen { false }
+                    events = setOf(
+                        TestLogEvent.PASSED,
+                        TestLogEvent.SKIPPED,
+                        TestLogEvent.FAILED,
+                        TestLogEvent.STANDARD_OUT,
+                        TestLogEvent.STANDARD_ERROR
+                    )
+                }
+            }
+        }
     }
 }
 
