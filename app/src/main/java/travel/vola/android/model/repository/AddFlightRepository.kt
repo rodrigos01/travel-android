@@ -8,8 +8,11 @@ import travel.vola.android.model.network.ApiResponse
 import travel.vola.android.model.network.request
 import travel.vola.android.model.network.toAppDataModel
 
-class AddFlightRepository : AutoCompleteRepository<AirportSearchResult> {
-    override suspend fun autocomplete(query: String): List<AirportSearchResult> {
+class AddFlightRepository : AutoCompleteRepository<AirportSearchResult, Airport> {
+    override suspend fun autocomplete(
+        query: String,
+        autocompleteKey: String
+    ): List<AirportSearchResult> {
         return request<ApiResponse.AirportAutoComplete>("flights/airport/autocomplete") {
             url {
                 parameters.append("query", query)
@@ -17,10 +20,10 @@ class AddFlightRepository : AutoCompleteRepository<AirportSearchResult> {
         }?.data?.map { it.toAppDataModel() } ?: emptyList()
     }
 
-    suspend fun airportDetails(iata: String): Airport {
+    override suspend fun details(id: String, autocompleteKey: String): Airport {
         return request<ApiData.Airport>("flights/airport") {
             url {
-                appendPathSegments(iata)
+                appendPathSegments(id)
             }
         }?.toAppDataModel() ?: error("Airport not found")
     }

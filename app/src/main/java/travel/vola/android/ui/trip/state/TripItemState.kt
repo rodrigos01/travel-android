@@ -133,7 +133,7 @@ sealed interface AddPlanItemState : TripItemState, Identifiable,
         get() = Type.entries
 
     enum class Type {
-        Flight, Lodging
+        Flight, Lodging, Place
     }
 
 }
@@ -183,6 +183,17 @@ data class LodgingSearchItemState(
     val checkOut: Time?,
 ) : AddLodgingItemState
 
+data class AddPlaceItemState(
+    override val id: String,
+    override val typeSelectionEnabled: Boolean,
+    override val dateSelectionEnabled: Boolean,
+    override val saveButtonEnabled: Boolean,
+    override val deleteButtonEnabled: Boolean,
+    override val timestamp: Time,
+    val placeName: String?,
+    val searchResults: List<AutoCompleteResultState>,
+) : AddPlanItemState
+
 data class SearchResultItemState(val title: String, val subtitle: String)
 
 val AddPlanItemState.type
@@ -190,4 +201,6 @@ val AddPlanItemState.type
         is AddFlightItemState -> AddPlanItemState.Type.Flight
         is ManualAddLodgingItemState,
         is LodgingSearchItemState -> AddPlanItemState.Type.Lodging
+
+        is AddPlaceItemState -> AddPlanItemState.Type.Place
     }

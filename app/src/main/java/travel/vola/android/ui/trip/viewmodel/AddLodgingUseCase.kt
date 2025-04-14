@@ -55,11 +55,11 @@ class AddLodgingUseCase(
     override fun setCheckOutTime(itemId: String, time: Time) =
         getActionHandler(itemId).setCheckOutTime(itemId, time)
 
-    override fun locationTextChanged(itemId: String, content: CharSequence) =
-        getActionHandler(itemId).locationTextChanged(itemId, content)
+    override fun lodgingTextChanged(itemId: String, content: CharSequence) =
+        getActionHandler(itemId).lodgingTextChanged(itemId, content)
 
-    override fun locationSearchResultTapped(itemId: String, index: Int) =
-        getActionHandler(itemId).locationSearchResultTapped(itemId, index)
+    override fun lodgingSearchResultTapped(itemId: String, index: Int) =
+        getActionHandler(itemId).lodgingSearchResultTapped(itemId, index)
 
     override fun addItem(
         id: String,

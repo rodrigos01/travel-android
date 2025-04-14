@@ -18,7 +18,7 @@ data class Trip(
     val coverImage: String?,
     val flights: List<Flight>,
     val lodgings: List<Lodging>,
-    val places: List<Place>,
+    val places: List<TimedPlace>,
 )
 
 sealed interface TripEntity : Identifiable
@@ -70,6 +70,18 @@ data class Place(
         return super.hashCode()
     }
 }
+
+data class PlaceDetailsResult(
+    val place: Place,
+    val city: Place?,
+)
+
+data class TimedPlace(
+    override val id: String,
+    val time: Time,
+    val place: Place,
+    val city: Place,
+) : TripEntity
 
 data class AirportSearchResult(
     val iata: String,

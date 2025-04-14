@@ -24,7 +24,7 @@ fun AddLodgingListItem(
         startLabelText = "Lodging Name",
         startPlaceHolder = "Enter Hotel name or Address",
         onStartTextChanged = onLodgingTextChanged,
-        showEndTextField = false,
+        showEndTimePickerButton = false,
         endTitle = { Text("Check-out") },
         endTimeSelectorLabel = "Check-out Time",
         endLabelText = "Check-out time",

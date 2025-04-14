@@ -10,12 +10,18 @@ interface ApiResponse {
 
     @Serializable
     data class PlaceAutoComplete(
-        val data: List<ApiData.SimplePlace>
+        val results: List<ApiData.SimplePlace>
     )
 
     @Serializable
     data class CityAutoComplete(
         val data: List<ApiData.Place>
+    )
+
+    @Serializable
+    data class PlaceDetails(
+        val place: ApiData.Place,
+        val city: ApiData.Place?,
     )
 
     @Serializable
@@ -49,6 +55,7 @@ interface ApiData {
         val latitude: Double,
         val longitude: Double,
         val coverImage: String?,
+        val city: Place?,
         val externalId: String,
         val source: String,
     )

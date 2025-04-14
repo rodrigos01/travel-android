@@ -53,7 +53,7 @@ class ManualAddLodgingUseCase(
         }
     }
 
-    override fun locationTextChanged(itemId: String, content: CharSequence) {
+    override fun lodgingTextChanged(itemId: String, content: CharSequence) {
         if (content.length < 3) {
             return
         }
@@ -67,7 +67,7 @@ class ManualAddLodgingUseCase(
         }
     }
 
-    override fun locationSearchResultTapped(itemId: String, index: Int) {
+    override fun lodgingSearchResultTapped(itemId: String, index: Int) {
         val selected = itemStore.getData(itemId)?.searchResults?.getOrNull(index) ?: return
         itemStore.update(itemId) { data ->
             data.copy(

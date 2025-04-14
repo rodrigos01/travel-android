@@ -11,7 +11,7 @@ sealed interface FirebaseData {
         val coverImage: String? = null,
         val flights: List<Flight> = emptyList(),
         val lodgings: List<Lodging> = emptyList(),
-        val places: List<Place> = emptyList(),
+        val places: List<TimedPlace> = emptyList(),
     ) : FirebaseData
 
     data class Flight(
@@ -55,5 +55,12 @@ sealed interface FirebaseData {
         val coverImage: String? = null,
         val externalId: String = "",
         val source: String = "",
+    )
+
+    data class TimedPlace(
+        val id: String = "",
+        val place: Place = Place(),
+        val time: String? = null,
+        val city: Place? = null,
     )
 }

@@ -76,13 +76,13 @@ fun rememberAddPlanRowState(
 @Composable
 fun AddPlanRow(
     state: AddPlanRowState,
-    minTime: Time?,
+    minTime: Time? = null,
     searchResults: List<AutoCompleteResultState>,
     title: @Composable () -> Unit,
-    timeSelectorLabel: String,
+    timeSelectorLabel: String? = null,
     text: String? = null,
     dateSelectionEnabled: Boolean = true,
-    showTextField: Boolean = true,
+    showTimePickerButton: Boolean = true,
     labelText: String? = null,
     placeHolder: String? = null,
     onTextChanged: (CharSequence) -> Unit = {},
@@ -108,7 +108,7 @@ fun AddPlanRow(
             ) {
                 ProvideTextStyle(MaterialTheme.typography.titleMedium, title)
             }
-            if (showTextField) {
+            if (timeSelectorLabel != null && showTimePickerButton) {
                 TimePickerTextButton(
                     text = state.selectedTime?.timeString ?: timeSelectorLabel,
                     onTimeSelected = { hour, minute ->
@@ -161,7 +161,7 @@ fun AddPlanRow(
                     modifier = Modifier.width(80.dp),
                 )
             }
-            if (showTextField) {
+            if (timeSelectorLabel == null || showTimePickerButton) {
                 AutoCompleteTextField(
                     state = rememberAutoCompleteTextFieldState(
                         text, searchResults,
@@ -230,7 +230,7 @@ fun AddPlanRowPreview() {
                 title = { Text("Title") },
                 timeSelectorLabel = "Pick Time",
                 dateSelectionEnabled = true,
-                showTextField = true,
+                showTimePickerButton = true,
                 placeHolder = "PlaceHolder",
                 labelText = "Label",
                 onTextChanged = {},
