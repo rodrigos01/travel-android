@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.firebase.toAppDataModel
 import travel.vola.android.model.repository.TripRepository
@@ -33,4 +34,8 @@ class MockTripRepository : TripRepository {
     override suspend fun deleteFlight(tripId: String, flightId: String) = Unit
 
     override suspend fun deleteLodging(tripId: String, lodgingId: String) = Unit
+
+    override suspend fun saveTimedPlace(tripId: String, timedPlace: TimedPlace) = Unit
+
+    override suspend fun deleteTimedPlace(tripId: String, timedPlaceId: String) = Unit
 }

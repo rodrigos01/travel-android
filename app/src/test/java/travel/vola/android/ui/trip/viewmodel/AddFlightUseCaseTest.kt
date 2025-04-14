@@ -191,7 +191,7 @@ class AddFlightUseCaseTest {
             on { timeZone } doReturn TimeZone.getTimeZone("Europe/Paris")
         }
         repository.stub {
-            onBlocking { airportDetails("CDG") } doReturn airport
+            onBlocking { details("CDG") } doReturn airport
         }
         itemStore.stub {
             on { getData("item_id") } doReturn originalData
@@ -210,7 +210,7 @@ class AddFlightUseCaseTest {
             on { timeZone } doReturn TimeZone.getTimeZone(airportTimeZone.id)
         }
         repository.stub {
-            onBlocking { airportDetails("airport_id") } doReturn expected
+            onBlocking { details("airport_id") } doReturn expected
         }
         val originalData =
             PendingFlight(
@@ -277,7 +277,7 @@ class AddFlightUseCaseTest {
             on { timeZone } doReturn TimeZone.getTimeZone("Europe/Paris")
         }
         repository.stub {
-            onBlocking { airportDetails("CDG") } doReturn airport
+            onBlocking { details("CDG") } doReturn airport
         }
         itemStore.stub {
             on { getData("item_id") } doReturn originalData
@@ -296,7 +296,7 @@ class AddFlightUseCaseTest {
             on { timeZone } doReturn TimeZone.getTimeZone(airportTimeZone.id)
         }
         repository.stub {
-            onBlocking { airportDetails("airport_id") } doReturn expected
+            onBlocking { details("airport_id") } doReturn expected
         }
         val originalData =
             PendingFlight(

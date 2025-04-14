@@ -10,6 +10,7 @@ import kotlinx.coroutines.tasks.await
 import travel.vola.android.extensions.asFlow
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.repository.TripRepository
 
@@ -100,6 +101,30 @@ class FirebaseTripRepository(private val firestore: FirebaseFirestore) : TripRep
         firestore.document("/trips/$tripId")
             .update("lodgings", trip.lodgings.toMutableList().apply {
                 removeIf { it.id == lodgingId }
+            }.toList())
+    }
+
+    override suspend fun saveTimedPlace(tripId: String, timedPlace: TimedPlace) {
+        val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
+        firestore.document("/trips/$tripId")
+            .update("places", trip.places.toMutableList().apply {
+                val firebasePlace = timedPlace.toFirebaseDataModel()
+                val index = indexOfFirst { it.id == firebasePlace.id }
+                if (index != -1) {
+                    // update previously saved item
+                    removeAt(index)
+                    add(index, firebasePlace)
+                } else {
+                    add(firebasePlace)
+                }
+            }.toList())
+    }
+
+    override suspend fun deleteTimedPlace(tripId: String, timedPlaceId: String) {
+        val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
+        firestore.document("/trips/$tripId")
+            .update("places", trip.places.toMutableList().apply {
+                removeIf { it.id == timedPlaceId }
             }.toList())
     }
 

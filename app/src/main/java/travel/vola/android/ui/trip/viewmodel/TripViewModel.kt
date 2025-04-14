@@ -34,6 +34,7 @@ import travel.vola.android.model.data.Identifiable
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.Time
+import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.data.TripEntity
 import travel.vola.android.model.data.TripEvent
@@ -193,6 +194,7 @@ class TripViewModel(
             when (entity) {
                 is Flight -> repository.saveFlight(tripId, entity)
                 is Lodging -> repository.saveLodging(tripId, entity)
+                is TimedPlace -> repository.saveTimedPlace(tripId, entity)
             }
         }
     }
@@ -208,6 +210,7 @@ class TripViewModel(
             when (entity) {
                 is Flight -> repository.deleteFlight(tripId, entity.id)
                 is Lodging -> repository.deleteLodging(tripId, entity.id)
+                is TimedPlace -> repository.deleteTimedPlace(tripId, entity.id)
             }
         }
     }

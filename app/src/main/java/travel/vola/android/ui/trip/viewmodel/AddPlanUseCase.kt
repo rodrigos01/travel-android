@@ -11,12 +11,15 @@ import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Time
+import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.TripEntity
 import travel.vola.android.ui.trip.creation.usecase.AddFlightItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandler
+import travel.vola.android.ui.trip.creation.usecase.AddPlaceItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.AddLodgingItemState
+import travel.vola.android.ui.trip.state.AddPlaceItemState
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.LodgingSearchItemState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
@@ -30,8 +33,10 @@ class AddPlanUseCase(
         placeRepository = placeRepository,
         coroutineScope = coroutineScope,
     ),
+    private val addPlaceUseCase: AddPlaceUseCase = AddPlaceUseCase(coroutineScope = coroutineScope),
 ) : AddPlanItemActionHandler, AddFlightItemActionHandler by addFlightUseCase,
     AddLodgingItemActionHandler by addLodgingUseCase,
+    AddPlaceItemActionHandler by addPlaceUseCase,
     LodgingSearchParamsFactory by addLodgingUseCase {
 
     data class StateParams(
@@ -55,6 +60,7 @@ class AddPlanUseCase(
 
     val items: MapStateFlow<String, AddPlanItemState> = mergeMaps(
         addFlightUseCase.items,
+        addPlaceUseCase.items,
         addLodgingUseCase.items,
     ).stateIn(coroutineScope, SharingStarted.Eagerly, initialValue = emptyMap())
 
@@ -112,6 +118,7 @@ class AddPlanUseCase(
         when (item) {
             is AddFlightItemState -> addFlightUseCase.removeItem(item)
             is AddLodgingItemState -> addLodgingUseCase.removeItem(item)
+            is AddPlaceItemState -> addPlaceUseCase.removeItem(item)
         }
     }
 
@@ -119,12 +126,14 @@ class AddPlanUseCase(
         get() = when (this) {
             is AddFlightItemState -> AddPlanItemState.Type.Flight
             is ManualAddLodgingItemState, is LodgingSearchItemState -> AddPlanItemState.Type.Lodging
+            is AddPlaceItemState -> AddPlanItemState.Type.Place
         }
 
     private fun AddPlanItemState.Type.useCase(): AddItemUseCase<out TripEntity, out AddPlanItemState> =
         when (this) {
             AddPlanItemState.Type.Flight -> addFlightUseCase
             AddPlanItemState.Type.Lodging -> addLodgingUseCase
+            AddPlanItemState.Type.Place -> addPlaceUseCase
         }
 
 
@@ -134,6 +143,7 @@ class AddPlanUseCase(
         return when (this) {
             is Flight -> addFlightUseCase.addItem(id, this, params)
             is Lodging -> addLodgingUseCase.addItem(id, this, params)
+            is TimedPlace -> addPlaceUseCase.addItem(id, this, params)
         }
     }
 
@@ -142,6 +152,7 @@ class AddPlanUseCase(
             is AddFlightItemState -> addFlightUseCase.createEntity(this)
             is ManualAddLodgingItemState -> addLodgingUseCase.createEntity(this)
             is LodgingSearchItemState -> error("LodgingSearchItemState entity creation not implemented")
+            is AddPlaceItemState -> addPlaceUseCase.createEntity(this)
         }
     }
 }

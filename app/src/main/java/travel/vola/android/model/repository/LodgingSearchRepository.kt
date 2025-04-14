@@ -22,7 +22,7 @@ class LodgingSearchRepository {
                 parameters.append("types", "lodging")
                 parameters.append("sessionId", autocompleteKey)
             }
-        }?.data?.map { it.toAppDataModel() } ?: emptyList()
+        }?.results?.map { it.toAppDataModel() } ?: emptyList()
     }
 
     suspend fun placeCity(placeId: String, autocompleteKey: String): Place? {

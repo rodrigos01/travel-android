@@ -26,6 +26,21 @@ fun <K, V> MutableMapStateFlow<K, V>.remove(key: K): V? {
     return removed
 }
 
+fun <K, V> MutableMapStateFlow<K, V>.updateOrSet(key: K, updater: (V?) -> V) {
+    val entry = get(key)
+    set(key, updater(entry))
+}
+
+fun <K, V> MutableMapStateFlow<K, V>.update(
+    key: K,
+    updater: (V) -> V,
+) {
+    updateOrSet(key) { entry ->
+        entry ?: throw IllegalArgumentException("Entry with key $key not found")
+        updater(entry)
+    }
+}
+
 operator fun <K, V> MapStateFlow<K, V>.get(key: K): V? = value[key]
 
 fun <K, V> mergeMaps(vararg flows: MapFlow<K, V>): MapFlow<K, V> =

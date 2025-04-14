@@ -146,7 +146,7 @@ class ManualAddLodgingUseCaseTest {
             onBlocking { autocomplete("hotel", autocompleteKey = "lodging_id") } doReturn results
         }
         subject.addItem("lodging_id", Time("2025-10-16T15:23:00+01:00"), mock())
-        subject.locationTextChanged("lodging_id", "hotel")
+        subject.lodgingTextChanged("lodging_id", "hotel")
         val item = items.value["lodging_id"] ?: fail()
         assertThat(item.startState.searchResults).isEqualTo(List(3) { index ->
             AutoCompleteResultState(
@@ -174,7 +174,7 @@ class ManualAddLodgingUseCaseTest {
             on { getData("lodging_id") } doReturn originalData
         }
         subject.addItem("lodging_id", Time("2025-10-16T15:23:00+01:00"), mock())
-        subject.locationSearchResultTapped("lodging_id", 1)
+        subject.lodgingSearchResultTapped("lodging_id", 1)
         val item = items.value["lodging_id"] ?: fail()
         assertThat(item.startState.locationText).isEqualTo("Hotel Novotel Paris Les Halles")
         assertThat(item.startState.searchResults).isEmpty()
@@ -201,7 +201,7 @@ class ManualAddLodgingUseCaseTest {
         itemStore.stub {
             on { getData("lodging_id") } doReturn originalData
         }
-        subject.locationSearchResultTapped("lodging_id", 1)
+        subject.lodgingSearchResultTapped("lodging_id", 1)
         val result = itemStore.getUpdateResult(originalData)
         assertThat(result.city).isEqualTo(paris)
     }
