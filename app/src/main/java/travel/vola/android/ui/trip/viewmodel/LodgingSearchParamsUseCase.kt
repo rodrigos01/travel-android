@@ -42,7 +42,7 @@ class LodgingSearchParamsUseCase(
     }
 
     private val autoCompleteScope = MutexScope(coroutineScope.coroutineContext)
-    override fun locationTextChanged(itemId: String, content: CharSequence) {
+    override fun lodgingTextChanged(itemId: String, content: CharSequence) {
         if (content.length < 3) {
             return
         }
@@ -56,7 +56,7 @@ class LodgingSearchParamsUseCase(
         }
     }
 
-    override fun locationSearchResultTapped(itemId: String, index: Int) {
+    override fun lodgingSearchResultTapped(itemId: String, index: Int) {
         itemStore.update(itemId) { it.copy(city = it.searchResults[index]) }
     }
 

@@ -8,6 +8,7 @@ import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.Time
+import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import java.util.TimeZone
 
@@ -69,6 +70,13 @@ fun FirebaseData.Place.toAppDataModel() = Place(
     source = source,
 )
 
+fun FirebaseData.TimedPlace.toAppDataModel() = TimedPlace(
+    id = id,
+    place = place.toAppDataModel(),
+    time = time?.toTime() ?: error("time is required"),
+    city = city?.toAppDataModel() ?: error("city is required"),
+)
+
 fun Flight.toFirebaseDataModel() = FirebaseData.Flight(
     id = id,
     segments = segments.map { it.toFirebaseDataModel() },
@@ -107,6 +115,13 @@ fun Place.toFirebaseDataModel() = FirebaseData.Place(
     coverImage = coverImage,
     externalId = externalId,
     source = source,
+)
+
+fun TimedPlace.toFirebaseDataModel() = FirebaseData.TimedPlace(
+    id = id,
+    place = place.toFirebaseDataModel(),
+    time = time.toFirebaseDataModel(),
+    city = city.toFirebaseDataModel(),
 )
 
 fun String.toTime(): Time = Time(this)

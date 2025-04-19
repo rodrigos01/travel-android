@@ -34,6 +34,7 @@ import travel.vola.android.model.data.Identifiable
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.Time
+import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.data.TripEntity
 import travel.vola.android.model.data.TripEvent
@@ -193,6 +194,7 @@ class TripViewModel(
             when (entity) {
                 is Flight -> repository.saveFlight(tripId, entity)
                 is Lodging -> repository.saveLodging(tripId, entity)
+                is TimedPlace -> repository.saveTimedPlace(tripId, entity)
             }
         }
     }
@@ -208,6 +210,7 @@ class TripViewModel(
             when (entity) {
                 is Flight -> repository.deleteFlight(tripId, entity.id)
                 is Lodging -> repository.deleteLodging(tripId, entity.id)
+                is TimedPlace -> repository.deleteTimedPlace(tripId, entity.id)
             }
         }
     }
@@ -229,14 +232,19 @@ class TripViewModel(
             is TripItemState.HotelCheckOutItemState -> trip.value?.lodgings?.first {
                 it.checkout == timestamp && (it.name ?: it.address) == hotelName
             }
+
+            is TripItemState.TimedPlaceItemState -> trip.value?.places?.first {
+                it.id == id
+            }
         }
 
     private fun genItems(trip: Trip): List<TripItemState> {
-        val events = trip.flights.flatMap { it.segments } + trip.lodgings
+        val events = trip.flights.flatMap { it.segments } + trip.lodgings + trip.places
         val pairs = events.flatMap { event ->
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
                 is Lodging -> listOf(event.checkIn to event, event.checkout to event)
+                is TimedPlace -> listOf(event.time to event)
             }
         }.sortedBy { (time, event) ->
             EventComparable(
@@ -417,6 +425,18 @@ class TripViewModel(
                     )
                 }
             }
+
+            is TimedPlace -> TripItemState.TimedPlaceItemState(
+                id = event.id,
+                timestamp = event.time,
+                showDate = showDate,
+                dayOfMonth = event.time.dayOfMonthString,
+                dayOfWeek = event.time.dayOfWeekString,
+                time = event.time.timeString,
+                placeName = event.place.name,
+                cityName = event.city.name,
+                imageUrl = event.place.coverImage ?: "",
+            )
         }
     }
 
@@ -435,6 +455,7 @@ private fun TripEvent.getPlace(referenceTime: Time) = when (this) {
     }
 
     is Lodging -> city
+    is TimedPlace -> city
 }
 
 private val Time.dateString

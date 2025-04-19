@@ -1,12 +1,12 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -14,7 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -28,6 +28,25 @@ fun EventListItem(
     dayOfWeekString: String?,
     timeString: String,
     @DrawableRes icon: Int,
+    headline: String,
+    supporting: String,
+) = EventListItem(
+    showDate = showDate,
+    dayOfMonthString = dayOfMonthString,
+    dayOfWeekString = dayOfWeekString,
+    timeString = timeString,
+    iconPainter = painterResource(id = icon),
+    headline = headline,
+    supporting = supporting,
+)
+
+@Composable
+fun EventListItem(
+    showDate: Boolean = false,
+    dayOfMonthString: String?,
+    dayOfWeekString: String?,
+    timeString: String,
+    iconPainter: Painter,
     headline: String,
     supporting: String,
 ) {
@@ -49,9 +68,9 @@ fun EventListItem(
             }
             ListItem(
                 leadingContent = {
-                    Image(
-                        painter = painterResource(id = icon),
-                        colorFilter = ColorFilter.tint(LocalContentColor.current),
+                    Icon(
+                        painter = iconPainter,
+                        tint = LocalContentColor.current,
                         contentDescription = "Event Icon",
                     )
                 },

@@ -4,6 +4,7 @@ import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.AirportSearchResult
 import travel.vola.android.model.data.LodgingSearchResult
 import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.PlaceDetailsResult
 import travel.vola.android.model.data.SimplePlace
 import java.util.TimeZone
 
@@ -26,7 +27,7 @@ fun ApiData.SimplePlace.toAppDataModel() = SimplePlace(
     address = address,
 )
 
-fun ApiData.Place.toAppDataModel() = Place(
+fun ApiData.Place.toAppDataModel(): Place = Place(
     id = id,
     name = name,
     address = address,
@@ -49,4 +50,9 @@ fun ApiData.LodgingSearchResult.toAppDataModel() = LodgingSearchResult(
     coverImage = coverImage,
     price = price,
     totalPrice = totalPrice,
+)
+
+fun ApiResponse.PlaceDetails.toAppDataModel() = PlaceDetailsResult(
+    place = place.toAppDataModel(),
+    city = city?.toAppDataModel(),
 )

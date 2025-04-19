@@ -38,4 +38,12 @@ sealed interface PendingData {
         val city: Place? = null,
         val searchResults: List<Place> = emptyList(),
     ) : PendingData
+
+    data class PendingTimedPlace(
+        override val id: String,
+        val time: Time,
+        val place: Place? = null,
+        val city: Place? = null,
+        val searchResults: List<SimplePlace> = emptyList(),
+    ) : PendingData
 }

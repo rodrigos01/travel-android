@@ -3,6 +3,7 @@ package travel.vola.android.model.repository
 import kotlinx.coroutines.flow.Flow
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 
 interface TripRepository {
@@ -17,6 +18,8 @@ interface TripRepository {
     suspend fun deleteTrip(tripId: String)
     suspend fun saveFlight(tripId: String, flight: Flight)
     suspend fun saveLodging(tripId: String, lodging: Lodging)
+    suspend fun saveTimedPlace(tripId: String, timedPlace: TimedPlace)
     suspend fun deleteFlight(tripId: String, flightId: String)
     suspend fun deleteLodging(tripId: String, lodgingId: String)
+    suspend fun deleteTimedPlace(tripId: String, timedPlaceId: String)
 }
