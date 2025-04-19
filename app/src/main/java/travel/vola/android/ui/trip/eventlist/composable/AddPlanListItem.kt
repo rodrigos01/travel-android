@@ -187,7 +187,7 @@ val AddPlanItemState.uiType
     get() = when (this) {
         is AddFlightItemState -> AddPlanType.Flight
         is ManualAddLodgingItemState, is LodgingSearchItemState -> AddPlanType.Lodging
-        is AddPlaceItemState -> AddPlanType.Lodging
+        is AddPlaceItemState -> AddPlanType.Place
     }
 
 @Preview
