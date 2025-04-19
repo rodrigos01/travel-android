@@ -101,6 +101,21 @@ sealed interface TripItemState {
         override val subtitle = hotelName
     }
 
+    data class TimedPlaceItemState(
+        override val id: String,
+        override val timestamp: Time,
+        override val showDate: Boolean,
+        override val dayOfMonth: String,
+        override val dayOfWeek: String,
+        override val time: String,
+        val placeName: String,
+        val cityName: String,
+        val imageUrl: String,
+    ) : EventItemState, Replaceable {
+        override val title = placeName
+        override val subtitle = cityName
+    }
+
     data class EmptyAddPlanItemState(
         override val id: String,
         override val timestamp: Time,
