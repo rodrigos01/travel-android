@@ -81,7 +81,7 @@ data class TimedPlace(
     val time: Time,
     val place: Place,
     val city: Place,
-) : TripEntity
+) : TripEntity, TripEvent
 
 data class AirportSearchResult(
     val iata: String,
