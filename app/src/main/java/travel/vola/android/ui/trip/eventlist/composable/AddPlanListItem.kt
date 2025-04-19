@@ -10,6 +10,7 @@ import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.AddPlanType
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddFlightItemState
+import travel.vola.android.ui.trip.state.AddPlaceItemState
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.LodgingSearchItemState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
@@ -97,7 +98,7 @@ fun AddPlanListItem(
                         }
                         LaunchedEffect(itemState.startState.selectedSearchResultIndex) {
                             if (itemState.startState.selectedSearchResultIndex != -1) {
-                                actionHandler.locationSearchResultTapped(
+                                actionHandler.lodgingSearchResultTapped(
                                     state.id,
                                     itemState.startState.selectedSearchResultIndex,
                                 )
@@ -112,7 +113,7 @@ fun AddPlanListItem(
                             startEndAddPlanState = itemState,
                             uiState = state,
                             onLodgingTextChanged = {
-                                actionHandler.locationTextChanged(
+                                actionHandler.lodgingTextChanged(
                                     state.id, it
                                 )
                             },
@@ -131,13 +132,13 @@ fun AddPlanListItem(
                     onCheckInDateSelected = { actionHandler.setCheckInTime(state.id, it) },
                     onCheckOutDateSelected = { actionHandler.setCheckOutTime(state.id, it) },
                     onLocationSearchTextChanged = {
-                        actionHandler.locationTextChanged(
+                        actionHandler.lodgingTextChanged(
                             state.id,
                             it
                         )
                     },
                     onLocationSearchResultSelected = {
-                        actionHandler.locationSearchResultTapped(
+                        actionHandler.lodgingSearchResultTapped(
                             state.id,
                             it
                         )
@@ -146,6 +147,32 @@ fun AddPlanListItem(
                         actionHandler.onSwitchToManualButtonTapped(state.id)
                     })
             }
+
+            is AddPlaceItemState -> {
+                val rowState = rememberAddPlanRowState(
+                    key = state.searchResults,
+                    selectedTime = state.timestamp,
+                )
+                LaunchedEffect(rowState.selectedTime) {
+                    rowState.selectedTime?.let {
+                        actionHandler.setPlaceArrivalTime(state.id, it)
+                    }
+                }
+                LaunchedEffect(rowState.selectedSearchResultIndex) {
+                    actionHandler.locationSearchResultTapped(
+                        state.id,
+                        rowState.selectedSearchResultIndex
+                    )
+                }
+                AddPlaceListItem(
+                    placeName = state.placeName,
+                    state = rowState,
+                    searchResults = state.searchResults,
+                    onTextChanged = {
+                        actionHandler.locationTextChanged(state.id, it)
+                    },
+                )
+            }
         }
     }
 }
@@ -153,12 +180,14 @@ fun AddPlanListItem(
 fun AddPlanType.toState() = when (this) {
     AddPlanType.Flight -> AddPlanItemState.Type.Flight
     AddPlanType.Lodging -> AddPlanItemState.Type.Lodging
+    AddPlanType.Place -> AddPlanItemState.Type.Place
 }
 
 val AddPlanItemState.uiType
     get() = when (this) {
         is AddFlightItemState -> AddPlanType.Flight
         is ManualAddLodgingItemState, is LodgingSearchItemState -> AddPlanType.Lodging
+        is AddPlaceItemState -> AddPlanType.Place
     }
 
 @Preview
@@ -203,11 +232,14 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
     override fun airportToSearchTextChanged(itemId: String, content: CharSequence) = Unit
     override fun airportFromSearchResultTapped(itemId: String, index: Int) = Unit
     override fun airportToSearchResultTapped(itemId: String, index: Int) = Unit
-    override fun locationTextChanged(itemId: String, content: CharSequence) = Unit
-    override fun locationSearchResultTapped(itemId: String, index: Int) = Unit
+    override fun lodgingTextChanged(itemId: String, content: CharSequence) = Unit
+    override fun lodgingSearchResultTapped(itemId: String, index: Int) = Unit
     override fun onSwitchToManualButtonTapped(itemId: String) = Unit
     override fun setCheckInTime(itemId: String, time: Time) = Unit
     override fun setCheckOutTime(itemId: String, time: Time) = Unit
     override fun setDepartureTime(itemId: String, time: Time) = Unit
     override fun setArrivalTime(itemId: String, time: Time) = Unit
+    override fun setPlaceArrivalTime(itemId: String, time: Time) = Unit
+    override fun locationSearchResultTapped(itemId: String, index: Int) = Unit
+    override fun locationTextChanged(itemId: String, content: CharSequence) = Unit
 }

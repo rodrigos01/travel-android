@@ -80,7 +80,7 @@ class AddFlightUseCase(
             data.copy(airportFrom = null, airportFromSearchResults = emptyList())
         }
         coroutineScope.launch {
-            val airport = repository.airportDetails(selected.iata)
+            val airport = repository.details(selected.iata)
             itemStore.update(itemId) { data ->
                 data.copy(
                     airportFrom = airport,
@@ -111,7 +111,7 @@ class AddFlightUseCase(
             data.copy(airportTo = null, airportToSearchResults = emptyList())
         }
         coroutineScope.launch {
-            val airport = repository.airportDetails(selected.iata)
+            val airport = repository.details(selected.iata)
             itemStore.update(itemId) { data ->
                 data.copy(
                     airportTo = airport,

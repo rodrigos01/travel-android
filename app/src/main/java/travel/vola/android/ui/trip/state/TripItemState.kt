@@ -101,6 +101,21 @@ sealed interface TripItemState {
         override val subtitle = hotelName
     }
 
+    data class TimedPlaceItemState(
+        override val id: String,
+        override val timestamp: Time,
+        override val showDate: Boolean,
+        override val dayOfMonth: String,
+        override val dayOfWeek: String,
+        override val time: String,
+        val placeName: String,
+        val cityName: String,
+        val imageUrl: String,
+    ) : EventItemState, Replaceable {
+        override val title = placeName
+        override val subtitle = cityName
+    }
+
     data class EmptyAddPlanItemState(
         override val id: String,
         override val timestamp: Time,
@@ -133,7 +148,7 @@ sealed interface AddPlanItemState : TripItemState, Identifiable,
         get() = Type.entries
 
     enum class Type {
-        Flight, Lodging
+        Flight, Lodging, Place
     }
 
 }
@@ -183,6 +198,17 @@ data class LodgingSearchItemState(
     val checkOut: Time?,
 ) : AddLodgingItemState
 
+data class AddPlaceItemState(
+    override val id: String,
+    override val typeSelectionEnabled: Boolean,
+    override val dateSelectionEnabled: Boolean,
+    override val saveButtonEnabled: Boolean,
+    override val deleteButtonEnabled: Boolean,
+    override val timestamp: Time,
+    val placeName: String?,
+    val searchResults: List<AutoCompleteResultState>,
+) : AddPlanItemState
+
 data class SearchResultItemState(val title: String, val subtitle: String)
 
 val AddPlanItemState.type
@@ -190,4 +216,6 @@ val AddPlanItemState.type
         is AddFlightItemState -> AddPlanItemState.Type.Flight
         is ManualAddLodgingItemState,
         is LodgingSearchItemState -> AddPlanItemState.Type.Lodging
+
+        is AddPlaceItemState -> AddPlanItemState.Type.Place
     }
