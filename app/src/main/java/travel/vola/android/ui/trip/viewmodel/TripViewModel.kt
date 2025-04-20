@@ -462,18 +462,26 @@ private val Time.dateString
     get() = "$year=$month-$dayOfMonth"
 
 private class EventComparable(
-    private val time: Time, private val event: Any
+    private val time: Time, private val event: TripEvent
 ) : Comparable<EventComparable> {
     override fun compareTo(other: EventComparable): Int {
         if (time.dateString != other.time.dateString) {
             return time.compareTo(other.time)
         }
-        val comparison = type.priority - other.type.priority
+        val comparison = if (event.getPlace(time) == other.event.getPlace(other.time)) {
+            type.priorityInPlace - other.type.priorityInPlace
+        } else {
+            type.priorityInDay - other.type.priorityInDay
+        }
         return if (comparison != 0) {
             comparison
         } else {
             time.compareTo(other.time)
         }
+    }
+
+    enum class EventType {
+        UNKNOWN, CHECKOUT, DEPARTURE, ARRIVAL, CHECKIN, PLACE
     }
 
     val type: EventType
@@ -483,13 +491,30 @@ private class EventComparable(
                 event is Lodging && time == event.checkIn -> EventType.CHECKIN
                 event is FlightSegment && time == event.arrival -> EventType.ARRIVAL
                 event is FlightSegment && time == event.departure -> EventType.DEPARTURE
+                event is TimedPlace -> EventType.PLACE
                 else -> EventType.UNKNOWN
             }
         }
 
-    enum class EventType(val priority: Int) {
-        UNKNOWN(0), CHECKOUT(0), DEPARTURE(1), ARRIVAL(1), CHECKIN(2),
-    }
+    val EventType.priorityInDay: Int
+        get() = when (this) {
+            EventType.UNKNOWN -> 0
+            EventType.CHECKOUT -> 0
+            EventType.DEPARTURE -> 1
+            EventType.ARRIVAL -> 1
+            EventType.CHECKIN -> 2
+            EventType.PLACE -> 3
+        }
+
+    val EventType.priorityInPlace: Int
+        get() = when (this) {
+            EventType.UNKNOWN -> 0
+            EventType.ARRIVAL -> 1
+            EventType.CHECKIN -> 2
+            EventType.CHECKOUT -> 4
+            EventType.PLACE -> 3
+            EventType.DEPARTURE -> 5
+        }
 
     override fun toString(): String {
         return (time to event).toString()
