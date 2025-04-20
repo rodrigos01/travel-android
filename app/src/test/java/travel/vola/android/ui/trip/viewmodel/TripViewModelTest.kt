@@ -221,6 +221,28 @@ class TripViewModelTest {
     }
 
     @Test
+    fun `arrival event not to origin should have place event`() {
+        tripFlow.value = Trip(
+            flights = listOf(
+                Flight(
+                    id = "jfk-lis",
+                    departure = "2024-05-10T22:05 -0400",
+                    airportFromName = "John F. Kennedy Intl. Airport",
+                    airportToName = "Humberto Delgado International Airport",
+                    arrival = "2024-05-11T10:00 +0100",
+                    cityFromName = "New York",
+                    cityToName = "Porto",
+                )
+            )
+        )
+        val places = subject.viewState.value.items.filterIsInstance<PlaceItemState>()
+        assertThat(places).satisfiesExactly({ item ->
+            assertThat(item.placeName).isEqualTo("Porto")
+            assertThat(item.dateStart).isEqualTo("May 11")
+        })
+    }
+
+    @Test
     fun `events should have one place event for each place`() {
         tripFlow.value = Trip(
             flights = listOf(
