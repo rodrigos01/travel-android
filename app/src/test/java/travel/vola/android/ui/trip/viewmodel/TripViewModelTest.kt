@@ -51,15 +51,14 @@ class TripViewModelTest {
     private val addPlanUseCase: AddPlanUseCase = mock {
         on { items } doReturn addPlanItems
     }
-    private val subject =
-        TripViewModel(
-            repository,
-            mock(),
-            "tripId",
-            mock(),
-            mock(),
-            addPlanUseCase,
-        )
+    private val subject = TripViewModel(
+        repository,
+        mock(),
+        "tripId",
+        mock(),
+        mock(),
+        addPlanUseCase,
+    )
 
     private fun String?.asTime(): Time = this?.let { Time(this) } ?: Time(0L, TimeZone.getDefault())
 
@@ -84,8 +83,7 @@ class TripViewModelTest {
                 ),
             )
         )
-        val departures =
-            subject.viewState.value.items.filterIsInstance(FlightDepartureItemState::class.java)
+        val departures = subject.viewState.value.items.filterIsInstance<FlightDepartureItemState>()
         assertThat(departures).satisfiesExactly(
             { item ->
                 assertThat(item.airport).isEqualTo("John F. Kennedy Intl. Airport")
