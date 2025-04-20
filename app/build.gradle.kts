@@ -100,6 +100,7 @@ android {
                         TestLogEvent.STANDARD_ERROR
                     )
                 }
+                it.jvmArgs("-Djava.locale.providers=COMPAT", "-Dfile.encoding=UTF-8")
             }
         }
     }
