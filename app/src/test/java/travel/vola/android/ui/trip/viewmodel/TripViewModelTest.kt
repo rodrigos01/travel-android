@@ -51,15 +51,14 @@ class TripViewModelTest {
     private val addPlanUseCase: AddPlanUseCase = mock {
         on { items } doReturn addPlanItems
     }
-    private val subject =
-        TripViewModel(
-            repository,
-            mock(),
-            "tripId",
-            mock(),
-            mock(),
-            addPlanUseCase,
-        )
+    private val subject = TripViewModel(
+        repository,
+        mock(),
+        "tripId",
+        mock(),
+        mock(),
+        addPlanUseCase,
+    )
 
     private fun String?.asTime(): Time = this?.let { Time(this) } ?: Time(0L, TimeZone.getDefault())
 
@@ -84,8 +83,7 @@ class TripViewModelTest {
                 ),
             )
         )
-        val departures =
-            subject.viewState.value.items.filterIsInstance(FlightDepartureItemState::class.java)
+        val departures = subject.viewState.value.items.filterIsInstance<FlightDepartureItemState>()
         assertThat(departures).satisfiesExactly(
             { item ->
                 assertThat(item.airport).isEqualTo("John F. Kennedy Intl. Airport")
@@ -219,6 +217,28 @@ class TripViewModelTest {
             assertThat(item.hotelName).isEqualTo("Hotel Conca Park")
             assertThat(item.dayOfMonth).isEqualTo("14")
             assertThat(item.time).isEqualTo("11:00 AM")
+        })
+    }
+
+    @Test
+    fun `arrival event not to origin should have place event`() {
+        tripFlow.value = Trip(
+            flights = listOf(
+                Flight(
+                    id = "jfk-lis",
+                    departure = "2024-05-10T22:05 -0400",
+                    airportFromName = "John F. Kennedy Intl. Airport",
+                    airportToName = "Humberto Delgado International Airport",
+                    arrival = "2024-05-11T10:00 +0100",
+                    cityFromName = "New York",
+                    cityToName = "Porto",
+                )
+            )
+        )
+        val places = subject.viewState.value.items.filterIsInstance<PlaceItemState>()
+        assertThat(places).satisfiesExactly({ item ->
+            assertThat(item.placeName).isEqualTo("Porto")
+            assertThat(item.dateStart).isEqualTo("May 11")
         })
     }
 
