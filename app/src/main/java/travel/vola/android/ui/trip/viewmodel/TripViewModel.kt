@@ -275,7 +275,9 @@ class TripViewModel(
                         )
                     )
                 }
-                add(genItem(time, event, showDate = firstInDay))
+                if (event !is TimedPlace || event.place != place) {
+                    add(genItem(time, event, showDate = firstInDay))
+                }
                 if (dateRangeItem != null) {
                     add(dateRangeItem)
                 } else if (lastInSection) {
