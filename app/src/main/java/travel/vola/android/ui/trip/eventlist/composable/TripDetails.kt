@@ -2,6 +2,7 @@ package travel.vola.android.ui.trip.eventlist.composable
 
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -218,7 +219,8 @@ private fun TripDetailItem(
         )
 
         is PlaceItemState -> PlaceEventListItem(
-            event.imageUrl, event.placeName, event.dateStart, event.dateEnd
+            event.imageUrl, event.placeName, event.dateStart, event.dateEnd,
+            modifier = Modifier.clickable { viewModel.itemTapped(event.id) }
         )
 
         is TripItemState.EventItemState -> Surface(

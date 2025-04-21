@@ -13,12 +13,13 @@ sealed interface TripItemState {
         TripItemState, Timeable
 
     data class PlaceItemState(
+        override val id: String,
         override val timestamp: Time,
         val placeName: String,
         val imageUrl: String,
         val dateStart: String,
         val dateEnd: String,
-    ) : TripItemState, Timeable
+    ) : TripItemState, Timeable, Editable, Replaceable
 
     data class DateRangeItemState(
         override val id: String,
@@ -31,6 +32,8 @@ sealed interface TripItemState {
 
     interface Replaceable : Identifiable
 
+    sealed interface Editable : Identifiable
+
     data class EmptyDateItemState(
         override val id: String,
         override val timestamp: Time,
@@ -38,7 +41,7 @@ sealed interface TripItemState {
         val dayOfWeek: String,
     ) : TripItemState, Timeable, Replaceable
 
-    sealed interface EventItemState : TripItemState, Timeable, Identifiable {
+    sealed interface EventItemState : TripItemState, Timeable, Editable {
         val showDate: Boolean
         val dayOfMonth: String?
         val dayOfWeek: String?
@@ -137,8 +140,7 @@ data class ManualAddPlanState(
     val searchResults: List<AutoCompleteResultState>
 )
 
-sealed interface AddPlanItemState : TripItemState, Identifiable,
-    TripItemState.Timeable {
+sealed interface AddPlanItemState : TripItemState, Identifiable, TripItemState.Timeable {
 
     val typeSelectionEnabled: Boolean
     val dateSelectionEnabled: Boolean
@@ -216,8 +218,7 @@ data class SearchResultItemState(val title: String, val subtitle: String)
 val AddPlanItemState.type
     get() = when (this) {
         is AddFlightItemState -> AddPlanItemState.Type.Flight
-        is ManualAddLodgingItemState,
-        is LodgingSearchItemState -> AddPlanItemState.Type.Lodging
+        is ManualAddLodgingItemState, is LodgingSearchItemState -> AddPlanItemState.Type.Lodging
 
         is AddPlaceItemState -> AddPlanItemState.Type.Place
     }
