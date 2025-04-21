@@ -39,6 +39,7 @@ data class Token(val accessToken: String, val expiration: Long)
 private const val AUTH_URL = "https://us-central1-travel-164715.cloudfunctions.net/auth"
 private const val CLIENT_ID = "travel-app-android"
 private const val CLIENT_SECRET = "QzD70JbccmYDyI4GjqpUlt4MrpBU259iI0ho"
+private const val MAX_AUTH_RETRIES = 3
 
 private suspend fun updateToken(): Token {
     val response = HttpClient {
@@ -116,7 +117,7 @@ suspend inline fun <reified T> request(
 }
 
 suspend fun get(
-    path: String, builder: HttpRequestBuilder.() -> Unit = {}, isRetry: Boolean = false,
+    path: String, builder: HttpRequestBuilder.() -> Unit = {}, retryCount: Int = 0,
 ): HttpResponse {
     try {
         return httpClient().get(SERVER_URL) {
@@ -127,10 +128,10 @@ suspend fun get(
             builder()
         }
     } catch (e: ParseException) {
-        if (!isRetry) {
+        if (retryCount < MAX_AUTH_RETRIES) {
             // Ktor can't handle malformed auth 401 headers so we have to handle them ourselves
             updateToken()
-            return get(path, builder, isRetry = true)
+            return get(path, builder, retryCount + 1)
         } else {
             throw e
         }
