@@ -108,6 +108,7 @@ sealed interface TripItemState {
         override val dayOfMonth: String,
         override val dayOfWeek: String,
         override val time: String,
+        val showTime: Boolean,
         val placeName: String,
         val cityName: String,
         val imageUrl: String,
@@ -205,6 +206,7 @@ data class AddPlaceItemState(
     override val saveButtonEnabled: Boolean,
     override val deleteButtonEnabled: Boolean,
     override val timestamp: Time,
+    val timeSelected: Boolean,
     val placeName: String?,
     val searchResults: List<AutoCompleteResultState>,
 ) : AddPlanItemState

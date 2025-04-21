@@ -244,7 +244,7 @@ class TripViewModel(
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
                 is Lodging -> listOf(event.checkIn to event, event.checkout to event)
-                is TimedPlace -> listOf(event.time to event)
+                is TimedPlace -> listOf(event.dateTime to event)
             }
         }.sortedBy { (time, event) ->
             EventComparable(
@@ -430,11 +430,12 @@ class TripViewModel(
 
             is TimedPlace -> TripItemState.TimedPlaceItemState(
                 id = event.id,
-                timestamp = event.time,
+                timestamp = event.dateTime,
                 showDate = showDate,
-                dayOfMonth = event.time.dayOfMonthString,
-                dayOfWeek = event.time.dayOfWeekString,
-                time = event.time.timeString,
+                dayOfMonth = event.dateTime.dayOfMonthString,
+                dayOfWeek = event.dateTime.dayOfWeekString,
+                time = event.dateTime.timeString,
+                showTime = event.hasTime,
                 placeName = event.place.name,
                 cityName = event.city.name,
                 imageUrl = event.place.coverImage ?: "",
