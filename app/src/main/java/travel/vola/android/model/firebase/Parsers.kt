@@ -73,7 +73,8 @@ fun FirebaseData.Place.toAppDataModel() = Place(
 fun FirebaseData.TimedPlace.toAppDataModel() = TimedPlace(
     id = id,
     place = place.toAppDataModel(),
-    time = time?.toTime() ?: error("time is required"),
+    dateTime = time?.toTime() ?: error("time is required"),
+    hasTime = hasTime,
     city = city?.toAppDataModel() ?: error("city is required"),
 )
 
@@ -120,7 +121,8 @@ fun Place.toFirebaseDataModel() = FirebaseData.Place(
 fun TimedPlace.toFirebaseDataModel() = FirebaseData.TimedPlace(
     id = id,
     place = place.toFirebaseDataModel(),
-    time = time.toFirebaseDataModel(),
+    time = dateTime.toFirebaseDataModel(),
+    hasTime = hasTime,
     city = city.toFirebaseDataModel(),
 )
 

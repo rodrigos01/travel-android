@@ -28,3 +28,8 @@ steps:
       - '-c'
       - |
         echo "Unit test report available at https://storage.googleapis.com/${_UNIT_TESTS_BUCKET}/${BRANCH_NAME}-${BUILD_ID}/index.html"
+
+artifacts:
+  objects:
+    location: 'gs://${_UNIT_TESTS_BUCKET}/$BRANCH_NAME-$BUILD_ID/'
+    paths: [ 'app/build/reports/tests/testProdReleaseUnitTest/*' ]

@@ -46,6 +46,7 @@ fun EventListItem(
     dayOfMonthString: String?,
     dayOfWeekString: String?,
     timeString: String,
+    showTime: Boolean = true,
     iconPainter: Painter,
     headline: String,
     supporting: String,
@@ -75,10 +76,12 @@ fun EventListItem(
                     )
                 },
                 overlineContent = {
-                    Text(
-                        text = timeString,
-                        style = typography.bodyMedium,
-                    )
+                    if (showTime) {
+                        Text(
+                            text = timeString,
+                            style = typography.bodyMedium,
+                        )
+                    }
                 },
                 headlineContent = { Text(headline, style = typography.titleMedium) },
                 supportingContent = {

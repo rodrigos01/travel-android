@@ -61,7 +61,7 @@ fun StartEndAddPlanListItem(
             timeSelectorLabel = endTimeSelectorLabel,
             dateSelectionEnabled = uiState.endState.dateSelectionEnabled,
             placeHolder = endPlaceHolder,
-            showTimePickerButton = showEndTimePickerButton,
+            showTextField = showEndTimePickerButton,
             labelText = endLabelText,
             text = uiState.endState.locationText,
             onTextChanged = onEndTextChanged,
