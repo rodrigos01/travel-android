@@ -27,7 +27,7 @@ interface ManualAddPlanItemActionHandler : AddLodgingItemActionHandlerBase
 interface LodgingSearchItemActionHandler : AddLodgingItemActionHandlerBase
 
 interface AddPlaceItemActionHandler {
-    fun setPlaceArrivalTime(itemId: String, time: Time)
+    fun setPlaceArrivalDateTime(itemId: String, time: Time, timeSelected: Boolean)
     fun locationTextChanged(itemId: String, content: CharSequence)
     fun locationSearchResultTapped(itemId: String, index: Int)
 }
