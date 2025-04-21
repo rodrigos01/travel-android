@@ -97,23 +97,20 @@ class TripViewModel(
         .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
     private val eventsFromTrip = trip.filterNotNull().map { currentTrip ->
         val items = genItems(currentTrip)
-        ViewState(
-            title = currentTrip.name ?: "Untitled Trip",
+        ViewState(title = currentTrip.name ?: "Untitled Trip",
             items = genItems(currentTrip),
-            places = (currentTrip.lodgings.map { it.city })
-                .map { place ->
-                    PlaceState(
-                        listIndex = items.indexOfFirst { it is TripItemState.PlaceItemState && place.name == it.placeName },
-                        markers = listOf(
-                            MarkerViewState(
-                                position = Pair(place.latitude, place.longitude),
-                                name = place.name,
-                                type = MarkerType.City,
-                            )
-                        ),
-                    )
-                }
-        )
+            places = (currentTrip.lodgings.map { it.city }).map { place ->
+                PlaceState(
+                    listIndex = items.indexOfFirst { it is TripItemState.PlaceItemState && place.name == it.placeName },
+                    markers = listOf(
+                        MarkerViewState(
+                            position = Pair(place.latitude, place.longitude),
+                            name = place.name,
+                            type = MarkerType.City,
+                        )
+                    ),
+                )
+            })
     }
     private val addPlanItemsState = addPlanUseCase.items.onEach { state ->
         reversibleItems.keys.forEach { itemId ->
@@ -174,11 +171,11 @@ class TripViewModel(
     }
 
     fun itemTapped(itemId: String) {
-        val item = viewState.value.items.filterIsInstance<TripItemState.EventItemState>()
-            .find { it.id == itemId } ?: return
         if (reversibleItems.containsKey(itemId)) {
             return
         }
+        val item = viewState.value.items.filterIsInstance<TripItemState.Editable>()
+            .find { it.id == itemId } ?: return
         val entity = item.entity ?: return
         addPlanUseCase.createAddPlanItem(itemId, entity)
     }
@@ -215,7 +212,7 @@ class TripViewModel(
         }
     }
 
-    private val TripItemState.EventItemState.entity: TripEntity?
+    private val TripItemState.Editable.entity: TripEntity?
         get() = when (this) {
             is TripItemState.FlightDepartureItemState -> trip.value?.flights?.first { flight ->
                 flight.segments.any { it.departure == timestamp && it.airportFrom.name == airport }
@@ -236,6 +233,8 @@ class TripViewModel(
             is TripItemState.TimedPlaceItemState -> trip.value?.places?.first {
                 it.id == id
             }
+
+            is TripItemState.PlaceItemState -> trip.value?.places?.firstOrNull { it.id == id }
         }
 
     private fun genItems(trip: Trip): List<TripItemState> {
@@ -316,7 +315,10 @@ class TripViewModel(
         // Exclude if only event in place is a departure
         if (placeEntries.size == 1 && lastEntry.isDeparture) return null
 
+        val id = if (event is TimedPlace && event.city == event.place) event.id else place.id
+
         return TripItemState.PlaceItemState(
+            id = id,
             timestamp = time,
             placeName = place.name,
             imageUrl = place.coverImage ?: "",

@@ -28,9 +28,15 @@ import travel.vola.android.R
 import travel.vola.android.ui.theme.AppTheme
 
 @Composable
-fun PlaceEventListItem(imageUrl: String, placeName: String, startDate: String, endDate: String) {
+fun PlaceEventListItem(
+    imageUrl: String,
+    placeName: String,
+    startDate: String,
+    endDate: String,
+    modifier: Modifier = Modifier
+) {
     Box(
-        Modifier
+        modifier
             .background(color = MaterialTheme.colorScheme.surface)
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
