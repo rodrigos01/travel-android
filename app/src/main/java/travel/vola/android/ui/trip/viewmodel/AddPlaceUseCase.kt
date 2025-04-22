@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import travel.vola.android.common.coroutines.MutexScope
 import travel.vola.android.extensions.MapFlow
+import travel.vola.android.extensions.toMidnight
 import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.repository.PlaceAutoCompleteRepository
@@ -17,8 +18,7 @@ class AddPlaceUseCase(
     private val coroutineScope: CoroutineScope,
     private val placeRepository: PlaceAutoCompleteRepository = PlaceAutoCompleteRepository(
         types = listOf(
-            "city",
-            "point_of_interest"
+            "city", "point_of_interest"
         )
     ),
     private val itemStore: AddPlanItemStore<PendingData.PendingTimedPlace, AddPlaceItemState> = AddPlanItemStore(),
@@ -28,12 +28,14 @@ class AddPlaceUseCase(
     override val items: MapFlow<String, AddPlaceItemState> = itemStore.items(::createItem)
 
     override fun addItem(id: String, time: Time, params: AddPlanUseCase.StateParams) {
-        itemStore.addItem(PendingData.PendingTimedPlace(id, time), params)
+        itemStore.addItem(PendingData.PendingTimedPlace(id, time.toMidnight()), params)
     }
 
     override fun addItem(id: String, entity: TimedPlace, params: AddPlanUseCase.StateParams) {
         itemStore.addItem(
-            PendingData.PendingTimedPlace(id, entity.time, entity.place, entity.city), params
+            PendingData.PendingTimedPlace(
+                id, entity.dateTime, entity.hasTime, entity.place, entity.city
+            ), params
         )
     }
 
@@ -46,11 +48,12 @@ class AddPlaceUseCase(
     ): AddPlaceItemState {
         return AddPlaceItemState(
             id = data.id,
-            timestamp = data.time,
+            timestamp = data.dateTime,
             saveButtonEnabled = data.place != null && data.city != null,
             deleteButtonEnabled = params.deleteEnabled,
             typeSelectionEnabled = params.typeSelectionEnabled,
             dateSelectionEnabled = params.dateSelectionEnabled,
+            timeSelected = data.hasTime,
             placeName = data.place?.name,
             searchResults = data.searchResults.map {
                 AutoCompleteResultState(
@@ -60,9 +63,12 @@ class AddPlaceUseCase(
         )
     }
 
-    override fun setPlaceArrivalTime(itemId: String, time: Time) {
+    override fun setPlaceArrivalDateTime(itemId: String, time: Time, timeSelected: Boolean) {
         itemStore.update(itemId) {
-            it.copy(time = time)
+            it.copy(
+                dateTime = time,
+                hasTime = timeSelected,
+            )
         }
     }
 
@@ -94,7 +100,8 @@ class AddPlaceUseCase(
         val data = itemStore.getData(item.id) ?: error("Item ${item.id} not found in store")
         return TimedPlace(
             id = data.id,
-            time = data.time,
+            dateTime = data.dateTime,
+            hasTime = data.hasTime,
             place = data.place ?: error("Place not set"),
             city = data.city ?: error("City not set"),
         )

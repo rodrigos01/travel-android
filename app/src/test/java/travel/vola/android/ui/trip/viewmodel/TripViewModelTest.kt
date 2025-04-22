@@ -21,6 +21,7 @@ import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.Time
+import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.test.UnconfinedDispatcherTestRule
@@ -957,7 +958,7 @@ class TripViewModelTest {
         id: String = "tripId",
         flights: List<Flight> = emptyList(),
         lodgings: List<Lodging> = emptyList(),
-        places: List<Place> = emptyList(),
+        places: List<TimedPlace> = emptyList(),
     ) = Trip(
         id = id,
         name = null,

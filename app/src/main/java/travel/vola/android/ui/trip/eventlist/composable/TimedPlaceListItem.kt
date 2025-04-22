@@ -16,6 +16,7 @@ fun TimedPlaceListItem(state: TripItemState.TimedPlaceItemState) {
         dayOfMonthString = state.dayOfMonth,
         dayOfWeekString = state.dayOfWeek,
         timeString = state.time,
+        showTime = state.showTime,
         iconPainter = rememberVectorPainter(Icons.Default.Place),
         headline = state.placeName,
         supporting = state.cityName,
@@ -34,6 +35,7 @@ fun TimedPlaceListItemPreview() {
                 dayOfMonth = "17",
                 dayOfWeek = "Fri",
                 time = "15:30 AM",
+                showTime = true,
                 placeName = "Fushimi Inari Taisha",
                 cityName = "Kyoto, Japan",
                 imageUrl = ""

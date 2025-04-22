@@ -40,16 +40,16 @@ fun AddPlanListItem(
                 val itemState = rememberStartEndAddPlanListItemState(
                     startState = rememberAddPlanRowState(
                         key = state.startState.searchResults,
-                        selectedTime = state.startState.time,
+                        selectedDateTime = state.startState.time,
                     ), endState = rememberAddPlanRowState(
                         key = state.endState.searchResults,
-                        selectedTime = state.endState.time,
+                        selectedDateTime = state.endState.time,
                     )
                 )
                 when (state) {
                     is AddFlightItemState -> {
-                        LaunchedEffect(itemState.startState.selectedTime) {
-                            itemState.startState.selectedTime?.let {
+                        LaunchedEffect(itemState.startState.selectedDateTime) {
+                            itemState.startState.selectedDateTime?.let {
                                 actionHandler.setDepartureTime(state.id, it)
                             }
                         }
@@ -61,8 +61,8 @@ fun AddPlanListItem(
                                 )
                             }
                         }
-                        LaunchedEffect(itemState.endState.selectedTime) {
-                            itemState.endState.selectedTime?.let {
+                        LaunchedEffect(itemState.endState.selectedDateTime) {
+                            itemState.endState.selectedDateTime?.let {
                                 actionHandler.setArrivalTime(state.id, it)
                             }
                         }
@@ -91,8 +91,8 @@ fun AddPlanListItem(
                     }
 
                     is ManualAddLodgingItemState -> {
-                        LaunchedEffect(itemState.startState.selectedTime) {
-                            itemState.startState.selectedTime?.let {
+                        LaunchedEffect(itemState.startState.selectedDateTime) {
+                            itemState.startState.selectedDateTime?.let {
                                 actionHandler.setCheckInTime(state.id, it)
                             }
                         }
@@ -104,8 +104,8 @@ fun AddPlanListItem(
                                 )
                             }
                         }
-                        LaunchedEffect(itemState.endState.selectedTime) {
-                            itemState.endState.selectedTime?.let {
+                        LaunchedEffect(itemState.endState.selectedDateTime) {
+                            itemState.endState.selectedDateTime?.let {
                                 actionHandler.setCheckOutTime(state.id, it)
                             }
                         }
@@ -151,11 +151,12 @@ fun AddPlanListItem(
             is AddPlaceItemState -> {
                 val rowState = rememberAddPlanRowState(
                     key = state.searchResults,
-                    selectedTime = state.timestamp,
+                    selectedDateTime = state.timestamp,
+                    timeSelected = state.timeSelected,
                 )
-                LaunchedEffect(rowState.selectedTime) {
-                    rowState.selectedTime?.let {
-                        actionHandler.setPlaceArrivalTime(state.id, it)
+                LaunchedEffect(rowState.selectedDateTime) {
+                    rowState.selectedDateTime?.let {
+                        actionHandler.setPlaceArrivalDateTime(state.id, it, rowState.timeSelected)
                     }
                 }
                 LaunchedEffect(rowState.selectedSearchResultIndex) {
@@ -239,7 +240,7 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
     override fun setCheckOutTime(itemId: String, time: Time) = Unit
     override fun setDepartureTime(itemId: String, time: Time) = Unit
     override fun setArrivalTime(itemId: String, time: Time) = Unit
-    override fun setPlaceArrivalTime(itemId: String, time: Time) = Unit
+    override fun setPlaceArrivalDateTime(itemId: String, time: Time, timeSelected: Boolean) = Unit
     override fun locationSearchResultTapped(itemId: String, index: Int) = Unit
     override fun locationTextChanged(itemId: String, content: CharSequence) = Unit
 }
