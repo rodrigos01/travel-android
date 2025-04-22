@@ -22,7 +22,8 @@ fun AddPlaceListItem(
         text = placeName,
         onTextChanged = { onTextChanged(it.toString()) },
         searchResults = searchResults,
-        showTimePickerButton = false,
+        timeSelectorLabel = "Pick Time",
+        showTextField = true,
     )
 }
 

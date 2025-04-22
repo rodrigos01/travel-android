@@ -97,23 +97,20 @@ class TripViewModel(
         .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
     private val eventsFromTrip = trip.filterNotNull().map { currentTrip ->
         val items = genItems(currentTrip)
-        ViewState(
-            title = currentTrip.name ?: "Untitled Trip",
+        ViewState(title = currentTrip.name ?: "Untitled Trip",
             items = genItems(currentTrip),
-            places = (currentTrip.lodgings.map { it.city })
-                .map { place ->
-                    PlaceState(
-                        listIndex = items.indexOfFirst { it is TripItemState.PlaceItemState && place.name == it.placeName },
-                        markers = listOf(
-                            MarkerViewState(
-                                position = Pair(place.latitude, place.longitude),
-                                name = place.name,
-                                type = MarkerType.City,
-                            )
-                        ),
-                    )
-                }
-        )
+            places = (currentTrip.lodgings.map { it.city }).map { place ->
+                PlaceState(
+                    listIndex = items.indexOfFirst { it is TripItemState.PlaceItemState && place.name == it.placeName },
+                    markers = listOf(
+                        MarkerViewState(
+                            position = Pair(place.latitude, place.longitude),
+                            name = place.name,
+                            type = MarkerType.City,
+                        )
+                    ),
+                )
+            })
     }
     private val addPlanItemsState = addPlanUseCase.items.onEach { state ->
         reversibleItems.keys.forEach { itemId ->
@@ -174,11 +171,11 @@ class TripViewModel(
     }
 
     fun itemTapped(itemId: String) {
-        val item = viewState.value.items.filterIsInstance<TripItemState.EventItemState>()
-            .find { it.id == itemId } ?: return
         if (reversibleItems.containsKey(itemId)) {
             return
         }
+        val item = viewState.value.items.filterIsInstance<TripItemState.Editable>()
+            .find { it.id == itemId } ?: return
         val entity = item.entity ?: return
         addPlanUseCase.createAddPlanItem(itemId, entity)
     }
@@ -215,7 +212,7 @@ class TripViewModel(
         }
     }
 
-    private val TripItemState.EventItemState.entity: TripEntity?
+    private val TripItemState.Editable.entity: TripEntity?
         get() = when (this) {
             is TripItemState.FlightDepartureItemState -> trip.value?.flights?.first { flight ->
                 flight.segments.any { it.departure == timestamp && it.airportFrom.name == airport }
@@ -236,6 +233,8 @@ class TripViewModel(
             is TripItemState.TimedPlaceItemState -> trip.value?.places?.first {
                 it.id == id
             }
+
+            is TripItemState.PlaceItemState -> trip.value?.places?.firstOrNull { it.id == id }
         }
 
     private fun genItems(trip: Trip): List<TripItemState> {
@@ -244,7 +243,7 @@ class TripViewModel(
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
                 is Lodging -> listOf(event.checkIn to event, event.checkout to event)
-                is TimedPlace -> listOf(event.time to event)
+                is TimedPlace -> listOf(event.dateTime to event)
             }
         }.sortedBy { (time, event) ->
             EventComparable(
@@ -275,7 +274,9 @@ class TripViewModel(
                         )
                     )
                 }
-                add(genItem(time, event, showDate = firstInDay))
+                if (event !is TimedPlace || event.place != place) {
+                    add(genItem(time, event, showDate = firstInDay))
+                }
                 if (dateRangeItem != null) {
                     add(dateRangeItem)
                 } else if (lastInSection) {
@@ -314,7 +315,10 @@ class TripViewModel(
         // Exclude if only event in place is a departure
         if (placeEntries.size == 1 && lastEntry.isDeparture) return null
 
+        val id = if (event is TimedPlace && event.city == event.place) event.id else place.id
+
         return TripItemState.PlaceItemState(
+            id = id,
             timestamp = time,
             placeName = place.name,
             imageUrl = place.coverImage ?: "",
@@ -428,11 +432,12 @@ class TripViewModel(
 
             is TimedPlace -> TripItemState.TimedPlaceItemState(
                 id = event.id,
-                timestamp = event.time,
+                timestamp = event.dateTime,
                 showDate = showDate,
-                dayOfMonth = event.time.dayOfMonthString,
-                dayOfWeek = event.time.dayOfWeekString,
-                time = event.time.timeString,
+                dayOfMonth = event.dateTime.dayOfMonthString,
+                dayOfWeek = event.dateTime.dayOfWeekString,
+                time = event.dateTime.timeString,
+                showTime = event.hasTime,
                 placeName = event.place.name,
                 cityName = event.city.name,
                 imageUrl = event.place.coverImage ?: "",
@@ -462,18 +467,26 @@ private val Time.dateString
     get() = "$year=$month-$dayOfMonth"
 
 private class EventComparable(
-    private val time: Time, private val event: Any
+    private val time: Time, private val event: TripEvent
 ) : Comparable<EventComparable> {
     override fun compareTo(other: EventComparable): Int {
         if (time.dateString != other.time.dateString) {
             return time.compareTo(other.time)
         }
-        val comparison = type.priority - other.type.priority
+        val comparison = if (event.getPlace(time) == other.event.getPlace(other.time)) {
+            type.priorityInPlace - other.type.priorityInPlace
+        } else {
+            type.priorityInDay - other.type.priorityInDay
+        }
         return if (comparison != 0) {
             comparison
         } else {
             time.compareTo(other.time)
         }
+    }
+
+    enum class EventType {
+        UNKNOWN, CHECKOUT, DEPARTURE, ARRIVAL, CHECKIN, PLACE
     }
 
     val type: EventType
@@ -483,13 +496,30 @@ private class EventComparable(
                 event is Lodging && time == event.checkIn -> EventType.CHECKIN
                 event is FlightSegment && time == event.arrival -> EventType.ARRIVAL
                 event is FlightSegment && time == event.departure -> EventType.DEPARTURE
+                event is TimedPlace -> EventType.PLACE
                 else -> EventType.UNKNOWN
             }
         }
 
-    enum class EventType(val priority: Int) {
-        UNKNOWN(0), CHECKOUT(0), DEPARTURE(1), ARRIVAL(1), CHECKIN(2),
-    }
+    val EventType.priorityInDay: Int
+        get() = when (this) {
+            EventType.UNKNOWN -> 0
+            EventType.CHECKOUT -> 0
+            EventType.DEPARTURE -> 1
+            EventType.ARRIVAL -> 1
+            EventType.CHECKIN -> 2
+            EventType.PLACE -> 3
+        }
+
+    val EventType.priorityInPlace: Int
+        get() = when (this) {
+            EventType.UNKNOWN -> 0
+            EventType.ARRIVAL -> 1
+            EventType.CHECKIN -> 2
+            EventType.CHECKOUT -> 4
+            EventType.PLACE -> 3
+            EventType.DEPARTURE -> 5
+        }
 
     override fun toString(): String {
         return (time to event).toString()

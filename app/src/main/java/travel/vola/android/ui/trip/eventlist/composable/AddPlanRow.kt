@@ -56,20 +56,24 @@ import java.util.TimeZone
 class AddPlanRowState(
     selectedTimeState: MutableState<Time?>,
     selectedSearchResultIndexState: MutableIntState,
+    timeSelectedState: MutableState<Boolean>,
 ) {
-    var selectedTime: Time? by selectedTimeState
+    var selectedDateTime: Time? by selectedTimeState
     var selectedSearchResultIndex: Int by selectedSearchResultIndexState
+    var timeSelected: Boolean by timeSelectedState
 }
 
 @Composable
 fun rememberAddPlanRowState(
     key: Any? = null,
-    selectedTime: Time? = null,
+    selectedDateTime: Time? = null,
     selectedSearchResultIndex: Int = -1,
-) = remember(key, selectedTime) {
+    timeSelected: Boolean = false,
+) = remember(key, selectedDateTime) {
     AddPlanRowState(
-        mutableStateOf(selectedTime),
+        mutableStateOf(selectedDateTime),
         mutableIntStateOf(selectedSearchResultIndex),
+        mutableStateOf(timeSelected),
     )
 }
 
@@ -79,15 +83,15 @@ fun AddPlanRow(
     minTime: Time? = null,
     searchResults: List<AutoCompleteResultState>,
     title: @Composable () -> Unit,
-    timeSelectorLabel: String? = null,
+    timeSelectorLabel: String,
     text: String? = null,
     dateSelectionEnabled: Boolean = true,
-    showTimePickerButton: Boolean = true,
+    showTextField: Boolean = true,
     labelText: String? = null,
     placeHolder: String? = null,
     onTextChanged: (CharSequence) -> Unit = {},
 ) {
-    val selectedTime = state.selectedTime ?: minTime ?: Time.now()
+    val selectedTime = state.selectedDateTime ?: minTime ?: Time.now()
     val isMinDate = selectedTime.toMidnight() == minTime?.toMidnight()
     val timePickerDialogState = rememberTimePickerDialogState(
         minHour = if (isMinDate) minTime?.hour ?: 0 else 0,
@@ -108,11 +112,13 @@ fun AddPlanRow(
             ) {
                 ProvideTextStyle(MaterialTheme.typography.titleMedium, title)
             }
-            if (timeSelectorLabel != null && showTimePickerButton) {
+            if (showTextField) {
                 TimePickerTextButton(
-                    text = state.selectedTime?.timeString ?: timeSelectorLabel,
+                    text = state.selectedDateTime?.timeString?.takeIf { state.timeSelected }
+                        ?: timeSelectorLabel,
                     onTimeSelected = { hour, minute ->
-                        state.selectedTime = selectedTime.update(hour = hour, minute = minute)
+                        state.timeSelected = true
+                        state.selectedDateTime = selectedTime.update(hour = hour, minute = minute)
                     },
                     modifier = Modifier.semantics { role = Role.Button },
                     timePickerDialogState = timePickerDialogState,
@@ -127,13 +133,13 @@ fun AddPlanRow(
                 DatePickerButton(
                     minimumSelectableTime = minTime?.toMidnight(),
                     onDateSelected = {
-                        state.selectedTime = selectedTime.update(
+                        state.selectedDateTime = selectedTime.update(
                             dayOfMonth = it.dayOfMonth,
                             month = it.month,
                             year = it.year,
                         )
                     },
-                    selectedTime = state.selectedTime,
+                    selectedTime = state.selectedDateTime,
                     modifier = Modifier.width(80.dp),
                 ) {
                     Row(
@@ -161,7 +167,7 @@ fun AddPlanRow(
                     modifier = Modifier.width(80.dp),
                 )
             }
-            if (timeSelectorLabel == null || showTimePickerButton) {
+            if (showTextField) {
                 AutoCompleteTextField(
                     state = rememberAutoCompleteTextFieldState(
                         text, searchResults,
@@ -192,7 +198,7 @@ fun AddPlanRow(
                 val focusManager = LocalFocusManager.current
                 TimePickerButton(
                     onTimeSelected = { hour, minute ->
-                        state.selectedTime = selectedTime.update(hour = hour, minute = minute)
+                        state.selectedDateTime = selectedTime.update(hour = hour, minute = minute)
                         focusManager.clearFocus()
                     },
                     showTimePickerState = showTimePicker,
@@ -221,7 +227,7 @@ fun AddPlanRowPreview() {
     AppTheme {
         Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
             val state = rememberAddPlanRowState(
-                selectedTime = Time("2025-06-12T03:45 -0300"),
+                selectedDateTime = Time("2025-06-12T03:45 -0300"),
             )
             AddPlanRow(
                 state = state,
@@ -230,7 +236,7 @@ fun AddPlanRowPreview() {
                 title = { Text("Title") },
                 timeSelectorLabel = "Pick Time",
                 dateSelectionEnabled = true,
-                showTimePickerButton = true,
+                showTextField = true,
                 placeHolder = "PlaceHolder",
                 labelText = "Label",
                 onTextChanged = {},

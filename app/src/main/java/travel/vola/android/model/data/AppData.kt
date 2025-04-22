@@ -1,6 +1,7 @@
 package travel.vola.android.model.data
 
 import kotlinx.serialization.Serializable
+import java.time.ZonedDateTime
 import java.util.TimeZone
 
 enum class ServerStatus {
@@ -78,7 +79,8 @@ data class PlaceDetailsResult(
 
 data class TimedPlace(
     override val id: String,
-    val time: Time,
+    val dateTime: ZonedDateTime,
+    val hasTime: Boolean,
     val place: Place,
     val city: Place,
 ) : TripEntity, TripEvent
