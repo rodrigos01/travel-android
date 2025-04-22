@@ -71,7 +71,7 @@ class LodgingSearchRepository {
                 appendPathSegments(lodgingId)
                 parameters.append("checkin", checkIn.asISO8601DateString())
                 parameters.append("checkout", checkOut.asISO8601DateString())
-                parameters.append("adults", "1")
+                parameters.append("adults", "2")
                 parameters.append("children", "0")
                 parameters.append("lat", latitude.toString())
                 parameters.append("lon", longitude.toString())
