@@ -4,9 +4,10 @@ import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
@@ -36,7 +37,7 @@ private fun setApplicationContext(context: Context) {
 }
 
 @ExperimentalMaterial3Api
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
     private val serviceLocator: ServiceLocator by lazy { ServiceLocator() }
 
@@ -45,7 +46,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         setApplicationContext(this.applicationContext)
         super.onCreate(savedInstanceState)
-
+        enableEdgeToEdge()
         setContent { MainScreen() }
         val content = findViewById<View>(android.R.id.content)
         content.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
