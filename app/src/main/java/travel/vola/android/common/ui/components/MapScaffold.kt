@@ -3,28 +3,19 @@ package travel.vola.android.common.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -40,14 +31,44 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
-import travel.vola.android.R
 import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.common.ui.state.MarkerViewState
+
+class MapScaffoldState internal constructor(
+    val sizeClass: SizeClass,
+    showMap: MutableState<Boolean>,
+) {
+
+    var showMap: Boolean by showMap
+}
+
+@Composable
+fun rememberMapScaffoldState(
+    showMap: MutableState<Boolean> = mutableStateOf(false),
+): MapScaffoldState {
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    return MapScaffoldState(
+        sizeClass = when {
+            windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) -> SizeClass.MEDIUM
+            windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) -> SizeClass.EXPANDED
+            else -> SizeClass.SMALL
+        },
+        showMap,
+    )
+}
+
+enum class SizeClass {
+    SMALL, MEDIUM, EXPANDED
+}
+
+val SizeClass.isLargeScreen: Boolean
+    get() = this != SizeClass.SMALL
 
 @Composable
 fun MapScaffold(
     markers: List<MarkerViewState>,
     boundsPoints: List<LatLng>,
+    state: MapScaffoldState = rememberMapScaffoldState(),
     minZoom: Float? = 15F,
     onMarkerTapped: (MarkerViewState) -> Unit = {},
     additionalContent: @Composable () -> Unit = {},
@@ -56,11 +77,7 @@ fun MapScaffold(
     },
     content: @Composable () -> Unit,
 ) {
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val isLargeScreen =
-        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
-    val isExpandedWindowSize =
-        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
+    val isExpandedWindowSize = state.sizeClass == SizeClass.EXPANDED
     val contentWidth = when {
         isExpandedWindowSize -> 400.dp
         else -> 320.dp
@@ -69,7 +86,7 @@ fun MapScaffold(
         Box(
             modifier = Modifier
                 .then(
-                    if (!isLargeScreen) {
+                    if (!state.sizeClass.isLargeScreen) {
                         Modifier.weight(1F)
                     } else {
                         Modifier.widthIn(max = contentWidth)
@@ -78,40 +95,8 @@ fun MapScaffold(
                 .fillMaxHeight()
         ) {
             content()
-            if (!isLargeScreen) {
-                SingleChoiceSegmentedButtonRow(modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = with(LocalDensity.current) {
-                        WindowInsets.safeContent.getBottom(this).toDp()
-                    } + 16.dp)
-                    .shadow(elevation = 8.dp, shape = SegmentedButtonDefaults.baseShape)) {
-                    SegmentedButton(
-                        selected = true,
-                        onClick = {},
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                        label = {
-                            Icon(
-                                Icons.AutoMirrored.Default.List, contentDescription = null
-                            )
-                        },
-                        icon = {},
-                    )
-                    SegmentedButton(
-                        selected = false,
-                        onClick = {},
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                        label = {
-                            Icon(
-                                painterResource(R.drawable.map_baseline_24),
-                                contentDescription = null
-                            )
-                        },
-                        icon = {},
-                    )
-                }
-            }
         }
-        if (isLargeScreen) {
+        if (state.sizeClass.isLargeScreen) {
             Box(
                 modifier = Modifier
                     .then(
