@@ -73,11 +73,11 @@ import travel.vola.android.R
 import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.TabbedHost
 import travel.vola.android.common.ui.components.TabbedHostScope
-import travel.vola.android.common.ui.components.TabletPreview
 import travel.vola.android.common.ui.components.asSizedImageTarget
 import travel.vola.android.common.ui.components.mapMarkerIcon
 import travel.vola.android.common.ui.components.rememberSizedImageState
 import travel.vola.android.common.ui.modifier.skeletonLoader
+import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.common.ui.state.MarkerViewState
 import travel.vola.android.extensions.Time

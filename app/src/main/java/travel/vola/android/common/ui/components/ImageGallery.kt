@@ -50,6 +50,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import coil.compose.rememberAsyncImagePainter
+import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.ui.theme.AppTheme
 
 @OptIn(ExperimentalLayoutApi::class)
