@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme" parent="android:Theme.Material.NoActionBar">
+        <!--        Splash Screen-->
+        <item name="android:windowSplashScreenBackground">@color/logoBackground</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <!-- Customize your theme here. -->
+    </style>
+</resources>
