@@ -20,7 +20,7 @@ fun FlightEventListItem(
         dayOfMonthString,
         dayOfWeekString,
         timeString,
-        icon = R.drawable.ic_flight_takeoff_black_24dp,
+        icon = R.drawable.flight_takeoff_baseline_24,
         headline = stringResource(R.string.flight_event_tile, destination),
         supporting = airportName,
     )

@@ -146,7 +146,7 @@ private fun DatePickerTextButton(
     ) {
         IconTextButton(
             onClick = {},
-            leadingIcon = ImageVector.vectorResource(R.drawable.baseline_today_24),
+            leadingIcon = ImageVector.vectorResource(R.drawable.today_baseline_24),
         ) {
             Text(selectedTime?.dateString() ?: label)
         }

@@ -101,7 +101,7 @@ fun EventListItemPreview() {
     AppTheme {
         EventListItem(
             showDate = true,
-            icon = R.drawable.ic_flight_takeoff_black_24dp,
+            icon = R.drawable.flight_takeoff_baseline_24,
             dayOfMonthString = "21",
             dayOfWeekString = "Fri",
             timeString = "6:15 AM",
