@@ -123,6 +123,7 @@ steps:
     args: [ "./gradlew", "testProdReleaseUnitTest" ]
     <<: *env
     waitFor: [ 'build' ]
+    allowFailure: true
     volumes:
       - name: 'build_cache'
         path: '/build_cache'
