@@ -13,12 +13,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.window.core.layout.WindowSizeClass
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptor
@@ -49,8 +49,8 @@ fun rememberMapScaffoldState(
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     return MapScaffoldState(
         sizeClass = when {
-            windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) -> SizeClass.MEDIUM
             windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) -> SizeClass.EXPANDED
+            windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) -> SizeClass.MEDIUM
             else -> SizeClass.SMALL
         },
         showMap,
@@ -78,46 +78,56 @@ fun MapScaffold(
     content: @Composable () -> Unit,
 ) {
     val isExpandedWindowSize = state.sizeClass == SizeClass.EXPANDED
-    val contentWidth = when {
-        isExpandedWindowSize -> 400.dp
-        else -> 320.dp
-    }
-    Row(Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .then(
-                    if (!state.sizeClass.isLargeScreen) {
-                        Modifier.weight(1F)
-                    } else {
-                        Modifier.widthIn(max = contentWidth)
-                    }
-                )
-                .fillMaxHeight()
-        ) {
-            content()
+    if (state.sizeClass.isLargeScreen) {
+        val contentWidth = when {
+            isExpandedWindowSize -> 400.dp
+            else -> 320.dp
         }
-        if (state.sizeClass.isLargeScreen) {
+        Row(Modifier.fillMaxSize()) {
             Box(
                 modifier = Modifier
-                    .then(
-                        if (isExpandedWindowSize) {
-                            Modifier.widthIn(max = contentWidth)
-                        } else {
-                            Modifier.weight(1F)
-                        }
-                    )
-                    .zIndex(1F)
+                    .widthIn(max = contentWidth)
+                    .fillMaxHeight()
             ) {
-                additionalContent()
+                content()
             }
             if (isExpandedWindowSize) {
+                Box(
+                    modifier = Modifier.widthIn(max = contentWidth)
+                ) {
+                    additionalContent()
+                }
                 Map(
                     markers,
                     boundsPoints,
                     onMarkerTapped,
                     minZoom,
                     markerDescriptor,
-                    modifier = Modifier.weight(1F)
+                )
+            } else {
+                Box {
+                    Map(
+                        markers,
+                        boundsPoints,
+                        onMarkerTapped,
+                        minZoom,
+                        markerDescriptor,
+                    )
+                    additionalContent()
+                }
+            }
+        }
+    } else {
+        Box(Modifier.fillMaxSize()) {
+            content()
+            additionalContent()
+            if (state.showMap) {
+                Map(
+                    markers,
+                    boundsPoints,
+                    onMarkerTapped,
+                    minZoom,
+                    markerDescriptor,
                 )
             }
         }
@@ -178,17 +188,21 @@ private fun Map(
 @Preview
 @TabletPreview
 fun MapScaffoldPreview() {
-    MapScaffold(markers = emptyList(), boundsPoints = listOf(LatLng(0.0, 0.0)), content = {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-        )
-    }, additionalContent = {
-        Box(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.surface)
-                .fillMaxSize()
-        )
-    })
+    MapScaffold(state = rememberMapScaffoldState(showMap = remember { mutableStateOf(false) }),
+        markers = emptyList(),
+        boundsPoints = listOf(LatLng(0.0, 0.0)),
+        content = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface)
+            )
+        },
+        additionalContent = {
+            Box(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                    .fillMaxSize()
+            )
+        })
 }
