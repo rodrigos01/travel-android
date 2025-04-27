@@ -19,7 +19,7 @@ fun ArrivalEventListItem(
         dayOfMonthString,
         dayOfWeekString,
         timeString,
-        icon = R.drawable.ic_flight_land_black_24dp,
+        icon = R.drawable.flight_land_baseline_24,
         headline = stringResource(R.string.flight_arrival_tile),
         supporting = airportName,
     )
