@@ -19,7 +19,7 @@ fun CheckinListItem(
         dayOfMonthString,
         dayOfWeekString,
         timeString,
-        icon = R.drawable.ic_hotel_black_24dp,
+        icon = R.drawable.hotel_baseline_24,
         headline = stringResource(id = R.string.hotel_checkin_title),
         supporting = hotelName,
     )

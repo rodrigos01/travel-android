@@ -1,11 +1,11 @@
 package travel.vola.android.ui.trip.creation.composable
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -17,7 +17,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -70,10 +69,10 @@ fun TimePickerTextButton(
         showTimePickerState = showTimePickerState,
     ) {
         Row {
-            Image(
-                painter = painterResource(id = R.drawable.ic_time_16),
+            Icon(
+                painter = painterResource(id = R.drawable.clock_baseline_16),
                 contentDescription = null,
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.tertiary),
+                tint = MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .padding(end = 4.dp)
@@ -94,7 +93,7 @@ fun TimePickerButtonPreview() {
             TimePickerTextButton(
                 text = "pick a time",
                 onTimeSelected = { _, _ -> },
-                showTimePickerState = remember { mutableStateOf(true) }
+                showTimePickerState = remember { mutableStateOf(false) }
             )
         }
     }

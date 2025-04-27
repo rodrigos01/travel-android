@@ -153,7 +153,7 @@ fun AddPlanRow(
                             dayOfWeek = selectedTime.dayOfWeekString,
                         )
                         Image(
-                            painter = painterResource(id = R.drawable.ic_arrow_drop_down_24),
+                            painter = painterResource(id = R.drawable.arrow_drop_down_filled_24),
                             colorFilter = ColorFilter.tint(LocalContentColor.current),
                             contentDescription = null,
                             modifier = Modifier.align(Alignment.CenterVertically)

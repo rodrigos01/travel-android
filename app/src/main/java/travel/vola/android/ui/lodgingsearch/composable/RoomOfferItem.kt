@@ -48,7 +48,7 @@ fun RoomOfferItem(
             )
         } else {
             LodgingImage(
-                painterResource(R.drawable.ic_hotel_black_24dp),
+                painterResource(R.drawable.hotel_baseline_24),
                 contentScale = ContentScale.None,
                 colorFilter = ColorFilter.tint(
                     MaterialTheme.colorScheme.onSurface.copy(
