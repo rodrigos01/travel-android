@@ -67,8 +67,8 @@ fun mapMarkerIcon(
 @Composable
 fun mapMarkerIcon(type: MarkerType, selected: Boolean = false): Bitmap {
     val icon = when (type) {
-        MarkerType.Lodging -> R.drawable.ic_hotel_black_24dp
-        MarkerType.City -> R.drawable.baseline_location_city_24
+        MarkerType.Lodging -> R.drawable.hotel_baseline_24
+        MarkerType.City -> R.drawable.location_city_baseline_24
     }.let { resId ->
         AppCompatResources.getDrawable(LocalContext.current, resId)
     } ?: error("Marker icon not found")
