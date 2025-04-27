@@ -3,15 +3,28 @@ package travel.vola.android.common.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -27,6 +40,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import travel.vola.android.R
 import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.common.ui.state.MarkerViewState
 
@@ -64,6 +78,38 @@ fun MapScaffold(
                 .fillMaxHeight()
         ) {
             content()
+            if (!isLargeScreen) {
+                SingleChoiceSegmentedButtonRow(modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = with(LocalDensity.current) {
+                        WindowInsets.safeContent.getBottom(this).toDp()
+                    } + 16.dp)
+                    .shadow(elevation = 8.dp, shape = SegmentedButtonDefaults.baseShape)) {
+                    SegmentedButton(
+                        selected = true,
+                        onClick = {},
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                        label = {
+                            Icon(
+                                Icons.AutoMirrored.Default.List, contentDescription = null
+                            )
+                        },
+                        icon = {},
+                    )
+                    SegmentedButton(
+                        selected = false,
+                        onClick = {},
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                        label = {
+                            Icon(
+                                painterResource(R.drawable.map_baseline_24),
+                                contentDescription = null
+                            )
+                        },
+                        icon = {},
+                    )
+                }
+            }
         }
         if (isLargeScreen) {
             Box(
@@ -131,16 +177,14 @@ private fun Map(
     ) {
         markers.forEach { markerState ->
             val position = LatLng(markerState.position.first, markerState.position.second)
-            Marker(
-                state = rememberMarkerState(key = position.toString(), position = position),
+            Marker(state = rememberMarkerState(key = position.toString(), position = position),
                 title = markerState.name,
                 icon = markerDescriptor(markerState),
                 anchor = Offset(0.5F, 0F),
                 onClick = {
                     onMarkerTapped(markerState)
                     false
-                }
-            )
+                })
         }
     }
 }
