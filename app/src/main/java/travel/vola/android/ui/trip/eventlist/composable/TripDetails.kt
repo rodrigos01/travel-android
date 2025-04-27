@@ -4,12 +4,17 @@ import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
@@ -23,6 +28,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -35,15 +43,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.LatLng
+import travel.vola.android.R
 import travel.vola.android.common.ui.components.MapScaffold
+import travel.vola.android.common.ui.components.isLargeScreen
+import travel.vola.android.common.ui.components.rememberMapScaffoldState
 import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.model.PlaceRepository
@@ -93,11 +109,47 @@ fun TripDetails(
     }
     val allMarkers = state.places.flatMap { it.markers }
     val boundingMarkers = focusedPlace?.markers ?: allMarkers
+    val mapScaffoldState = rememberMapScaffoldState()
     MapScaffold(
         allMarkers.filter { it.type != MarkerType.City },
-        boundingMarkers.map { LatLng(it.position.first, it.position.second) }
+        boundingMarkers.map { LatLng(it.position.first, it.position.second) },
+        state = mapScaffoldState,
     ) {
-        List(state, listScrollState, viewModel, navController)
+        Box(modifier = Modifier.fillMaxSize()) {
+            List(state, listScrollState, viewModel, navController)
+            if (!mapScaffoldState.sizeClass.isLargeScreen) {
+                SingleChoiceSegmentedButtonRow(modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = with(LocalDensity.current) {
+                        WindowInsets.safeContent.getBottom(this).toDp()
+                    } + 16.dp)
+                    .shadow(elevation = 8.dp, shape = SegmentedButtonDefaults.baseShape)) {
+                    SegmentedButton(
+                        selected = !mapScaffoldState.showMap,
+                        onClick = { mapScaffoldState.showMap = false },
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                        label = {
+                            Icon(
+                                Icons.AutoMirrored.Default.List, contentDescription = null
+                            )
+                        },
+                        icon = {},
+                    )
+                    SegmentedButton(
+                        selected = mapScaffoldState.showMap,
+                        onClick = { mapScaffoldState.showMap = true },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                        label = {
+                            Icon(
+                                painterResource(R.drawable.map_baseline_24),
+                                contentDescription = null
+                            )
+                        },
+                        icon = {},
+                    )
+                }
+            }
+        }
     }
 }
 
