@@ -110,44 +110,45 @@ fun TripDetails(
     val allMarkers = state.places.flatMap { it.markers }
     val boundingMarkers = focusedPlace?.markers ?: allMarkers
     val mapScaffoldState = rememberMapScaffoldState()
-    MapScaffold(
-        allMarkers.filter { it.type != MarkerType.City },
-        boundingMarkers.map { LatLng(it.position.first, it.position.second) },
-        state = mapScaffoldState,
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        MapScaffold(
+            allMarkers.filter { it.type != MarkerType.City },
+            boundingMarkers.map { LatLng(it.position.first, it.position.second) },
+            state = mapScaffoldState,
+        ) {
             List(state, listScrollState, viewModel, navController)
-            if (!mapScaffoldState.sizeClass.isLargeScreen) {
-                SingleChoiceSegmentedButtonRow(modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = with(LocalDensity.current) {
-                        WindowInsets.safeContent.getBottom(this).toDp()
-                    } + 16.dp)
-                    .shadow(elevation = 8.dp, shape = SegmentedButtonDefaults.baseShape)) {
-                    SegmentedButton(
-                        selected = !mapScaffoldState.showMap,
-                        onClick = { mapScaffoldState.showMap = false },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                        label = {
-                            Icon(
-                                Icons.AutoMirrored.Default.List, contentDescription = null
-                            )
-                        },
-                        icon = {},
-                    )
-                    SegmentedButton(
-                        selected = mapScaffoldState.showMap,
-                        onClick = { mapScaffoldState.showMap = true },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                        label = {
-                            Icon(
-                                painterResource(R.drawable.map_baseline_24),
-                                contentDescription = null
-                            )
-                        },
-                        icon = {},
-                    )
-                }
+        }
+        if (!mapScaffoldState.sizeClass.isLargeScreen) {
+            SingleChoiceSegmentedButtonRow(modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = with(LocalDensity.current) {
+                    WindowInsets.safeContent.getBottom(this).toDp()
+                } + 16.dp)
+                .shadow(elevation = 8.dp, shape = SegmentedButtonDefaults.baseShape)) {
+                SegmentedButton(
+                    selected = !mapScaffoldState.showMap,
+                    onClick = { mapScaffoldState.showMap = false },
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                    label = {
+                        Icon(
+                            Icons.AutoMirrored.Default.List, contentDescription = null
+                        )
+                    },
+                    icon = {},
+                )
+                SegmentedButton(
+                    selected = mapScaffoldState.showMap,
+                    onClick = { mapScaffoldState.showMap = true },
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                    label = {
+                        Icon(
+                            painterResource(R.drawable.map_baseline_24),
+                            contentDescription = null
+                        )
+                    },
+                    icon = {},
+                )
             }
         }
     }
