@@ -27,6 +27,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.common.ui.state.MarkerViewState
 
 @Composable
@@ -143,10 +144,6 @@ private fun Map(
         }
     }
 }
-
-@Preview(name = "2 - Portrait Tablet", device = "spec:parent=pixel_tablet,orientation=portrait")
-@Preview(name = "3 - Landscape Tablet", device = "id:pixel_tablet")
-annotation class TabletPreview
 
 @Composable
 @Preview

@@ -36,6 +36,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,7 +44,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.LatLng
 import travel.vola.android.common.ui.components.MapScaffold
-import travel.vola.android.common.ui.preview.PreviewLightDarkSystemUI
+import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Identifiable
@@ -279,7 +280,8 @@ private fun TripDetailItem(
 }
 
 @Composable
-@PreviewLightDarkSystemUI
+@Preview
+@TabletPreview
 fun TripDetailsPreview() {
     AppTheme(dynamicColor = false) {
         val navController = rememberNavController()
