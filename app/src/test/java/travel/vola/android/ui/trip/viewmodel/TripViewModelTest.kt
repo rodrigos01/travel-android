@@ -401,14 +401,18 @@ class TripViewModelTest {
                     id = "jfk-lis",
                     departure = "2024-05-10T22:05:00-04:00",
                     airportFromName = "John F. Kennedy Intl. Airport",
+                    cityFromName = "New York",
                     airportToName = "Humberto Delgado International Airport",
+                    cityToName = "Lisbon",
                     arrival = "2024-05-11T10:25:00+01:00",
                 ),
                 Flight(
                     id = "lis-jfk",
                     departure = "2024-06-14T17:05:00+01:00",
                     airportFromName = "Humberto Delgado International Airport",
+                    cityFromName = "Lisbon",
                     airportToName = "John F. Kennedy Intl. Airport",
+                    cityToName = "New York",
                     arrival = "2024-06-14T20:15:00-04:00",
                 ),
             ), lodgings = listOf(
@@ -416,6 +420,7 @@ class TripViewModelTest {
                     name = "Pestana Porto - A Brasileira",
                     checkIn = "2024-05-11T13:00:00+01:00",
                     checkout = "2024-06-14T11:00:00+01:00",
+                    cityName = "Porto"
                 ),
             )
         )
