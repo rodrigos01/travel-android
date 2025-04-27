@@ -71,17 +71,17 @@ class TripViewModelTest {
                 Flight(
                     id = "jfk-lis",
                     airportFromName = "John F. Kennedy Intl. Airport",
-                    departure = "2024-05-10T22:05 -0400",
+                    departure = "2024-05-10T22:05:00-04:00",
                 ),
                 Flight(
                     id = "opo-par",
                     airportFromName = "Francisco Sá Carneiro Airport",
-                    departure = "2024-05-21T16:50 +0100",
+                    departure = "2024-05-21T16:50:00+01:00",
                 ),
                 Flight(
                     id = "lis-jfk",
                     airportFromName = "Humberto Delgado International Airport",
-                    departure = "2024-06-14T17:05 +0100",
+                    departure = "2024-06-14T17:05:00+01:00",
                 ),
             )
         )
@@ -112,21 +112,21 @@ class TripViewModelTest {
             flights = listOf(
                 Flight(
                     id = "jfk-lis",
-                    departure = "2024-05-10T22:05 -0400",
+                    departure = "2024-05-10T22:05:00-04:00",
                     airportToName = "Humberto Delgado International Airport",
-                    arrival = "2024-05-11T10:00 +0100",
+                    arrival = "2024-05-11T10:00:00+01:00",
                 ),
                 Flight(
                     id = "opo-par",
-                    departure = "2024-05-21T16:50 +0100",
+                    departure = "2024-05-21T16:50:00+01:00",
                     airportToName = "Orly International Airport",
-                    arrival = "2024-05-21T20:15 +0200",
+                    arrival = "2024-05-21T20:15:00+02:00",
                 ),
                 Flight(
                     id = "lis-jfk",
-                    departure = "2024-06-14T17:05 +0100",
+                    departure = "2024-06-14T17:05:00+01:00",
                     airportToName = "John F. Kennedy Intl. Airport",
-                    arrival = "2024-06-14T20:05 -0400",
+                    arrival = "2024-06-14T20:05:00-04:00",
                 ),
             )
         )
@@ -151,18 +151,18 @@ class TripViewModelTest {
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
                     address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
-                    checkIn = "2024-05-19T13:00 +0100",
-                    checkout = "2024-05-21T11:00 +0100",
+                    checkIn = "2024-05-19T13:00:00+01:00",
+                    checkout = "2024-05-21T11:00:00+01:00",
                 ), Lodging(
                     name = "Hôtel La Villa Nice Victor Hugo",
                     address = "19 Bis Bd Victor Hugo, 06000 Nice, France",
-                    checkIn = "2024-05-29T13:00 +0200",
-                    checkout = "2024-06-02T11:00 +0200",
+                    checkIn = "2024-05-29T13:00:00+02:00",
+                    checkout = "2024-06-02T11:00:00+02:00",
                 ), Lodging(
                     name = "Hotel Conca Park",
                     address = "Via degli Aranci, 13\\bis, 80067 Sorrento NA, Italy",
-                    checkIn = "2024-06-12T13:00 +0200",
-                    checkout = "2024-06-14T11:00 +0200",
+                    checkIn = "2024-06-12T13:00:00+02:00",
+                    checkout = "2024-06-14T11:00:00+02:00",
                 )
             )
         )
@@ -192,18 +192,18 @@ class TripViewModelTest {
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
                     address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
-                    checkIn = "2024-05-19T13:00 +0100",
-                    checkout = "2024-05-21T11:00 +0100",
+                    checkIn = "2024-05-19T13:00:00+01:00",
+                    checkout = "2024-05-21T11:00:00+01:00",
                 ), Lodging(
                     name = "Hôtel La Villa Nice Victor Hugo",
                     address = "19 Bis Bd Victor Hugo, 06000 Nice, France",
-                    checkIn = "2024-05-29T13:00 +0200",
-                    checkout = "2024-06-02T11:00 +0200",
+                    checkIn = "2024-05-29T13:00:00+02:00",
+                    checkout = "2024-06-02T11:00:00+02:00",
                 ), Lodging(
                     name = "Hotel Conca Park",
                     address = "Via degli Aranci, 13\\bis, 80067 Sorrento NA, Italy",
-                    checkIn = "2024-06-12T13:00 +0200",
-                    checkout = "2024-06-14T11:00 +0200",
+                    checkIn = "2024-06-12T13:00:00+02:00",
+                    checkout = "2024-06-14T11:00:00+02:00",
                 )
             )
         )
@@ -229,25 +229,25 @@ class TripViewModelTest {
             flights = listOf(
                 Flight(
                     id = "jfk-lis",
-                    departure = "2024-05-10T22:05 -0400",
+                    departure = "2024-05-10T22:05:00-04:00",
                     airportToName = "Humberto Delgado International Airport",
-                    arrival = "2024-05-11T10:00 +0100",
+                    arrival = "2024-05-11T10:00:00+01:00",
                     cityFromName = "New York",
                     cityToName = "Porto",
                 ),
                 Flight(
                     id = "opo-par",
-                    departure = "2024-05-21T16:50 +0100",
+                    departure = "2024-05-21T16:50:00+01:00",
                     airportToName = "Orly International Airport",
-                    arrival = "2024-05-21T20:15 +0200",
+                    arrival = "2024-05-21T20:15:00+02:00",
                     cityFromName = "Porto",
                     cityToName = "Nice",
                 ),
                 Flight(
                     id = "lis-jfk",
-                    departure = "2024-06-14T17:05 +0100",
+                    departure = "2024-06-14T17:05:00+01:00",
                     airportToName = "John F. Kennedy Intl. Airport",
-                    arrival = "2024-06-14T20:05 -0400",
+                    arrival = "2024-06-14T20:05:00-04:00",
                     cityFromName = "Sorrento",
                     cityToName = "New York",
                 ),
@@ -255,20 +255,20 @@ class TripViewModelTest {
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
                     address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
-                    checkIn = "2024-05-19T13:00 +0100",
-                    checkout = "2024-05-21T11:00 +0100",
+                    checkIn = "2024-05-19T13:00:00+01:00",
+                    checkout = "2024-05-21T11:00:00+01:00",
                     cityName = "Porto"
                 ), Lodging(
                     name = "Hôtel La Villa Nice Victor Hugo",
                     address = "19 Bis Bd Victor Hugo, 06000 Nice, France",
-                    checkIn = "2024-05-29T13:00 +0200",
-                    checkout = "2024-06-02T11:00 +0200",
+                    checkIn = "2024-05-29T13:00:00+02:00",
+                    checkout = "2024-06-02T11:00:00+02:00",
                     cityName = "Nice"
                 ), Lodging(
                     name = "Hotel Conca Park",
                     address = "Via degli Aranci, 13\\bis, 80067 Sorrento NA, Italy",
-                    checkIn = "2024-06-12T13:00 +0200",
-                    checkout = "2024-06-14T11:00 +0200",
+                    checkIn = "2024-06-12T13:00:00+02:00",
+                    checkout = "2024-06-14T11:00:00+02:00",
                     cityName = "Sorrento"
                 )
             )
@@ -295,17 +295,17 @@ class TripViewModelTest {
             flights = listOf(
                 Flight(
                     id = "jfk-lis",
-                    departure = "2024-05-10T22:05 -0400",
+                    departure = "2024-05-10T22:05:00-04:00",
                     airportToName = "Humberto Delgado International Airport",
-                    arrival = "2024-05-11T10:00 +0100",
+                    arrival = "2024-05-11T10:00:00+01:00",
                     cityFromName = "New York",
                     cityToName = "Porto",
                 ),
                 Flight(
                     id = "lis-jfk",
-                    departure = "2024-06-14T17:05 +0100",
+                    departure = "2024-06-14T17:05:00+01:00",
                     airportToName = "John F. Kennedy Intl. Airport",
-                    arrival = "2024-06-14T20:05 -0400",
+                    arrival = "2024-06-14T20:05:00-04:00",
                     cityFromName = "Sorrento",
                     cityToName = "New York",
                 ),
@@ -313,8 +313,8 @@ class TripViewModelTest {
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
                     address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
-                    checkIn = "2024-05-19T13:00 +0100",
-                    checkout = "2024-05-21T11:00 +0100",
+                    checkIn = "2024-05-19T13:00:00+01:00",
+                    checkout = "2024-05-21T11:00:00+01:00",
                     cityName = "Lisbon"
                 ),
             )
@@ -331,17 +331,17 @@ class TripViewModelTest {
             flights = listOf(
                 Flight(
                     id = "jfk-lis",
-                    departure = "2024-05-10T22:05 -0400",
+                    departure = "2024-05-10T22:05:00-04:00",
                     airportToName = "Humberto Delgado International Airport",
-                    arrival = "2024-05-11T10:00 +0100",
+                    arrival = "2024-05-11T10:00:00+01:00",
                     cityFromName = "New York",
                     cityToName = "Porto",
                 ),
                 Flight(
                     id = "lis-jfk",
-                    departure = "2024-06-14T17:05 +0100",
+                    departure = "2024-06-14T17:05:00+01:00",
                     airportToName = "John F. Kennedy Intl. Airport",
-                    arrival = "2024-06-14T20:05 -0400",
+                    arrival = "2024-06-14T20:05:00-04:00",
                     cityFromName = "Lisbon",
                     cityToName = "New York",
                 ),
@@ -349,8 +349,8 @@ class TripViewModelTest {
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
                     address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
-                    checkIn = "2024-05-19T13:00 +0100",
-                    checkout = "2024-05-21T11:00 +0100",
+                    checkIn = "2024-05-19T13:00:00+01:00",
+                    checkout = "2024-05-21T11:00:00+01:00",
                     cityName = "Porto"
                 ),
             )
@@ -367,17 +367,17 @@ class TripViewModelTest {
             flights = listOf(
                 Flight(
                     id = "jfk-lis",
-                    departure = "2024-05-10T22:05 -0400",
+                    departure = "2024-05-10T22:05:00-04:00",
                     airportToName = "Humberto Delgado International Airport",
-                    arrival = "2024-05-11T10:00 +0100",
+                    arrival = "2024-05-11T10:00:00+01:00",
                     cityFromName = "New York",
                     cityToName = "Porto",
                 ),
                 Flight(
                     id = "lis-jfk",
-                    departure = "2024-06-14T17:05 +0100",
+                    departure = "2024-06-14T17:05:00+01:00",
                     airportToName = "John F. Kennedy Intl. Airport",
-                    arrival = "2024-06-14T20:05 -0400",
+                    arrival = "2024-06-14T20:05:00-04:00",
                     cityFromName = "Sorrento",
                     cityToName = "New York",
                 ),
@@ -399,23 +399,23 @@ class TripViewModelTest {
             flights = listOf(
                 Flight(
                     id = "jfk-lis",
-                    departure = "2024-05-10T22:05 -0400",
+                    departure = "2024-05-10T22:05:00-04:00",
                     airportFromName = "John F. Kennedy Intl. Airport",
                     airportToName = "Humberto Delgado International Airport",
-                    arrival = "2024-05-11T10:25 +0100",
+                    arrival = "2024-05-11T10:25:00+01:00",
                 ),
                 Flight(
                     id = "lis-jfk",
-                    departure = "2024-06-14T17:05 +0100",
+                    departure = "2024-06-14T17:05:00+01:00",
                     airportFromName = "Humberto Delgado International Airport",
                     airportToName = "John F. Kennedy Intl. Airport",
-                    arrival = "2024-06-14T20:15 -0400",
+                    arrival = "2024-06-14T20:15:00-04:00",
                 ),
             ), lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-06-14T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-06-14T11:00:00+01:00",
                 ),
             )
         )
@@ -461,8 +461,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-19T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-05-19T11:00:00+01:00",
                 ),
             )
         )
@@ -479,9 +479,9 @@ class TripViewModelTest {
             flights = listOf(
                 Flight(
                     id = "jfk-lis",
-                    departure = "2024-05-10T22:05 -0400",
+                    departure = "2024-05-10T22:05:00-04:00",
                     airportToName = "Humberto Delgado International Airport",
-                    arrival = "2024-05-11T10:00 +0100",
+                    arrival = "2024-05-11T10:00:00+01:00",
                     cityFromName = "New York",
                     cityToName = "Porto",
                 )
@@ -500,8 +500,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-13T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-05-13T11:00:00+01:00",
                 ),
             )
         )
@@ -518,8 +518,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-13T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-05-13T11:00:00+01:00",
                 ),
             )
         )
@@ -536,8 +536,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = lodgingName,
-                    checkIn = "2024-05-29T13:00 +0200",
-                    checkout = "2024-05-30T11:00 +0200",
+                    checkIn = "2024-05-29T13:00:00+02:00",
+                    checkout = "2024-05-30T11:00:00+02:00",
                 ),
             )
         )
@@ -554,14 +554,14 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = lodgingName,
-                    checkIn = "2024-05-29T13:00 +0200",
-                    checkout = "2024-05-30T11:00 +0200",
+                    checkIn = "2024-05-29T13:00:00+02:00",
+                    checkout = "2024-05-30T11:00:00+02:00",
                     cityName = "Montfleuri"
                 ),
                 Lodging(
                     name = "Hôtel La Villa Nice Victor Hugo",
-                    checkIn = "2024-05-30T13:00 +0200",
-                    checkout = "2024-06-01T11:00 +0200",
+                    checkIn = "2024-05-30T13:00:00+02:00",
+                    checkout = "2024-06-01T11:00:00+02:00",
                     cityName = "Nice"
                 ),
             )
@@ -578,8 +578,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Hôtel La Villa Nice Victor Hugo",
-                    checkIn = "2024-05-30T13:00 +0200",
-                    checkout = "2024-06-01T11:00 +0200",
+                    checkIn = "2024-05-30T13:00:00+02:00",
+                    checkout = "2024-06-01T11:00:00+02:00",
                     cityName = "Nice"
                 ),
             )
@@ -594,25 +594,25 @@ class TripViewModelTest {
             flights = listOf(
                 Flight(
                     id = "jfk-lis",
-                    departure = "2024-05-10T22:05 -0400",
+                    departure = "2024-05-10T22:05:00-04:00",
                     airportToName = "Humberto Delgado International Airport",
-                    arrival = "2024-05-11T10:00 +0100",
+                    arrival = "2024-05-11T10:00:00+01:00",
                     cityFromName = "New York",
                     cityToName = "Lisbon",
                 ),
                 Flight(
                     id = "por-par",
-                    departure = "2024-05-21T17:05 +0100",
+                    departure = "2024-05-21T17:05:00+01:00",
                     airportToName = "Orly Airport",
-                    arrival = "2024-05-21T19:25 +0200",
+                    arrival = "2024-05-21T19:25:00+02:00",
                     cityFromName = "Porto",
                     cityToName = "Paris",
                 ),
                 Flight(
                     id = "par-jfk",
-                    departure = "2024-06-14T17:05 +0100",
+                    departure = "2024-06-14T17:05:00+01:00",
                     airportToName = "John F. Kennedy Intl. Airport",
-                    arrival = "2024-06-14T20:05 -0400",
+                    arrival = "2024-06-14T20:05:00-04:00",
                     cityFromName = "Porto",
                     cityToName = "New York",
                 ),
@@ -620,8 +620,8 @@ class TripViewModelTest {
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
                     address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
-                    checkIn = "2024-05-21T13:00 +0100",
-                    checkout = "2024-06-14T11:00 +0100",
+                    checkIn = "2024-05-21T13:00:00+01:00",
+                    checkout = "2024-06-14T11:00:00+01:00",
                     cityName = "Paris"
                 ),
             )
@@ -639,8 +639,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-19T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-05-19T11:00:00+01:00",
                 ),
             )
         )
@@ -656,8 +656,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-19T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-05-19T11:00:00+01:00",
                 ),
             )
         )
@@ -681,14 +681,14 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = lodgingName,
-                    checkIn = "2024-05-29T13:00 +0200",
-                    checkout = "2024-05-30T11:00 +0200",
+                    checkIn = "2024-05-29T13:00:00+02:00",
+                    checkout = "2024-05-30T11:00:00+02:00",
                     cityName = "Montfleuri"
                 ),
                 Lodging(
                     name = "Hôtel La Villa Nice Victor Hugo",
-                    checkIn = "2024-05-30T13:00 +0200",
-                    checkout = "2024-06-01T11:00 +0200",
+                    checkIn = "2024-05-30T13:00:00+02:00",
+                    checkout = "2024-06-01T11:00:00+02:00",
                     cityName = "Nice"
                 ),
             )
@@ -698,7 +698,7 @@ class TripViewModelTest {
         subject.addButtonTapped(checkOutItem.id)
         verify(addPlanUseCase).createAddPlanItem(
             any(),
-            eq(Time("2024-05-30T11:00 +0200")),
+            eq(Time("2024-05-30T11:00:00+02:00")),
             dateSelectionEnabled = eq(false),
             type = any(),
         )
@@ -710,8 +710,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-19T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-05-19T11:00:00+01:00",
                 ),
             )
         )
@@ -734,8 +734,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-19T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-05-19T11:00:00+01:00",
                 ),
             )
         )
@@ -754,8 +754,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-13T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-05-13T11:00:00+01:00",
                 ),
             )
         )
@@ -778,8 +778,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-19T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-05-19T11:00:00+01:00",
                 ),
             )
         )
@@ -806,8 +806,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-19T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-05-19T11:00:00+01:00",
                 ),
             )
         )
@@ -834,8 +834,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-19T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-05-19T11:00:00+01:00",
                 ),
             )
         )
@@ -862,8 +862,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-19T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-05-19T11:00:00+01:00",
                 ),
             )
         )
@@ -881,8 +881,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-19T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-05-19T11:00:00+01:00",
                 ),
             )
         )
@@ -904,8 +904,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-19T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-05-19T11:00:00+01:00",
                 ),
             )
         )
@@ -923,8 +923,8 @@ class TripViewModelTest {
             lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00 +0100",
-                    checkout = "2024-05-19T11:00 +0100",
+                    checkIn = "2024-05-11T13:00:00+01:00",
+                    checkout = "2024-05-19T11:00:00+01:00",
                 ),
             )
         )
