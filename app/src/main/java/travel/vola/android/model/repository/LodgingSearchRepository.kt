@@ -26,12 +26,12 @@ class LodgingSearchRepository : AutoCompleteRepository<SimplePlace, Place> {
     }
 
     override suspend fun details(id: String, autocompleteKey: String): Place? {
-        return request<ApiData.Place>("/places/") {
+        return request<ApiResponse.PlaceDetails>("/places/") {
             url {
                 appendPathSegments(id)
                 parameters.append("autocompleteSessionId", autocompleteKey)
             }
-        }?.toAppDataModel()
+        }?.place?.toAppDataModel()
     }
 
     suspend fun placeCity(placeId: String, autocompleteKey: String): Place? {

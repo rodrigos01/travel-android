@@ -111,9 +111,9 @@ class TripViewModel(
                         entity.city, current.copy(
                             markers = current.markers + when (entity) {
                                 is Lodging -> MarkerViewState(
-                                    position = Pair(entity.city.latitude, entity.city.longitude),
+                                    position = Pair(entity.latitude, entity.longitude),
                                     name = entity.name ?: entity.address,
-                                    type = MarkerType.City,
+                                    type = MarkerType.Lodging,
                                 )
 
                                 is TimedPlace -> MarkerViewState(
