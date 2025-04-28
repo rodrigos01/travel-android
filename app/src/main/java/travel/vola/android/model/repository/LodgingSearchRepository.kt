@@ -13,9 +13,9 @@ import travel.vola.android.model.network.toAppDataModel
 import java.util.Currency
 import java.util.Locale
 
-class LodgingSearchRepository {
+class LodgingSearchRepository : AutoCompleteRepository<SimplePlace, Place> {
 
-    suspend fun autocomplete(query: String, autocompleteKey: String): List<SimplePlace> {
+    override suspend fun autocomplete(query: String, autocompleteKey: String): List<SimplePlace> {
         return request<ApiResponse.PlaceAutoComplete>("/places/autocomplete") {
             url {
                 parameters.append("query", query)
@@ -23,6 +23,15 @@ class LodgingSearchRepository {
                 parameters.append("sessionId", autocompleteKey)
             }
         }?.results?.map { it.toAppDataModel() } ?: emptyList()
+    }
+
+    override suspend fun details(id: String, autocompleteKey: String): Place? {
+        return request<ApiResponse.PlaceDetails>("/places/") {
+            url {
+                appendPathSegments(id)
+                parameters.append("autocompleteSessionId", autocompleteKey)
+            }
+        }?.place?.toAppDataModel()
     }
 
     suspend fun placeCity(placeId: String, autocompleteKey: String): Place? {

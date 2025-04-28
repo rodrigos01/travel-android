@@ -10,4 +10,5 @@ data class MarkerViewState(
 enum class MarkerType {
     City,
     Lodging,
+    Place,
 }

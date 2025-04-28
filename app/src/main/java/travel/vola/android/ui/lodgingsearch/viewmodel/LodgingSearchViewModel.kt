@@ -258,6 +258,8 @@ class LodgingSearchViewModel(
             id = lodgingId,
             name = details.name,
             address = details.address,
+            latitude = details.latitude,
+            longitude = details.longitude,
             city = location,
             checkIn = details.checkIn,
             checkout = details.checkOut,
