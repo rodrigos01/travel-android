@@ -217,12 +217,6 @@ fun List(
                     IconButton(onClick = { isInEditMode = true }) {
                         Icon(imageVector = Icons.Filled.Edit, contentDescription = "")
                     }
-                    IconButton(onClick = {}) {
-                        Icon(
-                            painter = painterResource(R.drawable.map_baseline_24),
-                            contentDescription = ""
-                        )
-                    }
                     Box {
                         IconButton(onClick = { showToolbarOverflowMenu = true }) {
                             Icon(imageVector = Icons.Filled.MoreVert, contentDescription = "")
