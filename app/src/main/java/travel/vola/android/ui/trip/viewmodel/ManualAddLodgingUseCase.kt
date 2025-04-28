@@ -116,6 +116,8 @@ class ManualAddLodgingUseCase(
             entityId = entity.id,
             name = entity.name,
             address = entity.address,
+            latitude = entity.latitude,
+            longitude = entity.longitude,
             checkIn = entity.checkIn,
             checkOut = entity.checkout,
             city = entity.city,
