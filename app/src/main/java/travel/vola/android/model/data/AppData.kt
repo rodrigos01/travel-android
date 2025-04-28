@@ -26,6 +26,10 @@ sealed interface TripEntity : Identifiable
 
 sealed interface TripEvent
 
+sealed interface WithCity {
+    val city: Place
+}
+
 data class Flight(
     override val id: String,
     val segments: List<FlightSegment>,
@@ -50,10 +54,10 @@ data class Lodging(
     override val id: String,
     val name: String?,
     val address: String,
-    val city: Place,
+    override val city: Place,
     val checkIn: Time,
     val checkout: Time,
-) : TripEntity, TripEvent
+) : TripEntity, TripEvent, WithCity
 
 @Serializable
 data class Place(
@@ -82,8 +86,8 @@ data class TimedPlace(
     val dateTime: ZonedDateTime,
     val hasTime: Boolean,
     val place: Place,
-    val city: Place,
-) : TripEntity, TripEvent
+    override val city: Place,
+) : TripEntity, TripEvent, WithCity
 
 data class AirportSearchResult(
     val iata: String,

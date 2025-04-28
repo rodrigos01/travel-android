@@ -38,6 +38,7 @@ import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.data.TripEntity
 import travel.vola.android.model.data.TripEvent
+import travel.vola.android.model.data.WithCity
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddPlanItemState
@@ -97,20 +98,39 @@ class TripViewModel(
         .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
     private val eventsFromTrip = trip.filterNotNull().map { currentTrip ->
         val items = genItems(currentTrip)
-        ViewState(title = currentTrip.name ?: "Untitled Trip",
-            items = genItems(currentTrip),
-            places = (currentTrip.lodgings.map { it.city }).map { place ->
-                PlaceState(
-                    listIndex = items.indexOfFirst { it is TripItemState.PlaceItemState && place.name == it.placeName },
-                    markers = listOf(
-                        MarkerViewState(
-                            position = Pair(place.latitude, place.longitude),
-                            name = place.name,
-                            type = MarkerType.City,
-                        )
-                    ),
+        val places =
+            (currentTrip.lodgings + currentTrip.places).fold(mapOf<Place, PlaceState>()) { map, entity: WithCity ->
+                val current = map.getOrDefault(
+                    entity.city, PlaceState(
+                        listIndex = items.indexOfFirst { it is TripItemState.PlaceItemState && entity.city.name == it.placeName },
+                        markers = emptyList()
+                    )
                 )
-            })
+                map.toMutableMap().apply {
+                    set(
+                        entity.city, current.copy(
+                            markers = current.markers + when (entity) {
+                                is Lodging -> MarkerViewState(
+                                    position = Pair(entity.city.latitude, entity.city.longitude),
+                                    name = entity.name ?: entity.address,
+                                    type = MarkerType.City,
+                                )
+
+                                is TimedPlace -> MarkerViewState(
+                                    position = Pair(entity.place.latitude, entity.place.longitude),
+                                    name = entity.place.name,
+                                    type = if (entity.place != entity.city) MarkerType.Place else MarkerType.City,
+                                )
+                            }
+                        )
+                    )
+                }
+            }
+        ViewState(
+            title = currentTrip.name ?: "Untitled Trip",
+            items = items,
+            places = places.values.toList(),
+        )
     }
     private val addPlanItemsState = addPlanUseCase.items.onEach { state ->
         reversibleItems.keys.forEach { itemId ->
