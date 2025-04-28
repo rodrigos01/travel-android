@@ -142,6 +142,8 @@ private fun Lodging(
     id,
     name,
     address,
+    0.0,
+    0.0,
     city,
     checkIn,
     checkout,

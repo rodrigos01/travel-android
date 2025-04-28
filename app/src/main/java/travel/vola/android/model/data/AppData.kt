@@ -54,6 +54,8 @@ data class Lodging(
     override val id: String,
     val name: String?,
     val address: String,
+    val latitude: Double,
+    val longitude: Double,
     override val city: Place,
     val checkIn: Time,
     val checkout: Time,
