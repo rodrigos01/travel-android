@@ -2,25 +2,29 @@ package travel.vola.android.common.ui.components
 
 import android.content.res.Configuration
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.drawable.Drawable
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.DrawableCompat
 import travel.vola.android.R
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.ui.theme.AppTheme
@@ -30,7 +34,7 @@ private const val MARKER_SELECTED_SIZE = 32
 
 @Composable
 fun mapMarkerIcon(
-    markerDrawable: Drawable,
+    markerPainter: Painter,
     selected: Boolean = false,
     backgroundColor: Color = if (selected) {
         MaterialTheme.colorScheme.primary
@@ -43,23 +47,28 @@ fun mapMarkerIcon(
         MaterialTheme.colorScheme.onPrimaryContainer
     },
 ): Bitmap {
-    val markerSizePx = (if (selected) MARKER_SELECTED_SIZE else MARKER_SIZE).dp.toPx().toInt()
-    val paddingPx = 4.dp.toPx().toInt()
-    val iconSizePx = markerSizePx - paddingPx
+    val markerSizePx = (if (selected) MARKER_SELECTED_SIZE else MARKER_SIZE).dp.toPx()
+    val paddingPx = 4.dp.toPx()
+    val iconSizePx = markerSizePx - paddingPx * 2
     val bitmap = Bitmap.createBitmap(
-        markerSizePx,
-        markerSizePx,
-        Bitmap.Config.ARGB_8888
+        markerSizePx.toInt(), markerSizePx.toInt(), Bitmap.Config.ARGB_8888
     )
-    val icon = markerDrawable.mutate().also {
-        it.setBounds(paddingPx, paddingPx, iconSizePx, iconSizePx)
-        DrawableCompat.setTint(it, contentColor.toArgb())
-    }
-    Canvas(bitmap).apply {
-        drawCircle(markerSizePx / 2F, markerSizePx / 2F, markerSizePx / 2F, Paint().apply {
-            color = backgroundColor.toArgb()
-        })
-        icon.draw(this@apply)
+    val androidCanvas = android.graphics.Canvas(bitmap)
+    CanvasDrawScope().draw(
+        LocalDensity.current,
+        LocalLayoutDirection.current,
+        Canvas(androidCanvas),
+        Size(markerSizePx, markerSizePx),
+    ) {
+        drawCircle(color = backgroundColor, radius = markerSizePx / 2F)
+        translate(left = paddingPx, top = paddingPx) {
+            markerPainter.apply {
+                draw(
+                    size = Size(iconSizePx, iconSizePx),
+                    colorFilter = ColorFilter.tint(contentColor),
+                )
+            }
+        }
     }
     return bitmap
 }
@@ -67,11 +76,12 @@ fun mapMarkerIcon(
 @Composable
 fun mapMarkerIcon(type: MarkerType, selected: Boolean = false): Bitmap {
     val icon = when (type) {
-        MarkerType.Lodging -> R.drawable.hotel_baseline_24
-        MarkerType.City -> R.drawable.location_city_baseline_24
-    }.let { resId ->
-        AppCompatResources.getDrawable(LocalContext.current, resId)
-    } ?: error("Marker icon not found")
+        MarkerType.Lodging -> painterResource(R.drawable.hotel_baseline_24)
+
+        MarkerType.City -> painterResource(R.drawable.location_city_baseline_24)
+
+        MarkerType.Place -> rememberVectorPainter(Icons.Filled.Place)
+    }
     return mapMarkerIcon(icon, selected)
 }
 
@@ -85,7 +95,7 @@ fun MapMarkerIconPreview() {
     AppTheme {
         Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
             Image(
-                bitmap = mapMarkerIcon(MarkerType.Lodging, selected = true).asImageBitmap(),
+                bitmap = mapMarkerIcon(MarkerType.Place, selected = true).asImageBitmap(),
                 contentDescription = null
             )
         }
