@@ -27,6 +27,8 @@ sealed interface PendingData {
         val checkOut: Time,
         val name: String? = null,
         val address: String? = null,
+        val latitude: Double? = null,
+        val longitude: Double? = null,
         val city: Place? = null,
         val searchResults: List<SimplePlace> = emptyList(),
     ) : PendingData

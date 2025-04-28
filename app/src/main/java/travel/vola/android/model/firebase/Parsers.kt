@@ -52,6 +52,8 @@ fun FirebaseData.Lodging.toAppDataModel() = Lodging(
     id = id,
     name = name,
     address = address ?: error("address is required"),
+    latitude = latitude,
+    longitude = longitude,
     city = city?.toAppDataModel() ?: error("city is required"),
     checkIn = checkIn?.toTime()
         ?: error("checkin is required"),
@@ -102,6 +104,8 @@ fun Lodging.toFirebaseDataModel() = FirebaseData.Lodging(
     id = id,
     name = name,
     address = address,
+    latitude = latitude,
+    longitude = longitude,
     city = city.toFirebaseDataModel(),
     checkIn = checkIn.toFirebaseDataModel(),
     checkout = checkout.toFirebaseDataModel(),

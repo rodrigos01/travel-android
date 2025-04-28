@@ -39,6 +39,8 @@ sealed interface FirebaseData {
         val id: String = UUID.randomUUID().toString(),
         val name: String? = null,
         val address: String? = null,
+        val latitude: Double = 0.0,
+        val longitude: Double = 0.0,
         val city: Place? = null,
         val checkIn: String? = null,
         val checkout: String? = null,

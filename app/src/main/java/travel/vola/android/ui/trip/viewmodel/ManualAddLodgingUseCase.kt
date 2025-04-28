@@ -1,6 +1,8 @@
 package travel.vola.android.ui.trip.viewmodel
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import travel.vola.android.extensions.MapFlow
 import travel.vola.android.extensions.plus
@@ -77,9 +79,16 @@ class ManualAddLodgingUseCase(
             )
         }
         coroutineScope.launch {
-            val city = repository.placeCity(selected.id, autocompleteKey = itemId)
+            val (hotelDetails, city) = listOf(
+                async { repository.details(selected.id, autocompleteKey = itemId) },
+                async { repository.placeCity(selected.id, autocompleteKey = itemId) }
+            ).awaitAll()
             itemStore.update(itemId) { data ->
-                data.copy(city = city)
+                data.copy(
+                    city = city,
+                    latitude = hotelDetails?.latitude,
+                    longitude = hotelDetails?.longitude
+                )
             }
         }
     }
@@ -107,6 +116,8 @@ class ManualAddLodgingUseCase(
             entityId = entity.id,
             name = entity.name,
             address = entity.address,
+            latitude = entity.latitude,
+            longitude = entity.longitude,
             checkIn = entity.checkIn,
             checkOut = entity.checkout,
             city = entity.city,
@@ -153,12 +164,16 @@ class ManualAddLodgingUseCase(
         val data =
             itemStore.getData(item.id) ?: error("item has no pending data associated with it")
         data.address ?: error("address is not set")
+        data.latitude ?: error("lodging latitude is not set")
+        data.longitude ?: error("lodging longitude is not set")
         data.city ?: error("lodging city is not set")
         data.checkOut
         return Lodging(
             id = data.entityId ?: data.id,
             data.name,
             data.address,
+            data.latitude,
+            data.longitude,
             data.city,
             data.checkIn,
             data.checkOut,
