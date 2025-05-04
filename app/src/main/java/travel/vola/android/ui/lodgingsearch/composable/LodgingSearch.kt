@@ -67,6 +67,7 @@ import kotlinx.serialization.Serializable
 import travel.vola.android.R
 import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.MapScaffoldState
+import travel.vola.android.common.ui.components.OverlayHostProvider
 import travel.vola.android.common.ui.components.TabBar
 import travel.vola.android.common.ui.components.asSizedImageTarget
 import travel.vola.android.common.ui.components.isLargeScreen
@@ -118,21 +119,23 @@ private fun LodgingSearch(
             tabBarListState.animateScrollToItem(state.openedResults.keys.indexOf(openedResultId))
         }
     }
-    ResultsWithMap(
-        navController,
-        mapScaffoldState,
-        tabBarListState,
-        state,
-        openedResultId,
-        openedResult,
-        onLodgingTapped = { lodging ->
-            onLodgingTapped(lodging)
-        },
-        onLodgingClosed,
-        onAddLodgingTapped,
-        onSortOptionSelected,
-        onFiltersApplied,
-    )
+    OverlayHostProvider {
+        ResultsWithMap(
+            navController,
+            mapScaffoldState,
+            tabBarListState,
+            state,
+            openedResultId,
+            openedResult,
+            onLodgingTapped = { lodging ->
+                onLodgingTapped(lodging)
+            },
+            onLodgingClosed,
+            onAddLodgingTapped,
+            onSortOptionSelected,
+            onFiltersApplied,
+        )
+    }
 }
 
 enum class ControlsVisible {
@@ -155,31 +158,6 @@ fun ResultsWithMap(
     onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit,
 ) {
     val loadedState = state as? LodgingSearchViewModel.UiState.Loaded
-    val tabBar = @Composable {
-        val tabs = loadedState?.openedResults ?: emptyMap()
-        AnimatedVisibility(visible = tabs.size > 1) {
-            TabBar(
-                tabBarListState = tabBarScrollState,
-                onTabClick = { tabId ->
-                    val lodgingId = loadedState?.results?.firstOrNull { it.id == tabId }
-                    onLodgingTapped(lodgingId)
-                },
-            ) {
-                tab(
-                    "search",
-                    selected = loadedState?.selectedResult == null,
-                    icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
-                tabs.forEach { (tabId, lodging) ->
-                    tab(
-                        id = tabId,
-                        selected = openedResultId == tabId,
-                        title = { Text(lodging.name) },
-                    )
-                }
-            }
-        }
-    }
-
     val markers = loadedState?.results?.map {
         MarkerViewState(
             position = Pair(it.latitude, it.longitude),
@@ -219,7 +197,7 @@ fun ResultsWithMap(
             BitmapDescriptorFactory.fromBitmap(bitmap)
         },
         topBar = {
-            if (loadedState?.selectedResult != null) {
+            if (!mapScaffoldState.sizeClass.isLargeScreen && loadedState?.selectedResult != null) {
                 LodgingDetailsTopBar(
                     loadedState.selectedResult,
                     detailsContentState,
@@ -240,7 +218,30 @@ fun ResultsWithMap(
                 )
             }
         },
-        bottomBar = tabBar,
+        bottomBar = {
+            val tabs = loadedState?.openedResults ?: emptyMap()
+            AnimatedVisibility(visible = tabs.size > 1) {
+                TabBar(
+                    tabBarListState = tabBarScrollState,
+                    onTabClick = { tabId ->
+                        val lodgingId = loadedState?.results?.firstOrNull { it.id == tabId }
+                        onLodgingTapped(lodgingId)
+                    },
+                ) {
+                    tab(
+                        "search",
+                        selected = loadedState?.selectedResult == null,
+                        icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
+                    tabs.forEach { (tabId, lodging) ->
+                        tab(
+                            id = tabId,
+                            selected = openedResultId == tabId,
+                            title = { Text(lodging.name) },
+                        )
+                    }
+                }
+            }
+        },
         persistentBottomBar = true,
         content = { paddingValues ->
             LodgingSearchResults(
@@ -254,16 +255,29 @@ fun ResultsWithMap(
         },
         additionalContent = { paddingValues ->
             if (openedResultId != null && openedResult != null) {
-                LodgingDetailsContent(
-                    paddingValues,
-                    openedResult,
-                    onAddToTripTapped = {
-                        onAddLodgingTapped(openedResultId)
-                    },
-                    showMap = !mapScaffoldState.sizeClass.isLargeScreen,
-                    contentState = detailsContentState,
-                    coroutineScope = coroutineScope,
-                )
+                if (mapScaffoldState.sizeClass.isLargeScreen) {
+                    LodgingDetails(
+                        state = openedResult,
+                        onClose = {
+                            onLodgingClosed(openedResultId)
+                        },
+                        onAddToTripTapped = {
+                            onAddLodgingTapped(openedResultId)
+                        },
+                        showMap = false,
+                    )
+                } else {
+                    LodgingDetailsContent(
+                        paddingValues,
+                        openedResult,
+                        onAddToTripTapped = {
+                            onAddLodgingTapped(openedResultId)
+                        },
+                        showMap = true,
+                        contentState = detailsContentState,
+                        coroutineScope = coroutineScope,
+                    )
+                }
             }
         })
 }
