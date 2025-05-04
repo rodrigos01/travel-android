@@ -47,6 +47,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -248,23 +249,26 @@ fun ResultsWithMap(
             }
         },
         bottomBar = {
-            val tabs = loadedState?.openedResults ?: emptyMap()
-            AnimatedVisibility(visible = tabs.size > 1) {
+            val openedResults = loadedState?.openedResults ?: emptyMap()
+            AnimatedVisibility(openedResults.isNotEmpty()) {
                 TabBar(
                     tabBarListState = tabBarScrollState,
                     onTabClick = { tabId ->
                         val lodgingId = loadedState?.results?.firstOrNull { it.id == tabId }
                         onLodgingTapped(lodgingId)
                     },
-                    modifier = Modifier.padding(
-                        bottom = WindowInsets.safeDrawing.asPaddingValues().calculateBottomPadding()
-                    )
+                    modifier = Modifier
+                        .padding(
+                            bottom = WindowInsets.safeDrawing.asPaddingValues()
+                                .calculateBottomPadding()
+                        )
+                        .fillMaxWidth()
                 ) {
                     tab(
                         "search",
                         selected = loadedState?.selectedResult == null,
                         icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
-                    tabs.forEach { (tabId, lodging) ->
+                    openedResults.forEach { (tabId, lodging) ->
                         tab(
                             id = tabId,
                             selected = openedResultId == tabId,
@@ -657,39 +661,7 @@ fun LodgingSearchPreview(showMap: Boolean = false, initialSelectedResult: String
                 longitude = -73.9899909 + index * 0.0005 * latMultipliers[index % lonMultipliers.size],
             )
         }
-        val details = results.take(5).associate { lodging ->
-            lodging.id to LodgingDetailsState(
-                id = lodging.id,
-                name = lodging.name,
-                rating = lodging.rating,
-                reviewCount = lodging.reviewCount,
-                lodgingType = lodging.lodgingType,
-                photos = listOf(lodging.coverImage) + List(44, { index ->
-                    "https://photo.hotellook.com/image_v2/limit/h374703_${(index + 1) % 23}/1024/768.auto"
-                }),
-                checkIn = Time("2025-08-10T00:00 -0500"),
-                checkOut = Time("2025-08-15T00:00 -0500"),
-                price = lodging.price,
-                rooms = List(2) {
-                    LodgingRoomOfferState(
-                        photos = emptyList(),
-                        description = "Room description",
-                        false,
-                        false,
-                        false,
-                        false,
-                        123.0,
-                        "",
-                        "Expedia",
-                    )
-                },
-                address = lodging.address,
-                description = null,
-                latitude = lodging.latitude,
-                longitude = lodging.longitude,
-                isLoading = false,
-            )
-        }.toMutableMap()
+        val details = remember { mutableStateMapOf<String, LodgingDetailsState>() }
         val state by remember {
             derivedStateOf {
                 LodgingSearchViewModel.UiState.Loaded(
@@ -708,10 +680,48 @@ fun LodgingSearchPreview(showMap: Boolean = false, initialSelectedResult: String
         LodgingSearch(
             navController = rememberNavController(),
             state = state,
-            onLodgingTapped = { selectedResultId = it?.id },
+            onLodgingTapped = { lodging ->
+                selectedResultId = lodging?.id
+                lodging?.let {
+                    details[lodging.id] = LodgingDetailsState(
+                        id = lodging.id,
+                        name = lodging.name,
+                        rating = lodging.rating,
+                        reviewCount = lodging.reviewCount,
+                        lodgingType = lodging.lodgingType,
+                        photos = listOf(lodging.coverImage) + List(44, { index ->
+                            "https://photo.hotellook.com/image_v2/limit/h374703_${(index + 1) % 23}/1024/768.auto"
+                        }),
+                        checkIn = Time("2025-08-10T00:00 -0500"),
+                        checkOut = Time("2025-08-15T00:00 -0500"),
+                        price = lodging.price,
+                        rooms = List(2) {
+                            LodgingRoomOfferState(
+                                photos = emptyList(),
+                                description = "Room description",
+                                false,
+                                false,
+                                false,
+                                false,
+                                123.0,
+                                "",
+                                "Expedia",
+                            )
+                        },
+                        address = lodging.address,
+                        description = null,
+                        latitude = lodging.latitude,
+                        longitude = lodging.longitude,
+                        isLoading = false,
+                    )
+                }
+            },
             onSortOptionSelected = {},
             onFiltersApplied = { _, _, _ -> },
-            onLodgingClosed = { selectedResultId = null },
+            onLodgingClosed = {
+                selectedResultId = null
+                details.remove(it)
+            },
             onAddLodgingTapped = {},
             onContinueBrowsingTapped = {},
             showMap = showMap,
