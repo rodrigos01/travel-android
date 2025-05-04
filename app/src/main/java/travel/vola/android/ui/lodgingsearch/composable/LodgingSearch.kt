@@ -33,8 +33,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -67,6 +69,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import travel.vola.android.R
+import travel.vola.android.common.ui.components.Map
 import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.MapScaffoldState
 import travel.vola.android.common.ui.components.OverlayHostProvider
@@ -173,6 +176,7 @@ fun ResultsWithMap(
     val coroutineScope = rememberCoroutineScope()
     var controlsVisible by remember { mutableStateOf(ControlsVisible.NONE) }
     val resultsScrollState = rememberLazyListState()
+    val mapResultsScrollState = rememberLazyListState()
     val detailsContentState = rememberLodgingDetailsContentState()
     MapScaffold(
         state = mapScaffoldState,
@@ -197,7 +201,14 @@ fun ResultsWithMap(
             BitmapDescriptorFactory.fromBitmap(bitmap)
         },
         topBar = {
-            if (!mapScaffoldState.sizeClass.isLargeScreen && loadedState?.selectedResult != null) {
+            if (!mapScaffoldState.sizeClass.isLargeScreen && mapScaffoldState.showMap) {
+                MapTopBar(
+                    navController,
+                    onListButtonTapped = {
+                        mapScaffoldState.showMap = false
+                    },
+                )
+            } else if (!mapScaffoldState.sizeClass.isLargeScreen && loadedState?.selectedResult != null) {
                 LodgingDetailsTopBar(
                     loadedState.selectedResult,
                     detailsContentState,
@@ -214,7 +225,10 @@ fun ResultsWithMap(
                     onFiltersApplied,
                     onSortOptionSelected,
                     coroutineScope,
-                    resultsScrollState
+                    resultsScrollState,
+                    onMapButtonTapped = {
+                        mapScaffoldState.showMap = true
+                    },
                 )
             }
         },
@@ -246,11 +260,14 @@ fun ResultsWithMap(
             }
         },
         mapContent = {
-            MapSearchResults(
-                state,
-                onLodgingTapped,
-                modifier = Modifier.align(Alignment.BottomStart)
-            )
+            if (!mapScaffoldState.sizeClass.isLargeScreen) {
+                MapSearchResults(
+                    state,
+                    mapResultsScrollState,
+                    onLodgingTapped,
+                    modifier = Modifier.align(Alignment.BottomStart)
+                )
+            }
         },
         content = { paddingValues ->
             LodgingSearchResults(
@@ -300,7 +317,8 @@ private fun SearchTopBar(
     onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit,
     onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit,
     coroutineScope: CoroutineScope,
-    resultsScrollState: LazyListState
+    resultsScrollState: LazyListState,
+    onMapButtonTapped: () -> Unit,
 ) {
     var controlsVisible1 = controlsVisible
     Column(
@@ -309,14 +327,25 @@ private fun SearchTopBar(
             .padding(bottom = 8.dp)
             .animateContentSize()
     ) {
-        TopAppBar(title = { Text("Lodging Search") }, navigationIcon = {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = ""
-                )
+        TopAppBar(
+            title = { Text("Lodging Search") },
+            navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = ""
+                    )
+                }
+            },
+            actions = {
+                IconButton(onClick = onMapButtonTapped) {
+                    Icon(
+                        imageVector = Icons.Outlined.Map,
+                        contentDescription = null,
+                    )
+                }
             }
-        })
+        )
         LodgingSearchParams(
             checkIn = state.searchState.checkIn,
             checkOut = state.searchState.checkOut,
@@ -420,12 +449,36 @@ private fun SearchTopBar(
 }
 
 @Composable
+fun MapTopBar(navController: NavController, onListButtonTapped: () -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(WindowInsets.safeDrawing.asPaddingValues())
+            .padding(horizontal = 8.dp),
+    ) {
+        FilledTonalIconButton(onClick = { navController.popBackStack() }) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = ""
+            )
+        }
+        FilledTonalIconButton(onClick = onListButtonTapped) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Default.List,
+                contentDescription = null,
+            )
+        }
+    }
+}
+
+@Composable
 fun MapSearchResults(
     state: LodgingSearchViewModel.UiState,
+    scrollState: LazyListState,
     onLodgingTapped: (LodgingSearchResultState) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val scrollState = rememberLazyListState()
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     LazyRow(
         state = scrollState,
@@ -655,7 +708,7 @@ fun LodgingSearchPreviewSelected() {
 }
 
 @Composable
-@Preview(group = "Phone")
+@Preview(group = "Phone", showSystemUi = true)
 fun LodgingSearchPreviewWithMap() {
     LodgingSearchPreview(showMap = true)
 }
