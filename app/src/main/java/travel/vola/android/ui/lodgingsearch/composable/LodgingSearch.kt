@@ -61,6 +61,7 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import travel.vola.android.R
@@ -68,6 +69,7 @@ import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.MapScaffoldState
 import travel.vola.android.common.ui.components.TabBar
 import travel.vola.android.common.ui.components.asSizedImageTarget
+import travel.vola.android.common.ui.components.isLargeScreen
 import travel.vola.android.common.ui.components.mapMarkerIcon
 import travel.vola.android.common.ui.components.rememberMapScaffoldState
 import travel.vola.android.common.ui.components.rememberSizedImageState
@@ -193,6 +195,7 @@ fun ResultsWithMap(
     val coroutineScope = rememberCoroutineScope()
     var controlsVisible by remember { mutableStateOf(ControlsVisible.NONE) }
     val resultsScrollState = rememberLazyListState()
+    val detailsContentState = rememberLodgingDetailsContentState()
     MapScaffold(
         state = mapScaffoldState,
         markers = markers,
@@ -216,118 +219,25 @@ fun ResultsWithMap(
             BitmapDescriptorFactory.fromBitmap(bitmap)
         },
         topBar = {
-            Column(
-                modifier = Modifier
-                    .background(color = MaterialTheme.colorScheme.surface)
-                    .padding(bottom = 8.dp)
-                    .animateContentSize()
-            ) {
-                TopAppBar(title = { Text("Lodging Search") }, navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = ""
-                        )
-                    }
-                })
-                LodgingSearchParams(
-                    checkIn = state.searchState.checkIn,
-                    checkOut = state.searchState.checkOut,
-                    minCheckOut = state.searchState.minCheckOut,
-                    locationText = state.searchState.locationText,
-                    onCheckInDateSelected = {},
-                    onCheckOutDateSelected = {},
-                    onLocationSearchResultSelected = {},
-                    onLocationSearchTextChanged = {},
-                )
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                ) {
-                    TextButton(onClick = {
-                        controlsVisible = ControlsVisible.FILTERS
-                    }) {
-                        Icon(
-                            painterResource(R.drawable.tune_baseline_24), contentDescription = null
-                        )
-                        Text("Filter")
-                    }
-                    TextButton(onClick = {
-                        controlsVisible = ControlsVisible.SORT
-                    }) {
-                        Icon(
-                            painterResource(R.drawable.sort_baseline_24), contentDescription = null
-                        )
-                        Text("Sort")
-                    }
-                }
-                AnimatedContent(
-                    targetState = controlsVisible,
-                    transitionSpec = {
-                        val direction = if (initialState == ControlsVisible.NONE) {
-                            AnimatedContentTransitionScope.SlideDirection.Down
-                        } else {
-                            when (targetState) {
-                                ControlsVisible.SORT -> AnimatedContentTransitionScope.SlideDirection.Start
-                                ControlsVisible.FILTERS -> AnimatedContentTransitionScope.SlideDirection.End
-                                ControlsVisible.NONE -> AnimatedContentTransitionScope.SlideDirection.Up
-                            }
-                        }
-                        val slideSpec = spring<IntOffset>(stiffness = Spring.StiffnessMediumLow)
-                        (fadeIn() + slideIntoContainer(direction, slideSpec)).togetherWith(
-                            slideOutOfContainer(direction, slideSpec) + fadeOut()
-                        )
+            if (loadedState?.selectedResult != null) {
+                LodgingDetailsTopBar(
+                    loadedState.selectedResult,
+                    detailsContentState,
+                    coroutineScope,
+                    onClose = {
+                        onLodgingClosed(loadedState.selectedResult.id)
                     },
-                ) { currentControls ->
-                    when (currentControls) {
-                        ControlsVisible.FILTERS -> {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                val filterState = FilterOptionsState(
-                                    minRating = state.sortAndFilterState.minRating,
-                                    minStars = state.sortAndFilterState.minStars,
-                                    priceRange = state.sortAndFilterState.priceRange
-                                )
-                                FilterOptions(
-                                    state = filterState,
-                                    valueRange = state.sortAndFilterState.availablePriceRange,
-                                )
-                                Row(modifier = Modifier.align(Alignment.End)) {
-                                    TextButton(onClick = {
-                                        controlsVisible = ControlsVisible.NONE
-                                    }) {
-                                        Text(
-                                            "Cancel",
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                    TextButton(onClick = {
-                                        controlsVisible = ControlsVisible.NONE
-                                        onFiltersApplied(
-                                            filterState.minRating.toDouble(),
-                                            filterState.minStars,
-                                            filterState.priceRange.start.toDouble()..filterState.priceRange.endInclusive.toDouble(),
-                                        )
-                                    }) {
-                                        Text("Apply")
-                                    }
-                                }
-                            }
-                        }
-
-                        ControlsVisible.SORT -> SortOptionSelector(state.sortAndFilterState,
-                            onSortOptionSelected = { option ->
-                                onSortOptionSelected(option)
-                                controlsVisible = ControlsVisible.NONE
-                                coroutineScope.launch {
-                                    resultsScrollState.animateScrollToItem(0)
-                                }
-                            })
-
-                        ControlsVisible.NONE -> {}
-                    }
-                }
+                )
+            } else {
+                SearchTopBar(
+                    navController,
+                    state,
+                    controlsVisible,
+                    onFiltersApplied,
+                    onSortOptionSelected,
+                    coroutineScope,
+                    resultsScrollState
+                )
             }
         },
         bottomBar = tabBar,
@@ -342,20 +252,148 @@ fun ResultsWithMap(
                 },
             )
         },
-        additionalContent = {
+        additionalContent = { paddingValues ->
             if (openedResultId != null && openedResult != null) {
-                LodgingDetails(
+                LodgingDetailsContent(
+                    paddingValues,
                     openedResult,
-                    onClose = {
-                        onLodgingClosed(openedResultId)
-                    },
                     onAddToTripTapped = {
                         onAddLodgingTapped(openedResultId)
                     },
-                    showMap = false,
+                    showMap = !mapScaffoldState.sizeClass.isLargeScreen,
+                    contentState = detailsContentState,
+                    coroutineScope = coroutineScope,
                 )
             }
         })
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun SearchTopBar(
+    navController: NavController,
+    state: LodgingSearchViewModel.UiState,
+    controlsVisible: ControlsVisible,
+    onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit,
+    onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit,
+    coroutineScope: CoroutineScope,
+    resultsScrollState: LazyListState
+) {
+    var controlsVisible1 = controlsVisible
+    Column(
+        modifier = Modifier
+            .background(color = MaterialTheme.colorScheme.surface)
+            .padding(bottom = 8.dp)
+            .animateContentSize()
+    ) {
+        TopAppBar(title = { Text("Lodging Search") }, navigationIcon = {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = ""
+                )
+            }
+        })
+        LodgingSearchParams(
+            checkIn = state.searchState.checkIn,
+            checkOut = state.searchState.checkOut,
+            minCheckOut = state.searchState.minCheckOut,
+            locationText = state.searchState.locationText,
+            onCheckInDateSelected = {},
+            onCheckOutDateSelected = {},
+            onLocationSearchResultSelected = {},
+            onLocationSearchTextChanged = {},
+        )
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            TextButton(onClick = {
+                controlsVisible1 = ControlsVisible.FILTERS
+            }) {
+                Icon(
+                    painterResource(R.drawable.tune_baseline_24), contentDescription = null
+                )
+                Text("Filter")
+            }
+            TextButton(onClick = {
+                controlsVisible1 = ControlsVisible.SORT
+            }) {
+                Icon(
+                    painterResource(R.drawable.sort_baseline_24), contentDescription = null
+                )
+                Text("Sort")
+            }
+        }
+        AnimatedContent(
+            targetState = controlsVisible1,
+            transitionSpec = {
+                val direction = if (initialState == ControlsVisible.NONE) {
+                    AnimatedContentTransitionScope.SlideDirection.Down
+                } else {
+                    when (targetState) {
+                        ControlsVisible.SORT -> AnimatedContentTransitionScope.SlideDirection.Start
+                        ControlsVisible.FILTERS -> AnimatedContentTransitionScope.SlideDirection.End
+                        ControlsVisible.NONE -> AnimatedContentTransitionScope.SlideDirection.Up
+                    }
+                }
+                val slideSpec = spring<IntOffset>(stiffness = Spring.StiffnessMediumLow)
+                (fadeIn() + slideIntoContainer(direction, slideSpec)).togetherWith(
+                    slideOutOfContainer(direction, slideSpec) + fadeOut()
+                )
+            },
+        ) { currentControls ->
+            when (currentControls) {
+                ControlsVisible.FILTERS -> {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        val filterState = FilterOptionsState(
+                            minRating = state.sortAndFilterState.minRating,
+                            minStars = state.sortAndFilterState.minStars,
+                            priceRange = state.sortAndFilterState.priceRange
+                        )
+                        FilterOptions(
+                            state = filterState,
+                            valueRange = state.sortAndFilterState.availablePriceRange,
+                        )
+                        Row(modifier = Modifier.align(Alignment.End)) {
+                            TextButton(onClick = {
+                                controlsVisible1 = ControlsVisible.NONE
+                            }) {
+                                Text(
+                                    "Cancel",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            TextButton(onClick = {
+                                controlsVisible1 = ControlsVisible.NONE
+                                onFiltersApplied(
+                                    filterState.minRating.toDouble(),
+                                    filterState.minStars,
+                                    filterState.priceRange.start.toDouble()..filterState.priceRange.endInclusive.toDouble(),
+                                )
+                            }) {
+                                Text("Apply")
+                            }
+                        }
+                    }
+                }
+
+                ControlsVisible.SORT -> SortOptionSelector(
+                    state.sortAndFilterState,
+                    onSortOptionSelected = { option ->
+                        onSortOptionSelected(option)
+                        controlsVisible1 = ControlsVisible.NONE
+                        coroutineScope.launch {
+                            resultsScrollState.animateScrollToItem(0)
+                        }
+                    })
+
+                ControlsVisible.NONE -> {}
+            }
+        }
+    }
 }
 
 @Composable

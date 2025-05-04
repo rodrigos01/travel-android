@@ -86,7 +86,7 @@ fun MapScaffold(
     state: MapScaffoldState = rememberMapScaffoldState(),
     minZoom: Float? = 15F,
     onMarkerTapped: (MarkerViewState) -> Unit = {},
-    additionalContent: @Composable () -> Unit = {},
+    additionalContent: @Composable (PaddingValues) -> Unit = {},
     markerDescriptor: @Composable (MarkerViewState) -> BitmapDescriptor = {
         BitmapDescriptorFactory.fromBitmap(mapMarkerIcon(it.type, selected = it.selected))
     },
@@ -114,7 +114,7 @@ fun MapScaffold(
                 Box(
                     modifier = Modifier.widthIn(max = contentWidth)
                 ) {
-                    additionalContent()
+                    additionalContent(PaddingValues(0.dp))
                 }
                 Map(
                     markers,
@@ -132,17 +132,24 @@ fun MapScaffold(
                         minZoom,
                         markerDescriptor,
                     )
-                    additionalContent()
+                    additionalContent(PaddingValues(0.dp))
                 }
             }
         }
     } else {
         Box(Modifier.fillMaxSize()) {
-            var additionalContentSize by remember { mutableStateOf(IntSize.Zero) }
-            val showingContent = additionalContentSize == IntSize.Zero && !state.showMap
-            if (showingContent) {
-                Scaffold(topBar = topBar, bottomBar = bottomBar, content = content)
-            }
+            Scaffold(topBar = topBar, bottomBar = bottomBar, content = { paddingValues ->
+                var additionalContentSize by remember { mutableStateOf(IntSize.Zero) }
+                val showingContent = additionalContentSize == IntSize.Zero && !state.showMap
+                if (showingContent) {
+                    content(paddingValues)
+                }
+                Box(modifier = Modifier.onGloballyPositioned {
+                    additionalContentSize = it.size
+                }) {
+                    additionalContent(paddingValues)
+                }
+            })
             if (state.showMap) {
                 Map(
                     markers,
@@ -151,15 +158,10 @@ fun MapScaffold(
                     minZoom,
                     markerDescriptor,
                 )
-            }
-            Box(modifier = Modifier.onGloballyPositioned {
-                additionalContentSize = it.size
-            }) {
-                additionalContent()
-            }
-            if (!showingContent && persistentBottomBar) {
-                Box(modifier = Modifier.align(Alignment.BottomStart)) {
-                    bottomBar()
+                if (persistentBottomBar) {
+                    Box(modifier = Modifier.align(Alignment.BottomStart)) {
+                        bottomBar()
+                    }
                 }
             }
         }
