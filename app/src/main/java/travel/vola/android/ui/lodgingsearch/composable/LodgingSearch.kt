@@ -9,22 +9,26 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -34,7 +38,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -49,7 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,7 +61,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.CoroutineScope
@@ -69,11 +71,9 @@ import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.MapScaffoldState
 import travel.vola.android.common.ui.components.OverlayHostProvider
 import travel.vola.android.common.ui.components.TabBar
-import travel.vola.android.common.ui.components.asSizedImageTarget
 import travel.vola.android.common.ui.components.isLargeScreen
 import travel.vola.android.common.ui.components.mapMarkerIcon
 import travel.vola.android.common.ui.components.rememberMapScaffoldState
-import travel.vola.android.common.ui.components.rememberSizedImageState
 import travel.vola.android.common.ui.modifier.skeletonLoader
 import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.common.ui.state.MarkerType
@@ -206,7 +206,7 @@ fun ResultsWithMap(
                         onLodgingClosed(loadedState.selectedResult.id)
                     },
                 )
-            } else {
+            } else if (mapScaffoldState.sizeClass.isLargeScreen || !mapScaffoldState.showMap) {
                 SearchTopBar(
                     navController,
                     state,
@@ -227,6 +227,9 @@ fun ResultsWithMap(
                         val lodgingId = loadedState?.results?.firstOrNull { it.id == tabId }
                         onLodgingTapped(lodgingId)
                     },
+                    modifier = Modifier.padding(
+                        bottom = WindowInsets.safeDrawing.asPaddingValues().calculateBottomPadding()
+                    )
                 ) {
                     tab(
                         "search",
@@ -242,7 +245,13 @@ fun ResultsWithMap(
                 }
             }
         },
-        persistentBottomBar = true,
+        mapContent = {
+            MapSearchResults(
+                state,
+                onLodgingTapped,
+                modifier = Modifier.align(Alignment.BottomStart)
+            )
+        },
         content = { paddingValues ->
             LodgingSearchResults(
                 state = state,
@@ -411,6 +420,38 @@ private fun SearchTopBar(
 }
 
 @Composable
+fun MapSearchResults(
+    state: LodgingSearchViewModel.UiState,
+    onLodgingTapped: (LodgingSearchResultState) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val scrollState = rememberLazyListState()
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    LazyRow(
+        state = scrollState,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(all = 16.dp),
+        modifier = modifier
+            .fillMaxWidth()
+    ) {
+        when (state) {
+            is LodgingSearchViewModel.UiState.Loading -> {
+                loading()
+            }
+
+            is LodgingSearchViewModel.UiState.Loaded -> {
+                loaded(
+                    state,
+                    onLodgingTapped,
+                    itemStyle = LodgingSearchResultListItemStyle.Compact,
+                    itemModifier = Modifier.width(screenWidth - 32.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun LodgingSearchResults(
     scrollState: LazyListState,
     state: LodgingSearchViewModel.UiState,
@@ -437,49 +478,18 @@ fun LodgingSearchResults(
 
 private fun LazyListScope.loaded(
     state: LodgingSearchViewModel.UiState.Loaded,
-    onLodgingTapped: (LodgingSearchResultState) -> Unit
+    onLodgingTapped: (LodgingSearchResultState) -> Unit,
+    itemStyle: LodgingSearchResultListItemStyle = LodgingSearchResultListItemStyle.Expanded,
+    itemModifier: Modifier = Modifier,
 ) {
     items(state.results, key = { it.id }) { result ->
-        Surface(shape = MaterialTheme.shapes.large, border = BorderStroke(
-            1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant,
-        ), modifier = Modifier.animateItem(), onClick = { onLodgingTapped(result) }) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                val sizedImageState = rememberSizedImageState(result.coverImage)
-                Image(
-                    painter = rememberAsyncImagePainter(sizedImageState.model),
-                    contentDescription = "Place Description",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1.77f)
-                        .background(color = MaterialTheme.colorScheme.tertiary)
-                        .asSizedImageTarget(sizedImageState),
-                    contentScale = ContentScale.Crop
-                )
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    Text(result.name, style = MaterialTheme.typography.bodyLarge)
-                    Text(
-                        result.address,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(vertical = 16.dp),
-                    ) {
-                        LodgingRating(result.rating)
-                        Text(
-                            result.lodgingType,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.weight(1f)
-                        )
-                        PriceText(result.price)
-                    }
-                }
-            }
-        }
+        LodgingSearchResultListItem(
+            result,
+            style = itemStyle,
+            modifier = itemModifier
+                .animateItem()
+                .clickable(onClick = { onLodgingTapped(result) })
+        )
     }
 }
 
@@ -556,7 +566,7 @@ fun LodgingSearch(
 }
 
 @Composable
-@Preview(group = "Phone")
+@Preview(group = "Phone", showSystemUi = true)
 fun LodgingSearchPreview(showMap: Boolean = false, initialSelectedResult: String? = null) {
     AppTheme {
         var selectedResultId by remember { mutableStateOf(initialSelectedResult) }
@@ -639,7 +649,7 @@ fun LodgingSearchPreview(showMap: Boolean = false, initialSelectedResult: String
 }
 
 @Composable
-@Preview(group = "Phone")
+@Preview(group = "Phone", showSystemUi = true)
 fun LodgingSearchPreviewSelected() {
     LodgingSearchPreview(initialSelectedResult = "3")
 }
