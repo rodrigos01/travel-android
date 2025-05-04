@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -35,12 +36,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -63,7 +62,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import androidx.window.core.layout.WindowSizeClass
 import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
@@ -71,10 +69,13 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import travel.vola.android.R
 import travel.vola.android.common.ui.components.MapScaffold
+import travel.vola.android.common.ui.components.MapScaffoldState
 import travel.vola.android.common.ui.components.TabbedHost
 import travel.vola.android.common.ui.components.TabbedHostScope
 import travel.vola.android.common.ui.components.asSizedImageTarget
+import travel.vola.android.common.ui.components.isLargeScreen
 import travel.vola.android.common.ui.components.mapMarkerIcon
+import travel.vola.android.common.ui.components.rememberMapScaffoldState
 import travel.vola.android.common.ui.components.rememberSizedImageState
 import travel.vola.android.common.ui.modifier.skeletonLoader
 import travel.vola.android.common.ui.preview.TabletPreview
@@ -99,6 +100,7 @@ private fun LodgingSearch(
     onContinueBrowsingTapped: () -> Unit,
     onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit,
     onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit,
+    showMap: Boolean = false,
 ) {
     if (state.localState.showAddConfirmation) {
         ConfirmationDialog(
@@ -110,6 +112,7 @@ private fun LodgingSearch(
             Text("Added to your trip. Do you want to continue browsing?")
         }
     }
+    val mapScaffoldState = rememberMapScaffoldState(mapInitiallyVisible = showMap)
     val tabBarListState = rememberLazyListState()
     val loadedState = state as? LodgingSearchViewModel.UiState.Loaded
     val openedResult = loadedState?.selectedResult
@@ -120,54 +123,234 @@ private fun LodgingSearch(
         }
     }
 
-    val isLargeScreen =
-        currentWindowAdaptiveInfo().windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
-    if (isLargeScreen) {
-        val markers = loadedState?.results?.map {
-            MarkerViewState(
-                position = Pair(it.latitude, it.longitude),
-                name = it.name,
-                type = MarkerType.Lodging,
-                selected = it.id == openedResultId,
-            )
-        } ?: emptyList()
-
-        val boundsMarkers = openedResult?.let {
-            listOf(LatLng(it.latitude, it.longitude))
-        } ?: markers.map { LatLng(it.position.first, it.position.second) }
-        MapScaffold(
-            markers = markers,
-            boundsPoints = boundsMarkers,
-            onMarkerTapped = { marker ->
-                val index = markers.indexOf(marker)
-                loadedState?.results?.getOrNull(index)?.let {
-                    onLodgingTapped(it)
-                }
+    val searchResults: @Composable TabbedHostScope.() -> Unit = {
+        ResultsWithMap(
+            navController,
+            mapScaffoldState,
+            tabBarListState,
+            state,
+            openedResultId,
+            openedResult,
+            onLodgingTapped = { lodging ->
+                onLodgingTapped(lodging)
+                navigate(lodging.id)
             },
-            minZoom = 17F,
-            markerDescriptor = { marker ->
-                val index = markers.indexOf(marker)
-                val bitmap = loadedState?.results?.getOrNull(index)?.let {
-                    LodgingSearchMarkerIcon(
-                        NumberFormat.getCurrencyInstance().apply { maximumFractionDigits = 0 }
-                            .format(it.price),
-                        marker.selected
+            onLodgingClosed,
+            onAddLodgingTapped,
+            onSortOptionSelected,
+            onFiltersApplied,
+            showMap,
+        )
+    }
+    val screenWidth = LocalConfiguration.current.screenWidthDp
+    TabbedHost(startDestination = "search", tabBarListState = tabBarListState) {
+        tab("search", icon = { Icon(Icons.Outlined.Search, contentDescription = null) }) {
+            searchResults()
+        }
+        if (!mapScaffoldState.sizeClass.isLargeScreen && state is LodgingSearchViewModel.UiState.Loaded) {
+            state.openedResults.forEach { (id, lodging) ->
+                tab(id, title = {
+                    Text(
+                        text = lodging.name,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
-                } ?: mapMarkerIcon(MarkerType.Lodging, selected = marker.selected)
-                BitmapDescriptorFactory.fromBitmap(bitmap)
-            },
-            content = {
-                LodgingSearchResults(
-                    navController,
-                    state,
-                    onLodgingTapped = { lodging ->
-                        onLodgingTapped(lodging)
-                    },
-                    onSortOptionSelected = onSortOptionSelected,
-                    onFiltersApplied = onFiltersApplied,
+                }, modifier = Modifier.widthIn(max = (screenWidth / 2).dp), content = {
+                    LodgingDetails(lodging, onClose = {
+                        onLodgingClosed(id)
+                        navigate("search")
+                    }, onAddToTripTapped = {
+                        onAddLodgingTapped(id)
+                    })
+                })
+            }
+        }
+    }
+}
+
+enum class ControlsVisible {
+    NONE, FILTERS, SORT,
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ResultsWithMap(
+    navController: NavController,
+    mapScaffoldState: MapScaffoldState,
+    resultsScrollState: LazyListState,
+    state: LodgingSearchViewModel.UiState,
+    openedResultId: String?,
+    openedResult: LodgingDetailsState?,
+    onLodgingTapped: (LodgingSearchResultState) -> Unit,
+    onLodgingClosed: (String) -> Unit,
+    onAddLodgingTapped: (String) -> Unit,
+    onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit,
+    onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit,
+    showMap: Boolean = false,
+) {
+    val loadedState = state as? LodgingSearchViewModel.UiState.Loaded
+    val markers = loadedState?.results?.map {
+        MarkerViewState(
+            position = Pair(it.latitude, it.longitude),
+            name = it.name,
+            type = MarkerType.Lodging,
+            selected = it.id == openedResultId,
+        )
+    } ?: emptyList()
+    val boundsMarkers = openedResult?.let {
+        listOf(LatLng(it.latitude, it.longitude))
+    } ?: markers.map { LatLng(it.position.first, it.position.second) }
+
+    val coroutineScope = rememberCoroutineScope()
+    var controlsVisible by remember { mutableStateOf(ControlsVisible.NONE) }
+    MapScaffold(
+        state = mapScaffoldState,
+        markers = markers,
+        boundsPoints = boundsMarkers,
+        onMarkerTapped = { marker ->
+            val index = markers.indexOf(marker)
+            loadedState?.results?.getOrNull(index)?.let {
+                onLodgingTapped(it)
+            }
+        },
+        minZoom = 17F,
+        markerDescriptor = { marker ->
+            val index = markers.indexOf(marker)
+            val bitmap = loadedState?.results?.getOrNull(index)?.let {
+                LodgingSearchMarkerIcon(
+                    NumberFormat.getCurrencyInstance().apply { maximumFractionDigits = 0 }
+                        .format(it.price),
+                    marker.selected
                 )
-            },
-            additionalContent = {
+            } ?: mapMarkerIcon(MarkerType.Lodging, selected = marker.selected)
+            BitmapDescriptorFactory.fromBitmap(bitmap)
+        },
+        topBar = {
+            Column(
+                modifier = Modifier
+                    .background(color = MaterialTheme.colorScheme.surface)
+                    .padding(bottom = 8.dp)
+                    .animateContentSize()
+            ) {
+                TopAppBar(title = { Text("Lodging Search") }, navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = ""
+                        )
+                    }
+                })
+                LodgingSearchParams(
+                    checkIn = state.searchState.checkIn,
+                    checkOut = state.searchState.checkOut,
+                    minCheckOut = state.searchState.minCheckOut,
+                    locationText = state.searchState.locationText,
+                    onCheckInDateSelected = {},
+                    onCheckOutDateSelected = {},
+                    onLocationSearchResultSelected = {},
+                    onLocationSearchTextChanged = {},
+                )
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    TextButton(onClick = {
+                        controlsVisible = ControlsVisible.FILTERS
+                    }) {
+                        Icon(
+                            painterResource(R.drawable.tune_baseline_24), contentDescription = null
+                        )
+                        Text("Filter")
+                    }
+                    TextButton(onClick = {
+                        controlsVisible = ControlsVisible.SORT
+                    }) {
+                        Icon(
+                            painterResource(R.drawable.sort_baseline_24), contentDescription = null
+                        )
+                        Text("Sort")
+                    }
+                }
+                AnimatedContent(
+                    targetState = controlsVisible,
+                    transitionSpec = {
+                        val direction = if (initialState == ControlsVisible.NONE) {
+                            AnimatedContentTransitionScope.SlideDirection.Down
+                        } else {
+                            when (targetState) {
+                                ControlsVisible.SORT -> AnimatedContentTransitionScope.SlideDirection.Start
+                                ControlsVisible.FILTERS -> AnimatedContentTransitionScope.SlideDirection.End
+                                ControlsVisible.NONE -> AnimatedContentTransitionScope.SlideDirection.Up
+                            }
+                        }
+                        val slideSpec = spring<IntOffset>(stiffness = Spring.StiffnessMediumLow)
+                        (fadeIn() + slideIntoContainer(direction, slideSpec)).togetherWith(
+                            slideOutOfContainer(direction, slideSpec) + fadeOut()
+                        )
+                    },
+                ) { currentControls ->
+                    when (currentControls) {
+                        ControlsVisible.FILTERS -> {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                val filterState = FilterOptionsState(
+                                    minRating = state.sortAndFilterState.minRating,
+                                    minStars = state.sortAndFilterState.minStars,
+                                    priceRange = state.sortAndFilterState.priceRange
+                                )
+                                FilterOptions(
+                                    state = filterState,
+                                    valueRange = state.sortAndFilterState.availablePriceRange,
+                                )
+                                Row(modifier = Modifier.align(Alignment.End)) {
+                                    TextButton(onClick = {
+                                        controlsVisible = ControlsVisible.NONE
+                                    }) {
+                                        Text(
+                                            "Cancel",
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    TextButton(onClick = {
+                                        controlsVisible = ControlsVisible.NONE
+                                        onFiltersApplied(
+                                            filterState.minRating.toDouble(),
+                                            filterState.minStars,
+                                            filterState.priceRange.start.toDouble()..filterState.priceRange.endInclusive.toDouble(),
+                                        )
+                                    }) {
+                                        Text("Apply")
+                                    }
+                                }
+                            }
+                        }
+
+                        ControlsVisible.SORT -> SortOptionSelector(state.sortAndFilterState,
+                            onSortOptionSelected = { option ->
+                                onSortOptionSelected(option)
+                                controlsVisible = ControlsVisible.NONE
+                                coroutineScope.launch {
+                                    resultsScrollState.animateScrollToItem(0)
+                                }
+                            })
+
+                        ControlsVisible.NONE -> {}
+                    }
+                }
+            }
+        },
+        content = { paddingValues ->
+            LodgingSearchResults(
+                state = state,
+                paddingValues = paddingValues,
+                onLodgingTapped = { lodging ->
+                    onLodgingTapped(lodging)
+                },
+            )
+        },
+        additionalContent = {
+            if (mapScaffoldState.sizeClass.isLargeScreen) {
                 AnimatedContent(
                     targetState = Pair(openedResultId, openedResult),
                     transitionSpec = {
@@ -193,190 +376,30 @@ private fun LodgingSearch(
                         )
                     }
                 }
-            })
-    } else {
-        val searchResults: @Composable TabbedHostScope.() -> Unit = {
-            LodgingSearchResults(
-                navController,
-                state,
-                onLodgingTapped = { lodging ->
-                    onLodgingTapped(lodging)
-                    navigate(lodging.id)
-                },
-                onSortOptionSelected = onSortOptionSelected,
-                onFiltersApplied = onFiltersApplied,
-            )
-        }
-        val screenWidth = LocalConfiguration.current.screenWidthDp
-        TabbedHost(startDestination = "search", tabBarListState = tabBarListState) {
-            tab("search", icon = { Icon(Icons.Outlined.Search, contentDescription = null) }) {
-                searchResults()
             }
-            if (state is LodgingSearchViewModel.UiState.Loaded) {
-                state.openedResults.forEach { (id, lodging) ->
-                    tab(id, title = {
-                        Text(
-                            text = lodging.name,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }, modifier = Modifier.widthIn(max = (screenWidth / 2).dp), content = {
-                        LodgingDetails(lodging, onClose = {
-                            onLodgingClosed(id)
-                            navigate("search")
-                        }, onAddToTripTapped = {
-                            onAddLodgingTapped(id)
-                        })
-                    })
-                }
-            }
-        }
-    }
+        })
 }
 
-enum class ControlsVisible {
-    NONE, FILTERS, SORT,
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LodgingSearchResults(
-    navController: NavController,
     state: LodgingSearchViewModel.UiState,
+    paddingValues: PaddingValues,
     onLodgingTapped: (LodgingSearchResultState) -> Unit = {},
-    onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit = {},
-    onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit = { _, _, _ -> },
 ) {
-    val coroutineScope = rememberCoroutineScope()
-    var controlsVisible by remember { mutableStateOf(ControlsVisible.NONE) }
     val scrollState = rememberLazyListState()
-    Scaffold(topBar = {
-        Column(
-            modifier = Modifier
-                .background(color = MaterialTheme.colorScheme.surface)
-                .padding(bottom = 8.dp)
-                .animateContentSize()
-        ) {
-            TopAppBar(title = { Text("Lodging Search") }, navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = ""
-                    )
-                }
-            })
-            LodgingSearchParams(
-                checkIn = state.searchState.checkIn,
-                checkOut = state.searchState.checkOut,
-                minCheckOut = state.searchState.minCheckOut,
-                locationText = state.searchState.locationText,
-                onCheckInDateSelected = {},
-                onCheckOutDateSelected = {},
-                onLocationSearchResultSelected = {},
-                onLocationSearchTextChanged = {},
-            )
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
-                TextButton(onClick = {
-                    controlsVisible = ControlsVisible.FILTERS
-                }) {
-                    Icon(
-                        painterResource(R.drawable.tune_baseline_24), contentDescription = null
-                    )
-                    Text("Filter")
-                }
-                TextButton(onClick = {
-                    controlsVisible = ControlsVisible.SORT
-                }) {
-                    Icon(
-                        painterResource(R.drawable.sort_baseline_24), contentDescription = null
-                    )
-                    Text("Sort")
-                }
+    LazyColumn(
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        state = scrollState,
+        modifier = Modifier.padding(top = paddingValues.calculateTopPadding())
+    ) {
+        when (state) {
+            is LodgingSearchViewModel.UiState.Loading -> {
+                loading()
             }
-            AnimatedContent(
-                targetState = controlsVisible,
-                transitionSpec = {
-                    val direction = if (initialState == ControlsVisible.NONE) {
-                        AnimatedContentTransitionScope.SlideDirection.Down
-                    } else {
-                        when (targetState) {
-                            ControlsVisible.SORT -> AnimatedContentTransitionScope.SlideDirection.Start
-                            ControlsVisible.FILTERS -> AnimatedContentTransitionScope.SlideDirection.End
-                            ControlsVisible.NONE -> AnimatedContentTransitionScope.SlideDirection.Up
-                        }
-                    }
-                    val slideSpec = spring<IntOffset>(stiffness = Spring.StiffnessMediumLow)
-                    (fadeIn() + slideIntoContainer(direction, slideSpec)).togetherWith(
-                        slideOutOfContainer(direction, slideSpec) + fadeOut()
-                    )
-                },
-            ) { currentControls ->
-                when (currentControls) {
-                    ControlsVisible.FILTERS -> {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            val filterState = FilterOptionsState(
-                                minRating = state.sortAndFilterState.minRating,
-                                minStars = state.sortAndFilterState.minStars,
-                                priceRange = state.sortAndFilterState.priceRange
-                            )
-                            FilterOptions(
-                                state = filterState,
-                                valueRange = state.sortAndFilterState.availablePriceRange,
-                            )
-                            Row(modifier = Modifier.align(Alignment.End)) {
-                                TextButton(onClick = {
-                                    controlsVisible = ControlsVisible.NONE
-                                }) {
-                                    Text(
-                                        "Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                TextButton(onClick = {
-                                    controlsVisible = ControlsVisible.NONE
-                                    onFiltersApplied(
-                                        filterState.minRating.toDouble(),
-                                        filterState.minStars,
-                                        filterState.priceRange.start.toDouble()..filterState.priceRange.endInclusive.toDouble(),
-                                    )
-                                }) {
-                                    Text("Apply")
-                                }
-                            }
-                        }
-                    }
 
-                    ControlsVisible.SORT -> SortOptionSelector(state.sortAndFilterState,
-                        onSortOptionSelected = { option ->
-                            onSortOptionSelected(option)
-                            controlsVisible = ControlsVisible.NONE
-                            coroutineScope.launch {
-                                scrollState.animateScrollToItem(0)
-                            }
-                        })
-
-                    ControlsVisible.NONE -> {}
-                }
-            }
-        }
-    }) { paddingValues ->
-        LazyColumn(
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            state = scrollState,
-            modifier = Modifier.padding(top = paddingValues.calculateTopPadding())
-        ) {
-            when (state) {
-                is LodgingSearchViewModel.UiState.Loading -> {
-                    loading()
-                }
-
-                is LodgingSearchViewModel.UiState.Loaded -> {
-                    loaded(state, onLodgingTapped)
-                }
+            is LodgingSearchViewModel.UiState.Loaded -> {
+                loaded(state, onLodgingTapped)
             }
         }
     }
@@ -504,8 +527,7 @@ fun LodgingSearch(
 
 @Composable
 @Preview
-@TabletPreview
-fun LodgingSearchPreview() {
+fun LodgingSearchPreview(showMap: Boolean = false) {
     AppTheme {
         var selectedResultId by remember { mutableStateOf<String?>("3") }
         val results = List(10) { index ->
@@ -581,7 +603,19 @@ fun LodgingSearchPreview() {
             onLodgingClosed = { selectedResultId = null },
             onAddLodgingTapped = {},
             onContinueBrowsingTapped = {},
+            showMap = showMap,
         )
     }
 }
 
+@Composable
+@Preview
+fun LodgingSearchPreviewWithMap() {
+    LodgingSearchPreview(showMap = true)
+}
+
+@Composable
+@TabletPreview
+fun LodgingSearchPreviewTablet() {
+    LodgingSearchPreview()
+}
