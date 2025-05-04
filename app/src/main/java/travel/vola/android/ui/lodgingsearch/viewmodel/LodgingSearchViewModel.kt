@@ -176,9 +176,9 @@ class LodgingSearchViewModel(
         return rating >= filters.minRating && stars >= filters.minStars && price in filters.priceRange
     }
 
-    fun onLodgingTapped(lodgingId: String) {
+    fun onLodgingTapped(lodgingId: String?) {
         localState.value = localState.value.copy(selectedResultId = lodgingId)
-        if (openedResultsState[lodgingId] != null) {
+        if (lodgingId == null || openedResultsState[lodgingId] != null) {
             return
         }
         val state = uiState.value as? UiState.Loaded ?: return

@@ -2,13 +2,12 @@ package travel.vola.android.ui.lodgingsearch.composable
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideIn
-import androidx.compose.animation.slideOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -23,7 +22,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -52,10 +50,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -70,10 +66,8 @@ import kotlinx.serialization.Serializable
 import travel.vola.android.R
 import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.MapScaffoldState
-import travel.vola.android.common.ui.components.TabbedHost
-import travel.vola.android.common.ui.components.TabbedHostScope
+import travel.vola.android.common.ui.components.TabBar
 import travel.vola.android.common.ui.components.asSizedImageTarget
-import travel.vola.android.common.ui.components.isLargeScreen
 import travel.vola.android.common.ui.components.mapMarkerIcon
 import travel.vola.android.common.ui.components.rememberMapScaffoldState
 import travel.vola.android.common.ui.components.rememberSizedImageState
@@ -94,7 +88,7 @@ import java.text.NumberFormat
 private fun LodgingSearch(
     navController: NavController,
     state: LodgingSearchViewModel.UiState,
-    onLodgingTapped: (LodgingSearchResultState) -> Unit,
+    onLodgingTapped: (LodgingSearchResultState?) -> Unit,
     onLodgingClosed: (String) -> Unit,
     onAddLodgingTapped: (String) -> Unit,
     onContinueBrowsingTapped: () -> Unit,
@@ -122,50 +116,21 @@ private fun LodgingSearch(
             tabBarListState.animateScrollToItem(state.openedResults.keys.indexOf(openedResultId))
         }
     }
-
-    val searchResults: @Composable TabbedHostScope.() -> Unit = {
-        ResultsWithMap(
-            navController,
-            mapScaffoldState,
-            tabBarListState,
-            state,
-            openedResultId,
-            openedResult,
-            onLodgingTapped = { lodging ->
-                onLodgingTapped(lodging)
-                navigate(lodging.id)
-            },
-            onLodgingClosed,
-            onAddLodgingTapped,
-            onSortOptionSelected,
-            onFiltersApplied,
-            showMap,
-        )
-    }
-    val screenWidth = LocalConfiguration.current.screenWidthDp
-    TabbedHost(startDestination = "search", tabBarListState = tabBarListState) {
-        tab("search", icon = { Icon(Icons.Outlined.Search, contentDescription = null) }) {
-            searchResults()
-        }
-        if (!mapScaffoldState.sizeClass.isLargeScreen && state is LodgingSearchViewModel.UiState.Loaded) {
-            state.openedResults.forEach { (id, lodging) ->
-                tab(id, title = {
-                    Text(
-                        text = lodging.name,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }, modifier = Modifier.widthIn(max = (screenWidth / 2).dp), content = {
-                    LodgingDetails(lodging, onClose = {
-                        onLodgingClosed(id)
-                        navigate("search")
-                    }, onAddToTripTapped = {
-                        onAddLodgingTapped(id)
-                    })
-                })
-            }
-        }
-    }
+    ResultsWithMap(
+        navController,
+        mapScaffoldState,
+        tabBarListState,
+        state,
+        openedResultId,
+        openedResult,
+        onLodgingTapped = { lodging ->
+            onLodgingTapped(lodging)
+        },
+        onLodgingClosed,
+        onAddLodgingTapped,
+        onSortOptionSelected,
+        onFiltersApplied,
+    )
 }
 
 enum class ControlsVisible {
@@ -177,18 +142,42 @@ enum class ControlsVisible {
 fun ResultsWithMap(
     navController: NavController,
     mapScaffoldState: MapScaffoldState,
-    resultsScrollState: LazyListState,
+    tabBarScrollState: LazyListState,
     state: LodgingSearchViewModel.UiState,
     openedResultId: String?,
     openedResult: LodgingDetailsState?,
-    onLodgingTapped: (LodgingSearchResultState) -> Unit,
+    onLodgingTapped: (LodgingSearchResultState?) -> Unit,
     onLodgingClosed: (String) -> Unit,
     onAddLodgingTapped: (String) -> Unit,
     onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit,
     onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit,
-    showMap: Boolean = false,
 ) {
     val loadedState = state as? LodgingSearchViewModel.UiState.Loaded
+    val tabBar = @Composable {
+        val tabs = loadedState?.openedResults ?: emptyMap()
+        AnimatedVisibility(visible = tabs.size > 1) {
+            TabBar(
+                tabBarListState = tabBarScrollState,
+                onTabClick = { tabId ->
+                    val lodgingId = loadedState?.results?.firstOrNull { it.id == tabId }
+                    onLodgingTapped(lodgingId)
+                },
+            ) {
+                tab(
+                    "search",
+                    selected = loadedState?.selectedResult == null,
+                    icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
+                tabs.forEach { (tabId, lodging) ->
+                    tab(
+                        id = tabId,
+                        selected = openedResultId == tabId,
+                        title = { Text(lodging.name) },
+                    )
+                }
+            }
+        }
+    }
+
     val markers = loadedState?.results?.map {
         MarkerViewState(
             position = Pair(it.latitude, it.longitude),
@@ -203,6 +192,7 @@ fun ResultsWithMap(
 
     val coroutineScope = rememberCoroutineScope()
     var controlsVisible by remember { mutableStateOf(ControlsVisible.NONE) }
+    val resultsScrollState = rememberLazyListState()
     MapScaffold(
         state = mapScaffoldState,
         markers = markers,
@@ -340,9 +330,12 @@ fun ResultsWithMap(
                 }
             }
         },
+        bottomBar = tabBar,
+        persistentBottomBar = true,
         content = { paddingValues ->
             LodgingSearchResults(
                 state = state,
+                scrollState = resultsScrollState,
                 paddingValues = paddingValues,
                 onLodgingTapped = { lodging ->
                     onLodgingTapped(lodging)
@@ -350,43 +343,28 @@ fun ResultsWithMap(
             )
         },
         additionalContent = {
-            if (mapScaffoldState.sizeClass.isLargeScreen) {
-                AnimatedContent(
-                    targetState = Pair(openedResultId, openedResult),
-                    transitionSpec = {
-                        (fadeIn() + slideIn(initialOffset = {
-                            IntOffset(0, 0)
-                        })).togetherWith(
-                            (fadeOut() + slideOut(targetOffset = {
-                                IntOffset(0, 0)
-                            }))
-                        )
+            if (openedResultId != null && openedResult != null) {
+                LodgingDetails(
+                    openedResult,
+                    onClose = {
+                        onLodgingClosed(openedResultId)
                     },
-                ) { (lodgingId, lodging) ->
-                    if (lodgingId != null && lodging != null) {
-                        LodgingDetails(
-                            lodging,
-                            onClose = {
-                                onLodgingClosed(lodgingId)
-                            },
-                            onAddToTripTapped = {
-                                onAddLodgingTapped(lodgingId)
-                            },
-                            showMap = false,
-                        )
-                    }
-                }
+                    onAddToTripTapped = {
+                        onAddLodgingTapped(openedResultId)
+                    },
+                    showMap = false,
+                )
             }
         })
 }
 
 @Composable
 fun LodgingSearchResults(
+    scrollState: LazyListState,
     state: LodgingSearchViewModel.UiState,
     paddingValues: PaddingValues,
     onLodgingTapped: (LodgingSearchResultState) -> Unit = {},
 ) {
-    val scrollState = rememberLazyListState()
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -515,7 +493,7 @@ fun LodgingSearch(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     LodgingSearch(navController = navController,
         state = state,
-        onLodgingTapped = { viewModel.onLodgingTapped(it.id) },
+        onLodgingTapped = { viewModel.onLodgingTapped(it?.id) },
         onLodgingClosed = { viewModel.onLodgingClosed(it) },
         onAddLodgingTapped = { viewModel.onAddLodgingTapped(it) },
         onContinueBrowsingTapped = { viewModel.onContinueBrowsingTapped() },
@@ -526,10 +504,10 @@ fun LodgingSearch(
 }
 
 @Composable
-@Preview
-fun LodgingSearchPreview(showMap: Boolean = false) {
+@Preview(group = "Phone")
+fun LodgingSearchPreview(showMap: Boolean = false, initialSelectedResult: String? = null) {
     AppTheme {
-        var selectedResultId by remember { mutableStateOf<String?>("3") }
+        var selectedResultId by remember { mutableStateOf(initialSelectedResult) }
         val results = List(10) { index ->
             val latMultipliers = listOf(1, 0, -1)
             val lonMultipliers = listOf(0, 1, -1)
@@ -597,7 +575,7 @@ fun LodgingSearchPreview(showMap: Boolean = false) {
         LodgingSearch(
             navController = rememberNavController(),
             state = state,
-            onLodgingTapped = { selectedResultId = it.id },
+            onLodgingTapped = { selectedResultId = it?.id },
             onSortOptionSelected = {},
             onFiltersApplied = { _, _, _ -> },
             onLodgingClosed = { selectedResultId = null },
@@ -609,7 +587,13 @@ fun LodgingSearchPreview(showMap: Boolean = false) {
 }
 
 @Composable
-@Preview
+@Preview(group = "Phone")
+fun LodgingSearchPreviewSelected() {
+    LodgingSearchPreview(initialSelectedResult = "3")
+}
+
+@Composable
+@Preview(group = "Phone")
 fun LodgingSearchPreviewWithMap() {
     LodgingSearchPreview(showMap = true)
 }
@@ -617,5 +601,5 @@ fun LodgingSearchPreviewWithMap() {
 @Composable
 @TabletPreview
 fun LodgingSearchPreviewTablet() {
-    LodgingSearchPreview()
+    LodgingSearchPreview(initialSelectedResult = "3")
 }
