@@ -8,9 +8,13 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -23,9 +27,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -84,6 +91,8 @@ fun MapScaffold(
         BitmapDescriptorFactory.fromBitmap(mapMarkerIcon(it.type, selected = it.selected))
     },
     topBar: @Composable () -> Unit = {},
+    bottomBar: @Composable () -> Unit = {},
+    persistentBottomBar: Boolean = false,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val isExpandedWindowSize = state.sizeClass == SizeClass.EXPANDED
@@ -98,6 +107,7 @@ fun MapScaffold(
                     .widthIn(max = contentWidth)
                     .fillMaxHeight(),
                 topBar = topBar,
+                bottomBar = bottomBar,
                 content = content,
             )
             if (isExpandedWindowSize) {
@@ -128,8 +138,11 @@ fun MapScaffold(
         }
     } else {
         Box(Modifier.fillMaxSize()) {
-            Scaffold(topBar = topBar, content = content)
-            additionalContent()
+            var additionalContentSize by remember { mutableStateOf(IntSize.Zero) }
+            val showingContent = additionalContentSize == IntSize.Zero && !state.showMap
+            if (showingContent) {
+                Scaffold(topBar = topBar, bottomBar = bottomBar, content = content)
+            }
             if (state.showMap) {
                 Map(
                     markers,
@@ -138,6 +151,16 @@ fun MapScaffold(
                     minZoom,
                     markerDescriptor,
                 )
+            }
+            Box(modifier = Modifier.onGloballyPositioned {
+                additionalContentSize = it.size
+            }) {
+                additionalContent()
+            }
+            if (!showingContent && persistentBottomBar) {
+                Box(modifier = Modifier.align(Alignment.BottomStart)) {
+                    bottomBar()
+                }
             }
         }
     }
@@ -197,10 +220,9 @@ private fun Map(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
-@TabletPreview
-fun MapScaffoldPreview() {
+fun MapScaffoldPreview(showMap: Boolean = false, hasAdditionContent: Boolean = false) {
     MapScaffold(
-        state = rememberMapScaffoldState(mapInitiallyVisible = false),
+        state = rememberMapScaffoldState(mapInitiallyVisible = showMap),
         markers = emptyList(),
         boundsPoints = listOf(LatLng(0.0, 0.0)),
         topBar = {
@@ -208,6 +230,19 @@ fun MapScaffoldPreview() {
                 title = { Text("Map Scaffold") }
             )
         },
+        bottomBar = {
+            TabBar(modifier = Modifier.fillMaxWidth()) {
+                tab(
+                    "search",
+                    selected = true,
+                    icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
+                tab(
+                    "map",
+                    selected = false,
+                    icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
+            }
+        },
+        persistentBottomBar = true,
         content = {
             Box(
                 modifier = Modifier
@@ -215,12 +250,27 @@ fun MapScaffoldPreview() {
                     .background(MaterialTheme.colorScheme.surface)
             )
         },
-//        additionalContent = {
-//            Box(
-//                modifier = Modifier
-//                    .background(MaterialTheme.colorScheme.secondaryContainer)
-//                    .fillMaxSize()
-//            )
-//        },
+        additionalContent = {
+            if (hasAdditionContent) {
+                Box(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                        .fillMaxSize()
+                )
+            }
+        },
     )
+}
+
+@Composable
+@Preview
+fun MapScaffoldPreviewAddContent() {
+    MapScaffoldPreview(hasAdditionContent = true)
+}
+
+@Composable
+@Preview
+@TabletPreview
+fun MapScaffoldPreviewMapTablet() {
+    MapScaffoldPreview(showMap = true)
 }
