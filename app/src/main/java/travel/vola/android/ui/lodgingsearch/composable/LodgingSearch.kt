@@ -145,7 +145,6 @@ enum class ControlsVisible {
     NONE, FILTERS, SORT,
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResultsWithMap(
     navController: NavController,
@@ -161,12 +160,13 @@ fun ResultsWithMap(
     onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit,
 ) {
     val loadedState = state as? LodgingSearchViewModel.UiState.Loaded
+    var selectedId by remember(openedResultId) { mutableStateOf(openedResultId) }
     val markers = loadedState?.results?.map {
         MarkerViewState(
             position = Pair(it.latitude, it.longitude),
             name = it.name,
             type = MarkerType.Lodging,
-            selected = it.id == openedResultId,
+            selected = it.id == selectedId,
         )
     } ?: emptyList()
     val boundsMarkers = openedResult?.let {
@@ -178,6 +178,20 @@ fun ResultsWithMap(
     val resultsScrollState = rememberLazyListState()
     val mapResultsScrollState = rememberLazyListState()
     val detailsContentState = rememberLodgingDetailsContentState()
+    LaunchedEffect(selectedId) {
+        if (selectedId != null) {
+            loadedState?.results?.indexOfFirst { it.id == selectedId }?.let { selectedIndex ->
+                launch {
+                    mapResultsScrollState.animateScrollToItem(selectedIndex)
+                }
+                if (mapScaffoldState.sizeClass.isLargeScreen) {
+                    launch {
+                        resultsScrollState.animateScrollToItem(selectedIndex)
+                    }
+                }
+            }
+        }
+    }
     MapScaffold(
         state = mapScaffoldState,
         markers = markers,
@@ -185,7 +199,7 @@ fun ResultsWithMap(
         onMarkerTapped = { marker ->
             val index = markers.indexOf(marker)
             loadedState?.results?.getOrNull(index)?.let {
-                onLodgingTapped(it)
+                selectedId = it.id
             }
         },
         minZoom = 17F,
@@ -201,20 +215,20 @@ fun ResultsWithMap(
             BitmapDescriptorFactory.fromBitmap(bitmap)
         },
         topBar = {
-            if (!mapScaffoldState.sizeClass.isLargeScreen && mapScaffoldState.showMap) {
-                MapTopBar(
-                    navController,
-                    onListButtonTapped = {
-                        mapScaffoldState.showMap = false
-                    },
-                )
-            } else if (!mapScaffoldState.sizeClass.isLargeScreen && loadedState?.selectedResult != null) {
+            if (!mapScaffoldState.sizeClass.isLargeScreen && loadedState?.selectedResult != null) {
                 LodgingDetailsTopBar(
                     loadedState.selectedResult,
                     detailsContentState,
                     coroutineScope,
                     onClose = {
                         onLodgingClosed(loadedState.selectedResult.id)
+                    },
+                )
+            } else if (!mapScaffoldState.sizeClass.isLargeScreen && mapScaffoldState.showMap) {
+                MapTopBar(
+                    navController,
+                    onListButtonTapped = {
+                        mapScaffoldState.showMap = false
                     },
                 )
             } else if (mapScaffoldState.sizeClass.isLargeScreen || !mapScaffoldState.showMap) {
