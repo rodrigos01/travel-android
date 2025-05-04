@@ -240,6 +240,7 @@ fun ResultsWithMap(
                     onSortOptionSelected,
                     coroutineScope,
                     resultsScrollState,
+                    showMapSwitchButton = !mapScaffoldState.sizeClass.isLargeScreen,
                     onMapButtonTapped = {
                         mapScaffoldState.showMap = true
                     },
@@ -332,6 +333,7 @@ private fun SearchTopBar(
     onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit,
     coroutineScope: CoroutineScope,
     resultsScrollState: LazyListState,
+    showMapSwitchButton: Boolean,
     onMapButtonTapped: () -> Unit,
 ) {
     var controlsVisible1 = controlsVisible
@@ -352,11 +354,13 @@ private fun SearchTopBar(
                 }
             },
             actions = {
-                IconButton(onClick = onMapButtonTapped) {
-                    Icon(
-                        imageVector = Icons.Outlined.Map,
-                        contentDescription = null,
-                    )
+                if (showMapSwitchButton) {
+                    IconButton(onClick = onMapButtonTapped) {
+                        Icon(
+                            imageVector = Icons.Outlined.Map,
+                            contentDescription = null,
+                        )
+                    }
                 }
             }
         )
