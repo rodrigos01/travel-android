@@ -8,11 +8,13 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement.spacedBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -46,6 +48,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -77,6 +80,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import travel.vola.android.R
 import travel.vola.android.common.ui.components.ImageGallery
@@ -95,14 +99,57 @@ import travel.vola.android.ui.theme.AppTheme
 import kotlin.math.roundToInt
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LodgingDetails(
     state: LodgingDetailsState,
     onClose: () -> Unit,
     onAddToTripTapped: () -> Unit,
-    showMap: Boolean = true
+    showMap: Boolean = true,
 ) {
+    val contentState = rememberLodgingDetailsContentState()
+    val coroutineScope = rememberCoroutineScope()
+    Scaffold(topBar = {
+        LodgingDetailsTopBar(state, contentState, coroutineScope, onClose)
+    }) { paddingValues ->
+        LodgingDetailsContent(
+            paddingValues,
+            state,
+            onAddToTripTapped,
+            showMap,
+            contentState,
+            coroutineScope,
+        )
+    }
+}
+
+class LodgingDetailsContentState(
+    val scrollState: ScrollState,
+) {
+    private val _reviewsOffset = mutableStateOf<Offset?>(null)
+    val reviewsOffset: State<Offset?> = _reviewsOffset
+    internal fun setReviewsOffset(offset: Offset) {
+        _reviewsOffset.value = offset
+    }
+}
+
+@Composable
+fun rememberLodgingDetailsContentState(): LodgingDetailsContentState {
+    val scrollState = rememberScrollState()
+    return remember { LodgingDetailsContentState(scrollState = scrollState) }
+}
+
+@Composable
+fun LodgingDetailsContent(
+    paddingValues: PaddingValues,
+    state: LodgingDetailsState,
+    onAddToTripTapped: () -> Unit = {},
+    showMap: Boolean = true,
+    contentState: LodgingDetailsContentState = rememberLodgingDetailsContentState(),
+    coroutineScope: CoroutineScope = rememberCoroutineScope(),
+) {
+    var showExpandedMap by rememberSaveable(state) { mutableStateOf(false) }
+    val marker = LatLng(state.latitude, state.longitude)
+    var roomsOffset by remember { mutableStateOf<Offset?>(null) }
     var showImageGallery by rememberSaveable(state) { mutableStateOf(false) }
     var imageGalleryModels by rememberSaveable(state) { mutableStateOf(emptyList<String>()) }
     var selectedGalleryModel by rememberSaveable(state) { mutableStateOf<String?>(null) }
@@ -112,314 +159,129 @@ fun LodgingDetails(
         showImageGallery = true
     }
 
-    var showExpandedMap by rememberSaveable(state) { mutableStateOf(false) }
-    val marker = LatLng(state.latitude, state.longitude)
-    val scrollState = rememberScrollState()
-    var reviewsOffset by remember { mutableStateOf<Offset?>(null) }
-    var roomsOffset by remember { mutableStateOf<Offset?>(null) }
-
-    val coroutineScope = rememberCoroutineScope()
-
     val context = LocalContext.current
-    Scaffold(topBar = {
-        Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
-            TopAppBar(title = {
-                Text(state.name)
-            }, actions = {
-                IconButton(onClick = { onClose() }) {
-                    Icon(Icons.Filled.Close, contentDescription = "")
-                }
-            })
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = spacedBy(8.dp),
-                modifier = Modifier.padding(all = 16.dp)
-            ) {
-                LodgingRating(state.rating)
-                Text(state.reviewCount.reviewCountString(), modifier = Modifier
-                    .clickable {
-                        reviewsOffset?.y?.let {
-                            coroutineScope.launch {
-                                scrollState.animateScrollTo(it.roundToInt())
-                            }
-                        }
-                    }
-                    .padding(vertical = 8.dp))
-                Spacer(modifier = Modifier.weight(1f))
-                Text(state.lodgingType)
-            }
-        }
-    }) { paddingValues ->
-        Column(
-            verticalArrangement = spacedBy(8.dp),
+    Column(
+        verticalArrangement = spacedBy(8.dp),
+        modifier = Modifier
+            .verticalScroll(contentState.scrollState)
+            .padding(horizontal = 16.dp)
+            .padding(
+                top = paddingValues.calculateTopPadding() + 16.dp,
+                bottom = paddingValues.calculateBottomPadding() + 16.dp
+            )
+            .animateContentSize(),
+    ) {
+        val photos = state.photos
+        Row(
+            horizontalArrangement = spacedBy(8.dp),
             modifier = Modifier
-                .verticalScroll(scrollState)
-                .padding(horizontal = 16.dp)
-                .padding(
-                    top = paddingValues.calculateTopPadding() + 16.dp,
-                    bottom = paddingValues.calculateBottomPadding() + 16.dp
-                )
-                .animateContentSize(),
+                .fillMaxWidth()
+                .aspectRatio(16F / 9F)
         ) {
-            val photos = state.photos
-            Row(
-                horizontalArrangement = spacedBy(8.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16F / 9F)
-            ) {
-                photos.firstOrNull()?.let {
-                    val heroSizedState = rememberSizedImageState(it)
+            photos.firstOrNull()?.let {
+                val heroSizedState = rememberSizedImageState(it)
+                LodgingImage(
+                    rememberAsyncImagePainter(
+                        model = heroSizedState.model,
+                        contentScale = ContentScale.Crop
+                    ),
+                    modifier = Modifier
+                        .weight(1F)
+                        .fillMaxHeight()
+                        .clickable {
+                            showImageGallery = true
+                            imageGalleryModels = state.photos
+                            selectedGalleryModel = it
+                        }
+                        .asSizedImageTarget(heroSizedState),
+                )
+            }
+            AnimatedVisibility(photos.size >= 3) {
+                Column(
+                    verticalArrangement = spacedBy(8.dp),
+                ) {
+                    val image2SizedState = rememberSizedImageState(photos[1])
                     LodgingImage(
-                        rememberAsyncImagePainter(model = heroSizedState.model, contentScale = ContentScale.Crop),
+                        rememberAsyncImagePainter(
+                            model = image2SizedState.model,
+                            contentScale = ContentScale.Crop
+                        ),
                         modifier = Modifier
                             .weight(1F)
-                            .fillMaxHeight()
+                            .matchWidthToHeight()
                             .clickable {
                                 showImageGallery = true
                                 imageGalleryModels = state.photos
-                                selectedGalleryModel = it
+                                selectedGalleryModel = state.photos[1]
                             }
-                            .asSizedImageTarget(heroSizedState),
+                            .asSizedImageTarget(image2SizedState),
                     )
-                }
-                AnimatedVisibility(photos.size >= 3) {
-                    Column(
-                        verticalArrangement = spacedBy(8.dp),
-                    ) {
-                        val image2SizedState = rememberSizedImageState(photos[1])
-                        LodgingImage(
-                            rememberAsyncImagePainter(
-                                model = image2SizedState.model,
-                                contentScale = ContentScale.Crop
-                            ),
-                            modifier = Modifier
-                                .weight(1F)
-                                .matchWidthToHeight()
-                                .clickable {
-                                    showImageGallery = true
-                                    imageGalleryModels = state.photos
-                                    selectedGalleryModel = state.photos[1]
-                                }
-                                .asSizedImageTarget(image2SizedState),
-                        )
-                        Box(
-                            modifier = Modifier
-                                .weight(1F)
-                                .matchWidthToHeight()
-                                .clickable {
-                                    showImageGallery = true
-                                    imageGalleryModels = state.photos
-                                    selectedGalleryModel = null
-                                },
-                        ) {
-                            val sizedImageState = rememberSizedImageState(photos[2])
-                            LodgingImage(
-                                rememberAsyncImagePainter(
-                                    model = sizedImageState.model,
-                                    contentScale = ContentScale.Crop
-                                ),
-                                colorFilter = ColorFilter.tint(
-                                    MaterialTheme.colorScheme.scrim.copy(
-                                        alpha = 0.3F
-                                    ),
-                                    blendMode = BlendMode.SrcAtop,
-                                ),
-                                modifier = Modifier.asSizedImageTarget(sizedImageState)
-                            )
-                            Text(
-                                text = "+${state.photos.size - 2}",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.inverseOnSurface,
-                                modifier = Modifier.align(Alignment.Center)
-                            )
-                        }
-                    }
-                }
-            }
-            Row(horizontalArrangement = spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                FilledTonalButton(onClick = {/* Save lodging */ }) {
-                    ButtonContent(
-                        iconResId = R.drawable.bookmark_border_outline_24,
-                        iconContentDescription = "Save button icon",
-                        text = "Save lodging"
-                    )
-                }
-                Button(
-                    onClick = onAddToTripTapped,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
-                    modifier = Modifier.weight(1F)
-                ) {
-                    ButtonContent(
-                        icon = Icons.Filled.Add,
-                        iconContentDescription = "Add button icon",
-                        text = "Add to trip"
-                    )
-                }
-            }
-            AnimatedContent(state.isLoading) {
-                if (it) {
                     Box(
                         modifier = Modifier
-                            .height(64.dp)
-                            .fillMaxWidth()
-                            .clip(MaterialTheme.shapes.large)
-                            .skeletonLoader()
-                    )
-                } else if (state.rooms.isNotEmpty()) {
-                    Column {
-                        val room = state.rooms.first()
-                        RoomOfferItem(room, onCoverImageTapped = { coverImage ->
-                            onRoomCoverImageTapped(room, coverImage)
-                        }, onViewOfferTapped = {
-                            context.startActivity(
-                                Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse(room.bookingUrl),
-                                )
-                            )
-                        })
-                        if (state.rooms.size > 1) {
-                            TextButton(
-                                onClick = {
-                                    coroutineScope.launch {
-                                        scrollState.animateScrollTo(
-                                            roomsOffset?.y?.roundToInt() ?: 0
-                                        )
-                                    }
-                                },
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
-                            ) {
-                                Icon(
-                                    Icons.Filled.KeyboardArrowDown,
-                                    contentDescription = null
-                                )
-                                Text("See ${state.rooms.size - 1} more offers")
-                            }
-                        }
-                    }
-                }
-            }
-            state.description?.let { description ->
-                var expanded by rememberSaveable { mutableStateOf(false) }
-                var hasMoreText by rememberSaveable { mutableStateOf(false) }
-                Text(
-                    description,
-                    maxLines = if (expanded) Int.MAX_VALUE else 6,
-                    overflow = TextOverflow.Ellipsis,
-                    onTextLayout = {
-                        if (it.didOverflowHeight) {
-                            hasMoreText = true
-                        }
-                    },
-                    modifier = Modifier.animateContentSize(),
-                )
-                if (hasMoreText) {
-                    TextButton(
-                        onClick = { expanded = !expanded },
-                        modifier = Modifier.align(Alignment.End)
+                            .weight(1F)
+                            .matchWidthToHeight()
+                            .clickable {
+                                showImageGallery = true
+                                imageGalleryModels = state.photos
+                                selectedGalleryModel = null
+                            },
                     ) {
-                        Text(if (expanded) "Read less" else "Read more")
-                    }
-                }
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = spacedBy(8.dp)
-            ) {
-                Image(Icons.Filled.Place, contentDescription = "Location icon")
-                Text(state.address, style = MaterialTheme.typography.labelLarge)
-            }
-            if (showMap) {
-                AnimatedContent(state.isLoading) { isLoading ->
-                    if (isLoading) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(6 / 4f)
-                                .clip(MaterialTheme.shapes.large)
-                                .skeletonLoader(startDelayMillis = 300)
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(6 / 4f)
-                                .clip(MaterialTheme.shapes.large)
-                                .background(color = MaterialTheme.colorScheme.surfaceContainer)
-                        ) {
-                            val cameraPositionState = rememberCameraPositionState()
-                            val markerState = rememberMarkerState(position = marker)
-                            LaunchedEffect(marker) {
-                                cameraPositionState.position =
-                                    CameraPosition.fromLatLngZoom(marker, 15f)
-                                markerState.position = marker
-                            }
-                            GoogleMap(
-                                cameraPositionState = cameraPositionState,
-                                googleMapOptionsFactory = {
-                                    GoogleMapOptions().liteMode(true)
-                                },
-                                uiSettings = MapUiSettings(
-                                    indoorLevelPickerEnabled = false,
-                                    myLocationButtonEnabled = false,
-                                    scrollGesturesEnabled = false,
-                                    rotationGesturesEnabled = false,
-                                    tiltGesturesEnabled = false,
-                                    zoomGesturesEnabled = false,
-                                    zoomControlsEnabled = false,
-                                    mapToolbarEnabled = false,
+                        val sizedImageState = rememberSizedImageState(photos[2])
+                        LodgingImage(
+                            rememberAsyncImagePainter(
+                                model = sizedImageState.model,
+                                contentScale = ContentScale.Crop
+                            ),
+                            colorFilter = ColorFilter.tint(
+                                MaterialTheme.colorScheme.scrim.copy(
+                                    alpha = 0.3F
                                 ),
-                                modifier = Modifier.fillMaxSize(),
-                            ) {
-                                Marker(
-                                    state = markerState, title = state.name, snippet = state.address
-                                )
-                            }
-                            Surface(color = Color.Transparent, onClick = {
-                                showExpandedMap = true
-                            }, modifier = Modifier.fillMaxSize()) {}
-                        }
-                    }
-                }
-            }
-            if (state.reviews.isNotEmpty()) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.onGloballyPositioned {
-                        reviewsOffset = it.positionInParent()
-                    }) {
-                    Text("Reviews", style = MaterialTheme.typography.titleLarge)
-                    Spacer(modifier = Modifier.weight(1f))
-                    TextButton(onClick = {
-                        context.startActivity(
-                            Intent(
-                                Intent.ACTION_VIEW,
-                                Uri.parse(state.reviewsUrl),
-                            )
+                                blendMode = BlendMode.SrcAtop,
+                            ),
+                            modifier = Modifier.asSizedImageTarget(sizedImageState)
                         )
-                    }) {
-                        ButtonContent(
-                            iconResId = R.drawable.open_in_new_outline_24,
-                            iconContentDescription = "Open reviews button icon",
-                            text = "View all on ${state.reviewsSource}"
+                        Text(
+                            text = "+${state.photos.size - 2}",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.inverseOnSurface,
+                            modifier = Modifier.align(Alignment.Center)
                         )
                     }
                 }
-                Column(verticalArrangement = spacedBy(24.dp)) {
-                    state.reviews.forEach { review ->
-                        LodgingReviewItem(review)
-                    }
-                }
             }
-            if (state.rooms.size > 1) {
-                Text(
-                    "Rooms",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.onGloballyPositioned {
-                        roomsOffset = it.positionInParent()
-                    })
-                state.rooms.subList(1, state.rooms.size).forEach { room ->
+        }
+        Row(horizontalArrangement = spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            FilledTonalButton(onClick = {/* Save lodging */ }) {
+                ButtonContent(
+                    iconResId = R.drawable.bookmark_border_outline_24,
+                    iconContentDescription = "Save button icon",
+                    text = "Save lodging"
+                )
+            }
+            Button(
+                onClick = onAddToTripTapped,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
+                modifier = Modifier.weight(1F)
+            ) {
+                ButtonContent(
+                    icon = Icons.Filled.Add,
+                    iconContentDescription = "Add button icon",
+                    text = "Add to trip"
+                )
+            }
+        }
+        AnimatedContent(state.isLoading) {
+            if (it) {
+                Box(
+                    modifier = Modifier
+                        .height(64.dp)
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.large)
+                        .skeletonLoader()
+                )
+            } else if (state.rooms.isNotEmpty()) {
+                Column {
+                    val room = state.rooms.first()
                     RoomOfferItem(room, onCoverImageTapped = { coverImage ->
                         onRoomCoverImageTapped(room, coverImage)
                     }, onViewOfferTapped = {
@@ -430,7 +292,158 @@ fun LodgingDetails(
                             )
                         )
                     })
+                    if (state.rooms.size > 1) {
+                        TextButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    contentState.scrollState.animateScrollTo(
+                                        roomsOffset?.y?.roundToInt() ?: 0
+                                    )
+                                }
+                            },
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        ) {
+                            Icon(
+                                Icons.Filled.KeyboardArrowDown,
+                                contentDescription = null
+                            )
+                            Text("See ${state.rooms.size - 1} more offers")
+                        }
+                    }
                 }
+            }
+        }
+        state.description?.let { description ->
+            var expanded by rememberSaveable { mutableStateOf(false) }
+            var hasMoreText by rememberSaveable { mutableStateOf(false) }
+            Text(
+                description,
+                maxLines = if (expanded) Int.MAX_VALUE else 6,
+                overflow = TextOverflow.Ellipsis,
+                onTextLayout = {
+                    if (it.didOverflowHeight) {
+                        hasMoreText = true
+                    }
+                },
+                modifier = Modifier.animateContentSize(),
+            )
+            if (hasMoreText) {
+                TextButton(
+                    onClick = { expanded = !expanded },
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text(if (expanded) "Read less" else "Read more")
+                }
+            }
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = spacedBy(8.dp)
+        ) {
+            Image(Icons.Filled.Place, contentDescription = "Location icon")
+            Text(state.address, style = MaterialTheme.typography.labelLarge)
+        }
+        if (showMap) {
+            AnimatedContent(state.isLoading) { isLoading ->
+                if (isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(6 / 4f)
+                            .clip(MaterialTheme.shapes.large)
+                            .skeletonLoader(startDelayMillis = 300)
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(6 / 4f)
+                            .clip(MaterialTheme.shapes.large)
+                            .background(color = MaterialTheme.colorScheme.surfaceContainer)
+                    ) {
+                        val cameraPositionState = rememberCameraPositionState()
+                        val markerState = rememberMarkerState(position = marker)
+                        LaunchedEffect(marker) {
+                            cameraPositionState.position =
+                                CameraPosition.fromLatLngZoom(marker, 15f)
+                            markerState.position = marker
+                        }
+                        GoogleMap(
+                            cameraPositionState = cameraPositionState,
+                            googleMapOptionsFactory = {
+                                GoogleMapOptions().liteMode(true)
+                            },
+                            uiSettings = MapUiSettings(
+                                indoorLevelPickerEnabled = false,
+                                myLocationButtonEnabled = false,
+                                scrollGesturesEnabled = false,
+                                rotationGesturesEnabled = false,
+                                tiltGesturesEnabled = false,
+                                zoomGesturesEnabled = false,
+                                zoomControlsEnabled = false,
+                                mapToolbarEnabled = false,
+                            ),
+                            modifier = Modifier.fillMaxSize(),
+                        ) {
+                            Marker(
+                                state = markerState, title = state.name, snippet = state.address
+                            )
+                        }
+                        Surface(color = Color.Transparent, onClick = {
+                            showExpandedMap = true
+                        }, modifier = Modifier.fillMaxSize()) {}
+                    }
+                }
+            }
+        }
+        if (state.reviews.isNotEmpty()) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.onGloballyPositioned {
+                    contentState.setReviewsOffset(it.positionInParent())
+                },
+            ) {
+                Text("Reviews", style = MaterialTheme.typography.titleLarge)
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(onClick = {
+                    context.startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse(state.reviewsUrl),
+                        )
+                    )
+                }) {
+                    ButtonContent(
+                        iconResId = R.drawable.open_in_new_outline_24,
+                        iconContentDescription = "Open reviews button icon",
+                        text = "View all on ${state.reviewsSource}"
+                    )
+                }
+            }
+            Column(verticalArrangement = spacedBy(24.dp)) {
+                state.reviews.forEach { review ->
+                    LodgingReviewItem(review)
+                }
+            }
+        }
+        if (state.rooms.size > 1) {
+            Text(
+                "Rooms",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.onGloballyPositioned {
+                    roomsOffset = it.positionInParent()
+                })
+            state.rooms.subList(1, state.rooms.size).forEach { room ->
+                RoomOfferItem(room, onCoverImageTapped = { coverImage ->
+                    onRoomCoverImageTapped(room, coverImage)
+                }, onViewOfferTapped = {
+                    context.startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse(room.bookingUrl),
+                        )
+                    )
+                })
             }
         }
     }
@@ -484,6 +497,45 @@ fun LodgingDetails(
                     state = markerState, title = state.name, snippet = state.address
                 )
             }
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+fun LodgingDetailsTopBar(
+    state: LodgingDetailsState,
+    contentState: LodgingDetailsContentState,
+    coroutineScope: CoroutineScope = rememberCoroutineScope(),
+    onClose: () -> Unit,
+) {
+    Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
+        TopAppBar(title = {
+            Text(state.name)
+        }, actions = {
+            IconButton(onClick = { onClose() }) {
+                Icon(Icons.Filled.Close, contentDescription = "")
+            }
+        })
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = spacedBy(8.dp),
+            modifier = Modifier.padding(all = 16.dp)
+        ) {
+            LodgingRating(state.rating)
+            Text(
+                state.reviewCount.reviewCountString(), modifier = Modifier
+                    .clickable {
+                        contentState.reviewsOffset.value?.y?.let {
+                            coroutineScope.launch {
+                                contentState.scrollState.animateScrollTo(it.roundToInt())
+                            }
+                        }
+                    }
+                    .padding(vertical = 8.dp)
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(state.lodgingType)
         }
     }
 }
