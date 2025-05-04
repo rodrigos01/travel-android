@@ -108,9 +108,11 @@ fun LodgingDetails(
 ) {
     val contentState = rememberLodgingDetailsContentState()
     val coroutineScope = rememberCoroutineScope()
-    Scaffold(topBar = {
-        LodgingDetailsTopBar(state, contentState, coroutineScope, onClose)
-    }) { paddingValues ->
+    Scaffold(
+        topBar = {
+            LodgingDetailsTopBar(state, contentState, coroutineScope, onClose)
+        },
+    ) { paddingValues ->
         LodgingDetailsContent(
             paddingValues,
             state,
@@ -163,6 +165,7 @@ fun LodgingDetailsContent(
     Column(
         verticalArrangement = spacedBy(8.dp),
         modifier = Modifier
+            .background(color = MaterialTheme.colorScheme.background)
             .verticalScroll(contentState.scrollState)
             .padding(horizontal = 16.dp)
             .padding(
@@ -467,6 +470,7 @@ fun LodgingDetailsContent(
     AnimatedVisibility(
         showExpandedMap, enter = fadeIn(),
         exit = fadeOut(),
+        modifier = Modifier.wrapContentSize(unbounded = true)
     ) {
         DismissableOverlay(onDismiss = {
             showExpandedMap = false
