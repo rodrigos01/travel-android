@@ -52,7 +52,7 @@ class MapScaffoldState internal constructor(
 
 @Composable
 fun rememberMapScaffoldState(
-    showMap: MutableState<Boolean> = mutableStateOf(false),
+    mapInitiallyVisible: Boolean = false,
 ): MapScaffoldState {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     return MapScaffoldState(
@@ -61,7 +61,7 @@ fun rememberMapScaffoldState(
             windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) -> SizeClass.MEDIUM
             else -> SizeClass.SMALL
         },
-        showMap,
+        remember { mutableStateOf(mapInitiallyVisible) },
     )
 }
 
@@ -200,7 +200,7 @@ private fun Map(
 @TabletPreview
 fun MapScaffoldPreview() {
     MapScaffold(
-        state = rememberMapScaffoldState(showMap = remember { mutableStateOf(false) }),
+        state = rememberMapScaffoldState(mapInitiallyVisible = false),
         markers = emptyList(),
         boundsPoints = listOf(LatLng(0.0, 0.0)),
         topBar = {
