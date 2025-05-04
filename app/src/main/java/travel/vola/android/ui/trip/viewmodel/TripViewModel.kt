@@ -335,14 +335,16 @@ class TripViewModel(
         // Exclude if only event in place is a departure
         if (placeEntries.size == 1 && lastEntry.isDeparture) return null
 
-        val id = if (event is TimedPlace && event.city == event.place) event.id else place.id
+        val dayAndMonth = time.dayAndMonthString
+        val id =
+            if (event is TimedPlace && event.city == event.place) event.id else "${place.id}_$dayAndMonth"
 
         return TripItemState.PlaceItemState(
             id = id,
             timestamp = time,
             placeName = place.name,
             imageUrl = place.coverImage ?: "",
-            dateStart = time.dayAndMonthString,
+            dateStart = dayAndMonth,
             dateEnd = lastEntry.first.dayAndMonthString,
         )
     }
