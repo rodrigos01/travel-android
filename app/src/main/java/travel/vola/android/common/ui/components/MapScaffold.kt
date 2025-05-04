@@ -2,6 +2,7 @@ package travel.vola.android.common.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -9,7 +10,11 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -78,7 +83,8 @@ fun MapScaffold(
     markerDescriptor: @Composable (MarkerViewState) -> BitmapDescriptor = {
         BitmapDescriptorFactory.fromBitmap(mapMarkerIcon(it.type, selected = it.selected))
     },
-    content: @Composable () -> Unit,
+    topBar: @Composable () -> Unit = {},
+    content: @Composable (PaddingValues) -> Unit,
 ) {
     val isExpandedWindowSize = state.sizeClass == SizeClass.EXPANDED
     if (state.sizeClass.isLargeScreen) {
@@ -87,13 +93,13 @@ fun MapScaffold(
             else -> 320.dp
         }
         Row(Modifier.fillMaxSize()) {
-            Box(
+            Scaffold(
                 modifier = Modifier
                     .widthIn(max = contentWidth)
-                    .fillMaxHeight()
-            ) {
-                content()
-            }
+                    .fillMaxHeight(),
+                topBar = topBar,
+                content = content,
+            )
             if (isExpandedWindowSize) {
                 Box(
                     modifier = Modifier.widthIn(max = contentWidth)
@@ -122,7 +128,7 @@ fun MapScaffold(
         }
     } else {
         Box(Modifier.fillMaxSize()) {
-            content()
+            Scaffold(topBar = topBar, content = content)
             additionalContent()
             if (state.showMap) {
                 Map(
@@ -188,13 +194,20 @@ private fun Map(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
 @TabletPreview
 fun MapScaffoldPreview() {
-    MapScaffold(state = rememberMapScaffoldState(showMap = remember { mutableStateOf(false) }),
+    MapScaffold(
+        state = rememberMapScaffoldState(showMap = remember { mutableStateOf(false) }),
         markers = emptyList(),
         boundsPoints = listOf(LatLng(0.0, 0.0)),
+        topBar = {
+            TopAppBar(
+                title = { Text("Map Scaffold") }
+            )
+        },
         content = {
             Box(
                 modifier = Modifier
@@ -202,11 +215,12 @@ fun MapScaffoldPreview() {
                     .background(MaterialTheme.colorScheme.surface)
             )
         },
-        additionalContent = {
-            Box(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .fillMaxSize()
-            )
-        })
+//        additionalContent = {
+//            Box(
+//                modifier = Modifier
+//                    .background(MaterialTheme.colorScheme.secondaryContainer)
+//                    .fillMaxSize()
+//            )
+//        },
+    )
 }
