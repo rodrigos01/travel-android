@@ -4,6 +4,7 @@ import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -22,7 +23,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -64,6 +64,7 @@ import travel.vola.android.ui.trip.state.TripItemState.MonthItemState
 import travel.vola.android.ui.trip.state.TripItemState.PlaceItemState
 import travel.vola.android.ui.trip.viewmodel.TripViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripDetails(
     viewModel: TripViewModel,
@@ -72,8 +73,7 @@ fun TripDetails(
     val state by viewModel.viewState.collectAsStateWithLifecycle()
     val listScrollState = rememberLazyListState()
     val currentPlaceIndex by remember {
-        derivedStateOf(policy =
-        object : SnapshotMutationPolicy<Int> {
+        derivedStateOf(policy = object : SnapshotMutationPolicy<Int> {
             override fun equivalent(a: Int, b: Int): Boolean {
                 val itemA = state.items.getOrNull(a)
                 val itemB = state.items.getOrNull(b)
@@ -100,47 +100,31 @@ fun TripDetails(
         allMarkers.filter { it.type != MarkerType.City },
         boundingMarkers.map { LatLng(it.position.first, it.position.second) },
         state = mapScaffoldState,
-    ) {
-        List(state, listScrollState, viewModel, navController)
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun List(
-    state: TripViewModel.ViewState,
-    scrollState: LazyListState,
-    viewModel: TripViewModel,
-    navController: NavController,
-    modifier: Modifier = Modifier,
-) {
-    var isInEditMode by remember {
-        mutableStateOf(false)
-    }
-    var enteredName by remember(state.title) {
-        mutableStateOf(state.title)
-    }
-    var showToolbarOverflowMenu by remember {
-        mutableStateOf(false)
-    }
-    var showDeleteConfirmation by remember { mutableStateOf(false) }
-    if (showDeleteConfirmation) {
-        ConfirmationDialog(
-            onConfirm = {
-                showDeleteConfirmation = false
-                viewModel.deleteTrip()
-            },
-            onDismiss = { showDeleteConfirmation = false },
-            confirmButtonLabel = "Delete",
-            confirmButtonColors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-            dismissButtonLabel = "Cancel"
-        ) {
-            Text("Delete ${state.title}?")
-        }
-    }
-    Scaffold(
-        modifier = modifier,
         topBar = {
+            var isInEditMode by remember {
+                mutableStateOf(false)
+            }
+            var enteredName by remember(state.title) {
+                mutableStateOf(state.title)
+            }
+            var showToolbarOverflowMenu by remember {
+                mutableStateOf(false)
+            }
+            var showDeleteConfirmation by remember { mutableStateOf(false) }
+            if (showDeleteConfirmation) {
+                ConfirmationDialog(
+                    onConfirm = {
+                        showDeleteConfirmation = false
+                        viewModel.deleteTrip()
+                    },
+                    onDismiss = { showDeleteConfirmation = false },
+                    confirmButtonLabel = "Delete",
+                    confirmButtonColors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    dismissButtonLabel = "Cancel"
+                ) {
+                    Text("Delete ${state.title}?")
+                }
+            }
             TopAppBar(title = {
                 if (isInEditMode) {
                     TextField(value = enteredName, onValueChange = { enteredName = it })
@@ -191,13 +175,23 @@ fun List(
             })
         },
     ) { paddingValues ->
-        LazyColumn(contentPadding = paddingValues, state = scrollState) {
-            items(state.items, key = { (it as? Identifiable)?.id ?: it.hashCode() }) { event ->
-                Box(
-                    modifier = Modifier.animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
-                ) {
-                    TripDetailItem(event, viewModel)
-                }
+        List(state, listScrollState, viewModel, paddingValues)
+    }
+}
+
+@Composable
+fun List(
+    state: TripViewModel.ViewState,
+    scrollState: LazyListState,
+    viewModel: TripViewModel,
+    contentPadding: PaddingValues,
+) {
+    LazyColumn(contentPadding = contentPadding, state = scrollState) {
+        items(state.items, key = { (it as? Identifiable)?.id ?: it.hashCode() }) { event ->
+            Box(
+                modifier = Modifier.animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
+            ) {
+                TripDetailItem(event, viewModel)
             }
         }
     }
@@ -223,10 +217,11 @@ private fun TripDetailItem(
             onTap = { viewModel.emptyDateRowTapped(event.id) },
         )
 
-        is PlaceItemState -> PlaceEventListItem(
-            event.imageUrl, event.placeName, event.dateStart, event.dateEnd,
-            modifier = Modifier.clickable { viewModel.itemTapped(event.id) }
-        )
+        is PlaceItemState -> PlaceEventListItem(event.imageUrl,
+            event.placeName,
+            event.dateStart,
+            event.dateEnd,
+            modifier = Modifier.clickable { viewModel.itemTapped(event.id) })
 
         is TripItemState.EventItemState -> Surface(
             onClick = { viewModel.itemTapped(event.id) },
