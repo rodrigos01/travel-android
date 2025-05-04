@@ -66,10 +66,11 @@ fun TabBar(
     val tabs = TabBar.Builder().apply(builder).build()
     LazyRow(
         state = tabBarListState,
-        modifier = modifier
+        modifier = Modifier
             .background(
                 MaterialTheme.colorScheme.surfaceContainer
-            ),
+            )
+            .then(modifier),
     ) {
         items(tabs, key = { it.id }) { tab ->
             val selected = tab.selected

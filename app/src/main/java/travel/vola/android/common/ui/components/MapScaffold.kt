@@ -3,11 +3,12 @@ package travel.vola.android.common.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -96,7 +98,6 @@ fun MapScaffold(
     },
     topBar: @Composable () -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
-    persistentBottomBar: Boolean = false,
     mapContent: @Composable BoxScope.() -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -146,36 +147,40 @@ fun MapScaffold(
             }
         }
     } else {
-        if (state.showMap) {
-            Column(Modifier.fillMaxSize()) {
-                Box(modifier = Modifier.weight(1F)) {
+        Scaffold(topBar = topBar, bottomBar = bottomBar, content = { paddingValues ->
+            var additionalContentSize by remember { mutableStateOf(IntSize.Zero) }
+            val showingContent = additionalContentSize == IntSize.Zero && !state.showMap
+            if (showingContent) {
+                content(paddingValues)
+            }
+            if (state.showMap) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(
+                            top = 0.dp,
+                            bottom = paddingValues.calculateBottomPadding(),
+                            start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
+                            end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
+                        )
+                ) {
                     Map(
                         markers,
                         boundsPoints,
                         onMarkerTapped,
                         minZoom,
                         markerDescriptor,
+                        modifier = Modifier
                     )
                     mapContent()
                 }
-                if (persistentBottomBar) {
-                    bottomBar()
-                }
             }
-        } else {
-            Scaffold(topBar = topBar, bottomBar = bottomBar, content = { paddingValues ->
-                var additionalContentSize by remember { mutableStateOf(IntSize.Zero) }
-                val showingContent = additionalContentSize == IntSize.Zero && !state.showMap
-                if (showingContent) {
-                    content(paddingValues)
-                }
-                Box(modifier = Modifier.onGloballyPositioned {
-                    additionalContentSize = it.size
-                }) {
-                    additionalContent(paddingValues)
-                }
-            })
-        }
+            Box(modifier = Modifier.onGloballyPositioned {
+                additionalContentSize = it.size
+            }) {
+                additionalContent(paddingValues)
+            }
+        })
     }
 }
 
@@ -233,15 +238,21 @@ private fun Map(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
-fun MapScaffoldPreview(showMap: Boolean = false, hasAdditionContent: Boolean = false) {
+fun MapScaffoldPreview(
+    showMap: Boolean = false,
+    hasAdditionContent: Boolean = false,
+    showTopBar: Boolean = true,
+) {
     MapScaffold(
         state = rememberMapScaffoldState(mapInitiallyVisible = showMap),
         markers = emptyList(),
         boundsPoints = listOf(LatLng(0.0, 0.0)),
         topBar = {
-            TopAppBar(
-                title = { Text("Map Scaffold") }
-            )
+            if (showTopBar) {
+                TopAppBar(
+                    title = { Text("Map Scaffold") }
+                )
+            }
         },
         bottomBar = {
             TabBar(modifier = Modifier.fillMaxWidth()) {
@@ -255,7 +266,6 @@ fun MapScaffoldPreview(showMap: Boolean = false, hasAdditionContent: Boolean = f
                     icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
             }
         },
-        persistentBottomBar = true,
         additionalContent = {
             if (hasAdditionContent) {
                 Box(
@@ -286,9 +296,9 @@ fun MapScaffoldPreview(showMap: Boolean = false, hasAdditionContent: Boolean = f
 }
 
 @Composable
-@Preview
-fun MapScaffoldPreviewAddContent() {
-    MapScaffoldPreview(hasAdditionContent = true)
+@Preview(showSystemUi = true)
+fun MapScaffoldPreviewMap() {
+    MapScaffoldPreview(showMap = true, hasAdditionContent = false, showTopBar = false)
 }
 
 @Composable
