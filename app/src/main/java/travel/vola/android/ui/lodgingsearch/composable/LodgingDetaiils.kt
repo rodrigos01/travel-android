@@ -18,7 +18,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -50,7 +53,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -68,8 +70,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.maps.GoogleMapOptions
@@ -85,6 +87,7 @@ import kotlinx.coroutines.launch
 import travel.vola.android.R
 import travel.vola.android.common.ui.components.ImageGallery
 import travel.vola.android.common.ui.components.Overlay
+import travel.vola.android.common.ui.components.OverlayHostProvider
 import travel.vola.android.common.ui.components.asSizedImageTarget
 import travel.vola.android.common.ui.components.rememberSizedImageState
 import travel.vola.android.common.ui.modifier.matchWidthToHeight
@@ -108,19 +111,21 @@ fun LodgingDetails(
 ) {
     val contentState = rememberLodgingDetailsContentState()
     val coroutineScope = rememberCoroutineScope()
-    Scaffold(
-        topBar = {
-            LodgingDetailsTopBar(state, contentState, coroutineScope, onClose)
-        },
-    ) { paddingValues ->
-        LodgingDetailsContent(
-            paddingValues,
-            state,
-            onAddToTripTapped,
-            showMap,
-            contentState,
-            coroutineScope,
-        )
+    OverlayHostProvider {
+        Scaffold(
+            topBar = {
+                LodgingDetailsTopBar(state, contentState, coroutineScope, onClose)
+            },
+        ) { paddingValues ->
+            LodgingDetailsContent(
+                paddingValues,
+                state,
+                onAddToTripTapped,
+                showMap,
+                contentState,
+                coroutineScope,
+            )
+        }
     }
 }
 
@@ -165,6 +170,7 @@ fun LodgingDetailsContent(
     Column(
         verticalArrangement = spacedBy(8.dp),
         modifier = Modifier
+            .fillMaxHeight()
             .background(color = MaterialTheme.colorScheme.background)
             .verticalScroll(contentState.scrollState)
             .padding(horizontal = 16.dp)
@@ -458,12 +464,12 @@ fun LodgingDetailsContent(
     ) {
         DismissableOverlay(onDismiss = {
             showImageGallery = false
-        }) { topPadding ->
+        }) { paddingValues ->
             ImageGallery(
                 imageGalleryModels,
                 selectedInitially = selectedGalleryModel,
                 modifier = Modifier
-                    .padding(top = topPadding),
+                    .padding(paddingValues),
             )
         }
     }
@@ -474,7 +480,7 @@ fun LodgingDetailsContent(
     ) {
         DismissableOverlay(onDismiss = {
             showExpandedMap = false
-        }) { topPadding ->
+        }) { paddingValues ->
             val cameraPositionState = rememberCameraPositionState()
             val markerState = rememberMarkerState(position = marker)
             LaunchedEffect(marker) {
@@ -491,7 +497,7 @@ fun LodgingDetailsContent(
                 ),
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
-                    .padding(top = topPadding)
+                    .padding(paddingValues)
                     .fillMaxWidth()
                     .fillMaxHeight(0.8F)
                     .clip(MaterialTheme.shapes.large)
@@ -547,23 +553,28 @@ fun LodgingDetailsTopBar(
 @Composable
 private fun DismissableOverlay(
     onDismiss: () -> Unit,
-    content: @Composable (topPadding: Dp) -> Unit
+    content: @Composable (paddingValues: PaddingValues) -> Unit
 ) {
     Overlay {
         Box {
-            val windowInsetsTopPadding = with(LocalDensity.current) {
-                WindowInsets.safeDrawing.getTop(this).toDp()
-            }
-            var topPadding by remember { mutableIntStateOf(0) }
-            content(with(LocalDensity.current) { topPadding.toDp() })
+            val windowInsetsPadding = WindowInsets.safeDrawing.asPaddingValues()
+            val layoutDirection = LocalLayoutDirection.current
+            val density = LocalDensity.current
+            var paddingValues by remember { mutableStateOf(windowInsetsPadding) }
+            content(paddingValues)
             FilledIconButton(
                 onClick = onDismiss,
                 modifier = Modifier
                     .onGloballyPositioned {
-                        topPadding = (it.size.height + windowInsetsTopPadding.value).roundToInt()
+                        paddingValues = PaddingValues(
+                            top = windowInsetsPadding.calculateTopPadding() + with(density) { it.size.height.toDp() },
+                            bottom = windowInsetsPadding.calculateBottomPadding(),
+                            start = windowInsetsPadding.calculateStartPadding(layoutDirection),
+                            end = windowInsetsPadding.calculateEndPadding(layoutDirection)
+                        )
                     }
                     .align(Alignment.TopEnd)
-                    .padding(end = 16.dp, top = windowInsetsTopPadding + 8.dp)
+                    .padding(end = 16.dp, top = windowInsetsPadding.calculateTopPadding() + 8.dp)
             ) {
                 Icon(
                     Icons.Filled.Close,
