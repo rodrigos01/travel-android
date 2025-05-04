@@ -2,6 +2,8 @@ package travel.vola.android.common.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -9,6 +11,8 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
@@ -93,6 +97,7 @@ fun MapScaffold(
     topBar: @Composable () -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
     persistentBottomBar: Boolean = false,
+    mapContent: @Composable BoxScope.() -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val isExpandedWindowSize = state.sizeClass == SizeClass.EXPANDED
@@ -116,13 +121,16 @@ fun MapScaffold(
                 ) {
                     additionalContent(PaddingValues(0.dp))
                 }
-                Map(
-                    markers,
-                    boundsPoints,
-                    onMarkerTapped,
-                    minZoom,
-                    markerDescriptor,
-                )
+                Box {
+                    Map(
+                        markers,
+                        boundsPoints,
+                        onMarkerTapped,
+                        minZoom,
+                        markerDescriptor,
+                    )
+                    mapContent()
+                }
             } else {
                 Box {
                     Map(
@@ -132,12 +140,29 @@ fun MapScaffold(
                         minZoom,
                         markerDescriptor,
                     )
+                    mapContent()
                     additionalContent(PaddingValues(0.dp))
                 }
             }
         }
     } else {
-        Box(Modifier.fillMaxSize()) {
+        if (state.showMap) {
+            Column(Modifier.fillMaxSize()) {
+                Box(modifier = Modifier.weight(1F)) {
+                    Map(
+                        markers,
+                        boundsPoints,
+                        onMarkerTapped,
+                        minZoom,
+                        markerDescriptor,
+                    )
+                    mapContent()
+                }
+                if (persistentBottomBar) {
+                    bottomBar()
+                }
+            }
+        } else {
             Scaffold(topBar = topBar, bottomBar = bottomBar, content = { paddingValues ->
                 var additionalContentSize by remember { mutableStateOf(IntSize.Zero) }
                 val showingContent = additionalContentSize == IntSize.Zero && !state.showMap
@@ -150,20 +175,6 @@ fun MapScaffold(
                     additionalContent(paddingValues)
                 }
             })
-            if (state.showMap) {
-                Map(
-                    markers,
-                    boundsPoints,
-                    onMarkerTapped,
-                    minZoom,
-                    markerDescriptor,
-                )
-                if (persistentBottomBar) {
-                    Box(modifier = Modifier.align(Alignment.BottomStart)) {
-                        bottomBar()
-                    }
-                }
-            }
         }
     }
 }
@@ -245,13 +256,6 @@ fun MapScaffoldPreview(showMap: Boolean = false, hasAdditionContent: Boolean = f
             }
         },
         persistentBottomBar = true,
-        content = {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface)
-            )
-        },
         additionalContent = {
             if (hasAdditionContent) {
                 Box(
@@ -260,6 +264,23 @@ fun MapScaffoldPreview(showMap: Boolean = false, hasAdditionContent: Boolean = f
                         .fillMaxSize()
                 )
             }
+        },
+        mapContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .padding(16.dp)
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .align(Alignment.BottomCenter),
+            )
+        },
+        content = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface)
+            )
         },
     )
 }
@@ -274,5 +295,5 @@ fun MapScaffoldPreviewAddContent() {
 @Preview
 @TabletPreview
 fun MapScaffoldPreviewMapTablet() {
-    MapScaffoldPreview(showMap = true)
+    MapScaffoldPreview(showMap = true, hasAdditionContent = true)
 }
