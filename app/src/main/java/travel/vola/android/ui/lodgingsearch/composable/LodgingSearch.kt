@@ -91,6 +91,8 @@ import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.ConfirmationDialog
 import java.text.NumberFormat
 
+private const val SEARCH_TAB_ID = "search"
+
 @Composable
 private fun LodgingSearch(
     navController: NavController,
@@ -161,7 +163,11 @@ fun ResultsWithMap(
     onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit,
 ) {
     val loadedState = state as? LodgingSearchViewModel.UiState.Loaded
-    var selectedId by remember(openedResultId) { mutableStateOf(openedResultId) }
+    var selectedId by remember(openedResultId?.takeIf { mapScaffoldState.sizeClass.isLargeScreen }) {
+        mutableStateOf(
+            openedResultId
+        )
+    }
     val markers = loadedState?.results?.map {
         MarkerViewState(
             position = Pair(it.latitude, it.longitude),
@@ -170,15 +176,19 @@ fun ResultsWithMap(
             selected = it.id == selectedId,
         )
     } ?: emptyList()
-    val boundsMarkers = openedResult?.let {
+    val boundsMarkers = openedResult?.takeIf { mapScaffoldState.sizeClass.isLargeScreen }?.let {
         listOf(LatLng(it.latitude, it.longitude))
-    } ?: markers.map { LatLng(it.position.first, it.position.second) }
+    } ?: markers.firstOrNull { it.selected }
+        ?.let { listOf(LatLng(it.position.first, it.position.second)) } ?: emptyList()
 
     val coroutineScope = rememberCoroutineScope()
     var controlsVisible by remember { mutableStateOf(ControlsVisible.NONE) }
     val resultsScrollState = rememberLazyListState()
     val mapResultsScrollState = rememberLazyListState()
-    val detailsContentState = rememberLodgingDetailsContentState()
+    val detailsContentStates = remember { mutableStateMapOf<String, LodgingDetailsContentState>() }
+    val detailsContentState = detailsContentStates.getOrPut(openedResultId ?: SEARCH_TAB_ID) {
+        rememberLodgingDetailsContentState()
+    }
     LaunchedEffect(selectedId) {
         if (selectedId != null) {
             loadedState?.results?.indexOfFirst { it.id == selectedId }?.let { selectedIndex ->
@@ -199,18 +209,15 @@ fun ResultsWithMap(
         boundsPoints = boundsMarkers,
         onMarkerTapped = { marker ->
             val index = markers.indexOf(marker)
-            loadedState?.results?.getOrNull(index)?.let {
-                selectedId = it.id
-            }
+            selectedId = loadedState?.results?.getOrNull(index)?.id
         },
         minZoom = 17F,
         markerDescriptor = { marker ->
             val index = markers.indexOf(marker)
             val bitmap = loadedState?.results?.getOrNull(index)?.let {
                 LodgingSearchMarkerIcon(
-                    NumberFormat.getCurrencyInstance().apply { maximumFractionDigits = 0 }
-                        .format(it.price),
-                    marker.selected
+                    NumberFormat.getCurrencyInstance()
+                        .apply { maximumFractionDigits = 0 }.format(it.price), marker.selected
                 )
             } ?: mapMarkerIcon(MarkerType.Lodging, selected = marker.selected)
             BitmapDescriptorFactory.fromBitmap(bitmap)
@@ -252,12 +259,10 @@ fun ResultsWithMap(
             val openedResults = loadedState?.openedResults ?: emptyMap()
             AnimatedVisibility(openedResults.isNotEmpty()) {
                 TabBar(
-                    tabBarListState = tabBarScrollState,
-                    onTabClick = { tabId ->
+                    tabBarListState = tabBarScrollState, onTabClick = { tabId ->
                         val lodgingId = loadedState?.results?.firstOrNull { it.id == tabId }
                         onLodgingTapped(lodgingId)
-                    },
-                    modifier = Modifier
+                    }, modifier = Modifier
                         .padding(
                             bottom = WindowInsets.safeDrawing.asPaddingValues()
                                 .calculateBottomPadding()
@@ -265,7 +270,7 @@ fun ResultsWithMap(
                         .fillMaxWidth()
                 ) {
                     tab(
-                        "search",
+                        SEARCH_TAB_ID,
                         selected = loadedState?.selectedResult == null,
                         icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
                     openedResults.forEach { (tabId, lodging) ->
@@ -347,27 +352,22 @@ private fun SearchTopBar(
             .padding(bottom = 8.dp)
             .animateContentSize()
     ) {
-        TopAppBar(
-            title = { Text("Lodging Search") },
-            navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
+        TopAppBar(title = { Text("Lodging Search") }, navigationIcon = {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = ""
+                )
+            }
+        }, actions = {
+            if (showMapSwitchButton) {
+                IconButton(onClick = onMapButtonTapped) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = ""
+                        imageVector = Icons.Outlined.Map,
+                        contentDescription = null,
                     )
                 }
-            },
-            actions = {
-                if (showMapSwitchButton) {
-                    IconButton(onClick = onMapButtonTapped) {
-                        Icon(
-                            imageVector = Icons.Outlined.Map,
-                            contentDescription = null,
-                        )
-                    }
-                }
             }
-        )
+        })
         LodgingSearchParams(
             checkIn = state.searchState.checkIn,
             checkOut = state.searchState.checkOut,
@@ -436,8 +436,7 @@ private fun SearchTopBar(
                                 controlsVisible1 = ControlsVisible.NONE
                             }) {
                                 Text(
-                                    "Cancel",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    "Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             TextButton(onClick = {
@@ -481,8 +480,7 @@ fun MapTopBar(navController: NavController, onListButtonTapped: () -> Unit) {
     ) {
         FilledTonalIconButton(onClick = { navController.popBackStack() }) {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = ""
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = ""
             )
         }
         FilledTonalIconButton(onClick = onListButtonTapped) {
@@ -506,8 +504,7 @@ fun MapSearchResults(
         state = scrollState,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(all = 16.dp),
-        modifier = modifier
-            .fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         when (state) {
             is LodgingSearchViewModel.UiState.Loading -> {
