@@ -93,7 +93,7 @@ fun TripDetails(
         value = state.places.firstOrNull { it.listIndex == currentPlaceIndex }
     }
     val allMarkers = state.places.flatMap { it.markers }
-    val boundingMarkers = focusedPlace?.markers ?: allMarkers
+    val boundingMarkers = focusedPlace?.markers ?: emptyList()
     val mapScaffoldState = rememberMapScaffoldState()
 
     MapScaffold(

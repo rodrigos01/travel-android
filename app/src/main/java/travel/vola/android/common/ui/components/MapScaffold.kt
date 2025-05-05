@@ -91,7 +91,7 @@ fun MapScaffold(
     boundsPoints: List<LatLng>,
     state: MapScaffoldState = rememberMapScaffoldState(),
     minZoom: Float? = 15F,
-    onMarkerTapped: (MarkerViewState) -> Unit = {},
+    onMarkerTapped: (MarkerViewState?) -> Unit = {},
     additionalContent: @Composable (PaddingValues) -> Unit = {},
     markerDescriptor: @Composable (MarkerViewState) -> BitmapDescriptor = {
         BitmapDescriptorFactory.fromBitmap(mapMarkerIcon(it.type, selected = it.selected))
@@ -188,25 +188,32 @@ fun MapScaffold(
 private fun Map(
     markers: List<MarkerViewState>,
     boundsPoints: List<LatLng>,
-    onMarkerTapped: (MarkerViewState) -> Unit,
+    onMarkerTapped: (MarkerViewState?) -> Unit,
     minZoom: Float?,
     markerDescriptor: @Composable (MarkerViewState) -> BitmapDescriptor,
     modifier: Modifier = Modifier,
 ) {
-    if (boundsPoints.isEmpty()) return
-    val boundingBox = boundsPoints.fold(LatLngBounds.Builder()) { builder, point ->
+    val points = boundsPoints.takeIf { it.isNotEmpty() } ?: markers.map {
+        LatLng(
+            it.position.first,
+            it.position.second
+        )
+    }
+    val boundingBox = points.fold(LatLngBounds.Builder()) { builder, point ->
         builder.include(point)
     }.build()
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(boundingBox.center, 15F)
     }
     LaunchedEffect(boundingBox) {
-        val update = if (boundsPoints.size > 1 || minZoom == null) {
-            CameraUpdateFactory.newLatLngBounds(boundingBox, 64.dp.value.toInt())
-        } else {
-            CameraUpdateFactory.newLatLngZoom(boundingBox.center, minZoom)
+        if (boundsPoints.isNotEmpty()) {
+            val update = if (boundsPoints.size > 1 || minZoom == null) {
+                CameraUpdateFactory.newLatLngBounds(boundingBox, 64.dp.value.toInt())
+            } else {
+                CameraUpdateFactory.newLatLngZoom(boundingBox.center, minZoom)
+            }
+            cameraPositionState.animate(update)
         }
-        cameraPositionState.animate(update)
     }
     GoogleMap(
         cameraPositionState = cameraPositionState,
@@ -217,6 +224,7 @@ private fun Map(
             tiltGesturesEnabled = false,
         ),
         contentPadding = WindowInsets.safeContent.asPaddingValues(),
+        onMapClick = { onMarkerTapped(null) },
         modifier = modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.tertiaryContainer)
