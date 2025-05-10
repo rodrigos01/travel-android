@@ -265,7 +265,10 @@ class TripViewModel(
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
                 is Lodging -> listOf(event.checkIn to event, event.checkout to event)
-                is TimedPlace -> listOf(event.startDateTime to event)
+                is TimedPlace -> listOfNotNull(
+                    event.startDateTime to event,
+                    event.endDateTime?.let { it to event },
+                )
             }
         }.sortedBy { (time, event) ->
             EventComparable(
@@ -298,9 +301,7 @@ class TripViewModel(
                         )
                     )
                 }
-                if (event !is TimedPlace || event.place != place) {
-                    add(genItem(time, event, showDate = firstInDay))
-                }
+                add(genItem(time, event, showDate = firstInDay))
                 if (dateRangeItem != null) {
                     add(dateRangeItem)
                 } else if (lastInSection) {
@@ -330,14 +331,21 @@ class TripViewModel(
         // Exclude return to origin
         if (index == pairs.lastIndex && event is FlightSegment && event.arrival == time && place == pairs.originPlace) return null
 
-        // Exclude if previous adjacent events had same place
-        val eventsBefore = pairs.subList(0, index).takeLastWhile { it.place == place }
+        // Exclude if previous adjacent events had same place or were day trips
+        val eventsBefore =
+            pairs.subList(0, index).filterNot { (it.second as? TimedPlace)?.isDayTrip == true }
+                .takeLastWhile { it.place == place }
         if (eventsBefore.isNotEmpty()) return null
 
-        val placeEntries = pairs.subList(index, pairs.size).takeWhile { it.place == place }
+        val placeEntries = pairs.subList(index, pairs.size).takeWhile {
+            it.place == place || (it.second as? TimedPlace)?.isDayTrip == true
+        }
         val lastEntry = placeEntries.last()
         // Exclude if only event in place is a departure
         if (placeEntries.size == 1 && lastEntry.isDeparture) return null
+
+        // Exclude if event is a day trip
+        if (event is TimedPlace && event.isDayTrip) return null
 
         val dayAndMonth = time.dayAndMonthString
         val id =
@@ -363,6 +371,9 @@ class TripViewModel(
 
     private val Pair<Time, TripEvent>.isDeparture: Boolean
         get() = (second as? FlightSegment)?.departure == first
+
+    private val TimedPlace.isDayTrip: Boolean
+        get() = this.endDateTime == null || this.endDateTime.toMidnight() == this.startDateTime.toMidnight()
 
 
     private fun genEmptyAddPlanItem(
