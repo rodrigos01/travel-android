@@ -24,7 +24,7 @@ val Time.dayAndMonthString: String
     get() = format(DateTimeFormatter.ofPattern("MMM d"))
 
 val Time.dayOfWeekString: String
-    get() = DateFormatSymbols.getInstance().shortWeekdays[dayOfWeek.value + 1]
+    get() = format(DateTimeFormatter.ofPattern("E"))
 
 val Time.timeString: String
     get() = format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
