@@ -11,16 +11,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.AutoCompleteResultState
+import java.time.ZonedDateTime
 
-data class AddPlaceListItemState(
+class AddPlaceListItemState internal constructor(
     val startState: AddPlanRowState,
     val endState: AddPlanRowState,
+    private val hasEndState: MutableState<Boolean>,
 ) {
-    private val _hasEnd: MutableState<Boolean> = mutableStateOf(false)
     var hasEnd: Boolean
-        get() = _hasEnd.value
+        get() = hasEndState.value
         internal set(value) {
-            _hasEnd.value = value
+            hasEndState.value = value
         }
 }
 
@@ -28,7 +29,14 @@ data class AddPlaceListItemState(
 fun rememberAddPlaceListItemState(
     startState: AddPlanRowState = rememberAddPlanRowState(),
     endState: AddPlanRowState = rememberAddPlanRowState(),
-) = remember(startState, endState) { AddPlaceListItemState(startState, endState) }
+    hasEnd: Boolean = false,
+) = remember(startState, endState, hasEnd) {
+    AddPlaceListItemState(
+        startState,
+        endState,
+        mutableStateOf(hasEnd),
+    )
+}
 
 @Composable
 fun AddPlaceListItem(
@@ -36,6 +44,7 @@ fun AddPlaceListItem(
     placeName: String?,
     searchResults: List<AutoCompleteResultState>,
     onTextChanged: (CharSequence) -> Unit,
+    minEndTime: ZonedDateTime? = null,
 ) {
     Column {
         AddPlanRow(
@@ -55,9 +64,10 @@ fun AddPlaceListItem(
         )
         if (state.hasEnd) {
             AddPlanRow(
-                state = state.startState,
+                state = state.endState,
                 title = { Text("End") },
                 timeSelectorLabel = "Pick Time",
+                minTime = minEndTime,
             )
         }
         TextButton(onClick = { state.hasEnd = !state.hasEnd }) {
