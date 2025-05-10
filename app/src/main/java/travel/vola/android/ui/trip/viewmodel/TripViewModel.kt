@@ -221,7 +221,7 @@ class TripViewModel(
     }
 
     override fun delete(type: AddPlanItemState.Type, itemId: String) {
-        val entity = (reversibleItems[itemId] as? TripItemState.EventItemState)?.entity ?: return
+        val entity = (reversibleItems[itemId] as? TripItemState.Editable)?.entity ?: return
         addPlanUseCase.removeItem(itemId)
         viewModelScope.launch {
             when (entity) {
