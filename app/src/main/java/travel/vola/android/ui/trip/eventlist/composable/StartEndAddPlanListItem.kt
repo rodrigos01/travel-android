@@ -20,8 +20,8 @@ data class StartEndAddPlanListItemState(
 
 @Composable
 fun rememberStartEndAddPlanListItemState(
-    startState: AddPlanRowState,
-    endState: AddPlanRowState,
+    startState: AddPlanRowState = rememberAddPlanRowState(),
+    endState: AddPlanRowState = rememberAddPlanRowState(),
 ) = remember(startState, endState) { StartEndAddPlanListItemState(startState, endState) }
 
 @Composable

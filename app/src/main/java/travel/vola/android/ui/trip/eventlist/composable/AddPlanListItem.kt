@@ -17,6 +17,7 @@ import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
 import travel.vola.android.ui.trip.state.ManualStartEndAddPlanState
 import travel.vola.android.ui.trip.state.type
+import java.time.ZonedDateTime
 
 @Composable
 fun AddPlanListItem(
@@ -133,14 +134,12 @@ fun AddPlanListItem(
                     onCheckOutDateSelected = { actionHandler.setCheckOutTime(state.id, it) },
                     onLocationSearchTextChanged = {
                         actionHandler.lodgingTextChanged(
-                            state.id,
-                            it
+                            state.id, it
                         )
                     },
                     onLocationSearchResultSelected = {
                         actionHandler.lodgingSearchResultTapped(
-                            state.id,
-                            it
+                            state.id, it
                         )
                     },
                     onSwitchToManualButtonTapped = {
@@ -149,25 +148,48 @@ fun AddPlanListItem(
             }
 
             is AddPlaceItemState -> {
-                val rowState = rememberAddPlanRowState(
-                    key = state.searchResults,
-                    selectedDateTime = state.timestamp,
-                    timeSelected = state.timeSelected,
+                val addPlaceListItemState = rememberAddPlaceListItemState(
+                    startState = rememberAddPlanRowState(
+                        key = state.searchResults,
+                        selectedDateTime = state.timestamp,
+                        timeSelected = state.timeSelected,
+                    ),
                 )
-                LaunchedEffect(rowState.selectedDateTime) {
-                    rowState.selectedDateTime?.let {
-                        actionHandler.setPlaceArrivalDateTime(state.id, it, rowState.timeSelected)
+                LaunchedEffect(addPlaceListItemState.startState.selectedDateTime) {
+                    addPlaceListItemState.startState.selectedDateTime?.let {
+                        actionHandler.setPlaceStartDateTime(
+                            state.id, it, addPlaceListItemState.startState.timeSelected
+                        )
                     }
                 }
-                LaunchedEffect(rowState.selectedSearchResultIndex) {
+                LaunchedEffect(addPlaceListItemState.startState.selectedSearchResultIndex) {
                     actionHandler.locationSearchResultTapped(
-                        state.id,
-                        rowState.selectedSearchResultIndex
+                        state.id, addPlaceListItemState.startState.selectedSearchResultIndex
                     )
+                }
+                LaunchedEffect(addPlaceListItemState.endState.selectedDateTime) {
+                    addPlaceListItemState.endState.selectedDateTime?.let {
+                        actionHandler.setPlaceEndDateTime(
+                            state.id, it, addPlaceListItemState.endState.timeSelected
+                        )
+                    }
+                }
+                LaunchedEffect(addPlaceListItemState.hasEnd) {
+                    if (addPlaceListItemState.hasEnd) {
+                        addPlaceListItemState.endState.selectedDateTime?.let {
+                            actionHandler.setPlaceEndDateTime(
+                                state.id, it, addPlaceListItemState.endState.timeSelected
+                            )
+                        }
+                    } else {
+                        actionHandler.setPlaceEndDateTime(
+                            state.id, null, false,
+                        )
+                    }
                 }
                 AddPlaceListItem(
                     placeName = state.placeName,
-                    state = rowState,
+                    state = addPlaceListItemState,
                     searchResults = state.searchResults,
                     onTextChanged = {
                         actionHandler.locationTextChanged(state.id, it)
@@ -240,7 +262,18 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
     override fun setCheckOutTime(itemId: String, time: Time) = Unit
     override fun setDepartureTime(itemId: String, time: Time) = Unit
     override fun setArrivalTime(itemId: String, time: Time) = Unit
-    override fun setPlaceArrivalDateTime(itemId: String, time: Time, timeSelected: Boolean) = Unit
+    override fun setPlaceStartDateTime(
+        itemId: String,
+        dateTime: ZonedDateTime,
+        timeSelected: Boolean,
+    ) = Unit
+
+    override fun setPlaceEndDateTime(
+        itemId: String,
+        dateTime: ZonedDateTime?,
+        timeSelected: Boolean,
+    ) = Unit
+
     override fun locationSearchResultTapped(itemId: String, index: Int) = Unit
     override fun locationTextChanged(itemId: String, content: CharSequence) = Unit
 }
