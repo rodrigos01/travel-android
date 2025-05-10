@@ -57,11 +57,14 @@ class AddPlaceUseCase(
         return AddPlaceItemState(
             id = data.id,
             timestamp = data.startDateTime,
-            saveButtonEnabled = data.place != null && data.city != null,
+            startTimeSelected = data.hasStartTime,
+            endDateTime = data.endDateTime,
+            endTimeSelected = data.hasEndTime,
+            minEndTime = data.startDateTime,
+            saveButtonEnabled = data.place != null && data.city != null && (data.endDateTime == null || data.endDateTime >= data.startDateTime),
             deleteButtonEnabled = params.deleteEnabled,
             typeSelectionEnabled = params.typeSelectionEnabled,
             dateSelectionEnabled = params.dateSelectionEnabled,
-            timeSelected = data.hasStartTime,
             placeName = data.place?.name,
             searchResults = data.searchResults.map {
                 AutoCompleteResultState(

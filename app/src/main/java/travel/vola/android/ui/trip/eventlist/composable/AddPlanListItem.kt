@@ -152,8 +152,14 @@ fun AddPlanListItem(
                     startState = rememberAddPlanRowState(
                         key = state.searchResults,
                         selectedDateTime = state.timestamp,
-                        timeSelected = state.timeSelected,
+                        timeSelected = state.startTimeSelected,
                     ),
+                    endState = rememberAddPlanRowState(
+                        key = state.timestamp,
+                        selectedDateTime = state.endDateTime ?: state.minEndTime,
+                        timeSelected = state.endTimeSelected,
+                    ),
+                    hasEnd = state.endDateTime != null,
                 )
                 LaunchedEffect(addPlaceListItemState.startState.selectedDateTime) {
                     addPlaceListItemState.startState.selectedDateTime?.let {
@@ -191,6 +197,7 @@ fun AddPlanListItem(
                     placeName = state.placeName,
                     state = addPlaceListItemState,
                     searchResults = state.searchResults,
+                    minEndTime = state.minEndTime,
                     onTextChanged = {
                         actionHandler.locationTextChanged(state.id, it)
                     },
