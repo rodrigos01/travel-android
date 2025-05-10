@@ -5,6 +5,7 @@ import travel.vola.android.model.data.AirportSearchResult
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.SimplePlace
 import travel.vola.android.model.data.Time
+import java.time.ZonedDateTime
 
 sealed interface PendingData {
     val id: String
@@ -43,8 +44,10 @@ sealed interface PendingData {
 
     data class PendingTimedPlace(
         override val id: String,
-        val dateTime: Time,
-        val hasTime: Boolean = false,
+        val startDateTime: ZonedDateTime,
+        val hasStartTime: Boolean = false,
+        val endDateTime: ZonedDateTime? = null,
+        val hasEndTime: Boolean = false,
         val place: Place? = null,
         val city: Place? = null,
         val searchResults: List<SimplePlace> = emptyList(),

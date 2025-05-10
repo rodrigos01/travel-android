@@ -94,8 +94,9 @@ class TripViewModel(
             value?.let { reversibleItems[id] = it } ?: reversibleItems.remove(id)
         }
 
-    private val trip = repository.findTripById(tripId)
-        .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
+    private val trip =
+        repository.findTripById(tripId)
+            .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
     private val eventsFromTrip = trip.filterNotNull().map { currentTrip ->
         val items = genItems(currentTrip)
         val places =
@@ -194,8 +195,9 @@ class TripViewModel(
         if (reversibleItems.containsKey(itemId)) {
             return
         }
-        val item = viewState.value.items.filterIsInstance<TripItemState.Editable>()
-            .find { it.id == itemId } ?: return
+        val item =
+            viewState.value.items.filterIsInstance<TripItemState.Editable>()
+                .find { it.id == itemId } ?: return
         val entity = item.entity ?: return
         addPlanUseCase.createAddPlanItem(itemId, entity)
     }
@@ -263,7 +265,7 @@ class TripViewModel(
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
                 is Lodging -> listOf(event.checkIn to event, event.checkout to event)
-                is TimedPlace -> listOf(event.dateTime to event)
+                is TimedPlace -> listOf(event.startDateTime to event)
             }
         }.sortedBy { (time, event) ->
             EventComparable(
@@ -272,10 +274,12 @@ class TripViewModel(
         }
         val items = pairs.flatMapIndexed { index, (time, event) ->
             val placeItem = genPlaceItem(index, pairs)
-            val firstInMonth = pairs.subList(0, index)
-                .lastOrNull { it.first.monthString == time.monthString } == null
-            val firstInDay = pairs.subList(0, index)
-                .lastOrNull { it.first.dateString == time.dateString } == null
+            val firstInMonth =
+                pairs.subList(0, index)
+                    .lastOrNull { it.first.monthString == time.monthString } == null
+            val firstInDay =
+                pairs.subList(0, index)
+                    .lastOrNull { it.first.dateString == time.dateString } == null
             val dateRangeItem = pairs.getOrNull(index + 1)?.let { genDateRangeItem(time, it.first) }
             val place = event.getPlace(time)
             val lastInPlace =
@@ -317,7 +321,7 @@ class TripViewModel(
     }
 
     private fun genPlaceItem(
-        index: Int, pairs: List<Pair<Time, TripEvent>>
+        index: Int, pairs: List<Pair<Time, TripEvent>>,
     ): TripItemState.PlaceItemState? {
         val (time, event) = pairs[index]
 
@@ -362,7 +366,7 @@ class TripViewModel(
 
 
     private fun genEmptyAddPlanItem(
-        emptyAddPlanItemTimestamp: Time, showDivider: Boolean
+        emptyAddPlanItemTimestamp: Time, showDivider: Boolean,
     ) = TripItemState.EmptyAddPlanItemState(
         UUID.randomUUID().toString(),
         emptyAddPlanItemTimestamp,
@@ -370,7 +374,7 @@ class TripViewModel(
     )
 
     private fun genDateRangeItem(
-        from: Time, to: Time
+        from: Time, to: Time,
     ): TripItemState? {
         val start = from + 1.days
         val end = to.toMidnight() - 1.minutes
@@ -454,12 +458,12 @@ class TripViewModel(
 
             is TimedPlace -> TripItemState.TimedPlaceItemState(
                 id = event.id,
-                timestamp = event.dateTime,
+                timestamp = event.startDateTime,
                 showDate = showDate,
-                dayOfMonth = event.dateTime.dayOfMonthString,
-                dayOfWeek = event.dateTime.dayOfWeekString,
-                time = event.dateTime.timeString,
-                showTime = event.hasTime,
+                dayOfMonth = event.startDateTime.dayOfMonthString,
+                dayOfWeek = event.startDateTime.dayOfWeekString,
+                time = event.startDateTime.timeString,
+                showTime = event.hasStartTime,
                 placeName = event.place.name,
                 cityName = event.city.name,
                 imageUrl = event.place.coverImage ?: "",
@@ -489,7 +493,7 @@ private val Time.dateString
     get() = "$year=$month-$dayOfMonth"
 
 private class EventComparable(
-    private val time: Time, private val event: TripEvent
+    private val time: Time, private val event: TripEvent,
 ) : Comparable<EventComparable> {
     override fun compareTo(other: EventComparable): Int {
         if (time.dateString != other.time.dateString) {

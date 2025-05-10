@@ -35,8 +35,15 @@ class AddPlaceUseCase(
     override fun addItem(id: String, entity: TimedPlace, params: AddPlanUseCase.StateParams) {
         itemStore.addItem(
             PendingData.PendingTimedPlace(
-                id, entity.dateTime, entity.hasTime, entity.place, entity.city
-            ), params
+                id,
+                entity.startDateTime,
+                entity.hasStartTime,
+                null,
+                false,
+                entity.place,
+                entity.city,
+            ),
+            params,
         )
     }
 
@@ -49,12 +56,12 @@ class AddPlaceUseCase(
     ): AddPlaceItemState {
         return AddPlaceItemState(
             id = data.id,
-            timestamp = data.dateTime,
+            timestamp = data.startDateTime,
             saveButtonEnabled = data.place != null && data.city != null,
             deleteButtonEnabled = params.deleteEnabled,
             typeSelectionEnabled = params.typeSelectionEnabled,
             dateSelectionEnabled = params.dateSelectionEnabled,
-            timeSelected = data.hasTime,
+            timeSelected = data.hasStartTime,
             placeName = data.place?.name,
             searchResults = data.searchResults.map {
                 AutoCompleteResultState(
@@ -71,8 +78,8 @@ class AddPlaceUseCase(
     ) {
         itemStore.update(itemId) {
             it.copy(
-                dateTime = dateTime,
-                hasTime = timeSelected,
+                startDateTime = dateTime,
+                hasStartTime = timeSelected,
             )
         }
     }
@@ -81,7 +88,14 @@ class AddPlaceUseCase(
         itemId: String,
         dateTime: ZonedDateTime?,
         timeSelected: Boolean,
-    ) = Unit
+    ) {
+        itemStore.update(itemId) {
+            it.copy(
+                endDateTime = dateTime,
+                hasEndTime = timeSelected,
+            )
+        }
+    }
 
     private val autoCompleteScope = MutexScope(coroutineScope.coroutineContext)
     override fun locationTextChanged(itemId: String, content: CharSequence) {
@@ -111,8 +125,10 @@ class AddPlaceUseCase(
         val data = itemStore.getData(item.id) ?: error("Item ${item.id} not found in store")
         return TimedPlace(
             id = data.id,
-            dateTime = data.dateTime,
-            hasTime = data.hasTime,
+            startDateTime = data.startDateTime,
+            hasStartTime = data.hasStartTime,
+            endDateTime = data.endDateTime,
+            hasEndTime = data.hasEndTime,
             place = data.place ?: error("Place not set"),
             city = data.city ?: error("City not set"),
         )
