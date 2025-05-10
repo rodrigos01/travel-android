@@ -215,6 +215,8 @@ class ManualAddLodgingUseCaseTest {
                 entityId = "hotel_id",
                 name = "Hotel Novotel Paris Les Halles",
                 address = "Blvd Les Halles, 45",
+                latitude = 1.5,
+                longitude = 2.5,
                 checkIn = Time("2025-10-16T15:23:00+01:00"),
                 checkOut = Time("2025-10-17T10:52:00+01:00"),
                 city = paris,
@@ -227,6 +229,8 @@ class ManualAddLodgingUseCaseTest {
         assertThat(entity.id).isEqualTo("hotel_id")
         assertThat(entity.name).isEqualTo("Hotel Novotel Paris Les Halles")
         assertThat(entity.address).isEqualTo("Blvd Les Halles, 45")
+        assertThat(entity.latitude).isEqualTo(1.5)
+        assertThat(entity.longitude).isEqualTo(2.5)
         assertThat(entity.checkIn).isEqualTo(Time("2025-10-16T15:23:00+01:00"))
         assertThat(entity.checkout).isEqualTo(Time("2025-10-17T10:52:00+01:00"))
         assertThat(entity.city).isEqualTo(paris)

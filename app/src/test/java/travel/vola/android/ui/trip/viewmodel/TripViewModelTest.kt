@@ -1016,9 +1016,11 @@ class TripViewModelTest {
         id = id,
         name = name,
         address = address,
+        latitude = 0.0,
+        longitude = 0.0,
+        city = Place(cityName),
         checkIn = checkIn.asTime(),
         checkout = checkout.asTime(),
-        city = Place(cityName),
     )
 
     private fun Place(name: String) = Place(

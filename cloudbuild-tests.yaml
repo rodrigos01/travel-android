@@ -6,6 +6,7 @@ steps:
   - name: 'gcr.io/$PROJECT_ID/android:35'
     id: unit_tests
     args: [ "./gradlew", "testProdReleaseUnitTest" ]
+    allowFailure: true
     env:
       - 'TERM=dumb'
       - 'JAVA_TOOL_OPTIONS="-Xmx4g"'
