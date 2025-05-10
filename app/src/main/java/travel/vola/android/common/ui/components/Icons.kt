@@ -12,3 +12,6 @@ val Icons.Filled.Map: ImageVector
 
 val Icons.Outlined.Map: ImageVector
     @Composable get() = ImageVector.vectorResource(R.drawable.map_outline_24)
+
+val Icons.Outlined.Clock: ImageVector
+    @Composable get() = ImageVector.vectorResource(R.drawable.clock_baseline_24)

@@ -6,12 +6,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
@@ -26,13 +26,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import travel.vola.android.R
@@ -46,7 +42,6 @@ import travel.vola.android.model.data.Time
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.AutoCompleteTextField
 import travel.vola.android.ui.trip.creation.composable.DatePickerButton
-import travel.vola.android.ui.trip.creation.composable.TimePickerButton
 import travel.vola.android.ui.trip.creation.composable.TimePickerTextButton
 import travel.vola.android.ui.trip.creation.composable.rememberAutoCompleteTextFieldState
 import travel.vola.android.ui.trip.creation.composable.rememberTimePickerDialogState
@@ -104,7 +99,6 @@ fun AddPlanRow(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.minimumInteractiveComponentSize(),
         ) {
             Box(
@@ -120,7 +114,9 @@ fun AddPlanRow(
                         state.timeSelected = true
                         state.selectedDateTime = selectedTime.update(hour = hour, minute = minute)
                     },
-                    modifier = Modifier.semantics { role = Role.Button },
+                    contentColor = MaterialTheme.colorScheme.tertiary,
+                    iconSize = 16.dp,
+                    textStyle = MaterialTheme.typography.bodyMedium,
                     timePickerDialogState = timePickerDialogState,
                 )
             }
@@ -128,6 +124,7 @@ fun AddPlanRow(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
             if (dateSelectionEnabled) {
                 DatePickerButton(
@@ -189,32 +186,25 @@ fun AddPlanRow(
                             }
                         }
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 4.dp)
+                        .align(Alignment.CenterVertically),
                 )
             } else {
                 val showTimePicker = remember {
                     mutableStateOf(false)
                 }
                 val focusManager = LocalFocusManager.current
-                TimePickerButton(
+                TimePickerTextButton(
                     onTimeSelected = { hour, minute ->
                         state.selectedDateTime = selectedTime.update(hour = hour, minute = minute)
                         focusManager.clearFocus()
                     },
                     showTimePickerState = showTimePicker,
                     timePickerDialogState = timePickerDialogState,
-                ) {
-                    OutlinedTextField(
-                        value = selectedTime.timeString,
-                        label = { Text(timeSelectorLabel) },
-                        placeholder = { placeHolder?.let { Text(it) } },
-                        onValueChange = {},
-                        modifier = Modifier.onFocusChanged {
-                            if (it.hasFocus) {
-                                showTimePicker.value = true
-                            }
-                        })
-                }
+                    text = timeSelectorLabel,
+                )
             }
         }
     }
@@ -223,9 +213,13 @@ fun AddPlanRow(
 
 @Preview
 @Composable
-fun AddPlanRowPreview() {
+fun AddPlanRowPreview(hasTextField: Boolean = true) {
     AppTheme {
-        Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
+        Box(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surface)
+                .fillMaxWidth()
+        ) {
             val state = rememberAddPlanRowState(
                 selectedDateTime = Time("2025-06-12T03:45 -0300"),
             )
@@ -236,11 +230,17 @@ fun AddPlanRowPreview() {
                 title = { Text("Title") },
                 timeSelectorLabel = "Pick Time",
                 dateSelectionEnabled = true,
-                showTextField = true,
+                showTextField = hasTextField,
                 placeHolder = "PlaceHolder",
                 labelText = "Label",
                 onTextChanged = {},
             )
         }
     }
+}
+
+@Preview
+@Composable
+fun AddPlanRowPreviewNoTextField() {
+    AddPlanRowPreview(hasTextField = false)
 }
