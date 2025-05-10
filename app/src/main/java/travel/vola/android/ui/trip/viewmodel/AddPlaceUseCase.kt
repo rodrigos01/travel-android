@@ -13,6 +13,7 @@ import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
 import travel.vola.android.ui.trip.creation.usecase.PendingData
 import travel.vola.android.ui.trip.state.AddPlaceItemState
 import travel.vola.android.ui.trip.state.AutoCompleteResultState
+import java.time.ZonedDateTime
 
 class AddPlaceUseCase(
     private val coroutineScope: CoroutineScope,
@@ -44,7 +45,7 @@ class AddPlaceUseCase(
     }
 
     private fun createItem(
-        data: PendingData.PendingTimedPlace, params: AddPlanUseCase.StateParams
+        data: PendingData.PendingTimedPlace, params: AddPlanUseCase.StateParams,
     ): AddPlaceItemState {
         return AddPlaceItemState(
             id = data.id,
@@ -63,14 +64,24 @@ class AddPlaceUseCase(
         )
     }
 
-    override fun setPlaceArrivalDateTime(itemId: String, time: Time, timeSelected: Boolean) {
+    override fun setPlaceStartDateTime(
+        itemId: String,
+        dateTime: ZonedDateTime,
+        timeSelected: Boolean,
+    ) {
         itemStore.update(itemId) {
             it.copy(
-                dateTime = time,
+                dateTime = dateTime,
                 hasTime = timeSelected,
             )
         }
     }
+
+    override fun setPlaceEndDateTime(
+        itemId: String,
+        dateTime: ZonedDateTime?,
+        timeSelected: Boolean,
+    ) = Unit
 
     private val autoCompleteScope = MutexScope(coroutineScope.coroutineContext)
     override fun locationTextChanged(itemId: String, content: CharSequence) {

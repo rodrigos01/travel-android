@@ -230,6 +230,25 @@ fun AddPlanRow(
     }
 }
 
+@Composable
+fun AddPlanRow(
+    state: AddPlanRowState,
+    minTime: Time? = null,
+    title: @Composable () -> Unit,
+    timeSelectorLabel: String,
+    dateSelectionEnabled: Boolean = true,
+) {
+    AddPlanRow(
+        state = state,
+        minTime = minTime,
+        searchResults = emptyList(),
+        title = title,
+        timeSelectorLabel = timeSelectorLabel,
+        dateSelectionEnabled = dateSelectionEnabled,
+        showTextField = false,
+    )
+}
+
 @Preview
 @Composable
 fun AddPlanRowPreview(hasTextField: Boolean = true) {
