@@ -2,7 +2,9 @@ package travel.vola.android.common.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
@@ -10,8 +12,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import travel.vola.android.ui.theme.AppTheme
 
@@ -21,12 +25,17 @@ fun IconTextButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     leadingIcon: ImageVector? = null,
+    leadingIconSize: Dp = 24.dp,
     trailingIcon: ImageVector? = null,
-    content: @Composable () -> Unit
+    trailingIconSize: Dp = 24.dp,
+    colors: ButtonColors = ButtonDefaults.textButtonColors(),
+    shape: Shape = ButtonDefaults.textShape,
+    content: @Composable () -> Unit,
 ) {
     TextButton(
         onClick = onClick,
-        shape = RoundedCornerShape(8.dp),
+        shape = shape,
+        colors = colors,
         enabled = enabled,
         modifier = modifier,
     ) {
@@ -39,7 +48,9 @@ fun IconTextButton(
                     it,
                     tint = LocalContentColor.current,
                     contentDescription = null,
-                    modifier = Modifier.align(Alignment.CenterVertically)
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .size(leadingIconSize)
                 )
             }
             content()
@@ -48,7 +59,9 @@ fun IconTextButton(
                     it,
                     tint = LocalContentColor.current,
                     contentDescription = null,
-                    modifier = Modifier.align(Alignment.CenterVertically)
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .size(trailingIconSize)
                 )
             }
         }
