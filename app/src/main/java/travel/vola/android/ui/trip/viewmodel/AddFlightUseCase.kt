@@ -6,7 +6,6 @@ import travel.vola.android.common.coroutines.MutexScope
 import travel.vola.android.extensions.MapFlow
 import travel.vola.android.extensions.atTimeZone
 import travel.vola.android.extensions.plus
-import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.update
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
@@ -25,8 +24,7 @@ class AddFlightUseCase(
     private val itemStore: AddPlanItemStore<PendingFlight, AddFlightItemState> = AddPlanItemStore(),
     private val repository: AddFlightRepository = AddFlightRepository(),
 ) : AddPlanUseCase.AddItemUseCase<Flight, AddFlightItemState>,
-    AddPlanUseCase.EntityFactory<Flight, AddFlightItemState>,
-    AddFlightItemActionHandler {
+    AddPlanUseCase.EntityFactory<Flight, AddFlightItemState>, AddFlightItemActionHandler {
 
     override val items: MapFlow<String, AddFlightItemState> = itemStore.items(::createItem)
 
@@ -60,7 +58,7 @@ class AddFlightUseCase(
 
     private val autoCompleteScope = MutexScope(coroutineScope.coroutineContext)
     override fun airportFromSearchTextChanged(
-        itemId: String, content: CharSequence
+        itemId: String, content: CharSequence,
     ) {
         if (content.length < 3) {
             return
@@ -92,7 +90,7 @@ class AddFlightUseCase(
     }
 
     override fun airportToSearchTextChanged(
-        itemId: String, content: CharSequence
+        itemId: String, content: CharSequence,
     ) {
         if (content.length < 3) {
             return
@@ -152,14 +150,15 @@ class AddFlightUseCase(
         data: PendingFlight,
         stateParams: AddPlanUseCase.StateParams,
     ): AddFlightItemState {
-        val minArrival = (data.airportTo?.let { data.departure.atTimeZone(it.timeZone) }
-            ?: data.departure) + 1.hours
+        val minArrival =
+            (data.airportTo?.let { data.departure.atTimeZone(it.timeZone) }
+                ?: data.departure) + 1.hours
         return AddFlightItemState(
             id = data.id,
             timestamp = data.departure,
             startState = ManualAddPlanState(
                 time = data.departure,
-                minTime = Time.now().toMidnight(),
+                minTime = null,
                 dateSelectionEnabled = stateParams.dateSelectionEnabled,
                 locationText = data.airportFrom?.name,
                 searchResults = data.airportFromSearchResults.map {
@@ -173,8 +172,7 @@ class AddFlightUseCase(
                 locationText = data.airportTo?.name,
                 searchResults = data.airportToSearchResults.map {
                     AutoCompleteResultState(
-                        it.name,
-                        it.location
+                        it.name, it.location
                     )
                 },
             ),
@@ -208,6 +206,6 @@ class AddFlightUseCase(
     }
 
     private fun PendingFlight.minArrival(
-        departureTime: Time = this.departure
+        departureTime: Time = this.departure,
     ) = (airportTo?.let { departureTime.atTimeZone(it.timeZone) } ?: departureTime) + 1.hours
 }
