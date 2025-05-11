@@ -5,6 +5,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,8 +45,30 @@ fun AddPlaceListItem(
     placeName: String?,
     searchResults: List<AutoCompleteResultState>,
     onTextChanged: (CharSequence) -> Unit,
+    onUpdated: (
+        startDateTime: ZonedDateTime?,
+        startTimeSelected: Boolean,
+        endDateTime: ZonedDateTime?,
+        endTimeSelected: Boolean,
+        selectedSearchResultIndex: Int,
+    ) -> Unit,
     minEndTime: ZonedDateTime? = null,
 ) {
+    LaunchedEffect(
+        state.startState.selectedDateTime,
+        state.startState.timeSelected,
+        state.endState.selectedDateTime,
+        state.startState.selectedSearchResultIndex,
+        state.endState.timeSelected,
+    ) {
+        onUpdated(
+            state.startState.selectedDateTime,
+            state.startState.timeSelected,
+            state.endState.selectedDateTime.takeIf { state.hasEnd },
+            state.endState.timeSelected,
+            state.startState.selectedSearchResultIndex,
+        )
+    }
     Column {
         AddPlanRow(
             state = state.startState,
@@ -86,6 +109,7 @@ fun AddPlaceListItemPreview() {
                 placeName = "New York",
                 searchResults = emptyList(),
                 onTextChanged = {},
+                onUpdated = { _, _, _, _, _ -> },
             )
         }
     }

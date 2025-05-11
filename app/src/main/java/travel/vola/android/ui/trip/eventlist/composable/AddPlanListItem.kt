@@ -169,38 +169,6 @@ fun AddPlanListItem(
                     ),
                     hasEnd = state.endDateTime != null,
                 )
-                LaunchedEffect(addPlaceListItemState.startState.selectedDateTime) {
-                    addPlaceListItemState.startState.selectedDateTime?.let {
-                        actionHandler.setPlaceStartDateTime(
-                            state.id, it, addPlaceListItemState.startState.timeSelected
-                        )
-                    }
-                }
-                LaunchedEffect(addPlaceListItemState.startState.selectedSearchResultIndex) {
-                    actionHandler.locationSearchResultTapped(
-                        state.id, addPlaceListItemState.startState.selectedSearchResultIndex
-                    )
-                }
-                LaunchedEffect(addPlaceListItemState.endState.selectedDateTime) {
-                    addPlaceListItemState.endState.selectedDateTime?.let {
-                        actionHandler.setPlaceEndDateTime(
-                            state.id, it, addPlaceListItemState.endState.timeSelected
-                        )
-                    }
-                }
-                LaunchedEffect(addPlaceListItemState.hasEnd) {
-                    if (addPlaceListItemState.hasEnd) {
-                        addPlaceListItemState.endState.selectedDateTime?.let {
-                            actionHandler.setPlaceEndDateTime(
-                                state.id, it, addPlaceListItemState.endState.timeSelected
-                            )
-                        }
-                    } else {
-                        actionHandler.setPlaceEndDateTime(
-                            state.id, null, false,
-                        )
-                    }
-                }
                 AddPlaceListItem(
                     placeName = state.placeName,
                     state = addPlaceListItemState,
@@ -208,6 +176,16 @@ fun AddPlanListItem(
                     minEndTime = state.minEndTime,
                     onTextChanged = {
                         actionHandler.locationTextChanged(state.id, it)
+                    },
+                    onUpdated = { startDateTime, startTimeSelected, endDateTime, endTimeSelected, selectedSearchResultIndex ->
+                        actionHandler.onUpdated(
+                            state.id,
+                            startDateTime,
+                            startTimeSelected,
+                            endDateTime,
+                            endTimeSelected,
+                            selectedSearchResultIndex,
+                        )
                     },
                 )
             }
@@ -279,19 +257,14 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
     override fun setCheckOutTime(itemId: String, time: Time) = Unit
     override fun setDepartureTime(itemId: String, time: Time) = Unit
     override fun setArrivalTime(itemId: String, time: Time) = Unit
-    override fun setPlaceStartDateTime(
-        itemId: String,
-        dateTime: ZonedDateTime,
-        timeSelected: Boolean,
-    ) = Unit
-
-    override fun setPlaceEndDateTime(
-        itemId: String,
-        dateTime: ZonedDateTime?,
-        timeSelected: Boolean,
-    ) = Unit
-
-    override fun locationSearchResultTapped(itemId: String, index: Int) = Unit
     override fun locationTextChanged(itemId: String, content: CharSequence) = Unit
+    override fun onUpdated(
+        itemId: String,
+        startDateTime: ZonedDateTime?,
+        startTimeSelected: Boolean,
+        endDateTime: ZonedDateTime?,
+        endTimeSelected: Boolean,
+        selectedSearchResultIndex: Int,
+    ) = Unit
     override fun onFindLodgingButtonTapped(itemId: String) = Unit
 }
