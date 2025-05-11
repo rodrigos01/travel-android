@@ -29,13 +29,17 @@ class AddPlaceUseCase(
     override val items: MapFlow<String, AddPlaceItemState> = itemStore.items(::createItem)
 
     override fun addItem(id: String, time: Time, params: AddPlanUseCase.StateParams) {
-        itemStore.addItem(PendingData.PendingTimedPlace(id, time.toMidnight()), params)
+        itemStore.addItem(
+            PendingData.PendingTimedPlace(id, entityId = null, startDateTime = time.toMidnight()),
+            params,
+        )
     }
 
     override fun addItem(id: String, entity: TimedPlace, params: AddPlanUseCase.StateParams) {
         itemStore.addItem(
             PendingData.PendingTimedPlace(
                 id,
+                entity.id,
                 entity.startDateTime,
                 entity.hasStartTime,
                 entity.endDateTime,
@@ -127,7 +131,7 @@ class AddPlaceUseCase(
     override fun createEntity(item: AddPlaceItemState): TimedPlace {
         val data = itemStore.getData(item.id) ?: error("Item ${item.id} not found in store")
         return TimedPlace(
-            id = data.id,
+            id = data.entityId ?: data.id,
             startDateTime = data.startDateTime,
             hasStartTime = data.hasStartTime,
             endDateTime = data.endDateTime,
