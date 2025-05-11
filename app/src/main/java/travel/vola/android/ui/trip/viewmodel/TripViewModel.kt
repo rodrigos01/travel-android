@@ -311,12 +311,12 @@ class TripViewModel(
                 previousItems.lastOrNull { it.first.dateString == time.dateString } == null
             val nextItems = pairs.nextItems(index)
             val nextItem = nextItems.firstOrNull()
-            val dateRangeItem = nextItem?.let { genDateRangeItem(time, it.first) }
             val place = event.getPlace(time)
-            val lastInPlace =
-                nextItem?.isDeparture == false && nextItems.takeWhile { it.place == place }.size == 1
+            val lastInPlace = nextItems.takeWhile { it.place == place }.isEmpty()
             val lastInSection =
                 index == pairs.lastIndex || nextItem?.first?.dateString != time.dateString || lastInPlace
+            val dateRangeItem =
+                nextItem?.let { genDateRangeItem(time, it.first, showBottomDivider = !lastInPlace) }
             mutableListOf<TripItemState>().apply {
                 placeItem?.let { add(it) }
                 if (firstInMonth) {
@@ -419,7 +419,7 @@ class TripViewModel(
     )
 
     private fun genDateRangeItem(
-        from: Time, to: Time,
+        from: Time, to: Time, showBottomDivider: Boolean,
     ): TripItemState? {
         val start = from + 1.days
         val end = to.toMidnight() - 1.minutes
@@ -433,6 +433,7 @@ class TripViewModel(
                 dayOfWeekStart = start.dayOfWeekString,
                 dayOfMonthEnd = end.dayOfMonthString,
                 dayOfWeekEnd = end.dayOfWeekString,
+                showBottomDivider = showBottomDivider,
             )
         } else {
             TripItemState.EmptyDateItemState(
@@ -440,6 +441,7 @@ class TripViewModel(
                 timestamp = from,
                 dayOfMonth = start.dayOfMonthString,
                 dayOfWeek = start.dayOfWeekString,
+                showBottomDivider = showBottomDivider,
             )
         }
     }
