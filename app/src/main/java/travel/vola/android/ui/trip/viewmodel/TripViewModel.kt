@@ -313,8 +313,14 @@ class TripViewModel(
                 previousItems.lastOrNull { it.first.dateString == time.dateString } == null
             val nextItems = pairs.nextItems(index)
             val nextItem = nextItems.firstOrNull()
-            val place = event.getPlace(time)
-            val lastInPlace = nextItems.takeWhile { it.place == place }.isEmpty()
+            val place = if ((event as? TimedPlace)?.isDayTrip == true) {
+                previousItems.lastOrNull()?.place
+            } else {
+                event.getPlace(time)
+            }
+            val lastInPlace =
+                nextItems.takeWhile { it.place == place || (it.second as? TimedPlace)?.isDayTrip == true }
+                    .isEmpty()
             val lastInSection =
                 index == pairs.lastIndex || nextItem?.first?.dateString != time.dateString || lastInPlace
             val dateRangeItem =
