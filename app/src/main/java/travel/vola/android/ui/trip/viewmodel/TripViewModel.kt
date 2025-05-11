@@ -82,6 +82,7 @@ class TripViewModel(
     )
 
     data class PlaceState(
+        internal val place: Place,
         val listIndex: Int,
         val markers: List<MarkerViewState>,
     )
@@ -103,6 +104,7 @@ class TripViewModel(
             (currentTrip.lodgings + currentTrip.places).fold(mapOf<Place, PlaceState>()) { map, entity: WithCity ->
                 val current = map.getOrDefault(
                     entity.city, PlaceState(
+                        place = entity.city,
                         listIndex = items.indexOfFirst { it is TripItemState.PlaceItemState && entity.city.name == it.placeName },
                         markers = emptyList()
                     )
@@ -198,8 +200,29 @@ class TripViewModel(
         val item =
             viewState.value.items.filterIsInstance<TripItemState.Editable>()
                 .find { it.id == itemId } ?: return
-        val entity = item.entity ?: return
-        addPlanUseCase.createAddPlanItem(itemId, entity)
+        val entity = item.entity
+        if (entity != null) {
+            addPlanUseCase.createAddPlanItem(itemId, entity)
+        } else if (item is TripItemState.PlaceItemState) {
+            val placeId = item.id.split("_").first()
+            viewState.value.places.firstOrNull {
+                it.place.id == placeId
+            }?.place?.let { place ->
+                addPlanUseCase.createAddPlanItem(
+                    itemId,
+                    TimedPlace(
+                        id = placeId,
+                        startDateTime = item.timestamp.toMidnight(),
+                        hasStartTime = false,
+                        city = place,
+                        place = place,
+                        endDateTime = null,
+                        hasEndTime = false,
+                    ),
+                    deleteEnabled = false,
+                )
+            }
+        }
     }
 
     override fun save(itemId: String) {
@@ -283,11 +306,11 @@ class TripViewModel(
             val firstInDay =
                 pairs.subList(0, index)
                     .lastOrNull { it.first.dateString == time.dateString } == null
-            val dateRangeItem = pairs.getOrNull(index + 1)?.let { genDateRangeItem(time, it.first) }
+            val nextItems = pairs.nextItems(index)
+            val dateRangeItem = nextItems.firstOrNull()?.let { genDateRangeItem(time, it.first) }
             val place = event.getPlace(time)
             val lastInPlace =
-                pairs.getOrNull(index + 1)?.isDeparture == false && pairs.subList(index, pairs.size)
-                    .takeWhile { it.place == place }.size == 1
+                nextItems.firstOrNull()?.isDeparture == false && nextItems.takeWhile { it.place == place }.size == 1
             val lastInSection =
                 index == pairs.lastIndex || pairs[index + 1].first.dateString != time.dateString || lastInPlace
             mutableListOf<TripItemState>().apply {
@@ -301,7 +324,9 @@ class TripViewModel(
                         )
                     )
                 }
-                add(genItem(time, event, showDate = firstInDay))
+                if (event !is TimedPlace || event.isDayTrip) {
+                    add(genItem(time, event, showDate = firstInDay))
+                }
                 if (dateRangeItem != null) {
                     add(dateRangeItem)
                 } else if (lastInSection) {
@@ -332,9 +357,7 @@ class TripViewModel(
         if (index == pairs.lastIndex && event is FlightSegment && event.arrival == time && place == pairs.originPlace) return null
 
         // Exclude if previous adjacent events had same place or were day trips
-        val eventsBefore =
-            pairs.subList(0, index).filterNot { (it.second as? TimedPlace)?.isDayTrip == true }
-                .takeLastWhile { it.place == place }
+        val eventsBefore = pairs.subList(0, index).takeLastWhile { it.place == place }
         if (eventsBefore.isNotEmpty()) return null
 
         val placeEntries = pairs.subList(index, pairs.size).takeWhile {
@@ -364,6 +387,11 @@ class TripViewModel(
     private val List<Pair<Time, TripEvent>>.originPlace: Place?
         get() {
             return first().takeIf { it.isDeparture }?.place
+        }
+
+    private fun List<Pair<Time, TripEvent>>.nextItems(index: Int) =
+        subList(index, size).filterNot { (nextTime, nextEvent) ->
+            nextEvent is TimedPlace && nextTime == nextEvent.endDateTime && nextTime != nextEvent.startDateTime
         }
 
     private val Pair<Time, TripEvent>.place: Place
