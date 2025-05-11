@@ -304,7 +304,9 @@ class TripViewModel(
                 return@flatMapIndexed emptyList()
             }
             val placeItem = genPlaceItem(index, pairs)
-            val previousItems = pairs.subList(0, index)
+            val previousItems =
+                pairs.subList(0, index)
+                    .filterNot { (nextTime, nextEvent) -> nextEvent.isTimedPlaceEnd(nextTime) }
             val firstInMonth =
                 previousItems.lastOrNull { it.first.monthString == time.monthString } == null
             val firstInDay =
@@ -566,10 +568,12 @@ private class EventComparable(
         get() {
             return when {
                 event is Lodging && time == event.checkout -> EventType.CHECKOUT
+                event is TimedPlace && time == event.endDateTime -> EventType.CHECKOUT
                 event is Lodging && time == event.checkIn -> EventType.CHECKIN
+                event is TimedPlace && time == event.startDateTime && event.endDateTime != null -> EventType.CHECKIN
                 event is FlightSegment && time == event.arrival -> EventType.ARRIVAL
                 event is FlightSegment && time == event.departure -> EventType.DEPARTURE
-                event is TimedPlace -> EventType.PLACE
+                event is TimedPlace && event.endDateTime == null -> EventType.PLACE
                 else -> EventType.UNKNOWN
             }
         }
