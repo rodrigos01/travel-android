@@ -102,6 +102,7 @@ class ManualAddLodgingUseCase(
         val data = PendingLodging(
             id = id,
             checkIn = time.update(hour = 15, minute = 0),
+            isCheckInTimeSet = true,
         )
         itemStore.addItem(data, params)
     }
@@ -119,7 +120,9 @@ class ManualAddLodgingUseCase(
             latitude = entity.latitude,
             longitude = entity.longitude,
             checkIn = entity.checkIn,
+            isCheckInTimeSet = true,
             checkOut = entity.checkout,
+            isCheckOutTimeSet = true,
             city = entity.city,
         )
         itemStore.addItem(data, params)
@@ -134,8 +137,9 @@ class ManualAddLodgingUseCase(
             id = data.id,
             timestamp = data.checkIn,
             startState = ManualAddPlanState(
-                time = data.checkIn,
-                minTime = null,
+                dateTime = data.checkIn,
+                minDateTime = null,
+                isTimeSet = data.isCheckInTimeSet,
                 dateSelectionEnabled = stateParams.dateSelectionEnabled,
                 locationText = data.name ?: data.address,
                 searchResults = data.searchResults.map {
@@ -145,8 +149,9 @@ class ManualAddLodgingUseCase(
                 },
             ),
             endState = ManualAddPlanState(
-                time = data.checkOut ?: minCheckoutTime.update(hour = 11, minute = 0),
-                minTime = minCheckoutTime,
+                dateTime = data.checkOut ?: minCheckoutTime.update(hour = 11, minute = 0),
+                minDateTime = minCheckoutTime,
+                isTimeSet = data.isCheckOutTimeSet,
                 dateSelectionEnabled = true,
                 locationText = null,
                 searchResults = emptyList(),

@@ -41,10 +41,12 @@ fun AddPlanListItem(
                 val itemState = rememberStartEndAddPlanListItemState(
                     startState = rememberAddPlanRowState(
                         key = state.startState.searchResults,
-                        selectedDateTime = state.startState.time,
+                        selectedDateTime = state.startState.dateTime,
+                        timeSelected = state.startState.isTimeSet,
                     ), endState = rememberAddPlanRowState(
                         key = state.endState.searchResults,
-                        selectedDateTime = state.endState.time,
+                        selectedDateTime = state.endState.dateTime,
+                        timeSelected = state.endState.isTimeSet,
                     )
                 )
                 when (state) {
@@ -144,7 +146,8 @@ fun AddPlanListItem(
                     },
                     onSwitchToManualButtonTapped = {
                         actionHandler.onSwitchToManualButtonTapped(state.id)
-                    })
+                    },
+                )
             }
 
             is AddPlaceItemState -> {
@@ -234,14 +237,14 @@ fun AddPlanListItemPreview() {
                         Time.now(),
                         dateSelectionEnabled = false,
                         locationText = "Charles de Gaule",
-                        searchResults = emptyList(),
+                        searchResults = emptyList(), isTimeSet = true
                     ),
                     endState = ManualAddPlanState(
                         Time("2025-10-18T06:00 -0300"),
                         Time.now(),
                         dateSelectionEnabled = true,
                         locationText = "John F. Kennedy",
-                        searchResults = emptyList(),
+                        searchResults = emptyList(), isTimeSet = true
                     ),
                     typeSelectionEnabled = true,
                     saveButtonEnabled = true,
