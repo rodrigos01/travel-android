@@ -1,7 +1,6 @@
 package travel.vola.android.ui.trip.creation.composable
 
 import android.text.format.DateFormat.is24HourFormat
-import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TimePickerState
@@ -18,7 +17,6 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.Date
-import java.util.TimeZone
 
 @Composable
 fun DateTimePickerDialog(
@@ -133,13 +131,6 @@ class DateTimePickerDialogState(
             dateTimeState.value = value
         }
 }
-
-/**
- * Currently selected date as a Time object. TimeZone is always UTC
- */
-@OptIn(ExperimentalMaterial3Api::class)
-val DatePickerState.selectedTime: ZonedDateTime?
-    get() = selectedDateMillis?.let { Time(it, TimeZone.getTimeZone("UTC")) }
 
 @Composable
 fun rememberDateTimePickerState(
