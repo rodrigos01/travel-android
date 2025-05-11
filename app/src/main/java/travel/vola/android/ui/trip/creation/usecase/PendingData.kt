@@ -25,7 +25,7 @@ sealed interface PendingData {
         override val id: String,
         val entityId: String? = null,
         val checkIn: Time,
-        val checkOut: Time,
+        val checkOut: Time? = null,
         val name: String? = null,
         val address: String? = null,
         val latitude: Double? = null,

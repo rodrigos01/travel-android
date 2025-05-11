@@ -33,7 +33,7 @@ fun TimePickerDialog(
         hour = 0,
         minute = 0,
     )
-    val selectedDateTime = ZonedDateTime.now().update(
+    val selectedDateTime = initialTime.update(
         hour = state.hour,
         minute = state.minute,
     )
@@ -75,7 +75,7 @@ fun TimePickerDialogPreview() {
         TimePickerDialog(
             onTimeSelected = { _, _ -> },
             onDismissRequest = {},
-            initialTime = ZonedDateTime.now().update(hour = 8, minute = 57),
+            initialTime = ZonedDateTime.now().update(hour = 9, minute = 57),
             minimumSelectableTime = ZonedDateTime.now().update(hour = 9, minute = 57),
         )
     }
