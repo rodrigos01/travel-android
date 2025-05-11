@@ -29,7 +29,7 @@ fun TimePickerDialog(
     minimumSelectableTime: ZonedDateTime? = null,
 ) {
     val state = rememberTimePickerState(initialTime.hour, initialTime.minute)
-    val minDateTime = minimumSelectableTime ?: ZonedDateTime.now().update(
+    val minDateTime = minimumSelectableTime ?: initialTime.update(
         hour = 0,
         minute = 0,
     )
