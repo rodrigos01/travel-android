@@ -82,6 +82,7 @@ class TripViewModel(
     )
 
     data class PlaceState(
+        internal val place: Place,
         val listIndex: Int,
         val markers: List<MarkerViewState>,
     )
@@ -94,14 +95,16 @@ class TripViewModel(
             value?.let { reversibleItems[id] = it } ?: reversibleItems.remove(id)
         }
 
-    private val trip = repository.findTripById(tripId)
-        .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
+    private val trip =
+        repository.findTripById(tripId)
+            .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
     private val eventsFromTrip = trip.filterNotNull().map { currentTrip ->
         val items = genItems(currentTrip)
         val places =
             (currentTrip.lodgings + currentTrip.places).fold(mapOf<Place, PlaceState>()) { map, entity: WithCity ->
                 val current = map.getOrDefault(
                     entity.city, PlaceState(
+                        place = entity.city,
                         listIndex = items.indexOfFirst { it is TripItemState.PlaceItemState && entity.city.name == it.placeName },
                         markers = emptyList()
                     )
@@ -194,10 +197,32 @@ class TripViewModel(
         if (reversibleItems.containsKey(itemId)) {
             return
         }
-        val item = viewState.value.items.filterIsInstance<TripItemState.Editable>()
-            .find { it.id == itemId } ?: return
-        val entity = item.entity ?: return
-        addPlanUseCase.createAddPlanItem(itemId, entity)
+        val item =
+            viewState.value.items.filterIsInstance<TripItemState.Editable>()
+                .find { it.id == itemId } ?: return
+        val entity = item.entity
+        if (entity != null) {
+            addPlanUseCase.createAddPlanItem(itemId, entity)
+        } else if (item is TripItemState.PlaceItemState) {
+            val placeId = item.id.split("_").first()
+            viewState.value.places.firstOrNull {
+                it.place.id == placeId
+            }?.place?.let { place ->
+                addPlanUseCase.createAddPlanItem(
+                    itemId,
+                    TimedPlace(
+                        id = placeId,
+                        startDateTime = item.timestamp.toMidnight(),
+                        hasStartTime = false,
+                        city = place,
+                        place = place,
+                        endDateTime = null,
+                        hasEndTime = false,
+                    ),
+                    deleteEnabled = false,
+                )
+            }
+        }
     }
 
     override fun save(itemId: String) {
@@ -263,7 +288,10 @@ class TripViewModel(
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
                 is Lodging -> listOf(event.checkIn to event, event.checkout to event)
-                is TimedPlace -> listOf(event.dateTime to event)
+                is TimedPlace -> listOfNotNull(
+                    event.startDateTime to event,
+                    event.endDateTime?.let { it to event },
+                )
             }
         }.sortedBy { (time, event) ->
             EventComparable(
@@ -271,18 +299,32 @@ class TripViewModel(
             )
         }
         val items = pairs.flatMapIndexed { index, (time, event) ->
+            // Skip end of TimedPlace events
+            if (event is TimedPlace && event.isTimedPlaceEnd(time)) {
+                return@flatMapIndexed emptyList()
+            }
             val placeItem = genPlaceItem(index, pairs)
-            val firstInMonth = pairs.subList(0, index)
-                .lastOrNull { it.first.monthString == time.monthString } == null
-            val firstInDay = pairs.subList(0, index)
-                .lastOrNull { it.first.dateString == time.dateString } == null
-            val dateRangeItem = pairs.getOrNull(index + 1)?.let { genDateRangeItem(time, it.first) }
-            val place = event.getPlace(time)
+            val previousItems =
+                pairs.subList(0, index)
+                    .filterNot { (nextTime, nextEvent) -> nextEvent.isTimedPlaceEnd(nextTime) }
+            val firstInMonth =
+                previousItems.lastOrNull { it.first.monthString == time.monthString } == null
+            val firstInDay =
+                previousItems.lastOrNull { it.first.dateString == time.dateString } == null
+            val nextItems = pairs.nextItems(index)
+            val nextItem = nextItems.firstOrNull()
+            val place = if ((event as? TimedPlace)?.isDayTrip == true) {
+                previousItems.lastOrNull()?.place
+            } else {
+                event.getPlace(time)
+            }
             val lastInPlace =
-                pairs.getOrNull(index + 1)?.isDeparture == false && pairs.subList(index, pairs.size)
-                    .takeWhile { it.place == place }.size == 1
+                nextItems.takeWhile { it.place == place || (it.second as? TimedPlace)?.isDayTrip == true }
+                    .isEmpty()
             val lastInSection =
-                index == pairs.lastIndex || pairs[index + 1].first.dateString != time.dateString || lastInPlace
+                index == pairs.lastIndex || nextItem?.first?.dateString != time.dateString || lastInPlace
+            val dateRangeItem =
+                nextItem?.let { genDateRangeItem(time, it.first, showBottomDivider = !lastInPlace) }
             mutableListOf<TripItemState>().apply {
                 placeItem?.let { add(it) }
                 if (firstInMonth) {
@@ -294,7 +336,7 @@ class TripViewModel(
                         )
                     )
                 }
-                if (event !is TimedPlace || event.place != place) {
+                if (event !is TimedPlace || event.isDayTrip) {
                     add(genItem(time, event, showDate = firstInDay))
                 }
                 if (dateRangeItem != null) {
@@ -304,9 +346,7 @@ class TripViewModel(
                 }
             }
         }
-        return if (items.isNotEmpty()) {
-            items
-        } else {
+        return items.ifEmpty {
             listOf(
                 TripItemState.InitialAddPlanItemState(
                     UUID.randomUUID().toString(),
@@ -317,7 +357,7 @@ class TripViewModel(
     }
 
     private fun genPlaceItem(
-        index: Int, pairs: List<Pair<Time, TripEvent>>
+        index: Int, pairs: List<Pair<Time, TripEvent>>,
     ): TripItemState.PlaceItemState? {
         val (time, event) = pairs[index]
 
@@ -326,14 +366,21 @@ class TripViewModel(
         // Exclude return to origin
         if (index == pairs.lastIndex && event is FlightSegment && event.arrival == time && place == pairs.originPlace) return null
 
-        // Exclude if previous adjacent events had same place
-        val eventsBefore = pairs.subList(0, index).takeLastWhile { it.place == place }
+        // Exclude if previous adjacent events had same place or were day trips
+        val eventsBefore =
+            pairs.subList(0, index).filterNot { (it.second as? TimedPlace)?.isDayTrip == true }
+                .takeLastWhile { it.place == place }
         if (eventsBefore.isNotEmpty()) return null
 
-        val placeEntries = pairs.subList(index, pairs.size).takeWhile { it.place == place }
+        val placeEntries = pairs.subList(index, pairs.size).takeWhile {
+            it.place == place || (it.second as? TimedPlace)?.isDayTrip == true
+        }
         val lastEntry = placeEntries.last()
         // Exclude if only event in place is a departure
         if (placeEntries.size == 1 && lastEntry.isDeparture) return null
+
+        // Exclude if event is a day trip
+        if (event is TimedPlace && event.isDayTrip) return null
 
         val dayAndMonth = time.dayAndMonthString
         val id =
@@ -354,15 +401,27 @@ class TripViewModel(
             return first().takeIf { it.isDeparture }?.place
         }
 
+    private fun List<Pair<Time, TripEvent>>.nextItems(index: Int) = subList(
+        (index + 1).coerceAtMost(lastIndex),
+        size,
+    ).filterNot { (nextTime, nextEvent) -> nextEvent.isTimedPlaceEnd(nextTime) }
+
+    private fun TripEvent.isTimedPlaceEnd(
+        referenceTime: Time,
+    ) = this is TimedPlace && referenceTime == endDateTime && referenceTime != startDateTime
+
     private val Pair<Time, TripEvent>.place: Place
         get() = second.getPlace(first)
 
     private val Pair<Time, TripEvent>.isDeparture: Boolean
         get() = (second as? FlightSegment)?.departure == first
 
+    private val TimedPlace.isDayTrip: Boolean
+        get() = this.endDateTime == null || this.endDateTime.toMidnight() == this.startDateTime.toMidnight()
+
 
     private fun genEmptyAddPlanItem(
-        emptyAddPlanItemTimestamp: Time, showDivider: Boolean
+        emptyAddPlanItemTimestamp: Time, showDivider: Boolean,
     ) = TripItemState.EmptyAddPlanItemState(
         UUID.randomUUID().toString(),
         emptyAddPlanItemTimestamp,
@@ -370,7 +429,7 @@ class TripViewModel(
     )
 
     private fun genDateRangeItem(
-        from: Time, to: Time
+        from: Time, to: Time, showBottomDivider: Boolean,
     ): TripItemState? {
         val start = from + 1.days
         val end = to.toMidnight() - 1.minutes
@@ -384,6 +443,7 @@ class TripViewModel(
                 dayOfWeekStart = start.dayOfWeekString,
                 dayOfMonthEnd = end.dayOfMonthString,
                 dayOfWeekEnd = end.dayOfWeekString,
+                showBottomDivider = showBottomDivider,
             )
         } else {
             TripItemState.EmptyDateItemState(
@@ -391,6 +451,7 @@ class TripViewModel(
                 timestamp = from,
                 dayOfMonth = start.dayOfMonthString,
                 dayOfWeek = start.dayOfWeekString,
+                showBottomDivider = showBottomDivider,
             )
         }
     }
@@ -454,12 +515,12 @@ class TripViewModel(
 
             is TimedPlace -> TripItemState.TimedPlaceItemState(
                 id = event.id,
-                timestamp = event.dateTime,
+                timestamp = event.startDateTime,
                 showDate = showDate,
-                dayOfMonth = event.dateTime.dayOfMonthString,
-                dayOfWeek = event.dateTime.dayOfWeekString,
-                time = event.dateTime.timeString,
-                showTime = event.hasTime,
+                dayOfMonth = event.startDateTime.dayOfMonthString,
+                dayOfWeek = event.startDateTime.dayOfWeekString,
+                time = event.startDateTime.timeString,
+                showTime = event.hasStartTime,
                 placeName = event.place.name,
                 cityName = event.city.name,
                 imageUrl = event.place.coverImage ?: "",
@@ -489,7 +550,7 @@ private val Time.dateString
     get() = "$year=$month-$dayOfMonth"
 
 private class EventComparable(
-    private val time: Time, private val event: TripEvent
+    private val time: Time, private val event: TripEvent,
 ) : Comparable<EventComparable> {
     override fun compareTo(other: EventComparable): Int {
         if (time.dateString != other.time.dateString) {
@@ -515,10 +576,12 @@ private class EventComparable(
         get() {
             return when {
                 event is Lodging && time == event.checkout -> EventType.CHECKOUT
+                event is TimedPlace && time == event.endDateTime -> EventType.CHECKOUT
                 event is Lodging && time == event.checkIn -> EventType.CHECKIN
+                event is TimedPlace && time == event.startDateTime && event.endDateTime != null -> EventType.CHECKIN
                 event is FlightSegment && time == event.arrival -> EventType.ARRIVAL
                 event is FlightSegment && time == event.departure -> EventType.DEPARTURE
-                event is TimedPlace -> EventType.PLACE
+                event is TimedPlace && event.endDateTime == null -> EventType.PLACE
                 else -> EventType.UNKNOWN
             }
         }

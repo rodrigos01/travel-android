@@ -13,6 +13,7 @@ import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
 import travel.vola.android.ui.trip.creation.usecase.PendingData
 import travel.vola.android.ui.trip.state.AddPlaceItemState
 import travel.vola.android.ui.trip.state.AutoCompleteResultState
+import java.time.ZonedDateTime
 
 class AddPlaceUseCase(
     private val coroutineScope: CoroutineScope,
@@ -28,14 +29,25 @@ class AddPlaceUseCase(
     override val items: MapFlow<String, AddPlaceItemState> = itemStore.items(::createItem)
 
     override fun addItem(id: String, time: Time, params: AddPlanUseCase.StateParams) {
-        itemStore.addItem(PendingData.PendingTimedPlace(id, time.toMidnight()), params)
+        itemStore.addItem(
+            PendingData.PendingTimedPlace(id, entityId = null, startDateTime = time.toMidnight()),
+            params,
+        )
     }
 
     override fun addItem(id: String, entity: TimedPlace, params: AddPlanUseCase.StateParams) {
         itemStore.addItem(
             PendingData.PendingTimedPlace(
-                id, entity.dateTime, entity.hasTime, entity.place, entity.city
-            ), params
+                id,
+                entity.id,
+                entity.startDateTime,
+                entity.hasStartTime,
+                entity.endDateTime,
+                entity.hasEndTime,
+                entity.place,
+                entity.city,
+            ),
+            params,
         )
     }
 
@@ -44,16 +56,19 @@ class AddPlaceUseCase(
     }
 
     private fun createItem(
-        data: PendingData.PendingTimedPlace, params: AddPlanUseCase.StateParams
+        data: PendingData.PendingTimedPlace, params: AddPlanUseCase.StateParams,
     ): AddPlaceItemState {
         return AddPlaceItemState(
             id = data.id,
-            timestamp = data.dateTime,
-            saveButtonEnabled = data.place != null && data.city != null,
+            timestamp = data.startDateTime,
+            startTimeSelected = data.hasStartTime,
+            endDateTime = data.endDateTime,
+            endTimeSelected = data.hasEndTime,
+            minEndTime = data.startDateTime,
+            saveButtonEnabled = data.place != null && data.city != null && (data.endDateTime == null || data.endDateTime >= data.startDateTime),
             deleteButtonEnabled = params.deleteEnabled,
             typeSelectionEnabled = params.typeSelectionEnabled,
             dateSelectionEnabled = params.dateSelectionEnabled,
-            timeSelected = data.hasTime,
             placeName = data.place?.name,
             searchResults = data.searchResults.map {
                 AutoCompleteResultState(
@@ -63,11 +78,28 @@ class AddPlaceUseCase(
         )
     }
 
-    override fun setPlaceArrivalDateTime(itemId: String, time: Time, timeSelected: Boolean) {
+    override fun setPlaceStartDateTime(
+        itemId: String,
+        dateTime: ZonedDateTime,
+        timeSelected: Boolean,
+    ) {
         itemStore.update(itemId) {
             it.copy(
-                dateTime = time,
-                hasTime = timeSelected,
+                startDateTime = dateTime,
+                hasStartTime = timeSelected,
+            )
+        }
+    }
+
+    override fun setPlaceEndDateTime(
+        itemId: String,
+        dateTime: ZonedDateTime?,
+        timeSelected: Boolean,
+    ) {
+        itemStore.update(itemId) {
+            it.copy(
+                endDateTime = dateTime,
+                hasEndTime = timeSelected,
             )
         }
     }
@@ -99,9 +131,11 @@ class AddPlaceUseCase(
     override fun createEntity(item: AddPlaceItemState): TimedPlace {
         val data = itemStore.getData(item.id) ?: error("Item ${item.id} not found in store")
         return TimedPlace(
-            id = data.id,
-            dateTime = data.dateTime,
-            hasTime = data.hasTime,
+            id = data.entityId ?: data.id,
+            startDateTime = data.startDateTime,
+            hasStartTime = data.hasStartTime,
+            endDateTime = data.endDateTime,
+            hasEndTime = data.hasEndTime,
             place = data.place ?: error("Place not set"),
             city = data.city ?: error("City not set"),
         )

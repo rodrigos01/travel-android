@@ -33,7 +33,7 @@ import travel.vola.android.R
 import travel.vola.android.common.ui.components.IconTextButton
 import travel.vola.android.extensions.dateString
 import travel.vola.android.model.data.Time
-import travel.vola.android.ui.trip.creation.composable.DatePickerButton
+import travel.vola.android.ui.trip.creation.composable.DatePickerDialog
 import travel.vola.android.ui.trip.state.SearchResultItemState
 
 @Composable
@@ -48,21 +48,15 @@ fun LodgingSearchParams(
     onCheckInDateSelected: (Time) -> Unit,
     onCheckOutDateSelected: (Time) -> Unit,
     onLocationSearchTextChanged: (CharSequence) -> Unit,
-    onLocationSearchResultSelected: (Int) -> Unit
+    onLocationSearchResultSelected: (Int) -> Unit,
 ) {
     Column {
         Row(horizontalArrangement = Arrangement.SpaceAround, modifier = Modifier.fillMaxWidth()) {
             DatePickerTextButton(
-                checkIn,
-                minCheckIn,
-                label = "check-in date",
-                onCheckInDateSelected
+                checkIn, minCheckIn, label = "check-in date", onCheckInDateSelected
             )
             DatePickerTextButton(
-                checkOut,
-                minCheckOut,
-                label = "check-out date",
-                onCheckOutDateSelected
+                checkOut, minCheckOut, label = "check-out date", onCheckOutDateSelected
             )
         }
         var showSearchDialog by remember { mutableStateOf(false) }
@@ -84,21 +78,19 @@ fun LodgingSearchParams(
                 val expanded =
                     searchResults.isNotEmpty() && query.isNotBlank() && query.isNotEmpty()
                 val focusRequester = remember { FocusRequester() }
-                DockedSearchBar(
-                    inputField = {
-                        SearchBarDefaults.InputField(
-                            query = query,
-                            placeholder = { Text("Enter location") },
-                            onQueryChange = {
-                                query = it
-                                onLocationSearchTextChanged(it)
-                            },
-                            expanded = expanded,
-                            onExpandedChange = {},
-                            onSearch = {},
-                            modifier = Modifier.focusRequester(focusRequester)
-                        )
-                    },
+                DockedSearchBar(inputField = {
+                    SearchBarDefaults.InputField(query = query,
+                        placeholder = { Text("Enter location") },
+                        onQueryChange = {
+                            query = it
+                            onLocationSearchTextChanged(it)
+                        },
+                        expanded = expanded,
+                        onExpandedChange = {},
+                        onSearch = {},
+                        modifier = Modifier.focusRequester(focusRequester)
+                    )
+                },
                     expanded = expanded,
                     onExpandedChange = {},
                     colors = SearchBarDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
@@ -136,20 +128,25 @@ private fun DatePickerTextButton(
     onTimeSelected: (Time) -> Unit,
 ) {
     var selectedTime by remember { mutableStateOf(time) }
-    DatePickerButton(
-        selectedTime = selectedTime,
-        minimumSelectableTime = minTime,
-        onDateSelected = {
-            selectedTime = it
-            onTimeSelected(it)
+    var showDatePickerState by remember { mutableStateOf(false) }
+    IconTextButton(
+        onClick = {
+            showDatePickerState = true
         },
+        leadingIcon = ImageVector.vectorResource(R.drawable.today_baseline_24),
     ) {
-        IconTextButton(
-            onClick = {},
-            leadingIcon = ImageVector.vectorResource(R.drawable.today_baseline_24),
-        ) {
-            Text(selectedTime?.dateString() ?: label)
-        }
+        Text(selectedTime?.dateString() ?: label)
+    }
+    if (showDatePickerState) {
+        DatePickerDialog(selectedTime = selectedTime,
+            minimumSelectableTime = minTime,
+            onDateSelected = {
+                selectedTime = it
+                onTimeSelected(it)
+            },
+            onDismiss = {
+                showDatePickerState = false
+            })
     }
 }
 

@@ -35,8 +35,7 @@ class AddPlanUseCase(
     ),
     private val addPlaceUseCase: AddPlaceUseCase = AddPlaceUseCase(coroutineScope = coroutineScope),
 ) : AddPlanItemActionHandler, AddFlightItemActionHandler by addFlightUseCase,
-    AddLodgingItemActionHandler by addLodgingUseCase,
-    AddPlaceItemActionHandler by addPlaceUseCase,
+    AddLodgingItemActionHandler by addLodgingUseCase, AddPlaceItemActionHandler by addPlaceUseCase,
     LodgingSearchParamsFactory by addLodgingUseCase {
 
     data class StateParams(
@@ -77,8 +76,10 @@ class AddPlanUseCase(
         )
     }
 
-    fun createAddPlanItem(id: String, entity: TripEntity) {
-        return entity.asState(id, StateParams(typeSelectionEnabled = false, deleteEnabled = true))
+    fun createAddPlanItem(id: String, entity: TripEntity, deleteEnabled: Boolean = true) {
+        return entity.asState(
+            id, StateParams(typeSelectionEnabled = false, deleteEnabled = deleteEnabled)
+        )
     }
 
     override fun addPlanTypeChanged(itemId: String, newType: AddPlanItemState.Type) {

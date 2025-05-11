@@ -16,7 +16,7 @@ sealed interface FirebaseData {
     data class Flight(
         val id: String = UUID.randomUUID().toString(),
         val segments: List<FlightSegment> = emptyList(),
-        val price: Double? = null
+        val price: Double? = null,
     ) : FirebaseData
 
     data class FlightSegment(
@@ -63,6 +63,8 @@ sealed interface FirebaseData {
         val place: Place = Place(),
         val time: String? = null,
         val hasTime: Boolean = false,
+        val endTime: String? = null,
+        val hasEndTime: Boolean = false,
         val city: Place? = null,
     )
 }

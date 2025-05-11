@@ -17,6 +17,7 @@ import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
 import travel.vola.android.ui.trip.state.ManualStartEndAddPlanState
 import travel.vola.android.ui.trip.state.type
+import java.time.ZonedDateTime
 
 @Composable
 fun AddPlanListItem(
@@ -40,10 +41,12 @@ fun AddPlanListItem(
                 val itemState = rememberStartEndAddPlanListItemState(
                     startState = rememberAddPlanRowState(
                         key = state.startState.searchResults,
-                        selectedDateTime = state.startState.time,
+                        selectedDateTime = state.startState.dateTime,
+                        timeSelected = state.startState.isTimeSet,
                     ), endState = rememberAddPlanRowState(
                         key = state.endState.searchResults,
-                        selectedDateTime = state.endState.time,
+                        selectedDateTime = state.endState.dateTime,
+                        timeSelected = state.endState.isTimeSet,
                     )
                 )
                 when (state) {
@@ -133,42 +136,71 @@ fun AddPlanListItem(
                     onCheckOutDateSelected = { actionHandler.setCheckOutTime(state.id, it) },
                     onLocationSearchTextChanged = {
                         actionHandler.lodgingTextChanged(
-                            state.id,
-                            it
+                            state.id, it
                         )
                     },
                     onLocationSearchResultSelected = {
                         actionHandler.lodgingSearchResultTapped(
-                            state.id,
-                            it
+                            state.id, it
                         )
                     },
                     onSwitchToManualButtonTapped = {
                         actionHandler.onSwitchToManualButtonTapped(state.id)
-                    })
+                    },
+                )
             }
 
             is AddPlaceItemState -> {
-                val rowState = rememberAddPlanRowState(
-                    key = state.searchResults,
-                    selectedDateTime = state.timestamp,
-                    timeSelected = state.timeSelected,
+                val addPlaceListItemState = rememberAddPlaceListItemState(
+                    startState = rememberAddPlanRowState(
+                        key = state.searchResults,
+                        selectedDateTime = state.timestamp,
+                        timeSelected = state.startTimeSelected,
+                    ),
+                    endState = rememberAddPlanRowState(
+                        key = state.timestamp,
+                        selectedDateTime = state.endDateTime ?: state.minEndTime,
+                        timeSelected = state.endTimeSelected,
+                    ),
+                    hasEnd = state.endDateTime != null,
                 )
-                LaunchedEffect(rowState.selectedDateTime) {
-                    rowState.selectedDateTime?.let {
-                        actionHandler.setPlaceArrivalDateTime(state.id, it, rowState.timeSelected)
+                LaunchedEffect(addPlaceListItemState.startState.selectedDateTime) {
+                    addPlaceListItemState.startState.selectedDateTime?.let {
+                        actionHandler.setPlaceStartDateTime(
+                            state.id, it, addPlaceListItemState.startState.timeSelected
+                        )
                     }
                 }
-                LaunchedEffect(rowState.selectedSearchResultIndex) {
+                LaunchedEffect(addPlaceListItemState.startState.selectedSearchResultIndex) {
                     actionHandler.locationSearchResultTapped(
-                        state.id,
-                        rowState.selectedSearchResultIndex
+                        state.id, addPlaceListItemState.startState.selectedSearchResultIndex
                     )
+                }
+                LaunchedEffect(addPlaceListItemState.endState.selectedDateTime) {
+                    addPlaceListItemState.endState.selectedDateTime?.let {
+                        actionHandler.setPlaceEndDateTime(
+                            state.id, it, addPlaceListItemState.endState.timeSelected
+                        )
+                    }
+                }
+                LaunchedEffect(addPlaceListItemState.hasEnd) {
+                    if (addPlaceListItemState.hasEnd) {
+                        addPlaceListItemState.endState.selectedDateTime?.let {
+                            actionHandler.setPlaceEndDateTime(
+                                state.id, it, addPlaceListItemState.endState.timeSelected
+                            )
+                        }
+                    } else {
+                        actionHandler.setPlaceEndDateTime(
+                            state.id, null, false,
+                        )
+                    }
                 }
                 AddPlaceListItem(
                     placeName = state.placeName,
-                    state = rowState,
+                    state = addPlaceListItemState,
                     searchResults = state.searchResults,
+                    minEndTime = state.minEndTime,
                     onTextChanged = {
                         actionHandler.locationTextChanged(state.id, it)
                     },
@@ -205,14 +237,14 @@ fun AddPlanListItemPreview() {
                         Time.now(),
                         dateSelectionEnabled = false,
                         locationText = "Charles de Gaule",
-                        searchResults = emptyList(),
+                        searchResults = emptyList(), isTimeSet = true
                     ),
                     endState = ManualAddPlanState(
                         Time("2025-10-18T06:00 -0300"),
                         Time.now(),
                         dateSelectionEnabled = true,
                         locationText = "John F. Kennedy",
-                        searchResults = emptyList(),
+                        searchResults = emptyList(), isTimeSet = true
                     ),
                     typeSelectionEnabled = true,
                     saveButtonEnabled = true,
@@ -240,7 +272,18 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
     override fun setCheckOutTime(itemId: String, time: Time) = Unit
     override fun setDepartureTime(itemId: String, time: Time) = Unit
     override fun setArrivalTime(itemId: String, time: Time) = Unit
-    override fun setPlaceArrivalDateTime(itemId: String, time: Time, timeSelected: Boolean) = Unit
+    override fun setPlaceStartDateTime(
+        itemId: String,
+        dateTime: ZonedDateTime,
+        timeSelected: Boolean,
+    ) = Unit
+
+    override fun setPlaceEndDateTime(
+        itemId: String,
+        dateTime: ZonedDateTime?,
+        timeSelected: Boolean,
+    ) = Unit
+
     override fun locationSearchResultTapped(itemId: String, index: Int) = Unit
     override fun locationTextChanged(itemId: String, content: CharSequence) = Unit
 }

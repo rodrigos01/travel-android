@@ -5,13 +5,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
@@ -25,17 +29,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import travel.vola.android.R
+import travel.vola.android.common.ui.components.Clock
+import travel.vola.android.common.ui.components.IconTextButton
 import travel.vola.android.extensions.Time
 import travel.vola.android.extensions.dayOfMonthString
 import travel.vola.android.extensions.dayOfWeekString
@@ -45,11 +45,9 @@ import travel.vola.android.extensions.update
 import travel.vola.android.model.data.Time
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.AutoCompleteTextField
-import travel.vola.android.ui.trip.creation.composable.DatePickerButton
-import travel.vola.android.ui.trip.creation.composable.TimePickerButton
-import travel.vola.android.ui.trip.creation.composable.TimePickerTextButton
+import travel.vola.android.ui.trip.creation.composable.DatePickerDialog
+import travel.vola.android.ui.trip.creation.composable.TimePickerDialog
 import travel.vola.android.ui.trip.creation.composable.rememberAutoCompleteTextFieldState
-import travel.vola.android.ui.trip.creation.composable.rememberTimePickerDialogState
 import travel.vola.android.ui.trip.state.AutoCompleteResultState
 import java.util.TimeZone
 
@@ -92,19 +90,16 @@ fun AddPlanRow(
     onTextChanged: (CharSequence) -> Unit = {},
 ) {
     val selectedTime = state.selectedDateTime ?: minTime ?: Time.now()
-    val isMinDate = selectedTime.toMidnight() == minTime?.toMidnight()
-    val timePickerDialogState = rememberTimePickerDialogState(
-        minHour = if (isMinDate) minTime?.hour ?: 0 else 0,
-        minMinute = if (isMinDate) minTime?.minute ?: 0 else 0,
-        hour = selectedTime.hour,
-        minute = selectedTime.minute,
-    )
+    var showTimePicker by remember {
+        mutableStateOf(false)
+    }
+    val timeText =
+        state.selectedDateTime?.timeString?.takeIf { state.timeSelected } ?: timeSelectorLabel
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.minimumInteractiveComponentSize(),
         ) {
             Box(
@@ -113,41 +108,39 @@ fun AddPlanRow(
                 ProvideTextStyle(MaterialTheme.typography.titleMedium, title)
             }
             if (showTextField) {
-                TimePickerTextButton(
-                    text = state.selectedDateTime?.timeString?.takeIf { state.timeSelected }
-                        ?: timeSelectorLabel,
-                    onTimeSelected = { hour, minute ->
-                        state.timeSelected = true
-                        state.selectedDateTime = selectedTime.update(hour = hour, minute = minute)
-                    },
-                    modifier = Modifier.semantics { role = Role.Button },
-                    timePickerDialogState = timePickerDialogState,
-                )
+                IconTextButton(
+                    onClick = { showTimePicker = true },
+                    leadingIcon = Icons.Outlined.Clock,
+                    leadingIconSize = 16.dp,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.tertiary,
+                    ),
+                ) {
+                    Text(
+                        text = timeText, style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
             if (dateSelectionEnabled) {
-                DatePickerButton(
-                    minimumSelectableTime = minTime?.toMidnight(),
-                    onDateSelected = {
-                        state.selectedDateTime = selectedTime.update(
-                            dayOfMonth = it.dayOfMonth,
-                            month = it.month,
-                            year = it.year,
-                        )
-                    },
-                    selectedTime = state.selectedDateTime,
-                    modifier = Modifier.width(80.dp),
+                var showDatePickerState by remember { mutableStateOf(false) }
+                FilledTonalButton(
+                    onClick = { showDatePickerState = true },
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(
+                        start = 24.dp,
+                        end = 4.dp,
+                        top = 8.dp,
+                        bottom = 8.dp,
+                    ),
+                    modifier = Modifier.width(80.dp)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.secondaryContainer)
-                            .padding(start = 24.dp, end = 4.dp, top = 8.dp, bottom = 8.dp)
-                    ) {
+                    Row {
                         LeadingDate(
                             dayOfMonth = selectedTime.dayOfMonthString,
                             dayOfWeek = selectedTime.dayOfWeekString,
@@ -159,6 +152,23 @@ fun AddPlanRow(
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                     }
+                }
+                if (showDatePickerState) {
+                    DatePickerDialog(
+                        minimumSelectableTime = minTime?.toMidnight(),
+                        onDateSelected = {
+                            state.selectedDateTime = selectedTime.update(
+                                dayOfMonth = it.dayOfMonth,
+                                month = it.month,
+                                year = it.year,
+                            )
+                            showDatePickerState = false
+                        },
+                        selectedTime = state.selectedDateTime,
+                        onDismiss = {
+                            showDatePickerState = false
+                        },
+                    )
                 }
             } else {
                 LeadingDate(
@@ -189,43 +199,65 @@ fun AddPlanRow(
                             }
                         }
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 4.dp)
+                        .align(Alignment.CenterVertically),
                 )
             } else {
-                val showTimePicker = remember {
-                    mutableStateOf(false)
-                }
-                val focusManager = LocalFocusManager.current
-                TimePickerButton(
-                    onTimeSelected = { hour, minute ->
-                        state.selectedDateTime = selectedTime.update(hour = hour, minute = minute)
-                        focusManager.clearFocus()
-                    },
-                    showTimePickerState = showTimePicker,
-                    timePickerDialogState = timePickerDialogState,
+                IconTextButton(
+                    onClick = { showTimePicker = true },
+                    leadingIcon = Icons.Outlined.Clock,
                 ) {
-                    OutlinedTextField(
-                        value = selectedTime.timeString,
-                        label = { Text(timeSelectorLabel) },
-                        placeholder = { placeHolder?.let { Text(it) } },
-                        onValueChange = {},
-                        modifier = Modifier.onFocusChanged {
-                            if (it.hasFocus) {
-                                showTimePicker.value = true
-                            }
-                        })
+                    Text(timeText)
                 }
             }
         }
     }
+    if (showTimePicker) {
+        TimePickerDialog(
+            onTimeSelected = { hour, minute ->
+                state.timeSelected = true
+                state.selectedDateTime = selectedTime.update(hour = hour, minute = minute)
+                showTimePicker = false
+            },
+            initialTime = selectedTime,
+            minimumSelectableTime = minTime,
+            onDismissRequest = {
+                showTimePicker = false
+            },
+        )
+    }
+}
 
+@Composable
+fun AddPlanRow(
+    state: AddPlanRowState,
+    minTime: Time? = null,
+    title: @Composable () -> Unit,
+    timeSelectorLabel: String,
+    dateSelectionEnabled: Boolean = true,
+) {
+    AddPlanRow(
+        state = state,
+        minTime = minTime,
+        searchResults = emptyList(),
+        title = title,
+        timeSelectorLabel = timeSelectorLabel,
+        dateSelectionEnabled = dateSelectionEnabled,
+        showTextField = false,
+    )
 }
 
 @Preview
 @Composable
-fun AddPlanRowPreview() {
+fun AddPlanRowPreview(hasTextField: Boolean = true) {
     AppTheme {
-        Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
+        Box(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surface)
+                .fillMaxWidth()
+        ) {
             val state = rememberAddPlanRowState(
                 selectedDateTime = Time("2025-06-12T03:45 -0300"),
             )
@@ -236,11 +268,17 @@ fun AddPlanRowPreview() {
                 title = { Text("Title") },
                 timeSelectorLabel = "Pick Time",
                 dateSelectionEnabled = true,
-                showTextField = true,
+                showTextField = hasTextField,
                 placeHolder = "PlaceHolder",
                 labelText = "Label",
                 onTextChanged = {},
             )
         }
     }
+}
+
+@Preview
+@Composable
+fun AddPlanRowPreviewNoTextField() {
+    AddPlanRowPreview(hasTextField = false)
 }

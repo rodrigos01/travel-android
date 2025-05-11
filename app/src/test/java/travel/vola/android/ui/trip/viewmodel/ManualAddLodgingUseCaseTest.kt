@@ -46,8 +46,8 @@ class ManualAddLodgingUseCaseTest {
             on { checkOut } doReturn Time("2025-10-17T10:52:00+01:00")
         }, mock())
         assertThat(items["lodging_id"]?.id).isEqualTo("lodging_id")
-        assertThat(items["lodging_id"]?.startState?.time).isEqualTo(Time("2025-10-16T15:23:00+01:00"))
-        assertThat(items["lodging_id"]?.endState?.time).isEqualTo(Time("2025-10-17T10:52:00+01:00"))
+        assertThat(items["lodging_id"]?.startState?.dateTime).isEqualTo(Time("2025-10-16T15:23:00+01:00"))
+        assertThat(items["lodging_id"]?.endState?.dateTime).isEqualTo(Time("2025-10-17T10:52:00+01:00"))
     }
 
     @Test
@@ -86,8 +86,8 @@ class ManualAddLodgingUseCaseTest {
         subject.addItem("lodging_id", entity, mock())
         val item = items.value["lodging_id"] ?: fail()
         assertThat(item.startState.locationText).isEqualTo("Hotel Novotel Paris Les Halles")
-        assertThat(item.startState.time).isEqualTo(entity.checkIn)
-        assertThat(item.endState.time).isEqualTo(entity.checkout)
+        assertThat(item.startState.dateTime).isEqualTo(entity.checkIn)
+        assertThat(item.endState.dateTime).isEqualTo(entity.checkout)
     }
 
     @Test
@@ -95,7 +95,7 @@ class ManualAddLodgingUseCaseTest {
         val initialTime = Time("2025-10-16T15:23:00+01:00")
         subject.addItem("lodging_id", initialTime, mock())
         val item = items.value["lodging_id"] ?: fail()
-        assertThat(item.startState.time).isEqualTo(initialTime)
+        assertThat(item.startState.dateTime).isEqualTo(initialTime)
     }
 
     @Test
@@ -104,7 +104,7 @@ class ManualAddLodgingUseCaseTest {
         val initialTime = Time("2025-10-16T15:43:00+01:00")
         subject.addItem("lodging_id", initialTime, mock())
         val item = items.value["lodging_id"] ?: fail()
-        assertThat(item.endState.time).isEqualTo(expected)
+        assertThat(item.endState.dateTime).isEqualTo(expected)
     }
 
     @Test
@@ -121,7 +121,7 @@ class ManualAddLodgingUseCaseTest {
         subject.addItem("lodging_id", originalTime, mock())
         subject.setCheckInTime("lodging_id", newTime)
         val item = items.value["lodging_id"] ?: fail()
-        assertThat(item.startState.time).isEqualTo(newTime)
+        assertThat(item.startState.dateTime).isEqualTo(newTime)
     }
 
     @Test
@@ -130,7 +130,7 @@ class ManualAddLodgingUseCaseTest {
         subject.addItem("lodging_id", Time("2025-10-16T15:23:00+01:00"), mock())
         subject.setCheckOutTime("lodging_id", newTime)
         val item = items.value["lodging_id"] ?: fail()
-        assertThat(item.endState.time).isEqualTo(newTime)
+        assertThat(item.endState.dateTime).isEqualTo(newTime)
     }
 
     @Test

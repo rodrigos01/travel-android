@@ -21,6 +21,7 @@ import travel.vola.android.ui.theme.AppTheme
 fun EmptyDateListItem(
     dayOfMonth: String,
     dayOfWeek: String,
+    showBottomDivider: Boolean,
     onTap: () -> Unit,
 ) {
     Column(modifier = Modifier.clickable(onClick = onTap)) {
@@ -31,29 +32,30 @@ fun EmptyDateListItem(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
         )
-        ListItem(
-            headlineContent = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.padding(end = 16.dp)) {
-                        LeadingDate(
-                            dayOfMonth = dayOfMonth,
-                            dayOfWeek = dayOfWeek,
-                        )
-                    }
-                    Text(
-                        text = "No plans yet, tap to add",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.secondary
+        ListItem(headlineContent = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.padding(end = 16.dp)) {
+                    LeadingDate(
+                        dayOfMonth = dayOfMonth,
+                        dayOfWeek = dayOfWeek,
                     )
                 }
-            })
-        HorizontalDivider(
-            color = MaterialTheme.colorScheme.outlineVariant,
-            thickness = 1.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-        )
+                Text(
+                    text = "No plans yet, tap to add",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
+        })
+        if (showBottomDivider) {
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 1.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+            )
+        }
     }
 }
 
@@ -61,6 +63,6 @@ fun EmptyDateListItem(
 @Preview
 fun EmptyDateListItemPreview() {
     AppTheme {
-        EmptyDateListItem("12", "Sat", {})
+        EmptyDateListItem("12", "Sat", showBottomDivider = true, {})
     }
 }

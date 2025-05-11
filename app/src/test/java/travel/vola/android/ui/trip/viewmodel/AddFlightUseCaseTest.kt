@@ -51,7 +51,7 @@ class AddFlightUseCaseTest {
             on { arrival } doReturn Time("2024-10-16T16:15+02:00")
         }, mock())
         assertThat(items["flight_id"]?.id).isEqualTo("flight_id")
-        assertThat(items["flight_id"]?.startState?.time).isEqualTo(Time("2024-10-16T18:25+02:00"))
+        assertThat(items["flight_id"]?.startState?.dateTime).isEqualTo(Time("2024-10-16T18:25+02:00"))
     }
 
     @Test
@@ -67,7 +67,7 @@ class AddFlightUseCaseTest {
         val initialTime = Time("2024-10-16T18:25+02:00")
         subject.addItem("flight_id", initialTime, mock())
         val data = items.value["flight_id"] ?: fail()
-        assertThat(data.startState.time).isEqualTo(initialTime)
+        assertThat(data.startState.dateTime).isEqualTo(initialTime)
     }
 
     @Test
@@ -108,8 +108,8 @@ class AddFlightUseCaseTest {
         val item = items.value["flight_id"] ?: fail()
         assertThat(item.startState.locationText).isEqualTo("John F. Kennedy International Airport")
         assertThat(item.endState.locationText).isEqualTo("Orly Airport")
-        assertThat(item.startState.time).isEqualTo(Time("2024-10-16T18:25-05:00"))
-        assertThat(item.endState.time).isEqualTo(Time("2024-10-17T06:15+02:00"))
+        assertThat(item.startState.dateTime).isEqualTo(Time("2024-10-16T18:25-05:00"))
+        assertThat(item.endState.dateTime).isEqualTo(Time("2024-10-17T06:15+02:00"))
     }
 
     @Test
@@ -125,7 +125,7 @@ class AddFlightUseCaseTest {
         subject.addItem("item_id", originalTime, mock())
         subject.setDepartureTime("item_id", Time("2024-10-16T09:15+02:00"))
         val item = items.value["item_id"] ?: fail()
-        assertThat(item.startState.time).isEqualTo(Time("2024-10-16T09:15+02:00"))
+        assertThat(item.startState.dateTime).isEqualTo(Time("2024-10-16T09:15+02:00"))
     }
 
     @Test
@@ -134,7 +134,7 @@ class AddFlightUseCaseTest {
         subject.addItem("item_id", originalTime, mock())
         subject.setArrivalTime("item_id", Time("2024-10-16T20:15+02:00"))
         val item = items.value["item_id"] ?: fail()
-        assertThat(item.endState.time).isEqualTo(Time("2024-10-16T20:15+02:00"))
+        assertThat(item.endState.dateTime).isEqualTo(Time("2024-10-16T20:15+02:00"))
     }
 
     @Test
@@ -212,17 +212,16 @@ class AddFlightUseCaseTest {
         repository.stub {
             onBlocking { details("airport_id") } doReturn expected
         }
-        val originalData =
-            PendingFlight(
-                id = "flight_id",
-                departure = mock(),
-                arrival = Time("2024-05-17T10:55 +02:00"),
-                airportFromSearchResults = listOf(
-                    mock(),
-                    mock { on { iata } doReturn "airport_id" },
-                    mock(),
-                ),
-            )
+        val originalData = PendingFlight(
+            id = "flight_id",
+            departure = mock(),
+            arrival = Time("2024-05-17T10:55 +02:00"),
+            airportFromSearchResults = listOf(
+                mock(),
+                mock { on { iata } doReturn "airport_id" },
+                mock(),
+            ),
+        )
         itemStore.stub {
             on { getData("flight_id") } doReturn originalData
         }
@@ -298,17 +297,16 @@ class AddFlightUseCaseTest {
         repository.stub {
             onBlocking { details("airport_id") } doReturn expected
         }
-        val originalData =
-            PendingFlight(
-                id = "flight_id",
-                departure = mock(),
-                arrival = Time("2024-05-17T10:55 +02:00"),
-                airportToSearchResults = listOf(
-                    mock(),
-                    mock { on { iata } doReturn "airport_id" },
-                    mock(),
-                ),
-            )
+        val originalData = PendingFlight(
+            id = "flight_id",
+            departure = mock(),
+            arrival = Time("2024-05-17T10:55 +02:00"),
+            airportToSearchResults = listOf(
+                mock(),
+                mock { on { iata } doReturn "airport_id" },
+                mock(),
+            ),
+        )
         itemStore.stub {
             on { getData("flight_id") } doReturn originalData
         }
