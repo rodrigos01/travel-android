@@ -361,7 +361,9 @@ class TripViewModel(
         if (index == pairs.lastIndex && event is FlightSegment && event.arrival == time && place == pairs.originPlace) return null
 
         // Exclude if previous adjacent events had same place or were day trips
-        val eventsBefore = pairs.subList(0, index).takeLastWhile { it.place == place }
+        val eventsBefore =
+            pairs.subList(0, index).filterNot { (it.second as? TimedPlace)?.isDayTrip == true }
+                .takeLastWhile { it.place == place }
         if (eventsBefore.isNotEmpty()) return null
 
         val placeEntries = pairs.subList(index, pairs.size).takeWhile {
