@@ -136,8 +136,9 @@ sealed interface TripItemState {
 }
 
 data class ManualAddPlanState(
-    val time: Time?,
-    val minTime: Time?,
+    val dateTime: ZonedDateTime?,
+    val minDateTime: ZonedDateTime?,
+    val isTimeSet: Boolean,
     val dateSelectionEnabled: Boolean,
     val locationText: String?,
     val searchResults: List<AutoCompleteResultState>,

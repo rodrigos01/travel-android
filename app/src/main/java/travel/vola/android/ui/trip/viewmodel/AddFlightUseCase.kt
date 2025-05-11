@@ -137,10 +137,12 @@ class AddFlightUseCase(
             val data = PendingFlight(
                 id = id,
                 entityId = entity.id,
-                segment.departure,
-                segment.airportFrom,
-                segment.airportTo,
-                segment.arrival
+                departure = segment.departure,
+                departureTimeSet = true,
+                airportFrom = segment.airportFrom,
+                airportTo = segment.airportTo,
+                arrival = segment.arrival,
+                arrivalTimeSet = true,
             )
             itemStore.addItem(data, params)
         }
@@ -157,8 +159,9 @@ class AddFlightUseCase(
             id = data.id,
             timestamp = data.departure,
             startState = ManualAddPlanState(
-                time = data.departure,
-                minTime = null,
+                dateTime = data.departure,
+                minDateTime = null,
+                isTimeSet = data.departureTimeSet,
                 dateSelectionEnabled = stateParams.dateSelectionEnabled,
                 locationText = data.airportFrom?.name,
                 searchResults = data.airportFromSearchResults.map {
@@ -166,8 +169,9 @@ class AddFlightUseCase(
                 },
             ),
             endState = ManualAddPlanState(
-                time = data.arrival?.takeIf { it >= minArrival },
-                minTime = minArrival,
+                dateTime = data.arrival?.takeIf { it >= minArrival },
+                minDateTime = minArrival,
+                isTimeSet = data.arrivalTimeSet,
                 dateSelectionEnabled = true,
                 locationText = data.airportTo?.name,
                 searchResults = data.airportToSearchResults.map {
@@ -178,7 +182,7 @@ class AddFlightUseCase(
             ),
             typeSelectionEnabled = stateParams.typeSelectionEnabled,
             deleteButtonEnabled = stateParams.deleteEnabled,
-            saveButtonEnabled = data.arrival?.let { it >= minArrival } ?: false && data.airportFrom != null && data.airportTo != null,
+            saveButtonEnabled = data.departureTimeSet && data.arrivalTimeSet && data.arrival?.let { it >= minArrival } ?: false && data.airportFrom != null && data.airportTo != null,
         )
     }
 
@@ -191,6 +195,12 @@ class AddFlightUseCase(
         data.airportFrom ?: error("airport from is not set")
         data.airportTo ?: error("airport to is not set")
         data.arrival ?: error("arival time is not set")
+        if (!data.arrivalTimeSet) {
+            error("arival time is not set")
+        }
+        if (!data.departureTimeSet) {
+            error("departure time is not set")
+        }
         return Flight(
             id = data.entityId ?: data.id,
             listOf(

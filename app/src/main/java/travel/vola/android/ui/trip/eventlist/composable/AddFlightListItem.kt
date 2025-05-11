@@ -44,25 +44,26 @@ fun AddFlightListItemPreview() {
                     "", Time.now(),
                     typeSelectionEnabled = false,
                     startState = ManualAddPlanState(
-                        time = Time("2025-06-12T05:00 -0300"),
-                        minTime = Time.now(),
+                        dateTime = Time("2025-06-12T05:00 -0300"),
+                        minDateTime = Time.now(),
                         dateSelectionEnabled = false,
                         locationText = null,
-                        searchResults = emptyList()
+                        searchResults = emptyList(),
+                        isTimeSet = false,
                     ),
                     endState = ManualAddPlanState(
-                        time = Time("2025-06-12T05:00 -0300"),
-                        minTime = Time.now(),
+                        dateTime = Time("2025-06-12T05:00 -0300"),
+                        minDateTime = Time.now(),
                         dateSelectionEnabled = true,
                         locationText = "Somewhere",
-                        searchResults = emptyList()
+                        searchResults = emptyList(),
+                        isTimeSet = false,
                     ),
                     deleteButtonEnabled = true,
                     saveButtonEnabled = true,
                 ),
                 startEndAddPlanState = rememberStartEndAddPlanListItemState(
-                    rememberAddPlanRowState(),
-                    rememberAddPlanRowState()
+                    rememberAddPlanRowState(), rememberAddPlanRowState()
                 ),
                 onAirportFromTextChanged = {},
                 onAirportToTextChanged = {},

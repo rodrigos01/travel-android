@@ -43,7 +43,7 @@ fun StartEndAddPlanListItem(
     Column {
         AddPlanRow(
             state = state.startState,
-            minTime = uiState.startState.minTime,
+            minTime = uiState.startState.minDateTime,
             searchResults = uiState.startState.searchResults,
             title = startTitle,
             timeSelectorLabel = startTimeSelectorLabel,
@@ -55,7 +55,7 @@ fun StartEndAddPlanListItem(
         )
         AddPlanRow(
             state = state.endState,
-            minTime = uiState.endState.minTime,
+            minTime = uiState.endState.minDateTime,
             searchResults = uiState.endState.searchResults,
             title = endTitle,
             timeSelectorLabel = endTimeSelectorLabel,
@@ -84,18 +84,20 @@ fun StartEndAddPlanListItemPreview() {
                     timestamp = Time.now(),
                     typeSelectionEnabled = false,
                     startState = ManualAddPlanState(
-                        time = Time("2025-09-21T14:49 +0100"),
-                        minTime = Time.now(),
+                        dateTime = Time("2025-09-21T14:49 +0100"),
+                        minDateTime = Time.now(),
                         dateSelectionEnabled = false,
                         locationText = null,
-                        searchResults = emptyList()
+                        searchResults = emptyList(),
+                        isTimeSet = false,
                     ),
                     endState = ManualAddPlanState(
-                        time = null,
-                        minTime = Time.now(),
+                        dateTime = null,
+                        minDateTime = Time.now(),
                         dateSelectionEnabled = true,
                         locationText = "Somewhere",
-                        searchResults = emptyList()
+                        searchResults = emptyList(),
+                        isTimeSet = false,
                     ),
                     deleteButtonEnabled = true,
                     saveButtonEnabled = true,
