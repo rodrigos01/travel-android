@@ -44,6 +44,7 @@ sealed interface PendingData {
 
     data class PendingTimedPlace(
         override val id: String,
+        val entityId: String? = null,
         val startDateTime: ZonedDateTime,
         val hasStartTime: Boolean = false,
         val endDateTime: ZonedDateTime? = null,
