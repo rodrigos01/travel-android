@@ -78,29 +78,35 @@ class AddPlaceUseCase(
         )
     }
 
-    override fun setPlaceStartDateTime(
+    override fun onUpdated(
         itemId: String,
-        dateTime: ZonedDateTime,
-        timeSelected: Boolean,
+        startDateTime: ZonedDateTime?,
+        startTimeSelected: Boolean,
+        endDateTime: ZonedDateTime?,
+        endTimeSelected: Boolean,
+        selectedSearchResultIndex: Int,
     ) {
+        val current = itemStore.getData(itemId)
+        val selected = current?.searchResults?.getOrNull(selectedSearchResultIndex)
         itemStore.update(itemId) {
             it.copy(
-                startDateTime = dateTime,
-                hasStartTime = timeSelected,
+                startDateTime = startDateTime ?: it.startDateTime,
+                hasStartTime = startTimeSelected,
+                endDateTime = endDateTime,
+                hasEndTime = endTimeSelected,
             )
         }
-    }
-
-    override fun setPlaceEndDateTime(
-        itemId: String,
-        dateTime: ZonedDateTime?,
-        timeSelected: Boolean,
-    ) {
-        itemStore.update(itemId) {
-            it.copy(
-                endDateTime = dateTime,
-                hasEndTime = timeSelected,
-            )
+        coroutineScope.launch {
+            selected?.id?.let { selectedId -> placeRepository.details(selectedId) }
+                ?.let { details ->
+                    itemStore.update(itemId) {
+                        it.copy(
+                            searchResults = emptyList(),
+                            place = details.place,
+                            city = details.city,
+                        )
+                    }
+                }
         }
     }
 
@@ -110,20 +116,6 @@ class AddPlaceUseCase(
             val results = placeRepository.autocomplete(content.toString(), itemId)
             itemStore.update(itemId) {
                 it.copy(searchResults = results)
-            }
-        }
-    }
-
-    override fun locationSearchResultTapped(itemId: String, index: Int) {
-        val selected = itemStore.getData(itemId)?.searchResults?.getOrNull(index) ?: return
-        coroutineScope.launch {
-            val details = placeRepository.details(selected.id) ?: return@launch
-            itemStore.update(itemId) {
-                it.copy(
-                    place = details.place,
-                    city = details.city,
-                    searchResults = emptyList(),
-                )
             }
         }
     }
