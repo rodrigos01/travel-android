@@ -1,6 +1,7 @@
 package travel.vola.android.ui.trip.creation.composable
 
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
@@ -13,6 +14,8 @@ import travel.vola.android.extensions.update
 import travel.vola.android.model.data.Time
 import travel.vola.android.ui.theme.AppTheme
 import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.util.TimeZone
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,7 +40,9 @@ fun DatePickerDialog(
         onConfirm = {
             datePickerState.selectedTime?.let {
                 onDateSelected(
-                    it
+                    it.update(
+                        timeZone = selectedTime?.zone ?: ZoneId.systemDefault()
+                    )
                 )
             }
             onDismiss()
@@ -50,6 +55,13 @@ fun DatePickerDialog(
         )
     }
 }
+
+/**
+ * Currently selected date as a Time object. TimeZone is always UTC
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+val DatePickerState.selectedTime: ZonedDateTime?
+    get() = selectedDateMillis?.let { Time(it, TimeZone.getTimeZone("UTC")) }
 
 @Composable
 @Preview
