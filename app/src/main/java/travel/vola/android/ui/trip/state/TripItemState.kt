@@ -2,6 +2,7 @@ package travel.vola.android.ui.trip.state
 
 import travel.vola.android.model.data.Identifiable
 import travel.vola.android.model.data.Time
+import java.time.ZonedDateTime
 
 sealed interface TripItemState {
 
@@ -28,6 +29,7 @@ sealed interface TripItemState {
         val dayOfWeekStart: String,
         val dayOfMonthEnd: String,
         val dayOfWeekEnd: String,
+        val showBottomDivider: Boolean,
     ) : TripItemState, Timeable, Replaceable
 
     interface Replaceable : Identifiable
@@ -39,6 +41,7 @@ sealed interface TripItemState {
         override val timestamp: Time,
         val dayOfMonth: String,
         val dayOfWeek: String,
+        val showBottomDivider: Boolean,
     ) : TripItemState, Timeable, Replaceable
 
     sealed interface EventItemState : TripItemState, Timeable, Editable {
@@ -58,7 +61,7 @@ sealed interface TripItemState {
         override val dayOfWeek: String,
         override val time: String,
         val destination: String,
-        val airport: String
+        val airport: String,
     ) : EventItemState, Replaceable {
         override val title = destination
         override val subtitle = airport
@@ -71,7 +74,7 @@ sealed interface TripItemState {
         override val dayOfMonth: String,
         override val dayOfWeek: String,
         override val time: String,
-        val airport: String
+        val airport: String,
     ) : EventItemState, Replaceable {
         override val title = null
         override val subtitle = airport
@@ -133,11 +136,12 @@ sealed interface TripItemState {
 }
 
 data class ManualAddPlanState(
-    val time: Time?,
-    val minTime: Time,
+    val dateTime: ZonedDateTime?,
+    val minDateTime: ZonedDateTime?,
+    val isTimeSet: Boolean,
     val dateSelectionEnabled: Boolean,
     val locationText: String?,
-    val searchResults: List<AutoCompleteResultState>
+    val searchResults: List<AutoCompleteResultState>,
 )
 
 sealed interface AddPlanItemState : TripItemState, Identifiable, TripItemState.Timeable {
@@ -208,7 +212,10 @@ data class AddPlaceItemState(
     override val saveButtonEnabled: Boolean,
     override val deleteButtonEnabled: Boolean,
     override val timestamp: Time,
-    val timeSelected: Boolean,
+    val startTimeSelected: Boolean,
+    val endDateTime: ZonedDateTime?,
+    val endTimeSelected: Boolean,
+    val minEndTime: ZonedDateTime?,
     val placeName: String?,
     val searchResults: List<AutoCompleteResultState>,
 ) : AddPlanItemState

@@ -44,7 +44,7 @@ class ManualAddLodgingUseCase(
     override fun setCheckOutTime(itemId: String, time: Time) {
         itemStore.update(itemId) {
             it.copy(
-                checkOut = it.checkOut.update(
+                checkOut = (it.checkOut ?: it.checkIn).update(
                     dayOfMonth = time.dayOfMonth,
                     month = time.month,
                     year = time.year,
@@ -79,10 +79,11 @@ class ManualAddLodgingUseCase(
             )
         }
         coroutineScope.launch {
-            val (hotelDetails, city) = listOf(
-                async { repository.details(selected.id, autocompleteKey = itemId) },
-                async { repository.placeCity(selected.id, autocompleteKey = itemId) }
-            ).awaitAll()
+            val (hotelDetails, city) = listOf(async {
+                repository.details(
+                    selected.id, autocompleteKey = itemId
+                )
+            }, async { repository.placeCity(selected.id, autocompleteKey = itemId) }).awaitAll()
             itemStore.update(itemId) { data ->
                 data.copy(
                     city = city,
@@ -100,8 +101,8 @@ class ManualAddLodgingUseCase(
     ) {
         val data = PendingLodging(
             id = id,
-            checkIn = time,
-            checkOut = time.toMidnight() + 1.days,
+            checkIn = time.update(hour = 15, minute = 0),
+            isCheckInTimeSet = true,
         )
         itemStore.addItem(data, params)
     }
@@ -119,7 +120,9 @@ class ManualAddLodgingUseCase(
             latitude = entity.latitude,
             longitude = entity.longitude,
             checkIn = entity.checkIn,
+            isCheckInTimeSet = true,
             checkOut = entity.checkout,
+            isCheckOutTimeSet = true,
             city = entity.city,
         )
         itemStore.addItem(data, params)
@@ -129,12 +132,14 @@ class ManualAddLodgingUseCase(
         data: PendingLodging,
         stateParams: AddPlanUseCase.StateParams,
     ): ManualAddLodgingItemState {
+        val minCheckoutTime = data.checkIn.toMidnight() + 1.days
         return ManualAddLodgingItemState(
             id = data.id,
             timestamp = data.checkIn,
             startState = ManualAddPlanState(
-                time = data.checkIn,
-                minTime = data.checkIn.toMidnight(),
+                dateTime = data.checkIn,
+                minDateTime = null,
+                isTimeSet = data.isCheckInTimeSet,
                 dateSelectionEnabled = stateParams.dateSelectionEnabled,
                 locationText = data.name ?: data.address,
                 searchResults = data.searchResults.map {
@@ -144,13 +149,15 @@ class ManualAddLodgingUseCase(
                 },
             ),
             endState = ManualAddPlanState(
-                time = data.checkOut,
-                minTime = data.checkIn.toMidnight() + 1.days,
+                dateTime = data.checkOut ?: minCheckoutTime.update(hour = 11, minute = 0),
+                minDateTime = minCheckoutTime,
+                isTimeSet = data.isCheckOutTimeSet,
                 dateSelectionEnabled = true,
                 locationText = null,
                 searchResults = emptyList(),
             ),
-            saveButtonEnabled = data.checkOut > data.checkIn && (data.name ?: data.address) != null,
+            saveButtonEnabled = data.checkOut != null && data.checkOut > data.checkIn && (data.name
+                ?: data.address) != null,
             deleteButtonEnabled = stateParams.deleteEnabled,
             typeSelectionEnabled = stateParams.typeSelectionEnabled,
         )
@@ -167,7 +174,7 @@ class ManualAddLodgingUseCase(
         data.latitude ?: error("lodging latitude is not set")
         data.longitude ?: error("lodging longitude is not set")
         data.city ?: error("lodging city is not set")
-        data.checkOut
+        data.checkOut ?: error("checkout time is not set")
         return Lodging(
             id = data.entityId ?: data.id,
             data.name,

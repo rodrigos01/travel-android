@@ -42,15 +42,13 @@ fun AddLodgingListItemPreview() {
                     "", Time.now(),
                     typeSelectionEnabled = false,
                     startState = ManualAddPlanState(
-                        time = null,
-                        minTime = Time.now(),
+                        dateTime = null, minDateTime = Time.now(), isTimeSet = false,
                         dateSelectionEnabled = false,
                         locationText = null,
                         searchResults = emptyList()
                     ),
                     endState = ManualAddPlanState(
-                        time = null,
-                        minTime = Time.now(),
+                        dateTime = null, minDateTime = Time.now(), isTimeSet = false,
                         dateSelectionEnabled = true,
                         locationText = null,
                         searchResults = emptyList()

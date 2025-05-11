@@ -15,8 +15,9 @@ import java.util.TimeZone
 fun FirebaseData.Trip.toAppDataModel(): Trip {
     val appFlights = flights.map { it.toAppDataModel() }
     val appLodgings = lodgings.map { it.toAppDataModel() }
-    val image = coverImage ?: appLodgings.firstOrNull()?.city?.coverImage
-    ?: appFlights.firstOrNull()?.segments?.firstOrNull()?.airportTo?.city?.coverImage
+    val image =
+        coverImage ?: appLodgings.firstOrNull()?.city?.coverImage
+        ?: appFlights.firstOrNull()?.segments?.firstOrNull()?.airportTo?.city?.coverImage
     return Trip(
         id = id,
         name = name,
@@ -55,10 +56,8 @@ fun FirebaseData.Lodging.toAppDataModel() = Lodging(
     latitude = latitude,
     longitude = longitude,
     city = city?.toAppDataModel() ?: error("city is required"),
-    checkIn = checkIn?.toTime()
-        ?: error("checkin is required"),
-    checkout = checkout?.toTime()
-        ?: error("checkout is required"),
+    checkIn = checkIn?.toTime() ?: error("checkin is required"),
+    checkout = checkout?.toTime() ?: error("checkout is required"),
 )
 
 fun FirebaseData.Place.toAppDataModel() = Place(
@@ -75,8 +74,10 @@ fun FirebaseData.Place.toAppDataModel() = Place(
 fun FirebaseData.TimedPlace.toAppDataModel() = TimedPlace(
     id = id,
     place = place.toAppDataModel(),
-    dateTime = time?.toTime() ?: error("time is required"),
-    hasTime = hasTime,
+    startDateTime = time?.toTime() ?: error("time is required"),
+    hasStartTime = hasTime,
+    endDateTime = endTime?.toTime(),
+    hasEndTime = hasEndTime,
     city = city?.toAppDataModel() ?: error("city is required"),
 )
 
@@ -125,8 +126,10 @@ fun Place.toFirebaseDataModel() = FirebaseData.Place(
 fun TimedPlace.toFirebaseDataModel() = FirebaseData.TimedPlace(
     id = id,
     place = place.toFirebaseDataModel(),
-    time = dateTime.toFirebaseDataModel(),
-    hasTime = hasTime,
+    time = startDateTime.toFirebaseDataModel(),
+    hasTime = hasStartTime,
+    endTime = endDateTime?.toFirebaseDataModel(),
+    hasEndTime = hasEndTime,
     city = city.toFirebaseDataModel(),
 )
 

@@ -21,8 +21,10 @@ fun Time(source: String): Time {
     }
 }
 
-fun Time(epochMillis: Long, timeZone: TimeZone): Time =
-    Time.ofInstant(Instant.ofEpochMilli(epochMillis), timeZone.toZoneId())
+fun Time(epochMillis: Long, timeZone: TimeZone): Time = Time(epochMillis, timeZone.toZoneId())
+
+fun Time(epochMillis: Long, zoneId: ZoneId): Time =
+    Time.ofInstant(Instant.ofEpochMilli(epochMillis), zoneId)
 
 val Time.timeInMillis: Long
     get() = this.toInstant().toEpochMilli()

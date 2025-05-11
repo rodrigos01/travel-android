@@ -5,8 +5,7 @@ import java.time.ZonedDateTime
 import java.util.TimeZone
 
 enum class ServerStatus {
-    OK,
-    UNAVAILABLE,
+    OK, UNAVAILABLE,
 }
 
 interface Identifiable {
@@ -85,8 +84,10 @@ data class PlaceDetailsResult(
 
 data class TimedPlace(
     override val id: String,
-    val dateTime: ZonedDateTime,
-    val hasTime: Boolean,
+    val startDateTime: ZonedDateTime,
+    val hasStartTime: Boolean,
+    val endDateTime: ZonedDateTime?,
+    val hasEndTime: Boolean,
     val place: Place,
     override val city: Place,
 ) : TripEntity, TripEvent, WithCity

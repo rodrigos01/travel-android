@@ -208,12 +208,14 @@ private fun TripDetailItem(
             dayOfWeekStart = event.dayOfWeekStart,
             dayOfMonthEnd = event.dayOfMonthEnd,
             dayOfWeekEnd = event.dayOfWeekEnd,
+            showBottomDivider = event.showBottomDivider,
             onAddButtonClick = { viewModel.addButtonTapped(event.id) },
         )
 
         is EmptyDateItemState -> EmptyDateListItem(
             dayOfMonth = event.dayOfMonth,
             dayOfWeek = event.dayOfWeek,
+            showBottomDivider = event.showBottomDivider,
             onTap = { viewModel.emptyDateRowTapped(event.id) },
         )
 
