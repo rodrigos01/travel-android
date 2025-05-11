@@ -29,6 +29,7 @@ sealed interface TripItemState {
         val dayOfWeekStart: String,
         val dayOfMonthEnd: String,
         val dayOfWeekEnd: String,
+        val showBottomDivider: Boolean,
     ) : TripItemState, Timeable, Replaceable
 
     interface Replaceable : Identifiable
@@ -40,6 +41,7 @@ sealed interface TripItemState {
         override val timestamp: Time,
         val dayOfMonth: String,
         val dayOfWeek: String,
+        val showBottomDivider: Boolean,
     ) : TripItemState, Timeable, Replaceable
 
     sealed interface EventItemState : TripItemState, Timeable, Editable {
