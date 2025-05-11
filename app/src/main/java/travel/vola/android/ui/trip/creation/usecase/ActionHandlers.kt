@@ -29,10 +29,15 @@ interface ManualAddPlanItemActionHandler : AddLodgingItemActionHandlerBase
 interface LodgingSearchItemActionHandler : AddLodgingItemActionHandlerBase
 
 interface AddPlaceItemActionHandler {
-    fun setPlaceStartDateTime(itemId: String, dateTime: ZonedDateTime, timeSelected: Boolean)
-    fun setPlaceEndDateTime(itemId: String, dateTime: ZonedDateTime?, timeSelected: Boolean)
     fun locationTextChanged(itemId: String, content: CharSequence)
-    fun locationSearchResultTapped(itemId: String, index: Int)
+    fun onUpdated(
+        itemId: String,
+        startDateTime: ZonedDateTime?,
+        startTimeSelected: Boolean,
+        endDateTime: ZonedDateTime?,
+        endTimeSelected: Boolean,
+        selectedSearchResultIndex: Int,
+    )
 }
 
 interface AddFlightItemActionHandler {
