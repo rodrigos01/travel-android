@@ -108,7 +108,8 @@ fun AddPlanListItem(
                                 actionHandler.setCheckOutTime(state.id, it)
                             }
                         }
-                        AddLodgingListItem(startEndAddPlanState = itemState,
+                        AddLodgingListItem(
+                            startEndAddPlanState = itemState,
                             uiState = state,
                             onLodgingTextChanged = {
                                 actionHandler.lodgingTextChanged(
@@ -117,7 +118,16 @@ fun AddPlanListItem(
                             },
                             onFindLodgingButtonTapped = {
                                 actionHandler.onFindLodgingButtonTapped(state.id)
-                            })
+                            },
+                            onUpdated = {
+                                    checkIn,
+                                    checkInTimeSelected,
+                                    checkOut,
+                                    checkOutTimeSelected,
+                                    selectedSearchResultIndex,
+                                ->
+                            },
+                        )
                     }
                 }
             }
@@ -255,6 +265,7 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
         endTimeSelected: Boolean,
         selectedSearchResultIndex: Int,
     ) = Unit
+
     override fun onFindLodgingButtonTapped(itemId: String) = Unit
 
     // Flight list item
