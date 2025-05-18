@@ -1,6 +1,5 @@
 package travel.vola.android.ui.trip.creation.usecase
 
-import travel.vola.android.model.data.Time
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import java.time.ZonedDateTime
 
@@ -13,10 +12,15 @@ interface AddPlanItemActionHandler : AddLodgingItemActionHandler, AddFlightItemA
 }
 
 interface AddLodgingItemActionHandlerBase {
-    fun setCheckInTime(itemId: String, time: Time)
-    fun setCheckOutTime(itemId: String, time: Time)
     fun lodgingTextChanged(itemId: String, content: CharSequence)
-    fun lodgingSearchResultTapped(itemId: String, index: Int)
+    fun onUpdated(
+        itemId: String,
+        checkIn: ZonedDateTime,
+        checkInTimeSelected: Boolean,
+        checkOut: ZonedDateTime?,
+        checkOutTimeSelected: Boolean,
+        selectedSearchResultIndex: Int,
+    )
 }
 
 interface AddLodgingItemActionHandler : AddLodgingItemActionHandlerBase {
