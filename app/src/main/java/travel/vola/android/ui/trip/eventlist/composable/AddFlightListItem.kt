@@ -15,7 +15,6 @@ import java.time.ZonedDateTime
 @Composable
 fun AddFlightListItem(
     uiState: ManualStartEndAddPlanState,
-    startEndAddPlanState: StartEndAddPlanListItemState,
     onAirportFromTextChanged: (CharSequence) -> Unit,
     onAirportToTextChanged: (CharSequence) -> Unit,
     onUpdated: (
@@ -29,7 +28,6 @@ fun AddFlightListItem(
 ) {
     StartEndAddPlanListItem(
         uiState = uiState,
-        state = startEndAddPlanState,
         startTitle = { Text("Departure") },
         startTimeSelectorLabel = "Choose Departure Time",
         startLabelText = "from",
@@ -71,9 +69,6 @@ fun AddFlightListItemPreview() {
                     ),
                     deleteButtonEnabled = true,
                     saveButtonEnabled = true,
-                ),
-                startEndAddPlanState = rememberStartEndAddPlanListItemState(
-                    rememberAddPlanRowState(), rememberAddPlanRowState()
                 ),
                 onAirportFromTextChanged = {},
                 onAirportToTextChanged = {},

@@ -20,7 +20,6 @@ import java.time.ZonedDateTime
 @Composable
 fun AddLodgingListItem(
     uiState: ManualStartEndAddPlanState,
-    startEndAddPlanState: StartEndAddPlanListItemState,
     onLodgingTextChanged: (CharSequence) -> Unit,
     onUpdated: (
         checkIn: ZonedDateTime,
@@ -34,7 +33,6 @@ fun AddLodgingListItem(
     Column {
         StartEndAddPlanListItem(
             uiState = uiState,
-            state = startEndAddPlanState,
             startTitle = { Text("CheckIn") },
             startTimeSelectorLabel = "Check-in Time",
             startLabelText = "Lodging Name",
@@ -100,9 +98,6 @@ fun AddLodgingListItemPreview() {
                     ),
                     deleteButtonEnabled = true,
                     saveButtonEnabled = true,
-                ),
-                startEndAddPlanState = rememberStartEndAddPlanListItemState(
-                    rememberAddPlanRowState(), rememberAddPlanRowState()
                 ),
                 onLodgingTextChanged = {},
                 onFindLodgingButtonTapped = {},
