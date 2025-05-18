@@ -55,32 +55,6 @@ fun AddPlanListItem(
                 )
                 when (state) {
                     is AddFlightItemState -> {
-                        LaunchedEffect(itemState.startState.selectedDateTime) {
-                            itemState.startState.selectedDateTime?.let {
-                                actionHandler.setDepartureTime(state.id, it)
-                            }
-                        }
-                        LaunchedEffect(itemState.startState.selectedSearchResultIndex) {
-                            if (itemState.startState.selectedSearchResultIndex != -1) {
-                                actionHandler.airportFromSearchResultTapped(
-                                    state.id,
-                                    itemState.startState.selectedSearchResultIndex,
-                                )
-                            }
-                        }
-                        LaunchedEffect(itemState.endState.selectedDateTime) {
-                            itemState.endState.selectedDateTime?.let {
-                                actionHandler.setArrivalTime(state.id, it)
-                            }
-                        }
-                        LaunchedEffect(itemState.endState.selectedSearchResultIndex) {
-                            if (itemState.endState.selectedSearchResultIndex != -1) {
-                                actionHandler.airportToSearchResultTapped(
-                                    state.id,
-                                    itemState.endState.selectedSearchResultIndex,
-                                )
-                            }
-                        }
                         AddFlightListItem(
                             startEndAddPlanState = itemState,
                             uiState = state,
@@ -92,6 +66,24 @@ fun AddPlanListItem(
                             onAirportToTextChanged = {
                                 actionHandler.airportToSearchTextChanged(
                                     state.id, it
+                                )
+                            },
+                            onUpdated = {
+                                    departureDateTime,
+                                    departureTimeSelected,
+                                    selectedDepartureSearchResultIndex,
+                                    arrivalDateTime,
+                                    arrivalTimeSelected,
+                                    selectedArrivalSearchResultIndex,
+                                ->
+                                actionHandler.onUpdated(
+                                    state.id,
+                                    departureDateTime,
+                                    departureTimeSelected,
+                                    selectedDepartureSearchResultIndex,
+                                    arrivalDateTime,
+                                    arrivalTimeSelected,
+                                    selectedArrivalSearchResultIndex,
                                 )
                             },
                         )
@@ -246,18 +238,15 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
     override fun delete(type: AddPlanItemState.Type, itemId: String) = Unit
     override fun save(itemId: String) = Unit
     override fun cancelEdit(itemId: String) = Unit
-    override fun airportFromSearchTextChanged(itemId: String, content: CharSequence) = Unit
-    override fun airportToSearchTextChanged(itemId: String, content: CharSequence) = Unit
-    override fun airportFromSearchResultTapped(itemId: String, index: Int) = Unit
-    override fun airportToSearchResultTapped(itemId: String, index: Int) = Unit
     override fun lodgingTextChanged(itemId: String, content: CharSequence) = Unit
     override fun lodgingSearchResultTapped(itemId: String, index: Int) = Unit
     override fun onSwitchToManualButtonTapped(itemId: String) = Unit
     override fun setCheckInTime(itemId: String, time: Time) = Unit
     override fun setCheckOutTime(itemId: String, time: Time) = Unit
-    override fun setDepartureTime(itemId: String, time: Time) = Unit
-    override fun setArrivalTime(itemId: String, time: Time) = Unit
-    override fun locationTextChanged(itemId: String, content: CharSequence) = Unit
+
+    // Place list item
+    override fun airportFromSearchTextChanged(itemId: String, content: CharSequence) = Unit
+    override fun airportToSearchTextChanged(itemId: String, content: CharSequence) = Unit
     override fun onUpdated(
         itemId: String,
         startDateTime: ZonedDateTime?,
@@ -267,4 +256,16 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
         selectedSearchResultIndex: Int,
     ) = Unit
     override fun onFindLodgingButtonTapped(itemId: String) = Unit
+
+    // Flight list item
+    override fun locationTextChanged(itemId: String, content: CharSequence) = Unit
+    override fun onUpdated(
+        itemId: String,
+        departureTime: ZonedDateTime,
+        departureTimeSelected: Boolean,
+        selectedDepartureSearchResultIndex: Int,
+        arrivalTime: ZonedDateTime?,
+        arrivalTimeSelected: Boolean,
+        selectedArrivalSearchResultIndex: Int,
+    ) = Unit
 }

@@ -37,6 +37,7 @@ fun AddLodgingListItem(
             endTimeSelectorLabel = "Check-out Time",
             endLabelText = "Check-out time",
             endPlaceHolder = "Check-out time",
+            onUpdated = { _, _, _, _, _, _ -> },
         )
         TextButton(
             onClick = onFindLodgingButtonTapped,
@@ -54,30 +55,35 @@ fun AddLodgingListItem(
 fun AddLodgingListItemPreview() {
     AppTheme {
         Surface {
-            AddLodgingListItem(uiState = ManualAddLodgingItemState(
-                "", Time.now(),
-                typeSelectionEnabled = false,
-                startState = ManualAddPlanState(
-                    dateTime = null,
-                    minDateTime = Time.now(),
-                    isTimeSet = false,
-                    dateSelectionEnabled = false,
-                    locationText = null,
-                    searchResults = emptyList()
+            AddLodgingListItem(
+                uiState = ManualAddLodgingItemState(
+                    "", Time.now(),
+                    typeSelectionEnabled = false,
+                    startState = ManualAddPlanState(
+                        dateTime = null,
+                        minDateTime = Time.now(),
+                        isTimeSet = false,
+                        dateSelectionEnabled = false,
+                        locationText = null,
+                        searchResults = emptyList()
+                    ),
+                    endState = ManualAddPlanState(
+                        dateTime = null,
+                        minDateTime = Time.now(),
+                        isTimeSet = false,
+                        dateSelectionEnabled = true,
+                        locationText = null,
+                        searchResults = emptyList()
+                    ),
+                    deleteButtonEnabled = true,
+                    saveButtonEnabled = true,
                 ),
-                endState = ManualAddPlanState(
-                    dateTime = null,
-                    minDateTime = Time.now(),
-                    isTimeSet = false,
-                    dateSelectionEnabled = true,
-                    locationText = null,
-                    searchResults = emptyList()
+                startEndAddPlanState = rememberStartEndAddPlanListItemState(
+                    rememberAddPlanRowState(), rememberAddPlanRowState()
                 ),
-                deleteButtonEnabled = true,
-                saveButtonEnabled = true,
-            ), startEndAddPlanState = rememberStartEndAddPlanListItemState(
-                rememberAddPlanRowState(), rememberAddPlanRowState()
-            ), onLodgingTextChanged = {}, onFindLodgingButtonTapped = {})
+                onLodgingTextChanged = {},
+                onFindLodgingButtonTapped = {},
+            )
         }
     }
 }
