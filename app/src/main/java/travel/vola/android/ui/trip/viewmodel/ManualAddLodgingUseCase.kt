@@ -30,32 +30,6 @@ class ManualAddLodgingUseCase(
 
     override val items: MapFlow<String, ManualAddLodgingItemState> = itemStore.items(::createItem)
 
-    override fun setCheckInTime(itemId: String, time: Time) = itemStore.update(itemId) {
-        it.copy(
-            checkIn = it.checkIn.update(
-                dayOfMonth = time.dayOfMonth,
-                month = time.month,
-                year = time.year,
-                hour = time.hour,
-                minute = time.minute,
-            )
-        )
-    }
-
-    override fun setCheckOutTime(itemId: String, time: Time) {
-        itemStore.update(itemId) {
-            it.copy(
-                checkOut = (it.checkOut ?: it.checkIn).update(
-                    dayOfMonth = time.dayOfMonth,
-                    month = time.month,
-                    year = time.year,
-                    hour = time.hour,
-                    minute = time.minute,
-                )
-            )
-        }
-    }
-
     override fun lodgingTextChanged(itemId: String, content: CharSequence) {
         if (content.length < 3) {
             return
@@ -65,31 +39,6 @@ class ManualAddLodgingUseCase(
             itemStore.update(itemId) { data ->
                 data.copy(
                     searchResults = results
-                )
-            }
-        }
-    }
-
-    override fun lodgingSearchResultTapped(itemId: String, index: Int) {
-        val selected = itemStore.getData(itemId)?.searchResults?.getOrNull(index) ?: return
-        itemStore.update(itemId) { data ->
-            data.copy(
-                name = selected.name,
-                address = selected.address,
-                searchResults = emptyList(),
-            )
-        }
-        coroutineScope.launch {
-            val (hotelDetails, city) = listOf(async {
-                repository.details(
-                    selected.id, autocompleteKey = itemId
-                )
-            }, async { repository.placeCity(selected.id, autocompleteKey = itemId) }).awaitAll()
-            itemStore.update(itemId) { data ->
-                data.copy(
-                    city = city,
-                    latitude = hotelDetails?.latitude,
-                    longitude = hotelDetails?.longitude
                 )
             }
         }
@@ -202,5 +151,58 @@ class ManualAddLodgingUseCase(
             data.checkIn,
             data.checkOut,
         )
+    }
+
+    override fun onUpdated(
+        itemId: String,
+        checkIn: ZonedDateTime,
+        checkInTimeSelected: Boolean,
+        checkOut: ZonedDateTime?,
+        checkOutTimeSelected: Boolean,
+        selectedSearchResultIndex: Int,
+    ) {
+        val selected =
+            itemStore.getData(itemId)?.searchResults?.getOrNull(selectedSearchResultIndex)
+        itemStore.update(itemId) {
+            it.copy(
+                checkIn = it.checkIn.update(
+                    dayOfMonth = checkIn.dayOfMonth,
+                    month = checkIn.month,
+                    year = checkIn.year,
+                    hour = checkIn.hour,
+                    minute = checkIn.minute,
+                ),
+                isCheckInTimeSet = checkInTimeSelected,
+                checkOut = checkOut?.let { time ->
+                    (it.checkOut ?: it.checkIn).update(
+                        dayOfMonth = time.dayOfMonth,
+                        month = time.month,
+                        year = time.year,
+                        hour = time.hour,
+                        minute = time.minute,
+                    )
+                },
+                isCheckOutTimeSet = checkOutTimeSelected,
+                name = selected?.name ?: it.name,
+                address = selected?.address ?: it.address,
+                searchResults = if (selected != null) emptyList() else it.searchResults,
+            )
+        }
+        if (selected != null) {
+            coroutineScope.launch {
+                val (hotelDetails, city) = listOf(async {
+                    repository.details(
+                        selected.id, autocompleteKey = itemId
+                    )
+                }, async { repository.placeCity(selected.id, autocompleteKey = itemId) }).awaitAll()
+                itemStore.update(itemId) { data ->
+                    data.copy(
+                        city = city,
+                        latitude = hotelDetails?.latitude,
+                        longitude = hotelDetails?.longitude
+                    )
+                }
+            }
+        }
     }
 }
