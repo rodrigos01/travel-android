@@ -15,12 +15,20 @@ import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
 import travel.vola.android.ui.trip.state.ManualStartEndAddPlanState
+import java.time.ZonedDateTime
 
 @Composable
 fun AddLodgingListItem(
     uiState: ManualStartEndAddPlanState,
     startEndAddPlanState: StartEndAddPlanListItemState,
     onLodgingTextChanged: (CharSequence) -> Unit,
+    onUpdated: (
+        checkIn: ZonedDateTime,
+        checkInTimeSelected: Boolean,
+        checkOut: ZonedDateTime?,
+        checkOutTimeSelected: Boolean,
+        selectedSearchResultIndex: Int,
+    ) -> Unit,
     onFindLodgingButtonTapped: () -> Unit,
 ) {
     Column {
@@ -37,7 +45,22 @@ fun AddLodgingListItem(
             endTimeSelectorLabel = "Check-out Time",
             endLabelText = "Check-out time",
             endPlaceHolder = "Check-out time",
-            onUpdated = { _, _, _, _, _, _ -> },
+            onUpdated = {
+                    startDateTime,
+                    startTimeSelected,
+                    selectedStartSearchResultIndex,
+                    endDateTime,
+                    endTimeSelected,
+                    _,
+                ->
+                onUpdated(
+                    startDateTime,
+                    startTimeSelected,
+                    endDateTime,
+                    endTimeSelected,
+                    selectedStartSearchResultIndex
+                )
+            },
         )
         TextButton(
             onClick = onFindLodgingButtonTapped,
@@ -83,6 +106,7 @@ fun AddLodgingListItemPreview() {
                 ),
                 onLodgingTextChanged = {},
                 onFindLodgingButtonTapped = {},
+                onUpdated = { _, _, _, _, _ -> },
             )
         }
     }
