@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import travel.vola.android.extensions.Time
@@ -12,6 +13,7 @@ import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
 import travel.vola.android.ui.trip.state.ManualStartEndAddPlanState
+import java.time.ZonedDateTime
 
 data class StartEndAddPlanListItemState(
     val startState: AddPlanRowState,
@@ -39,7 +41,32 @@ fun StartEndAddPlanListItem(
     endLabelText: String? = null,
     endPlaceHolder: String? = null,
     onEndTextChanged: (CharSequence) -> Unit = {},
+    onUpdated: (
+        startDateTime: ZonedDateTime,
+        startTimeSelected: Boolean,
+        selectedStartSearchResultIndex: Int,
+        endDateTime: ZonedDateTime?,
+        endTimeSelected: Boolean,
+        selectedEndSearchResultIndex: Int,
+    ) -> Unit,
 ) {
+    LaunchedEffect(
+        state.startState.selectedDateTime,
+        state.startState.timeSelected,
+        state.endState.selectedDateTime,
+        state.endState.timeSelected,
+        state.startState.selectedSearchResultIndex,
+        state.endState.selectedSearchResultIndex,
+    ) {
+        onUpdated(
+            state.startState.selectedDateTime ?: error("Start date time should never be null"),
+            state.startState.timeSelected,
+            state.startState.selectedSearchResultIndex,
+            state.endState.selectedDateTime,
+            state.endState.timeSelected,
+            state.endState.selectedSearchResultIndex,
+        )
+    }
     Column {
         AddPlanRow(
             state = state.startState,
@@ -76,8 +103,7 @@ fun StartEndAddPlanListItemPreview() {
         Surface {
             StartEndAddPlanListItem(
                 state = StartEndAddPlanListItemState(
-                    startState = rememberAddPlanRowState(),
-                    endState = rememberAddPlanRowState()
+                    startState = rememberAddPlanRowState(), endState = rememberAddPlanRowState()
                 ),
                 uiState = AddFlightItemState(
                     id = "",
@@ -112,6 +138,7 @@ fun StartEndAddPlanListItemPreview() {
                 endPlaceHolder = "Enter End point",
                 endLabelText = "End",
                 onEndTextChanged = {},
+                onUpdated = { _, _, _, _, _, _ -> },
             )
         }
     }

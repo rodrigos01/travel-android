@@ -10,6 +10,7 @@ import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
 import travel.vola.android.ui.trip.state.ManualStartEndAddPlanState
+import java.time.ZonedDateTime
 
 @Composable
 fun AddFlightListItem(
@@ -17,6 +18,14 @@ fun AddFlightListItem(
     startEndAddPlanState: StartEndAddPlanListItemState,
     onAirportFromTextChanged: (CharSequence) -> Unit,
     onAirportToTextChanged: (CharSequence) -> Unit,
+    onUpdated: (
+        departureDateTime: ZonedDateTime,
+        departureTimeSelected: Boolean,
+        selectedDepartureSearchResultIndex: Int,
+        arrivalDateTime: ZonedDateTime?,
+        arrivalTimeSelected: Boolean,
+        selectedArrivalSearchResultIndex: Int,
+    ) -> Unit,
 ) {
     StartEndAddPlanListItem(
         uiState = uiState,
@@ -31,6 +40,7 @@ fun AddFlightListItem(
         endLabelText = "to",
         endPlaceHolder = "Enter City or Airport",
         onEndTextChanged = onAirportToTextChanged,
+        onUpdated = onUpdated,
     )
 }
 
@@ -67,6 +77,7 @@ fun AddFlightListItemPreview() {
                 ),
                 onAirportFromTextChanged = {},
                 onAirportToTextChanged = {},
+                onUpdated = { _, _, _, _, _, _ -> },
             )
         }
     }
