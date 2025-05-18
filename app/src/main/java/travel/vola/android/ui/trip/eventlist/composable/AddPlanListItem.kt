@@ -89,7 +89,8 @@ fun AddPlanListItem(
                     }
 
                     is ManualAddLodgingItemState -> {
-                        AddLodgingListItem(startEndAddPlanState = itemState,
+                        AddLodgingListItem(
+                            startEndAddPlanState = itemState,
                             uiState = state,
                             onLodgingTextChanged = {
                                 actionHandler.lodgingTextChanged(
@@ -127,20 +128,27 @@ fun AddPlanListItem(
                     minCheckOut = state.minCheckOutTime,
                     locationText = state.locationText,
                     searchResults = state.searchResults,
-                    onCheckInDateSelected = { actionHandler.setCheckInTime(state.id, it) },
-                    onCheckOutDateSelected = { actionHandler.setCheckOutTime(state.id, it) },
                     onLocationSearchTextChanged = {
                         actionHandler.lodgingTextChanged(
                             state.id, it
                         )
                     },
-                    onLocationSearchResultSelected = {
-                        actionHandler.lodgingSearchResultTapped(
-                            state.id, it
-                        )
-                    },
                     onSwitchToManualButtonTapped = {
                         actionHandler.onSwitchToManualButtonTapped(state.id)
+                    },
+                    onUpdated = {
+                            checkIn,
+                            checkOut,
+                            selectedSearchResultIndex,
+                        ->
+                        actionHandler.onUpdated(
+                            state.id,
+                            checkIn,
+                            checkInTimeSelected = false,
+                            checkOut,
+                            checkOutTimeSelected = false,
+                            selectedSearchResultIndex,
+                        )
                     },
                 )
             }

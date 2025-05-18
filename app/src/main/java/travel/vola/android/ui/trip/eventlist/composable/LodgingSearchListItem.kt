@@ -6,6 +6,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -18,31 +24,49 @@ import travel.vola.android.ui.trip.state.SearchResultItemState
 
 @Composable
 fun LodgingSearchListItem(
-    checkIn: Time? = null,
+    checkIn: Time,
     checkOut: Time? = null,
     minCheckIn: Time? = null,
     minCheckOut: Time? = null,
     locationText: String? = null,
     searchResults: List<SearchResultItemState> = emptyList(),
-    onCheckInDateSelected: (Time) -> Unit,
-    onCheckOutDateSelected: (Time) -> Unit,
     onSwitchToManualButtonTapped: () -> Unit,
     onLocationSearchTextChanged: (CharSequence) -> Unit,
-    onLocationSearchResultSelected: (Int) -> Unit,
+    onUpdated: (
+        checkIn: Time,
+        checkOut: Time?,
+        selectedSearchResultIndex: Int,
+    ) -> Unit,
 ) {
+    var checkInState by remember {
+        mutableStateOf(checkIn)
+    }
+    var checkOutState by remember {
+        mutableStateOf(checkOut)
+    }
+    var selectedSearchResultIndexState by remember {
+        mutableIntStateOf(-1)
+    }
+    LaunchedEffect(
+        checkInState, checkOutState, selectedSearchResultIndexState
+    ) {
+        onUpdated(
+            checkInState,
+            checkOutState,
+            selectedSearchResultIndexState,
+        )
+    }
     Column {
-        LodgingSearchParams(
-            checkIn,
+        LodgingSearchParams(checkIn,
             minCheckIn,
             checkOut,
             minCheckOut,
             locationText,
             searchResults,
-            onCheckInDateSelected,
-            onCheckOutDateSelected,
+            onCheckInDateSelected = { checkInState = it },
+            onCheckOutDateSelected = { checkOutState = it },
             onLocationSearchTextChanged,
-            onLocationSearchResultSelected
-        )
+            onLocationSearchResultSelected = { selectedSearchResultIndexState = it })
         TextButton(
             onClick = onSwitchToManualButtonTapped,
             modifier = Modifier
@@ -59,17 +83,13 @@ fun LodgingSearchListItem(
 fun LodgingSearchListItemPreview() {
     AppTheme {
         AddPlanScaffold(AddPlanType.Lodging, {}, true, false, {}, true, "Save", {}, "Cancel", {}) {
-            LodgingSearchListItem(
-                checkIn = Time("2025-12-05T12:00 +0100"),
+            LodgingSearchListItem(checkIn = Time("2025-12-05T12:00 +0100"),
                 checkOut = null,
                 searchResults = List(5) { SearchResultItemState("City$it", "Address$it") },
                 locationText = null,
-                onCheckInDateSelected = {},
-                onCheckOutDateSelected = {},
                 onLocationSearchTextChanged = {},
-                onLocationSearchResultSelected = {},
                 onSwitchToManualButtonTapped = {},
-            )
+                onUpdated = { _, _, _ -> })
         }
     }
 }

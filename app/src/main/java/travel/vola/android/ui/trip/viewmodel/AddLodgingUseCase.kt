@@ -14,6 +14,7 @@ import travel.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandlerB
 import travel.vola.android.ui.trip.state.AddLodgingItemState
 import travel.vola.android.ui.trip.state.LodgingSearchItemState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
+import java.time.ZonedDateTime
 
 class AddLodgingUseCase(
     placeRepository: PlaceRepository,
@@ -60,17 +61,26 @@ class AddLodgingUseCase(
         lodgingSearchParamsUseCase.items,
     ).stateIn(coroutineScope, SharingStarted.Eagerly, emptyMap())
 
-    override fun setCheckInTime(itemId: String, time: Time) =
-        getActionHandler(itemId).setCheckInTime(itemId, time)
-
-    override fun setCheckOutTime(itemId: String, time: Time) =
-        getActionHandler(itemId).setCheckOutTime(itemId, time)
-
     override fun lodgingTextChanged(itemId: String, content: CharSequence) =
         getActionHandler(itemId).lodgingTextChanged(itemId, content)
 
-    override fun lodgingSearchResultTapped(itemId: String, index: Int) =
-        getActionHandler(itemId).lodgingSearchResultTapped(itemId, index)
+    override fun onUpdated(
+        itemId: String,
+        checkIn: ZonedDateTime,
+        checkInTimeSelected: Boolean,
+        checkOut: ZonedDateTime?,
+        checkOutTimeSelected: Boolean,
+        selectedSearchResultIndex: Int,
+    ) {
+        getActionHandler(itemId).onUpdated(
+            itemId,
+            checkIn,
+            checkInTimeSelected,
+            checkOut,
+            checkOutTimeSelected,
+            selectedSearchResultIndex,
+        )
+    }
 
     override fun addItem(
         id: String,
