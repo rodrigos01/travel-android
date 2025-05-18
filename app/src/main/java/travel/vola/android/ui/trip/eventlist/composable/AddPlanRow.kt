@@ -20,6 +20,7 @@ import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -49,6 +50,7 @@ import travel.vola.android.ui.trip.creation.composable.DatePickerDialog
 import travel.vola.android.ui.trip.creation.composable.TimePickerDialog
 import travel.vola.android.ui.trip.creation.composable.rememberAutoCompleteTextFieldState
 import travel.vola.android.ui.trip.state.AutoCompleteResultState
+import java.time.ZonedDateTime
 import java.util.TimeZone
 
 class AddPlanRowState(
@@ -77,8 +79,9 @@ fun rememberAddPlanRowState(
 
 @Composable
 fun AddPlanRow(
-    state: AddPlanRowState,
-    minTime: Time? = null,
+    initialDateTime: ZonedDateTime? = null,
+    timeSelectedInitially: Boolean = false,
+    minTime: ZonedDateTime? = null,
     searchResults: List<AutoCompleteResultState>,
     title: @Composable () -> Unit,
     timeSelectorLabel: String,
@@ -88,13 +91,33 @@ fun AddPlanRow(
     labelText: String? = null,
     placeHolder: String? = null,
     onTextChanged: (CharSequence) -> Unit = {},
+    onUpdated: (
+        selectedDateTime: ZonedDateTime?,
+        timeSelected: Boolean,
+        selectedSearchResultIndex: Int,
+    ) -> Unit,
 ) {
-    val selectedTime = state.selectedDateTime ?: minTime ?: Time.now()
+    var selectedDateTime by remember(initialDateTime) {
+        mutableStateOf(initialDateTime)
+    }
+    var timeSelected by remember(timeSelectedInitially) {
+        mutableStateOf(timeSelectedInitially)
+    }
+    var selectedSearchResultIndex by remember(searchResults) {
+        mutableIntStateOf(-1)
+    }
+    LaunchedEffect(selectedDateTime, timeSelected, selectedSearchResultIndex) {
+        onUpdated(
+            selectedDateTime,
+            timeSelected,
+            selectedSearchResultIndex,
+        )
+    }
+    val selectedTime = selectedDateTime ?: minTime ?: ZonedDateTime.now()
     var showTimePicker by remember {
         mutableStateOf(false)
     }
-    val timeText =
-        state.selectedDateTime?.timeString?.takeIf { state.timeSelected } ?: timeSelectorLabel
+    val timeText = selectedDateTime?.timeString?.takeIf { timeSelected } ?: timeSelectorLabel
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
     ) {
@@ -157,14 +180,14 @@ fun AddPlanRow(
                     DatePickerDialog(
                         minimumSelectableTime = minTime?.toMidnight(),
                         onDateSelected = {
-                            state.selectedDateTime = selectedTime.update(
+                            selectedDateTime = selectedTime.update(
                                 dayOfMonth = it.dayOfMonth,
                                 month = it.month,
                                 year = it.year,
                             )
                             showDatePickerState = false
                         },
-                        selectedTime = state.selectedDateTime,
+                        selectedTime = selectedDateTime,
                         onDismiss = {
                             showDatePickerState = false
                         },
@@ -185,7 +208,7 @@ fun AddPlanRow(
                     label = labelText,
                     placeHolder = placeHolder,
                     onTextChanged,
-                    onOptionSelected = { state.selectedSearchResultIndex = it },
+                    onOptionSelected = { selectedSearchResultIndex = it },
                     itemText = { it.title },
                     itemContent = { result ->
                         Column {
@@ -217,8 +240,8 @@ fun AddPlanRow(
     if (showTimePicker) {
         TimePickerDialog(
             onTimeSelected = { hour, minute ->
-                state.timeSelected = true
-                state.selectedDateTime = selectedTime.update(hour = hour, minute = minute)
+                timeSelected = true
+                selectedDateTime = selectedTime.update(hour = hour, minute = minute)
                 showTimePicker = false
             },
             initialTime = selectedTime,
@@ -232,20 +255,28 @@ fun AddPlanRow(
 
 @Composable
 fun AddPlanRow(
-    state: AddPlanRowState,
+    initialDateTime: ZonedDateTime? = null,
+    timeSelectedInitially: Boolean = false,
     minTime: Time? = null,
     title: @Composable () -> Unit,
     timeSelectorLabel: String,
     dateSelectionEnabled: Boolean = true,
+    onUpdated: (
+        selectedDateTime: ZonedDateTime?,
+        timeSelected: Boolean,
+        selectedSearchResultIndex: Int,
+    ) -> Unit,
 ) {
     AddPlanRow(
-        state = state,
+        initialDateTime = initialDateTime,
+        timeSelectedInitially = timeSelectedInitially,
         minTime = minTime,
         searchResults = emptyList(),
         title = title,
         timeSelectorLabel = timeSelectorLabel,
         dateSelectionEnabled = dateSelectionEnabled,
         showTextField = false,
+        onUpdated = onUpdated,
     )
 }
 
@@ -258,11 +289,9 @@ fun AddPlanRowPreview(hasTextField: Boolean = true) {
                 .background(MaterialTheme.colorScheme.surface)
                 .fillMaxWidth()
         ) {
-            val state = rememberAddPlanRowState(
-                selectedDateTime = Time("2025-06-12T03:45 -0300"),
-            )
             AddPlanRow(
-                state = state,
+                initialDateTime = Time("2025-06-12T03:45 -0300"),
+                timeSelectedInitially = true,
                 minTime = Time(0L, TimeZone.getDefault()),
                 searchResults = emptyList(),
                 title = { Text("Title") },
@@ -272,6 +301,7 @@ fun AddPlanRowPreview(hasTextField: Boolean = true) {
                 placeHolder = "PlaceHolder",
                 labelText = "Label",
                 onTextChanged = {},
+                onUpdated = { _, _, _ -> },
             )
         }
     }
