@@ -2,7 +2,6 @@ package travel.vola.android.ui.trip.eventlist.composable
 
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.tooling.preview.Preview
 import travel.vola.android.extensions.Time
 import travel.vola.android.model.data.Time
@@ -90,26 +89,7 @@ fun AddPlanListItem(
                     }
 
                     is ManualAddLodgingItemState -> {
-                        LaunchedEffect(itemState.startState.selectedDateTime) {
-                            itemState.startState.selectedDateTime?.let {
-                                actionHandler.setCheckInTime(state.id, it)
-                            }
-                        }
-                        LaunchedEffect(itemState.startState.selectedSearchResultIndex) {
-                            if (itemState.startState.selectedSearchResultIndex != -1) {
-                                actionHandler.lodgingSearchResultTapped(
-                                    state.id,
-                                    itemState.startState.selectedSearchResultIndex,
-                                )
-                            }
-                        }
-                        LaunchedEffect(itemState.endState.selectedDateTime) {
-                            itemState.endState.selectedDateTime?.let {
-                                actionHandler.setCheckOutTime(state.id, it)
-                            }
-                        }
-                        AddLodgingListItem(
-                            startEndAddPlanState = itemState,
+                        AddLodgingListItem(startEndAddPlanState = itemState,
                             uiState = state,
                             onLodgingTextChanged = {
                                 actionHandler.lodgingTextChanged(
@@ -126,6 +106,14 @@ fun AddPlanListItem(
                                     checkOutTimeSelected,
                                     selectedSearchResultIndex,
                                 ->
+                                actionHandler.onUpdated(
+                                    state.id,
+                                    checkIn,
+                                    checkInTimeSelected,
+                                    checkOut,
+                                    checkOutTimeSelected,
+                                    selectedSearchResultIndex,
+                                )
                             },
                         )
                     }
@@ -248,14 +236,10 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
     override fun delete(type: AddPlanItemState.Type, itemId: String) = Unit
     override fun save(itemId: String) = Unit
     override fun cancelEdit(itemId: String) = Unit
-    override fun lodgingTextChanged(itemId: String, content: CharSequence) = Unit
-    override fun lodgingSearchResultTapped(itemId: String, index: Int) = Unit
-    override fun onSwitchToManualButtonTapped(itemId: String) = Unit
-    override fun setCheckInTime(itemId: String, time: Time) = Unit
-    override fun setCheckOutTime(itemId: String, time: Time) = Unit
 
     // Place list item
     override fun airportFromSearchTextChanged(itemId: String, content: CharSequence) = Unit
+
     override fun airportToSearchTextChanged(itemId: String, content: CharSequence) = Unit
     override fun onUpdated(
         itemId: String,
@@ -270,6 +254,7 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
 
     // Flight list item
     override fun locationTextChanged(itemId: String, content: CharSequence) = Unit
+
     override fun onUpdated(
         itemId: String,
         departureTime: ZonedDateTime,
@@ -278,5 +263,17 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
         arrivalTime: ZonedDateTime?,
         arrivalTimeSelected: Boolean,
         selectedArrivalSearchResultIndex: Int,
+    ) = Unit
+
+    // Lodging List Item
+    override fun onSwitchToManualButtonTapped(itemId: String) = Unit
+    override fun lodgingTextChanged(itemId: String, content: CharSequence) = Unit
+    override fun onUpdated(
+        itemId: String,
+        checkIn: ZonedDateTime,
+        checkInTimeSelected: Boolean,
+        checkOut: ZonedDateTime?,
+        checkOutTimeSelected: Boolean,
+        selectedSearchResultIndex: Int,
     ) = Unit
 }
