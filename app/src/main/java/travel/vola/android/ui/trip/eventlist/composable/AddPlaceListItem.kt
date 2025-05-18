@@ -6,44 +6,19 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import travel.vola.android.ui.theme.AppTheme
-import travel.vola.android.ui.trip.state.AutoCompleteResultState
+import travel.vola.android.ui.trip.state.AddPlaceItemState
 import java.time.ZonedDateTime
-
-class AddPlaceListItemState internal constructor(
-    val startState: AddPlanRowState,
-    val endState: AddPlanRowState,
-    private val hasEndState: MutableState<Boolean>,
-) {
-    var hasEnd: Boolean
-        get() = hasEndState.value
-        internal set(value) {
-            hasEndState.value = value
-        }
-}
-
-@Composable
-fun rememberAddPlaceListItemState(
-    startState: AddPlanRowState = rememberAddPlanRowState(),
-    endState: AddPlanRowState = rememberAddPlanRowState(),
-    hasEnd: Boolean = false,
-) = remember(startState, endState, hasEnd) {
-    AddPlaceListItemState(
-        startState,
-        endState,
-        mutableStateOf(hasEnd),
-    )
-}
 
 @Composable
 fun AddPlaceListItem(
-    state: AddPlaceListItemState,
-    placeName: String?,
-    searchResults: List<AutoCompleteResultState>,
+    uiState: AddPlaceItemState,
     onTextChanged: (CharSequence) -> Unit,
     onUpdated: (
         startDateTime: ZonedDateTime?,
@@ -54,47 +29,77 @@ fun AddPlaceListItem(
     ) -> Unit,
     minEndTime: ZonedDateTime? = null,
 ) {
+    var selectedStartDateTime by remember {
+        mutableStateOf(uiState.timestamp)
+    }
+    var startTimeSelected by remember {
+        mutableStateOf(uiState.startTimeSelected)
+    }
+    var hasEnd by remember(uiState.endDateTime) {
+        mutableStateOf(uiState.endDateTime != null)
+    }
+    var selectedEndDateTime by remember {
+        mutableStateOf(uiState.endDateTime)
+    }
+    var endTimeSelected by remember {
+        mutableStateOf(uiState.endTimeSelected)
+    }
+    var selectedSearchResultIndex by remember {
+        mutableIntStateOf(-1)
+    }
     LaunchedEffect(
-        state.startState.selectedDateTime,
-        state.startState.timeSelected,
-        state.endState.selectedDateTime,
-        state.startState.selectedSearchResultIndex,
-        state.endState.timeSelected,
+        selectedStartDateTime,
+        startTimeSelected,
+        selectedEndDateTime,
+        endTimeSelected,
+        selectedSearchResultIndex,
     ) {
         onUpdated(
-            state.startState.selectedDateTime,
-            state.startState.timeSelected,
-            state.endState.selectedDateTime.takeIf { state.hasEnd },
-            state.endState.timeSelected,
-            state.startState.selectedSearchResultIndex,
+            selectedStartDateTime,
+            startTimeSelected,
+            selectedEndDateTime,
+            endTimeSelected,
+            selectedSearchResultIndex,
         )
     }
     Column {
         AddPlanRow(
-            state = state.startState,
-            title = if (state.hasEnd) {
+            initialDateTime = selectedStartDateTime,
+            timeSelectedInitially = startTimeSelected,
+            title = if (hasEnd) {
                 { Text("Start") }
             } else {
                 {}
             },
             labelText = "Location",
             placeHolder = "Enter Location",
-            text = placeName,
+            text = uiState.placeName,
             onTextChanged = { onTextChanged(it.toString()) },
-            searchResults = searchResults,
+            searchResults = uiState.searchResults,
             timeSelectorLabel = "Pick Time",
             showTextField = true,
+            onUpdated = { selectedDateTime, timeSelected, selectedIndex ->
+                selectedStartDateTime =
+                    selectedDateTime ?: error("Start date time should never be null")
+                startTimeSelected = timeSelected
+                selectedSearchResultIndex = selectedIndex
+            },
         )
-        if (state.hasEnd) {
+        if (hasEnd) {
             AddPlanRow(
-                state = state.endState,
+                initialDateTime = selectedEndDateTime,
+                timeSelectedInitially = endTimeSelected,
                 title = { Text("End") },
                 timeSelectorLabel = "Pick Time",
                 minTime = minEndTime,
+                onUpdated = { selectedDateTime, timeSelected, _ ->
+                    selectedEndDateTime = selectedDateTime
+                    endTimeSelected = timeSelected
+                },
             )
         }
-        TextButton(onClick = { state.hasEnd = !state.hasEnd }) {
-            Text(if (!state.hasEnd) "Set end time" else "Remove end time")
+        TextButton(onClick = { hasEnd = !hasEnd }) {
+            Text(if (!hasEnd) "Set end time" else "Remove end time")
         }
     }
 }
@@ -105,9 +110,20 @@ fun AddPlaceListItemPreview() {
     AppTheme {
         Surface {
             AddPlaceListItem(
-                state = rememberAddPlaceListItemState(),
-                placeName = "New York",
-                searchResults = emptyList(),
+                uiState = AddPlaceItemState(
+                    id = "",
+                    timestamp = ZonedDateTime.now(),
+                    startTimeSelected = true,
+                    endTimeSelected = true,
+                    endDateTime = ZonedDateTime.now(),
+                    deleteButtonEnabled = true,
+                    saveButtonEnabled = true,
+                    typeSelectionEnabled = false,
+                    dateSelectionEnabled = false,
+                    minEndTime = null,
+                    searchResults = emptyList(),
+                    placeName = null,
+                ),
                 onTextChanged = {},
                 onUpdated = { _, _, _, _, _ -> },
             )

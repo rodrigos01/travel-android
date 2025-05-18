@@ -5,7 +5,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
 import travel.vola.android.extensions.Time
 import travel.vola.android.model.data.Time
@@ -15,20 +19,8 @@ import travel.vola.android.ui.trip.state.ManualAddPlanState
 import travel.vola.android.ui.trip.state.ManualStartEndAddPlanState
 import java.time.ZonedDateTime
 
-data class StartEndAddPlanListItemState(
-    val startState: AddPlanRowState,
-    val endState: AddPlanRowState,
-)
-
-@Composable
-fun rememberStartEndAddPlanListItemState(
-    startState: AddPlanRowState = rememberAddPlanRowState(),
-    endState: AddPlanRowState = rememberAddPlanRowState(),
-) = remember(startState, endState) { StartEndAddPlanListItemState(startState, endState) }
-
 @Composable
 fun StartEndAddPlanListItem(
-    state: StartEndAddPlanListItemState,
     uiState: ManualStartEndAddPlanState,
     startTitle: @Composable () -> Unit,
     startTimeSelectorLabel: String,
@@ -50,26 +42,45 @@ fun StartEndAddPlanListItem(
         selectedEndSearchResultIndex: Int,
     ) -> Unit,
 ) {
+    var selectedStartDateTime by remember {
+        mutableStateOf(uiState.startState.dateTime)
+    }
+    var startTimeSelected by remember {
+        mutableStateOf(uiState.startState.isTimeSet)
+    }
+    var selectedStartSearchResultIndex by remember {
+        mutableIntStateOf(-1)
+    }
+    var selectedEndDateTime by remember {
+        mutableStateOf(uiState.endState.dateTime)
+    }
+    var endTimeSelected by remember {
+        mutableStateOf(uiState.endState.isTimeSet)
+    }
+    var selectedEndSearchResultIndex by remember {
+        mutableIntStateOf(-1)
+    }
     LaunchedEffect(
-        state.startState.selectedDateTime,
-        state.startState.timeSelected,
-        state.endState.selectedDateTime,
-        state.endState.timeSelected,
-        state.startState.selectedSearchResultIndex,
-        state.endState.selectedSearchResultIndex,
+        selectedStartDateTime,
+        startTimeSelected,
+        selectedStartSearchResultIndex,
+        selectedEndDateTime,
+        endTimeSelected,
+        selectedEndSearchResultIndex,
     ) {
         onUpdated(
-            state.startState.selectedDateTime ?: error("Start date time should never be null"),
-            state.startState.timeSelected,
-            state.startState.selectedSearchResultIndex,
-            state.endState.selectedDateTime,
-            state.endState.timeSelected,
-            state.endState.selectedSearchResultIndex,
+            selectedStartDateTime ?: error("Start date time should never be null"),
+            startTimeSelected,
+            selectedStartSearchResultIndex,
+            selectedEndDateTime,
+            endTimeSelected,
+            selectedEndSearchResultIndex,
         )
     }
     Column {
         AddPlanRow(
-            state = state.startState,
+            initialDateTime = selectedStartDateTime,
+            timeSelectedInitially = startTimeSelected,
             minTime = uiState.startState.minDateTime,
             searchResults = uiState.startState.searchResults,
             title = startTitle,
@@ -79,9 +90,15 @@ fun StartEndAddPlanListItem(
             labelText = startLabelText,
             text = uiState.startState.locationText,
             onTextChanged = onStartTextChanged,
+            onUpdated = { selectedDateTime, timeSelected, selectedSearchResultIndex ->
+                selectedStartDateTime = selectedDateTime
+                startTimeSelected = timeSelected
+                selectedStartSearchResultIndex = selectedSearchResultIndex
+            },
         )
         AddPlanRow(
-            state = state.endState,
+            initialDateTime = selectedEndDateTime,
+            timeSelectedInitially = endTimeSelected,
             minTime = uiState.endState.minDateTime,
             searchResults = uiState.endState.searchResults,
             title = endTitle,
@@ -92,6 +109,11 @@ fun StartEndAddPlanListItem(
             labelText = endLabelText,
             text = uiState.endState.locationText,
             onTextChanged = onEndTextChanged,
+            onUpdated = { selectedDateTime, timeSelected, selectedSearchResultIndex ->
+                selectedEndDateTime = selectedDateTime
+                endTimeSelected = timeSelected
+                selectedEndSearchResultIndex = selectedSearchResultIndex
+            },
         )
     }
 }
@@ -102,9 +124,6 @@ fun StartEndAddPlanListItemPreview() {
     AppTheme {
         Surface {
             StartEndAddPlanListItem(
-                state = StartEndAddPlanListItemState(
-                    startState = rememberAddPlanRowState(), endState = rememberAddPlanRowState()
-                ),
                 uiState = AddFlightItemState(
                     id = "",
                     timestamp = Time.now(),

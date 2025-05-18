@@ -41,21 +41,9 @@ fun AddPlanListItem(
     ) {
         when (state) {
             is ManualStartEndAddPlanState -> {
-                val itemState = rememberStartEndAddPlanListItemState(
-                    startState = rememberAddPlanRowState(
-                        key = state.startState.searchResults,
-                        selectedDateTime = state.startState.dateTime,
-                        timeSelected = state.startState.isTimeSet,
-                    ), endState = rememberAddPlanRowState(
-                        key = state.endState.searchResults,
-                        selectedDateTime = state.endState.dateTime,
-                        timeSelected = state.endState.isTimeSet,
-                    )
-                )
                 when (state) {
                     is AddFlightItemState -> {
                         AddFlightListItem(
-                            startEndAddPlanState = itemState,
                             uiState = state,
                             onAirportFromTextChanged = {
                                 actionHandler.airportFromSearchTextChanged(
@@ -90,7 +78,6 @@ fun AddPlanListItem(
 
                     is ManualAddLodgingItemState -> {
                         AddLodgingListItem(
-                            startEndAddPlanState = itemState,
                             uiState = state,
                             onLodgingTextChanged = {
                                 actionHandler.lodgingTextChanged(
@@ -154,23 +141,8 @@ fun AddPlanListItem(
             }
 
             is AddPlaceItemState -> {
-                val addPlaceListItemState = rememberAddPlaceListItemState(
-                    startState = rememberAddPlanRowState(
-                        key = state.searchResults,
-                        selectedDateTime = state.timestamp,
-                        timeSelected = state.startTimeSelected,
-                    ),
-                    endState = rememberAddPlanRowState(
-                        key = state.timestamp,
-                        selectedDateTime = state.endDateTime ?: state.minEndTime,
-                        timeSelected = state.endTimeSelected,
-                    ),
-                    hasEnd = state.endDateTime != null,
-                )
                 AddPlaceListItem(
-                    placeName = state.placeName,
-                    state = addPlaceListItemState,
-                    searchResults = state.searchResults,
+                    uiState = state,
                     minEndTime = state.minEndTime,
                     onTextChanged = {
                         actionHandler.locationTextChanged(state.id, it)
