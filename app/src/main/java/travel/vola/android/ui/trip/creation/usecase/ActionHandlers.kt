@@ -41,18 +41,21 @@ interface AddPlaceItemActionHandler {
 }
 
 interface AddFlightItemActionHandler {
-    fun setDepartureTime(itemId: String, time: Time)
-    fun setArrivalTime(itemId: String, time: Time)
-
     fun airportFromSearchTextChanged(
         itemId: String, content: CharSequence,
     )
-
-    fun airportFromSearchResultTapped(itemId: String, index: Int)
 
     fun airportToSearchTextChanged(
         itemId: String, content: CharSequence,
     )
 
-    fun airportToSearchResultTapped(itemId: String, index: Int)
+    fun onUpdated(
+        itemId: String,
+        departureTime: ZonedDateTime,
+        departureTimeSelected: Boolean,
+        selectedDepartureSearchResultIndex: Int,
+        arrivalTime: ZonedDateTime?,
+        arrivalTimeSelected: Boolean,
+        selectedArrivalSearchResultIndex: Int,
+    )
 }

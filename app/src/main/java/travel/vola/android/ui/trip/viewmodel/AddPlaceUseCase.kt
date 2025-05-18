@@ -86,8 +86,6 @@ class AddPlaceUseCase(
         endTimeSelected: Boolean,
         selectedSearchResultIndex: Int,
     ) {
-        val current = itemStore.getData(itemId)
-        val selected = current?.searchResults?.getOrNull(selectedSearchResultIndex)
         itemStore.update(itemId) {
             it.copy(
                 startDateTime = startDateTime ?: it.startDateTime,
@@ -96,6 +94,8 @@ class AddPlaceUseCase(
                 hasEndTime = endTimeSelected,
             )
         }
+        val current = itemStore.getData(itemId)
+        val selected = current?.searchResults?.getOrNull(selectedSearchResultIndex)
         coroutineScope.launch {
             selected?.id?.let { selectedId -> placeRepository.details(selectedId) }
                 ?.let { details ->
