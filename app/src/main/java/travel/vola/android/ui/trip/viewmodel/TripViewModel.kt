@@ -321,8 +321,8 @@ class TripViewModel(
             val lastInPlace =
                 nextItems.takeWhile { it.place == place || (it.second as? TimedPlace)?.isDayTrip == true }
                     .isEmpty()
-            val lastInSection =
-                index == pairs.lastIndex || nextItem?.first?.dateString != time.dateString || lastInPlace
+            val lastInDay = nextItem?.first?.dateString != time.dateString
+            val lastInSection = index == pairs.lastIndex || lastInDay || lastInPlace
             val dateRangeItem =
                 nextItem?.let { genDateRangeItem(time, it.first, showBottomDivider = !lastInPlace) }
             mutableListOf<TripItemState>().apply {
@@ -341,7 +341,7 @@ class TripViewModel(
                 }
                 if (dateRangeItem != null) {
                     add(dateRangeItem)
-                } else if (lastInSection) {
+                } else if (lastInSection && nextItem?.isReturn(pairs) == false) {
                     add(genEmptyAddPlanItem(time, showDivider = !lastInPlace))
                 }
             }
@@ -359,12 +359,15 @@ class TripViewModel(
     private fun genPlaceItem(
         index: Int, pairs: List<Pair<Time, TripEvent>>,
     ): TripItemState.PlaceItemState? {
-        val (time, event) = pairs[index]
+        val item = pairs[index]
+
+        // Exclude return to origin
+        if (item.isReturn(pairs)) return null
+
+        val (time, event) = item
 
         val place = event.getPlace(time)
 
-        // Exclude return to origin
-        if (index == pairs.lastIndex && event is FlightSegment && event.arrival == time && place == pairs.originPlace) return null
 
         // Exclude if previous adjacent events had same place or were day trips
         val eventsBefore =
@@ -418,6 +421,13 @@ class TripViewModel(
 
     private val TimedPlace.isDayTrip: Boolean
         get() = this.endDateTime == null || this.endDateTime.toMidnight() == this.startDateTime.toMidnight()
+
+    private fun Pair<Time, TripEvent>.isReturn(pairs: List<Pair<Time, TripEvent>>): Boolean {
+        val (time, event) = this
+        return (this == pairs.last() && event is FlightSegment && event.arrival == time && event.getPlace(
+            time
+        ) == pairs.originPlace)
+    }
 
 
     private fun genEmptyAddPlanItem(
