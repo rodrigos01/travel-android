@@ -13,7 +13,7 @@ interface AddPlanItemActionHandler : AddLodgingItemActionHandler, AddFlightItemA
 
 interface AddLodgingItemActionHandlerBase {
     fun lodgingTextChanged(itemId: String, content: CharSequence)
-    fun onUpdated(
+    fun onLodgingUpdated(
         itemId: String,
         checkIn: ZonedDateTime,
         checkInTimeSelected: Boolean,
