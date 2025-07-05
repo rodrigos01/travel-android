@@ -214,8 +214,7 @@ class AddFlightUseCaseTest {
         }
         val originalData = PendingFlight(
             id = "flight_id",
-            departure = mock(),
-            arrival = Time("2024-05-17T10:55 +02:00"),
+            departure = Time("2024-05-17T10:55:00+02:00"),
             airportFromSearchResults = listOf(
                 mock(),
                 mock { on { iata } doReturn "airport_id" },
@@ -227,7 +226,7 @@ class AddFlightUseCaseTest {
         }
         subject.airportFromSearchResultTapped("flight_id", 1)
         val result = itemStore.getUpdateResult(originalData)
-        assertThat(result.arrival?.zone).isEqualTo(airportTimeZone)
+        assertThat(result.departure.zone).isEqualTo(airportTimeZone)
     }
 
     @Test
@@ -262,7 +261,7 @@ class AddFlightUseCaseTest {
     }
 
     @Test
-    fun `airport to search result tapped should update item with selected lodging`() {
+    fun `airport to search result tapped should update item with selected airport`() {
         val expected = AirportSearchResult("CDG", "Charles de Gaule Airport", "Paris, FR")
         val originalData = PendingFlight(
             id = "item_id", departure = mock(), airportToSearchResults = listOf(
