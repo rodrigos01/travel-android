@@ -64,7 +64,7 @@ class AddLodgingUseCase(
     override fun lodgingTextChanged(itemId: String, content: CharSequence) =
         getActionHandler(itemId).lodgingTextChanged(itemId, content)
 
-    override fun onUpdated(
+    override fun onLodgingUpdated(
         itemId: String,
         checkIn: ZonedDateTime,
         checkInTimeSelected: Boolean,
@@ -72,7 +72,7 @@ class AddLodgingUseCase(
         checkOutTimeSelected: Boolean,
         selectedSearchResultIndex: Int,
     ) {
-        getActionHandler(itemId).onUpdated(
+        getActionHandler(itemId).onLodgingUpdated(
             itemId,
             checkIn,
             checkInTimeSelected,

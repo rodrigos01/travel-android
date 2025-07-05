@@ -123,7 +123,15 @@ class AddFlightUseCaseTest {
     fun `set departure time should update departure time`() {
         val originalTime = Time("2024-10-16T18:25+02:00")
         subject.addItem("item_id", originalTime, mock())
-        subject.setDepartureTime("item_id", Time("2024-10-16T09:15+02:00"))
+        subject.onUpdated(
+            "item_id",
+            departureTime = Time("2024-10-16T09:15+02:00"),
+            departureTimeSelected = true,
+            arrivalTime = null,
+            arrivalTimeSelected = false,
+            selectedDepartureSearchResultIndex = -1,
+            selectedArrivalSearchResultIndex = -1,
+        )
         val item = items.value["item_id"] ?: fail()
         assertThat(item.startState.dateTime).isEqualTo(Time("2024-10-16T09:15+02:00"))
     }
@@ -132,7 +140,15 @@ class AddFlightUseCaseTest {
     fun `set arrival time should update arrival time`() {
         val originalTime = Time("2024-10-16T18:25+02:00")
         subject.addItem("item_id", originalTime, mock())
-        subject.setArrivalTime("item_id", Time("2024-10-16T20:15+02:00"))
+        subject.onUpdated(
+            "item_id",
+            departureTime = originalTime,
+            departureTimeSelected = false,
+            arrivalTime = Time("2024-10-16T20:15+02:00"),
+            arrivalTimeSelected = true,
+            selectedDepartureSearchResultIndex = -1,
+            selectedArrivalSearchResultIndex = -1,
+        )
         val item = items.value["item_id"] ?: fail()
         assertThat(item.endState.dateTime).isEqualTo(Time("2024-10-16T20:15+02:00"))
     }
@@ -196,8 +212,18 @@ class AddFlightUseCaseTest {
         itemStore.stub {
             on { getData("item_id") } doReturn originalData
         }
-        subject.addItem("item_id", Time("2025-10-16T15:23:00+01:00"), mock())
-        subject.airportFromSearchResultTapped("item_id", 1)
+        val time = Time("2025-10-16T15:23:00+01:00")
+        subject.addItem("item_id", time, mock())
+        subject.onUpdated(
+            "item_id",
+            departureTime = time,
+            departureTimeSelected = false,
+            arrivalTime = null,
+            arrivalTimeSelected = false,
+            selectedDepartureSearchResultIndex = 1,
+            selectedArrivalSearchResultIndex = -1,
+        )
+
         val item = items.value["item_id"] ?: fail()
         assertThat(item.startState.locationText).isEqualTo("Charles de Gaule Airport")
         assertThat(item.startState.searchResults).isEmpty()
@@ -212,9 +238,10 @@ class AddFlightUseCaseTest {
         repository.stub {
             onBlocking { details("airport_id") } doReturn expected
         }
+        val departure = Time("2024-10-16T18:25:00+02:00")
         val originalData = PendingFlight(
-            id = "flight_id",
-            departure = Time("2024-05-17T10:55:00+02:00"),
+            id = "item_id",
+            departure = departure,
             airportFromSearchResults = listOf(
                 mock(),
                 mock { on { iata } doReturn "airport_id" },
@@ -222,9 +249,17 @@ class AddFlightUseCaseTest {
             ),
         )
         itemStore.stub {
-            on { getData("flight_id") } doReturn originalData
+            on { getData("item_id") } doReturn originalData
         }
-        subject.airportFromSearchResultTapped("flight_id", 1)
+        subject.onUpdated(
+            "item_id",
+            departureTime = departure,
+            departureTimeSelected = false,
+            arrivalTime = null,
+            arrivalTimeSelected = false,
+            selectedDepartureSearchResultIndex = 1,
+            selectedArrivalSearchResultIndex = -1,
+        )
         val result = itemStore.getUpdateResult(originalData)
         assertThat(result.departure.zone).isEqualTo(airportTimeZone)
     }
@@ -280,8 +315,17 @@ class AddFlightUseCaseTest {
         itemStore.stub {
             on { getData("item_id") } doReturn originalData
         }
-        subject.addItem("item_id", Time("2025-10-16T15:23:00+01:00"), mock())
-        subject.airportToSearchResultTapped("item_id", 1)
+        val time = Time("2025-10-16T15:23:00+01:00")
+        subject.addItem("item_id", time, mock())
+        subject.onUpdated(
+            "item_id",
+            departureTime = time,
+            departureTimeSelected = false,
+            arrivalTime = null,
+            arrivalTimeSelected = false,
+            selectedDepartureSearchResultIndex = -1,
+            selectedArrivalSearchResultIndex = 1,
+        )
         val item = items.value["item_id"] ?: fail()
         assertThat(item.endState.locationText).isEqualTo("Charles de Gaule Airport")
         assertThat(item.endState.searchResults).isEmpty()
@@ -309,8 +353,17 @@ class AddFlightUseCaseTest {
         itemStore.stub {
             on { getData("flight_id") } doReturn originalData
         }
-        subject.addItem("flight_id", Time("2025-10-16T15:23:00+01:00"), mock())
-        subject.airportToSearchResultTapped("flight_id", 1)
+        val time = Time("2025-10-16T15:23:00+01:00")
+        subject.addItem("flight_id", time, mock())
+        subject.onUpdated(
+            "flight_id",
+            departureTime = time,
+            departureTimeSelected = false,
+            arrivalTime = null,
+            arrivalTimeSelected = false,
+            selectedDepartureSearchResultIndex = -1,
+            selectedArrivalSearchResultIndex = 1,
+        )
         val result = itemStore.getUpdateResult(originalData)
         assertThat(result.arrival?.zone).isEqualTo(airportTimeZone)
     }
