@@ -3,18 +3,19 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    id("kotlin-kapt")
     id("androidx.navigation.safeargs")
     id("com.google.gms.google-services")
     id("kotlinx-serialization")
     id("org.jetbrains.kotlin.plugin.compose") version "2.1.10"
     id("com.google.firebase.appdistribution")
     id("com.google.firebase.crashlytics")
+    id("com.google.devtools.ksp")
 }
 
 val ktorVersion = "3.0.3"
 val composeVersion = "1.7.8"
 val navigationVersion = "2.8.9"
+val room_version = "2.7.2"
 
 android {
     namespace = "travel.vola.android"
@@ -166,6 +167,10 @@ dependencies {
     implementation("io.ktor:ktor-client-encoding:$ktorVersion")
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.1.4")
+    // Room
+    ksp("androidx.room:room-compiler:$room_version")
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
     // Testing
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:5.15.2")
@@ -174,6 +179,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.1")
     testImplementation("org.assertj:assertj-core:3.27.3")
     testImplementation("io.mockk:mockk:1.13.16")
+    testImplementation("androidx.room:room-testing:$room_version")
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
 }

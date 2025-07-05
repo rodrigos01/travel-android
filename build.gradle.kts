@@ -8,4 +8,6 @@ plugins {
 
     id("com.google.firebase.appdistribution") version "5.1.1" apply false
     id("com.google.firebase.crashlytics") version "3.0.3" apply false
+
+    id("com.google.devtools.ksp") version "2.0.21-1.0.27" apply false
 }
