@@ -50,7 +50,7 @@ class LodgingSearchParamsUseCase(
         }
     }
 
-    override fun onUpdated(
+    override fun onLodgingUpdated(
         itemId: String,
         checkIn: ZonedDateTime,
         checkInTimeSelected: Boolean,
