@@ -23,6 +23,7 @@ import travel.vola.android.test.UnconfinedDispatcherTestRule
 import travel.vola.android.ui.trip.creation.usecase.PendingData.PendingLodging
 import travel.vola.android.ui.trip.state.AutoCompleteResultState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
+import java.time.ZonedDateTime
 
 class ManualAddLodgingUseCaseTest {
     @get:Rule
@@ -120,7 +121,14 @@ class ManualAddLodgingUseCaseTest {
         val newTime = Time("2025-10-17T10:52:00+01:00")
         val originalTime = Time("2025-10-17T15:23:00+01:00")
         subject.addItem("lodging_id", originalTime, mock())
-        subject.setCheckInTime("lodging_id", newTime)
+        subject.onLodgingUpdated(
+            itemId = "lodging_id",
+            checkIn = newTime,
+            checkInTimeSelected = true,
+            checkOut = null,
+            checkOutTimeSelected = false,
+            selectedSearchResultIndex = -1
+        )
         val item = items.value["lodging_id"] ?: fail()
         assertThat(item.startState.dateTime).isEqualTo(newTime)
     }
@@ -128,8 +136,16 @@ class ManualAddLodgingUseCaseTest {
     @Test
     fun `set check-out time should update check-out time`() {
         val newTime = Time("2025-10-17T10:52:00+01:00")
-        subject.addItem("lodging_id", Time("2025-10-16T15:23:00+01:00"), mock())
-        subject.setCheckOutTime("lodging_id", newTime)
+        val checkInTime = Time("2025-10-16T15:23:00+01:00")
+        subject.addItem("lodging_id", checkInTime, mock())
+        subject.onLodgingUpdated(
+            itemId = "lodging_id",
+            checkIn = checkInTime,
+            checkInTimeSelected = false,
+            checkOut = newTime,
+            checkOutTimeSelected = true,
+            selectedSearchResultIndex = -1
+        )
         val item = items.value["lodging_id"] ?: fail()
         assertThat(item.endState.dateTime).isEqualTo(newTime)
     }
@@ -174,8 +190,16 @@ class ManualAddLodgingUseCaseTest {
         itemStore.stub {
             on { getData("lodging_id") } doReturn originalData
         }
-        subject.addItem("lodging_id", Time("2025-10-16T15:23:00+01:00"), mock())
-        subject.lodgingSearchResultTapped("lodging_id", 1)
+        val checkInTime = Time("2025-10-16T15:23:00+01:00")
+        subject.addItem("lodging_id", checkInTime, mock())
+        subject.onLodgingUpdated(
+            itemId = "lodging_id",
+            checkIn = checkInTime,
+            checkInTimeSelected = false,
+            checkOut = null,
+            checkOutTimeSelected = false,
+            selectedSearchResultIndex = 1
+        )
         val item = items.value["lodging_id"] ?: fail()
         assertThat(item.startState.locationText).isEqualTo("Hotel Novotel Paris Les Halles")
         assertThat(item.startState.searchResults).isEmpty()
@@ -192,8 +216,9 @@ class ManualAddLodgingUseCaseTest {
             on { name } doReturn "Hotel Novotel Paris Les Halles"
             on { address } doReturn "Blvd Les Halles, 45"
         }
+        val checkInTime: ZonedDateTime = mock()
         val originalData = PendingLodging(
-            id = "lodging_id", checkIn = mock(), checkOut = mock(), searchResults = listOf(
+            id = "lodging_id", checkIn = checkInTime, checkOut = mock(), searchResults = listOf(
                 mock(),
                 expected,
                 mock(),
@@ -202,7 +227,14 @@ class ManualAddLodgingUseCaseTest {
         itemStore.stub {
             on { getData("lodging_id") } doReturn originalData
         }
-        subject.lodgingSearchResultTapped("lodging_id", 1)
+        subject.onLodgingUpdated(
+            itemId = "lodging_id",
+            checkIn = checkInTime,
+            checkInTimeSelected = false,
+            checkOut = null,
+            checkOutTimeSelected = false,
+            selectedSearchResultIndex = 1
+        )
         val result = itemStore.getUpdateResult(originalData)
         assertThat(result.city).isEqualTo(paris)
     }

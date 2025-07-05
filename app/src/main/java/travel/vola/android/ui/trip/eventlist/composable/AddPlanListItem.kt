@@ -94,7 +94,7 @@ fun AddPlanListItem(
                                     checkOutTimeSelected,
                                     selectedSearchResultIndex,
                                 ->
-                                actionHandler.onUpdated(
+                                actionHandler.onLodgingUpdated(
                                     state.id,
                                     checkIn,
                                     checkInTimeSelected,
@@ -128,7 +128,7 @@ fun AddPlanListItem(
                             checkOut,
                             selectedSearchResultIndex,
                         ->
-                        actionHandler.onUpdated(
+                        actionHandler.onLodgingUpdated(
                             state.id,
                             checkIn,
                             checkInTimeSelected = false,
@@ -248,7 +248,7 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
     // Lodging List Item
     override fun onSwitchToManualButtonTapped(itemId: String) = Unit
     override fun lodgingTextChanged(itemId: String, content: CharSequence) = Unit
-    override fun onUpdated(
+    override fun onLodgingUpdated(
         itemId: String,
         checkIn: ZonedDateTime,
         checkInTimeSelected: Boolean,
