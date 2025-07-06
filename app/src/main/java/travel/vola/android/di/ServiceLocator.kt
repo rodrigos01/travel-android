@@ -1,13 +1,21 @@
 package travel.vola.android.di
 
-import com.google.firebase.firestore.FirebaseFirestore
+import android.content.Context
+import androidx.room.Room
 import travel.vola.android.model.PlaceRepository
-import travel.vola.android.model.firebase.FirebaseTripRepository
 import travel.vola.android.model.repository.TripRepository
+import travel.vola.android.model.room.RoomTripRepository
+import travel.vola.android.model.room.TravelDatabase
 
-class ServiceLocator {
+class ServiceLocator(getApplicationContext: () -> Context) {
     val tripRepository: TripRepository by lazy {
-        FirebaseTripRepository(FirebaseFirestore.getInstance())
+        RoomTripRepository(
+            Room.databaseBuilder(
+                getApplicationContext(),
+                TravelDatabase::class.java,
+                "travel-db",
+            ).build().tripDao
+        )
     }
     val placeRepository: PlaceRepository by lazy {
         PlaceRepository()
