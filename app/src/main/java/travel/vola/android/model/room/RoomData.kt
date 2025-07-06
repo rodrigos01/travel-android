@@ -12,30 +12,30 @@ sealed interface RoomData {
     data class Trip(
         @Embedded val entity: Schema.Trip,
         @Relation(
-            parentColumn = "id", entityColumn = "tripId"
+            entity = Schema.Flight::class, parentColumn = "id", entityColumn = "tripId"
         ) val flights: List<Flight>,
         @Relation(
-            parentColumn = "id", entityColumn = "tripId"
+            entity = Schema.Lodging::class, parentColumn = "id", entityColumn = "tripId"
         ) val lodgings: List<Lodging>,
         @Relation(
-            parentColumn = "id", entityColumn = "tripId"
+            entity = Schema.TimedPlace::class, parentColumn = "id", entityColumn = "tripId"
         ) val places: List<TimedPlace>,
     )
 
     data class Flight(
         @Embedded val entity: Schema.Flight,
         @Relation(
-            parentColumn = "id", entityColumn = "flightId"
+            entity = Schema.FlightSegment::class, parentColumn = "id", entityColumn = "flightId"
         ) val segments: List<FlightSegment>,
     )
 
     data class FlightSegment(
         @Embedded val entity: Schema.FlightSegment,
         @Relation(
-            parentColumn = "airportFrom", entityColumn = "iata"
+            entity = Schema.Airport::class, parentColumn = "airportFrom", entityColumn = "iata"
         ) val airportFrom: Airport,
         @Relation(
-            parentColumn = "airportTo", entityColumn = "iata"
+            entity = Schema.Airport::class, parentColumn = "airportTo", entityColumn = "iata"
         ) val airportTo: Airport,
     )
 
@@ -93,6 +93,7 @@ sealed interface RoomData {
 
         @Entity
         data class FlightSegment(
+            @PrimaryKey val id: String,
             val flightId: String,
             val airportFrom: String,
             val departure: ZonedDateTime,
