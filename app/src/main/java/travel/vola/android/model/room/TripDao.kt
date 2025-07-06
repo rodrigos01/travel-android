@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import travel.vola.android.model.room.RoomData.Schema
@@ -12,9 +13,11 @@ import travel.vola.android.model.room.RoomData.Trip
 
 @Dao
 interface TripDao {
-    @get:Query("SELECT * FROM trip")
-    val trips: Flow<List<Trip>>
+    @Transaction
+    @Query("SELECT * FROM trip")
+    fun observeTrips(): Flow<List<Trip>>
 
+    @Transaction
     @Query("SELECT * FROM trip WHERE id = :tripId")
     fun observeTrip(tripId: String): Flow<Trip>
 

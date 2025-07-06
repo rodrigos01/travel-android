@@ -1,5 +1,7 @@
 package travel.vola.android.model.room
 
+import androidx.room.TypeConverter
+import travel.vola.android.extensions.asISO8601String
 import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
@@ -7,6 +9,8 @@ import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
+import java.time.ZonedDateTime
+import java.util.TimeZone
 
 fun RoomData.Trip.toAppDataModel(): Trip = Trip(
     id = entity.id,
@@ -68,3 +72,17 @@ fun RoomData.Place.toAppDataModel(): Place = Place(
     externalId = externalId,
     source = source,
 )
+
+class Converters {
+    @TypeConverter
+    fun parseZonedDateTime(value: String): ZonedDateTime = ZonedDateTime.parse(value)
+
+    @TypeConverter
+    fun encodeZonedDateTime(value: ZonedDateTime): String = value.asISO8601String()
+
+    @TypeConverter
+    fun parseTimeZone(value: String): TimeZone = TimeZone.getTimeZone(value)
+
+    @TypeConverter
+    fun encodeTimeZone(value: TimeZone): String = value.id
+}

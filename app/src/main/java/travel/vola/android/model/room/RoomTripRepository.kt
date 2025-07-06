@@ -11,7 +11,7 @@ import java.util.UUID
 
 class RoomTripRepository(private val dao: TripDao) : TripRepository {
     override val trips: Flow<List<Trip>>
-        get() = dao.trips.map { it.map { trip -> trip.toAppDataModel() } }
+        get() = dao.observeTrips().map { it.map { trip -> trip.toAppDataModel() } }
 
     override fun findTripById(tripId: String): Flow<Trip> {
         return dao.observeTrip(tripId).map { it.toAppDataModel() }
