@@ -150,12 +150,18 @@ sealed interface AddPlanItemState : TripItemState, Identifiable, TripItemState.T
     val dateSelectionEnabled: Boolean
     val saveButtonEnabled: Boolean
     val deleteButtonEnabled: Boolean
+    val buttonConfiguration: ButtonConfiguration
+        get() = ButtonConfiguration.Save
 
     val types: List<Type>
         get() = Type.entries
 
     enum class Type {
         Flight, Lodging, Place
+    }
+
+    enum class ButtonConfiguration {
+        Save, Search,
     }
 
 }
@@ -203,7 +209,10 @@ data class LodgingSearchItemState(
     val checkIn: Time?,
     val minCheckOutTime: Time?,
     val checkOut: Time?,
-) : AddLodgingItemState
+) : AddLodgingItemState {
+    override val buttonConfiguration: AddPlanItemState.ButtonConfiguration =
+        AddPlanItemState.ButtonConfiguration.Search
+}
 
 data class AddPlaceItemState(
     override val id: String,
