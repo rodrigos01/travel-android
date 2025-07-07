@@ -22,25 +22,36 @@ class AddLodgingUseCase(
         coroutineScope = coroutineScope
     ),
     private val lodgingSearchParamsUseCase: LodgingSearchParamsUseCase = LodgingSearchParamsUseCase(
-        placeRepository = placeRepository,
-        coroutineScope = coroutineScope
+        placeRepository = placeRepository, coroutineScope = coroutineScope
     ),
 ) : AddPlanUseCase.AddItemUseCase<Lodging, AddLodgingItemState>,
     AddPlanUseCase.EntityFactory<Lodging, ManualAddLodgingItemState> by manualAddLodgingUseCase,
-    LodgingSearchParamsFactory by lodgingSearchParamsUseCase,
-    AddLodgingItemActionHandler {
+    LodgingSearchParamsFactory by lodgingSearchParamsUseCase, AddLodgingItemActionHandler {
 
     override fun onSwitchToManualButtonTapped(itemId: String) {
         val item = items[itemId] ?: return
         removeItem(item)
         manualAddLodgingUseCase.addItem(
-            itemId,
-            item.timestamp,
-            AddPlanUseCase.StateParams(
-                item.dateSelectionEnabled,
-                item.typeSelectionEnabled,
-                item.deleteButtonEnabled
-            )
+            id = itemId,
+            checkIn = item.timestamp,
+            checkOut = item.checkOut,
+            params = AddPlanUseCase.StateParams(
+                item.dateSelectionEnabled, item.typeSelectionEnabled, item.deleteButtonEnabled
+            ),
+        )
+    }
+
+    override fun onFindLodgingButtonTapped(itemId: String) {
+        val item = items[itemId] ?: return
+        removeItem(item)
+        lodgingSearchParamsUseCase.addItem(
+            id = itemId,
+            checkIn = item.timestamp,
+            checkOut = item.checkOut,
+            city = null, // TODO: Use city from item when Unified Places API is available
+            params = AddPlanUseCase.StateParams(
+                item.dateSelectionEnabled, item.typeSelectionEnabled, item.deleteButtonEnabled
+            ),
         )
     }
 
@@ -65,8 +76,7 @@ class AddLodgingUseCase(
         id: String,
         time: Time,
         params: AddPlanUseCase.StateParams,
-    ) =
-        lodgingSearchParamsUseCase.addItem(id, time, params)
+    ) = lodgingSearchParamsUseCase.addItem(id, time, params)
 
     override fun addItem(id: String, entity: Lodging, params: AddPlanUseCase.StateParams) =
         manualAddLodgingUseCase.addItem(id, entity, params)

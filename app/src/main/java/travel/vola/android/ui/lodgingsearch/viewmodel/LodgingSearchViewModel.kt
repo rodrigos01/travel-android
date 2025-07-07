@@ -55,6 +55,12 @@ class LodgingSearchViewModel(
             override val localState: LocalState = LocalState(),
             override val sortAndFilterState: SortAndFilterState,
         ) : UiState
+
+        data class Error(
+            override val searchState: SearchParamsState,
+            override val localState: LocalState = LocalState(),
+            override val sortAndFilterState: SortAndFilterState = SortAndFilterState(),
+        ) : UiState
     }
 
     data class LocalState(
@@ -96,7 +102,10 @@ class LodgingSearchViewModel(
             locationText = location.name,
         )
     )
-    private val searchResultState = searchParamsState.onEach { loadingState.value = true }.map {
+    private val loadAttemptCountState = MutableStateFlow(0)
+    private val searchResultState = combine(
+        searchParamsState, loadAttemptCountState
+    ) { params, _ -> params }.onEach { loadingState.value = true }.map {
         it to repository.search(
             locationId = location.id,
             checkIn = it.checkIn,
@@ -117,6 +126,12 @@ class LodgingSearchViewModel(
     ) { (params, results), openedResults, loading, sortAndFilter, localState ->
         if (loading) {
             UiState.Loading(searchState = params, localState = localState)
+        } else if (results.isEmpty()) {
+            UiState.Error(
+                searchState = params,
+                localState = localState,
+                sortAndFilterState = sortAndFilter,
+            )
         } else {
             UiState.Loaded(
                 searchState = params,
@@ -163,13 +178,17 @@ class LodgingSearchViewModel(
     }
 
     fun onFiltersApplied(
-        minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>
+        minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>,
     ) {
         sortAndFilterState.value = sortAndFilterState.value.copy(
             minRating = minRating,
             minStars = minStars,
             priceRange = priceRange,
         )
+    }
+
+    fun onRetryTapped() {
+        loadAttemptCountState.value++
     }
 
     private fun LodgingSearchResult.passesFilter(filters: SortAndFilterState): Boolean {
