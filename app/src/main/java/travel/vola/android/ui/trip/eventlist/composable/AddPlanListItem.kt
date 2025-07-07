@@ -24,6 +24,10 @@ fun AddPlanListItem(
     state: AddPlanItemState,
     actionHandler: AddPlanItemActionHandler,
 ) {
+    val primaryButtonLabel = when (state.buttonConfiguration) {
+        AddPlanItemState.ButtonConfiguration.Save -> "Save"
+        AddPlanItemState.ButtonConfiguration.Search -> "Search"
+    }
     AddPlanScaffold(
         state.uiType,
         onTypeSelected = { actionHandler.addPlanTypeChanged(state.id, it.toState()) },
@@ -31,7 +35,7 @@ fun AddPlanListItem(
         deleteButtonEnabled = state.deleteButtonEnabled,
         onDeleteConfirmed = { actionHandler.delete(state.type, state.id) },
         primaryButtonEnabled = state.saveButtonEnabled,
-        primaryButtonLabel = "Save",
+        primaryButtonLabel = primaryButtonLabel,
         onPrimaryButtonTapped = { actionHandler.save(state.id) },
         secondaryButtonLabel = "Cancel",
         onSecondaryButtonTapped = { actionHandler.cancelEdit(state.id) },
