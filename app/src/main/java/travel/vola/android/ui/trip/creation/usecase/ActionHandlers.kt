@@ -21,6 +21,7 @@ interface AddLodgingItemActionHandlerBase {
 
 interface AddLodgingItemActionHandler : AddLodgingItemActionHandlerBase {
     fun onSwitchToManualButtonTapped(itemId: String)
+    fun onFindLodgingButtonTapped(itemId: String)
 }
 
 interface ManualAddPlanItemActionHandler : AddLodgingItemActionHandlerBase
