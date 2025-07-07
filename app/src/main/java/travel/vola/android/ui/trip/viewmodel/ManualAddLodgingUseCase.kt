@@ -17,6 +17,7 @@ import travel.vola.android.ui.trip.creation.usecase.PendingData.PendingLodging
 import travel.vola.android.ui.trip.state.AutoCompleteResultState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
+import java.time.ZonedDateTime
 import kotlin.time.Duration.Companion.days
 
 class ManualAddLodgingUseCase(
@@ -103,6 +104,22 @@ class ManualAddLodgingUseCase(
             id = id,
             checkIn = time.update(hour = 15, minute = 0),
             isCheckInTimeSet = true,
+        )
+        itemStore.addItem(data, params)
+    }
+
+    fun addItem(
+        id: String,
+        checkIn: ZonedDateTime,
+        checkOut: ZonedDateTime?,
+        params: AddPlanUseCase.StateParams,
+    ) {
+        val data = PendingLodging(
+            id = id,
+            checkIn = checkIn,
+            isCheckInTimeSet = true,
+            checkOut = checkOut,
+            isCheckOutTimeSet = checkOut != null,
         )
         itemStore.addItem(data, params)
     }

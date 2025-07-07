@@ -9,6 +9,7 @@ import travel.vola.android.extensions.timeInMillis
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.Time
 import travel.vola.android.model.repository.LodgingSearchRepository
 import travel.vola.android.ui.lodgingsearch.composable.LodgingSearchDestination
@@ -17,6 +18,7 @@ import travel.vola.android.ui.trip.creation.usecase.LodgingSearchItemActionHandl
 import travel.vola.android.ui.trip.creation.usecase.PendingData
 import travel.vola.android.ui.trip.state.LodgingSearchItemState
 import travel.vola.android.ui.trip.state.SearchResultItemState
+import java.time.ZonedDateTime
 import kotlin.time.Duration.Companion.days
 
 interface LodgingSearchParamsFactory {
@@ -75,12 +77,29 @@ class LodgingSearchParamsUseCase(
     override fun addItem(
         id: String,
         entity: Lodging,
-        params: AddPlanUseCase.StateParams
+        params: AddPlanUseCase.StateParams,
     ) {
-        val data = PendingData.LodgingSearchParams(
+        addItem(
             id = id,
             checkIn = entity.checkIn,
             checkOut = entity.checkout,
+            city = null, // TODO: Use city from entity when Unified Places API is available
+            params = params
+        )
+    }
+
+    fun addItem(
+        id: String,
+        checkIn: ZonedDateTime,
+        checkOut: ZonedDateTime?,
+        city: Place?,
+        params: AddPlanUseCase.StateParams,
+    ) {
+        val data = PendingData.LodgingSearchParams(
+            id = id,
+            checkIn = checkIn,
+            checkOut = checkOut,
+            city = city,
         )
         itemStore.addItem(data, params)
     }
@@ -91,43 +110,40 @@ class LodgingSearchParamsUseCase(
 
     private fun createItem(
         searchParams: PendingData.LodgingSearchParams,
-        stateParams: AddPlanUseCase.StateParams
-    ) =
-        LodgingSearchItemState(
-            id = searchParams.id,
-            timestamp = searchParams.checkIn,
-            saveButtonEnabled = searchParams.city != null && searchParams.checkOut != null && searchParams.checkOut > searchParams.checkIn,
-            dateSelectionEnabled = stateParams.dateSelectionEnabled,
-            deleteButtonEnabled = stateParams.deleteEnabled,
-            typeSelectionEnabled = stateParams.typeSelectionEnabled,
-            checkIn = searchParams.checkIn,
-            minCheckOutTime = searchParams.checkIn.toMidnight() + 1.days,
-            checkOut = searchParams.checkOut,
-            locationText = searchParams.city?.name,
-            searchResults = searchParams.searchResults.map {
-                SearchResultItemState(
-                    it.name,
-                    it.address
-                )
-            },
-        )
+        stateParams: AddPlanUseCase.StateParams,
+    ) = LodgingSearchItemState(
+        id = searchParams.id,
+        timestamp = searchParams.checkIn,
+        saveButtonEnabled = searchParams.city != null && searchParams.checkOut != null && searchParams.checkOut > searchParams.checkIn,
+        dateSelectionEnabled = stateParams.dateSelectionEnabled,
+        deleteButtonEnabled = stateParams.deleteEnabled,
+        typeSelectionEnabled = stateParams.typeSelectionEnabled,
+        checkIn = searchParams.checkIn,
+        minCheckOutTime = searchParams.checkIn.toMidnight() + 1.days,
+        checkOut = searchParams.checkOut,
+        locationText = searchParams.city?.name,
+        searchResults = searchParams.searchResults.map {
+            SearchResultItemState(
+                it.name, it.address
+            )
+        },
+    )
 
     override fun getLodgingSearchParams(
         tripId: String,
-        itemId: String
-    ): LodgingSearchDestination.Params? =
-        itemStore.getData(itemId)?.let {
-            if (it.checkOut != null && it.city != null) {
-                placeRepository.places[it.city.id] = it.city
-                LodgingSearchDestination.Params(
-                    tripId = tripId,
-                    checkIn = it.checkIn.timeInMillis,
-                    checkOut = it.checkOut.timeInMillis,
-                    locationId = it.city.id,
-                    timeZoneId = it.checkIn.zone.id
-                )
-            } else {
-                null
-            }
+        itemId: String,
+    ): LodgingSearchDestination.Params? = itemStore.getData(itemId)?.let {
+        if (it.checkOut != null && it.city != null) {
+            placeRepository.places[it.city.id] = it.city
+            LodgingSearchDestination.Params(
+                tripId = tripId,
+                checkIn = it.checkIn.timeInMillis,
+                checkOut = it.checkOut.timeInMillis,
+                locationId = it.city.id,
+                timeZoneId = it.checkIn.zone.id
+            )
+        } else {
+            null
         }
+    }
 }

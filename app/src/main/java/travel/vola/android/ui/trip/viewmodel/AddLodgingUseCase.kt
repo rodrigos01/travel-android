@@ -32,9 +32,12 @@ class AddLodgingUseCase(
         val item = items[itemId] ?: return
         removeItem(item)
         manualAddLodgingUseCase.addItem(
-            itemId, item.timestamp, AddPlanUseCase.StateParams(
+            id = itemId,
+            checkIn = item.timestamp,
+            checkOut = item.checkOut,
+            params = AddPlanUseCase.StateParams(
                 item.dateSelectionEnabled, item.typeSelectionEnabled, item.deleteButtonEnabled
-            )
+            ),
         )
     }
 
@@ -42,9 +45,13 @@ class AddLodgingUseCase(
         val item = items[itemId] ?: return
         removeItem(item)
         lodgingSearchParamsUseCase.addItem(
-            itemId, item.timestamp, AddPlanUseCase.StateParams(
+            id = itemId,
+            checkIn = item.timestamp,
+            checkOut = item.checkOut,
+            city = null, // TODO: Use city from item when Unified Places API is available
+            params = AddPlanUseCase.StateParams(
                 item.dateSelectionEnabled, item.typeSelectionEnabled, item.deleteButtonEnabled
-            )
+            ),
         )
     }
 
