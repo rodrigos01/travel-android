@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -34,6 +35,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
@@ -70,6 +72,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import travel.vola.android.R
+import travel.vola.android.common.ui.components.IconTextButton
 import travel.vola.android.common.ui.components.Map
 import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.MapScaffoldState
@@ -103,6 +106,7 @@ private fun LodgingSearch(
     onContinueBrowsingTapped: () -> Unit,
     onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit,
     onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit,
+    onRetryTapped: () -> Unit,
     showMap: Boolean = false,
 ) {
     if (state.localState.showAddConfirmation) {
@@ -140,6 +144,7 @@ private fun LodgingSearch(
             onAddLodgingTapped,
             onSortOptionSelected,
             onFiltersApplied,
+            onRetryTapped,
         )
     }
 }
@@ -161,6 +166,7 @@ fun ResultsWithMap(
     onAddLodgingTapped: (String) -> Unit,
     onSortOptionSelected: (LodgingSearchViewModel.SortOption) -> Unit,
     onFiltersApplied: (minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>) -> Unit,
+    onRetryTapped: () -> Unit,
 ) {
     val loadedState = state as? LodgingSearchViewModel.UiState.Loaded
     var selectedId by remember(openedResultId?.takeIf { mapScaffoldState.sizeClass.isLargeScreen }) {
@@ -203,8 +209,7 @@ fun ResultsWithMap(
             }
         }
     }
-    MapScaffold(
-        state = mapScaffoldState,
+    MapScaffold(state = mapScaffoldState,
         markers = markers,
         boundsPoints = boundsMarkers,
         onMarkerTapped = { marker ->
@@ -215,10 +220,8 @@ fun ResultsWithMap(
         markerDescriptor = { marker ->
             val index = markers.indexOf(marker)
             val bitmap = loadedState?.results?.getOrNull(index)?.let {
-                LodgingSearchMarkerIcon(
-                    NumberFormat.getCurrencyInstance()
-                        .apply { maximumFractionDigits = 0 }.format(it.price), marker.selected
-                )
+                LodgingSearchMarkerIcon(NumberFormat.getCurrencyInstance()
+                    .apply { maximumFractionDigits = 0 }.format(it.price), marker.selected)
             } ?: mapMarkerIcon(MarkerType.Lodging, selected = marker.selected)
             BitmapDescriptorFactory.fromBitmap(bitmap)
         },
@@ -269,8 +272,7 @@ fun ResultsWithMap(
                         )
                         .fillMaxWidth()
                 ) {
-                    tab(
-                        SEARCH_TAB_ID,
+                    tab(SEARCH_TAB_ID,
                         selected = loadedState?.selectedResult == null,
                         icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
                     openedResults.forEach { (tabId, lodging) ->
@@ -294,14 +296,7 @@ fun ResultsWithMap(
             }
         },
         content = { paddingValues ->
-            LodgingSearchResults(
-                state = state,
-                scrollState = resultsScrollState,
-                paddingValues = paddingValues,
-                onLodgingTapped = { lodging ->
-                    onLodgingTapped(lodging)
-                },
-            )
+            Content(state, resultsScrollState, paddingValues, onLodgingTapped, onRetryTapped)
         },
         additionalContent = { paddingValues ->
             if (openedResultId != null && openedResult != null) {
@@ -453,8 +448,7 @@ private fun SearchTopBar(
                     }
                 }
 
-                ControlsVisible.SORT -> SortOptionSelector(
-                    state.sortAndFilterState,
+                ControlsVisible.SORT -> SortOptionSelector(state.sortAndFilterState,
                     onSortOptionSelected = { option ->
                         onSortOptionSelected(option)
                         controlsVisible1 = ControlsVisible.NONE
@@ -508,11 +502,11 @@ fun MapSearchResults(
     ) {
         when (state) {
             is LodgingSearchViewModel.UiState.Loading -> {
-                loading()
+                Loading()
             }
 
             is LodgingSearchViewModel.UiState.Loaded -> {
-                loaded(
+                Loaded(
                     state,
                     onLodgingTapped,
                     itemStyle = LodgingSearchResultListItemStyle.Compact,
@@ -524,31 +518,48 @@ fun MapSearchResults(
 }
 
 @Composable
-fun LodgingSearchResults(
-    scrollState: LazyListState,
+private fun Content(
     state: LodgingSearchViewModel.UiState,
+    resultsScrollState: LazyListState,
     paddingValues: PaddingValues,
-    onLodgingTapped: (LodgingSearchResultState) -> Unit = {},
+    onLodgingTapped: (LodgingSearchResultState?) -> Unit,
+    onRetryTapped: () -> Unit,
+) {
+    when (state) {
+        is LodgingSearchViewModel.UiState.Loading -> {
+            ResultsColumn(resultsScrollState, paddingValues) {
+                Loading()
+            }
+        }
+
+        is LodgingSearchViewModel.UiState.Loaded -> {
+            ResultsColumn(resultsScrollState, paddingValues) {
+                Loaded(state, onLodgingTapped)
+            }
+        }
+
+        is LodgingSearchViewModel.UiState.Error -> {
+            LoadingError(paddingValues, onRetryTapped)
+        }
+    }
+}
+
+@Composable
+private fun ResultsColumn(
+    scrollState: LazyListState,
+    paddingValues: PaddingValues,
+    content: LazyListScope.() -> Unit,
 ) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         state = scrollState,
-        modifier = Modifier.padding(top = paddingValues.calculateTopPadding())
-    ) {
-        when (state) {
-            is LodgingSearchViewModel.UiState.Loading -> {
-                loading()
-            }
-
-            is LodgingSearchViewModel.UiState.Loaded -> {
-                loaded(state, onLodgingTapped)
-            }
-        }
-    }
+        modifier = Modifier.padding(top = paddingValues.calculateTopPadding()),
+        content = content,
+    )
 }
 
-private fun LazyListScope.loaded(
+private fun LazyListScope.Loaded(
     state: LodgingSearchViewModel.UiState.Loaded,
     onLodgingTapped: (LodgingSearchResultState) -> Unit,
     itemStyle: LodgingSearchResultListItemStyle = LodgingSearchResultListItemStyle.Expanded,
@@ -565,7 +576,7 @@ private fun LazyListScope.loaded(
     }
 }
 
-private fun LazyListScope.loading() {
+private fun LazyListScope.Loading() {
     items(3) { index ->
         Column(
             modifier = Modifier
@@ -578,6 +589,30 @@ private fun LazyListScope.loading() {
                     .aspectRatio(1.77f)
             )
             Box(Modifier.height(64.dp))
+        }
+    }
+}
+
+@Composable
+private fun LoadingError(
+    paddingValues: PaddingValues,
+    onRetryTapped: () -> Unit,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(
+                top = paddingValues.calculateTopPadding() + 24.dp,
+                start = 16.dp,
+                end = 16.dp,
+            ),
+    ) {
+        Text("Something went wrong")
+        IconTextButton(onClick = onRetryTapped) {
+            Icon(Icons.Default.Refresh, contentDescription = null)
+            Text("Retry")
         }
     }
 }
@@ -625,7 +660,8 @@ fun LodgingSearch(
     viewModel: LodgingSearchViewModel,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    LodgingSearch(navController = navController,
+    LodgingSearch(
+        navController = navController,
         state = state,
         onLodgingTapped = { viewModel.onLodgingTapped(it?.id) },
         onLodgingClosed = { viewModel.onLodgingClosed(it) },
@@ -634,7 +670,9 @@ fun LodgingSearch(
         onSortOptionSelected = { viewModel.onSortOptionSelected(it) },
         onFiltersApplied = { minRating, minStars, priceRange ->
             viewModel.onFiltersApplied(minRating, minStars, priceRange)
-        })
+        },
+        onRetryTapped = { viewModel.onRetryTapped() },
+    )
 }
 
 @Composable
@@ -676,7 +714,9 @@ fun LodgingSearchPreview(showMap: Boolean = false, initialSelectedResult: String
         }
         LodgingSearch(
             navController = rememberNavController(),
-            state = state,
+            state = LodgingSearchViewModel.UiState.Error(
+                state.searchState, state.localState, state.sortAndFilterState
+            ),
             onLodgingTapped = { lodging ->
                 selectedResultId = lodging?.id
                 lodging?.let {
@@ -721,6 +761,7 @@ fun LodgingSearchPreview(showMap: Boolean = false, initialSelectedResult: String
             },
             onAddLodgingTapped = {},
             onContinueBrowsingTapped = {},
+            onRetryTapped = {},
             showMap = showMap,
         )
     }
