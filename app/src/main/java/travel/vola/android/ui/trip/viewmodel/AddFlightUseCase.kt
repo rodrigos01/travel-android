@@ -82,7 +82,7 @@ class AddFlightUseCase(
             itemStore.update(itemId) { data ->
                 data.copy(
                     airportFrom = airport,
-                    arrival = data.arrival?.update(timeZone = airport.timeZone.toZoneId()),
+                    departure = data.departure.update(timeZone = airport.timeZone.toZoneId()),
                     airportFromSearchResults = emptyList(),
                 )
             }

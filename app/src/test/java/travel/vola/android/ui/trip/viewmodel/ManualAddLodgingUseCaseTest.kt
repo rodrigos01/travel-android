@@ -91,16 +91,17 @@ class ManualAddLodgingUseCaseTest {
     }
 
     @Test
-    fun `added item should be initialized with initial time as check-in`() {
+    fun `added item should be initialized with initial time at full hour as check-in`() {
+        val expected = Time("2025-10-16T15:00:00+01:00")
         val initialTime = Time("2025-10-16T15:23:00+01:00")
         subject.addItem("lodging_id", initialTime, mock())
         val item = items.value["lodging_id"] ?: fail()
-        assertThat(item.startState.dateTime).isEqualTo(initialTime)
+        assertThat(item.startState.dateTime).isEqualTo(expected)
     }
 
     @Test
-    fun `added item should be initialized with day after initial time as check-out`() {
-        val expected = Time("2025-10-17T00:43:00+01:00")
+    fun `added item should be initialized with day after initial time at 11am as check-out`() {
+        val expected = Time("2025-10-17T11:00:00+01:00")
         val initialTime = Time("2025-10-16T15:43:00+01:00")
         subject.addItem("lodging_id", initialTime, mock())
         val item = items.value["lodging_id"] ?: fail()
@@ -215,8 +216,8 @@ class ManualAddLodgingUseCaseTest {
                 entityId = "hotel_id",
                 name = "Hotel Novotel Paris Les Halles",
                 address = "Blvd Les Halles, 45",
-                latitude = 1.5,
-                longitude = 2.5,
+                latitude = 48.866667,
+                longitude = 2.333333,
                 checkIn = Time("2025-10-16T15:23:00+01:00"),
                 checkOut = Time("2025-10-17T10:52:00+01:00"),
                 city = paris,
@@ -229,8 +230,8 @@ class ManualAddLodgingUseCaseTest {
         assertThat(entity.id).isEqualTo("hotel_id")
         assertThat(entity.name).isEqualTo("Hotel Novotel Paris Les Halles")
         assertThat(entity.address).isEqualTo("Blvd Les Halles, 45")
-        assertThat(entity.latitude).isEqualTo(1.5)
-        assertThat(entity.longitude).isEqualTo(2.5)
+        assertThat(entity.latitude).isEqualTo(48.866667)
+        assertThat(entity.longitude).isEqualTo(2.333333)
         assertThat(entity.checkIn).isEqualTo(Time("2025-10-16T15:23:00+01:00"))
         assertThat(entity.checkout).isEqualTo(Time("2025-10-17T10:52:00+01:00"))
         assertThat(entity.city).isEqualTo(paris)

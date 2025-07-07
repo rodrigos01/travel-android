@@ -52,15 +52,14 @@ class TripViewModelTest {
     private val addPlanUseCase: AddPlanUseCase = mock {
         on { items } doReturn addPlanItems
     }
-    private val subject =
-        TripViewModel(
-            repository,
-            mock(),
-            "tripId",
-            mock(),
-            mock(),
-            addPlanUseCase,
-        )
+    private val subject = TripViewModel(
+        repository,
+        mock(),
+        "tripId",
+        mock(),
+        mock(),
+        addPlanUseCase,
+    )
 
     private fun String?.asTime(): Time = this?.let { Time(this) } ?: Time(0L, TimeZone.getDefault())
 
@@ -594,7 +593,7 @@ class TripViewModelTest {
     }
 
     @Test
-    fun `last item before single departure event should not have empty add item after it`() {
+    fun `last item after single departure event should not have empty add item after it`() {
         tripFlow.value = Trip(
             flights = listOf(
                 Flight(
@@ -634,7 +633,7 @@ class TripViewModelTest {
         val departureItemIndex = subject.viewState.value.items.indexOfFirst {
             it is FlightDepartureItemState && it.destination == "New York"
         }
-        val itemBefore = subject.viewState.value.items[departureItemIndex - 1]
+        val itemBefore = subject.viewState.value.items[departureItemIndex + 1]
         assertThat(itemBefore).isNotInstanceOf(TripItemState.EmptyAddPlanItemState::class.java)
     }
 
@@ -1011,7 +1010,7 @@ class TripViewModelTest {
         address: String = "",
         checkIn: String? = null,
         checkout: String? = null,
-        cityName: String = ""
+        cityName: String = "",
     ) = Lodging(
         id = id,
         name = name,
