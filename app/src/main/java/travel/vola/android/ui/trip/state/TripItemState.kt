@@ -150,12 +150,18 @@ sealed interface AddPlanItemState : TripItemState, Identifiable, TripItemState.T
     val dateSelectionEnabled: Boolean
     val saveButtonEnabled: Boolean
     val deleteButtonEnabled: Boolean
+    val buttonConfiguration: ButtonConfiguration
+        get() = ButtonConfiguration.Save
 
     val types: List<Type>
         get() = Type.entries
 
     enum class Type {
         Flight, Lodging, Place
+    }
+
+    enum class ButtonConfiguration {
+        Save, Search,
     }
 
 }
@@ -167,7 +173,10 @@ sealed interface ManualStartEndAddPlanState : AddPlanItemState {
         get() = startState.dateSelectionEnabled
 }
 
-sealed interface AddLodgingItemState : AddPlanItemState
+sealed interface AddLodgingItemState : AddPlanItemState {
+    val checkIn: ZonedDateTime?
+    val checkOut: ZonedDateTime?
+}
 
 data class AutoCompleteResultState(val title: String, val subtitle: String?)
 
@@ -179,7 +188,10 @@ data class ManualAddLodgingItemState(
     override val endState: ManualAddPlanState,
     override val saveButtonEnabled: Boolean,
     override val deleteButtonEnabled: Boolean,
-) : AddLodgingItemState, ManualStartEndAddPlanState
+) : AddLodgingItemState, ManualStartEndAddPlanState {
+    override val checkIn: ZonedDateTime? = startState.dateTime
+    override val checkOut: ZonedDateTime? = endState.dateTime
+}
 
 data class AddFlightItemState(
     override val id: String,
@@ -200,10 +212,13 @@ data class LodgingSearchItemState(
     override val dateSelectionEnabled: Boolean,
     val locationText: String?,
     val searchResults: List<SearchResultItemState>,
-    val checkIn: Time?,
+    override val checkIn: ZonedDateTime?,
     val minCheckOutTime: Time?,
-    val checkOut: Time?,
-) : AddLodgingItemState
+    override val checkOut: ZonedDateTime?,
+) : AddLodgingItemState {
+    override val buttonConfiguration: AddPlanItemState.ButtonConfiguration =
+        AddPlanItemState.ButtonConfiguration.Search
+}
 
 data class AddPlaceItemState(
     override val id: String,

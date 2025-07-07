@@ -24,6 +24,10 @@ fun AddPlanListItem(
     state: AddPlanItemState,
     actionHandler: AddPlanItemActionHandler,
 ) {
+    val primaryButtonLabel = when (state.buttonConfiguration) {
+        AddPlanItemState.ButtonConfiguration.Save -> "Save"
+        AddPlanItemState.ButtonConfiguration.Search -> "Search"
+    }
     AddPlanScaffold(
         state.uiType,
         onTypeSelected = { actionHandler.addPlanTypeChanged(state.id, it.toState()) },
@@ -31,7 +35,7 @@ fun AddPlanListItem(
         deleteButtonEnabled = state.deleteButtonEnabled,
         onDeleteConfirmed = { actionHandler.delete(state.type, state.id) },
         primaryButtonEnabled = state.saveButtonEnabled,
-        primaryButtonLabel = "Save",
+        primaryButtonLabel = primaryButtonLabel,
         onPrimaryButtonTapped = { actionHandler.save(state.id) },
         secondaryButtonLabel = "Cancel",
         onSecondaryButtonTapped = { actionHandler.cancelEdit(state.id) },
@@ -112,15 +116,16 @@ fun AddPlanListItem(
                                 actionHandler.setCheckOutTime(state.id, it)
                             }
                         }
-                        AddLodgingListItem(
-                            startEndAddPlanState = itemState,
+                        AddLodgingListItem(startEndAddPlanState = itemState,
                             uiState = state,
                             onLodgingTextChanged = {
                                 actionHandler.lodgingTextChanged(
                                     state.id, it
                                 )
                             },
-                        )
+                            onFindLodgingButtonTapped = {
+                                actionHandler.onFindLodgingButtonTapped(state.id)
+                            })
                     }
                 }
             }
@@ -237,14 +242,16 @@ fun AddPlanListItemPreview() {
                         Time.now(),
                         dateSelectionEnabled = false,
                         locationText = "Charles de Gaule",
-                        searchResults = emptyList(), isTimeSet = true
+                        searchResults = emptyList(),
+                        isTimeSet = true
                     ),
                     endState = ManualAddPlanState(
                         Time("2025-10-18T06:00 -0300"),
                         Time.now(),
                         dateSelectionEnabled = true,
                         locationText = "John F. Kennedy",
-                        searchResults = emptyList(), isTimeSet = true
+                        searchResults = emptyList(),
+                        isTimeSet = true
                     ),
                     typeSelectionEnabled = true,
                     saveButtonEnabled = true,
@@ -286,4 +293,5 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
 
     override fun locationSearchResultTapped(itemId: String, index: Int) = Unit
     override fun locationTextChanged(itemId: String, content: CharSequence) = Unit
+    override fun onFindLodgingButtonTapped(itemId: String) = Unit
 }
