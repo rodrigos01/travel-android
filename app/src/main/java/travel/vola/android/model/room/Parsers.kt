@@ -12,14 +12,22 @@ import travel.vola.android.model.data.Trip
 import java.time.ZonedDateTime
 import java.util.TimeZone
 
-fun RoomData.Trip.toAppDataModel(): Trip = Trip(
-    id = entity.id,
-    name = entity.name,
-    coverImage = entity.coverImage,
-    flights = flights.map { it.toAppDataModel() },
-    lodgings = lodgings.map { it.toAppDataModel() },
-    places = places.map { it.toAppDataModel() },
-)
+fun RoomData.Trip.toAppDataModel(): Trip {
+    val flights = flights.map { it.toAppDataModel() }
+    val lodgings = lodgings.map { it.toAppDataModel() }
+    val places = places.map { it.toAppDataModel() }
+    val image =
+        entity.coverImage ?: lodgings.firstOrNull()?.city?.coverImage
+        ?: flights.firstOrNull()?.segments?.firstOrNull()?.airportTo?.city?.coverImage
+    return Trip(
+        id = entity.id,
+        name = entity.name,
+        coverImage = image,
+        flights = flights,
+        lodgings = lodgings,
+        places = places,
+    )
+}
 
 fun RoomData.Flight.toAppDataModel(): Flight = Flight(
     id = entity.id,

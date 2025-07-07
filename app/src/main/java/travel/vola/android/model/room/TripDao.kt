@@ -43,10 +43,19 @@ interface TripDao {
     suspend fun saveFlight(flight: Schema.Flight)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveFlightSegment(flightSegment: Schema.FlightSegment)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveAirport(airport: Schema.Airport)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveLodging(lodging: Schema.Lodging)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveTimedPlace(timedPlace: Schema.TimedPlace)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun savePlace(place: RoomData.Place)
 
     @Delete
     suspend fun deleteTrip(trip: Schema.Trip)

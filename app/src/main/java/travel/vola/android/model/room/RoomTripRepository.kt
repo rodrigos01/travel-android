@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.repository.TripRepository
@@ -51,9 +52,40 @@ class RoomTripRepository(private val dao: TripDao) : TripRepository {
                 price = flight.price,
             )
         )
+        flight.segments.forEachIndexed { index, segment ->
+            savePlace(segment.airportFrom.city)
+            dao.saveAirport(
+                RoomData.Schema.Airport(
+                    iata = segment.airportFrom.iata,
+                    name = segment.airportFrom.name,
+                    timeZone = segment.airportFrom.timeZone,
+                    city = segment.airportFrom.city.id,
+                )
+            )
+            savePlace(segment.airportTo.city)
+            dao.saveAirport(
+                RoomData.Schema.Airport(
+                    iata = segment.airportTo.iata,
+                    name = segment.airportTo.name,
+                    timeZone = segment.airportTo.timeZone,
+                    city = segment.airportTo.city.id,
+                )
+            )
+            dao.saveFlightSegment(
+                RoomData.Schema.FlightSegment(
+                    id = "${flight.id}_$index",
+                    flightId = flight.id,
+                    airportFrom = segment.airportFrom.iata,
+                    airportTo = segment.airportTo.iata,
+                    departure = segment.departure,
+                    arrival = segment.arrival,
+                )
+            )
+        }
     }
 
     override suspend fun saveLodging(tripId: String, lodging: Lodging) {
+        savePlace(lodging.city)
         dao.saveLodging(
             RoomData.Schema.Lodging(
                 id = lodging.id,
@@ -70,6 +102,8 @@ class RoomTripRepository(private val dao: TripDao) : TripRepository {
     }
 
     override suspend fun saveTimedPlace(tripId: String, timedPlace: TimedPlace) {
+        savePlace(timedPlace.place)
+        savePlace(timedPlace.city)
         dao.saveTimedPlace(
             RoomData.Schema.TimedPlace(
                 id = timedPlace.id,
@@ -104,4 +138,19 @@ class RoomTripRepository(private val dao: TripDao) : TripRepository {
 
     private suspend fun withTrip(tripId: String, block: suspend (RoomData.Schema.Trip) -> Unit) =
         block(dao.getTrip(tripId))
+
+    private suspend fun savePlace(place: Place) {
+        dao.savePlace(
+            RoomData.Place(
+                id = place.id,
+                name = place.name,
+                latitude = place.latitude,
+                longitude = place.longitude,
+                coverImage = place.coverImage,
+                address = place.address,
+                externalId = place.externalId,
+                source = place.source,
+            )
+        )
+    }
 }
