@@ -38,6 +38,7 @@ class AddFlightUseCase(
                     hour = time.hour,
                     minute = time.minute,
                 ),
+                departureTimeSet = true,
             )
         }
     }
@@ -51,7 +52,8 @@ class AddFlightUseCase(
                     year = time.year,
                     hour = time.hour,
                     minute = time.minute,
-                )
+                ),
+                arrivalTimeSet = true,
             )
         }
     }
