@@ -37,7 +37,9 @@ class AddFlightUseCase(
                     year = time.year,
                     hour = time.hour,
                     minute = time.minute,
+                    timeZone = it.airportFrom?.timeZone?.toZoneId() ?: it.departure.zone
                 ),
+                departureTimeSet = true,
             )
         }
     }
@@ -51,7 +53,10 @@ class AddFlightUseCase(
                     year = time.year,
                     hour = time.hour,
                     minute = time.minute,
-                )
+                    timeZone = it.airportTo?.timeZone?.toZoneId() ?: it.arrival?.zone
+                    ?: it.departure.zone,
+                ),
+                arrivalTimeSet = true,
             )
         }
     }

@@ -39,7 +39,9 @@ private fun setApplicationContext(context: Context) {
 @ExperimentalMaterial3Api
 class MainActivity : ComponentActivity() {
 
-    private val serviceLocator: ServiceLocator by lazy { ServiceLocator() }
+    private val serviceLocator: ServiceLocator by lazy {
+        ServiceLocator(getApplicationContext = { applicationContext })
+    }
 
     private val viewModel: StartupViewModel by viewModels(factoryProducer = { StartupViewModel.Factory() })
 
