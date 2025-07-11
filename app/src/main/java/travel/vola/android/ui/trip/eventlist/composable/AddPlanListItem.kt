@@ -105,6 +105,25 @@ fun AddPlanListItem(
                             },
                         )
                     }
+
+                    is AddPlaceItemState -> {
+                        AddPlaceListItem(
+                            uiState = state,
+                            onTextChanged = {
+                                actionHandler.locationTextChanged(state.id, it)
+                            },
+                            onUpdated = { startDateTime, startTimeSelected, endDateTime, endTimeSelected, selectedSearchResultIndex ->
+                                actionHandler.onUpdated(
+                                    state.id,
+                                    startDateTime,
+                                    startTimeSelected,
+                                    endDateTime,
+                                    endTimeSelected,
+                                    selectedSearchResultIndex,
+                                )
+                            },
+                        )
+                    }
                 }
             }
 
@@ -134,26 +153,6 @@ fun AddPlanListItem(
                             checkInTimeSelected = false,
                             checkOut,
                             checkOutTimeSelected = false,
-                            selectedSearchResultIndex,
-                        )
-                    },
-                )
-            }
-
-            is AddPlaceItemState -> {
-                AddPlaceListItem(
-                    uiState = state,
-                    minEndTime = state.minEndTime,
-                    onTextChanged = {
-                        actionHandler.locationTextChanged(state.id, it)
-                    },
-                    onUpdated = { startDateTime, startTimeSelected, endDateTime, endTimeSelected, selectedSearchResultIndex ->
-                        actionHandler.onUpdated(
-                            state.id,
-                            startDateTime,
-                            startTimeSelected,
-                            endDateTime,
-                            endTimeSelected,
                             selectedSearchResultIndex,
                         )
                     },
