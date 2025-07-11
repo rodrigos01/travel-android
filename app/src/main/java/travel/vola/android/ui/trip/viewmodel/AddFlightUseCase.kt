@@ -170,7 +170,7 @@ class AddFlightUseCase(
                     year = departureTime.year,
                     hour = departureTime.hour,
                     minute = departureTime.minute,
-                    timeZone = it.airportFrom?.timeZone?.toZoneId() ?: it.departure.zone
+                    timeZone = data.airportFrom?.timeZone?.toZoneId() ?: data.departure.zone
                 ),
                 departureTimeSet = departureTimeSelected,
                 airportFrom = if (selectedDepartureSearchResultIndex != -1) null else data.airportFrom,
@@ -181,8 +181,8 @@ class AddFlightUseCase(
                         year = time.year,
                         hour = time.hour,
                         minute = time.minute,
-                        timeZone = it.airportTo?.timeZone?.toZoneId() ?: it.arrival?.zone
-                        ?: it.departure.zone,
+                        timeZone = data.airportTo?.timeZone?.toZoneId() ?: data.arrival?.zone
+                        ?: data.departure.zone,
                     )
                 },
                 arrivalTimeSet = arrivalTimeSelected,
