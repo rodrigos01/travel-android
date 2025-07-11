@@ -10,12 +10,12 @@ interface ApiResponse {
 
     @Serializable
     data class PlaceAutoComplete(
-        val results: List<ApiData.SimplePlace>
+        val results: List<ApiData.SimplePlace>,
     )
 
     @Serializable
     data class CityAutoComplete(
-        val data: List<ApiData.Place>
+        val data: List<ApiData.Place>,
     )
 
     @Serializable
@@ -101,6 +101,7 @@ interface ApiData {
         val reviewsUrl: String,
         val reviewsSource: String,
         val reviews: List<LodgingReview>,
+        val city: Place?,
     )
 
     @Serializable
