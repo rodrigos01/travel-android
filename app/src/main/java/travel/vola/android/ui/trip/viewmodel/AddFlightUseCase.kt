@@ -1,6 +1,8 @@
 package travel.vola.android.ui.trip.viewmodel
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import travel.vola.android.common.coroutines.MutexScope
 import travel.vola.android.extensions.MapFlow
@@ -162,65 +164,39 @@ class AddFlightUseCase(
         arrivalTimeSelected: Boolean,
         selectedArrivalSearchResultIndex: Int,
     ) {
-        itemStore.update(itemId) { data ->
-            data.copy(
-                departure = data.departure.update(
-                    dayOfMonth = departureTime.dayOfMonth,
-                    month = departureTime.month,
-                    year = departureTime.year,
-                    hour = departureTime.hour,
-                    minute = departureTime.minute,
-                    timeZone = data.airportFrom?.timeZone?.toZoneId() ?: data.departure.zone
-                ),
-                departureTimeSet = departureTimeSelected,
-                airportFrom = if (selectedDepartureSearchResultIndex != -1) null else data.airportFrom,
-                arrival = arrivalTime?.let { time ->
-                    (data.arrival ?: data.departure).update(
-                        dayOfMonth = time.dayOfMonth,
-                        month = time.month,
-                        year = time.year,
-                        hour = time.hour,
-                        minute = time.minute,
-                        timeZone = data.airportTo?.timeZone?.toZoneId() ?: data.arrival?.zone
-                        ?: data.departure.zone,
-                    )
-                },
-                arrivalTimeSet = arrivalTimeSelected,
-                airportTo = if (selectedArrivalSearchResultIndex != -1) null else data.airportTo,
-            )
-        }
         val current = itemStore.getData(itemId)
-        val selectedDeparture =
-            current?.airportFromSearchResults?.getOrNull(selectedDepartureSearchResultIndex)
         coroutineScope.launch {
-            selectedDeparture?.iata?.let { selectedId -> repository.details(selectedId) }
-                ?.let { airport ->
-                    itemStore.update(itemId) { data ->
-                        data.copy(
-                            airportFrom = airport,
-                            departure = data.departure.update(timeZone = airport.timeZone.toZoneId()),
-                            airportFromSearchResults = emptyList(),
-                        )
+            val (selectedDepartureAirport, selectedArrivalAirport) = awaitAll(
+                async {
+                    current?.airportFromSearchResults?.getOrNull(selectedDepartureSearchResultIndex)?.iata?.let { selectedId ->
+                        repository.details(selectedId)
                     }
-                }
-        }
-        val selectedArrival =
-            current?.airportToSearchResults?.getOrNull(selectedArrivalSearchResultIndex)
-        coroutineScope.launch {
-            selectedArrival?.iata?.let { selectedId -> repository.details(selectedId) }
-                ?.let { airport ->
-                    itemStore.update(itemId) { data ->
-                        data.copy(
-                            airportTo = airport,
-                            arrival = data.arrival?.update(timeZone = airport.timeZone.toZoneId()),
-                            airportToSearchResults = emptyList(),
-                        )
+                },
+                async {
+                    current?.airportToSearchResults?.getOrNull(selectedArrivalSearchResultIndex)?.iata?.let { selectedId ->
+                        repository.details(selectedId)
                     }
-                }
+                },
+            )
+            itemStore.update(itemId) { data ->
+                val airportFrom = selectedDepartureAirport ?: data.airportFrom
+                val airportTo = selectedArrivalAirport ?: data.airportTo
+                PendingFlight(
+                    id = data.id,
+                    entityId = data.entityId,
+                    departure = departureTime.update(
+                        timeZone = airportFrom?.timeZone?.toZoneId() ?: data.departure.zone
+                    ),
+                    departureTimeSet = departureTimeSelected,
+                    airportFrom = airportFrom,
+                    arrival = arrivalTime?.update(
+                        timeZone = airportTo?.timeZone?.toZoneId() ?: data.arrival?.zone
+                        ?: data.departure.zone
+                    ),
+                    arrivalTimeSet = arrivalTimeSelected,
+                    airportTo = airportTo,
+                )
+            }
         }
     }
-
-    private fun PendingFlight.minArrival(
-        departureTime: Time = this.departure,
-    ) = (airportTo?.let { departureTime.atTimeZone(it.timeZone) } ?: departureTime) + 1.hours
 }
