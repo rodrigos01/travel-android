@@ -212,7 +212,7 @@ data class LodgingSearchItemState(
     override val dateSelectionEnabled: Boolean,
     val locationText: String?,
     val searchResults: List<SearchResultItemState>,
-    override val checkIn: ZonedDateTime?,
+    override val checkIn: ZonedDateTime,
     val minCheckOutTime: Time?,
     override val checkOut: ZonedDateTime?,
 ) : AddLodgingItemState {
