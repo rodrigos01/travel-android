@@ -17,7 +17,9 @@ import travel.vola.android.extensions.set
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.LodgingSearchResult
+import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.Time
+import travel.vola.android.model.network.toAppDataModel
 import travel.vola.android.model.repository.LodgingSearchRepository
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.lodgingsearch.state.LodgingDetailsState
@@ -93,6 +95,8 @@ class LodgingSearchViewModel(
 
     private val location =
         placeRepository.places[locationId] ?: error("Place with id $locationId not found")
+
+    private val lodgingCities = mutableMapOf<String, Place>()
 
     private val loadingState = MutableStateFlow(false)
     private val searchParamsState = MutableStateFlow(
@@ -264,10 +268,12 @@ class LodgingSearchViewModel(
                 },
                 isLoading = false,
             )
+            lodging.city?.toAppDataModel()?.let { lodgingCities[lodgingId] = it }
         }
     }
 
     fun onLodgingClosed(lodgingId: String) {
+        lodgingCities.remove(lodgingId)
         openedResultsState.remove(lodgingId)
     }
 
@@ -279,7 +285,7 @@ class LodgingSearchViewModel(
             address = details.address,
             latitude = details.latitude,
             longitude = details.longitude,
-            city = location,
+            city = lodgingCities[lodgingId] ?: location,
             checkIn = details.checkIn,
             checkout = details.checkOut,
         )
