@@ -342,7 +342,9 @@ class AddFlightUseCaseTest {
         }
         val originalData = PendingFlight(
             id = "flight_id",
-            departure = mock(),
+            departure = mock {
+                on { zone } doReturn ZoneId.of("America/New_York")
+            },
             arrival = Time("2024-05-17T10:55 +02:00"),
             airportToSearchResults = listOf(
                 mock(),
@@ -359,7 +361,7 @@ class AddFlightUseCaseTest {
             "flight_id",
             departureTime = time,
             departureTimeSelected = false,
-            arrivalTime = null,
+            arrivalTime = Time("2024-05-17T10:55 +02:00"),
             arrivalTimeSelected = false,
             selectedDepartureSearchResultIndex = -1,
             selectedArrivalSearchResultIndex = 1,
