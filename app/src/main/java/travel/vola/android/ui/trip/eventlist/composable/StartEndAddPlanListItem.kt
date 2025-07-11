@@ -3,6 +3,7 @@ package travel.vola.android.ui.trip.eventlist.composable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,6 +42,7 @@ fun StartEndAddPlanListItem(
         endTimeSelected: Boolean,
         selectedEndSearchResultIndex: Int,
     ) -> Unit,
+    requiresEnd: Boolean = true,
 ) {
     var selectedStartDateTime by remember {
         mutableStateOf(uiState.startState.dateTime)
@@ -50,6 +52,9 @@ fun StartEndAddPlanListItem(
     }
     var selectedStartSearchResultIndex by remember {
         mutableIntStateOf(-1)
+    }
+    var hasEnd by remember(requiresEnd) {
+        mutableStateOf(requiresEnd)
     }
     var selectedEndDateTime by remember {
         mutableStateOf(uiState.endState.dateTime)
@@ -81,40 +86,43 @@ fun StartEndAddPlanListItem(
         AddPlanRow(
             initialDateTime = selectedStartDateTime,
             timeSelectedInitially = startTimeSelected,
-            minTime = uiState.startState.minDateTime,
-            searchResults = uiState.startState.searchResults,
-            title = startTitle,
-            timeSelectorLabel = startTimeSelectorLabel,
-            dateSelectionEnabled = uiState.startState.dateSelectionEnabled,
-            placeHolder = startPlaceHolder,
-            labelText = startLabelText,
+            title = if (hasEnd) {
+                startTitle
+            } else {
+                {}
+            },
+            labelText = "Location",
+            placeHolder = "Enter Location",
             text = uiState.startState.locationText,
             onTextChanged = onStartTextChanged,
+            searchResults = uiState.startState.searchResults,
+            timeSelectorLabel = "Pick Time",
+            showTextField = true,
             onUpdated = { selectedDateTime, timeSelected, selectedSearchResultIndex ->
                 selectedStartDateTime = selectedDateTime
                 startTimeSelected = timeSelected
                 selectedStartSearchResultIndex = selectedSearchResultIndex
             },
         )
-        AddPlanRow(
-            initialDateTime = selectedEndDateTime,
-            timeSelectedInitially = endTimeSelected,
-            minTime = uiState.endState.minDateTime,
-            searchResults = uiState.endState.searchResults,
-            title = endTitle,
-            timeSelectorLabel = endTimeSelectorLabel,
-            dateSelectionEnabled = uiState.endState.dateSelectionEnabled,
-            placeHolder = endPlaceHolder,
-            showTextField = showEndTimePickerButton,
-            labelText = endLabelText,
-            text = uiState.endState.locationText,
-            onTextChanged = onEndTextChanged,
-            onUpdated = { selectedDateTime, timeSelected, selectedSearchResultIndex ->
-                selectedEndDateTime = selectedDateTime
-                endTimeSelected = timeSelected
-                selectedEndSearchResultIndex = selectedSearchResultIndex
-            },
-        )
+        if (hasEnd) {
+            AddPlanRow(
+                initialDateTime = selectedEndDateTime,
+                timeSelectedInitially = endTimeSelected,
+                title = { Text("End") },
+                timeSelectorLabel = "Pick Time",
+                minTime = uiState.endState.minDateTime,
+                onUpdated = { selectedDateTime, timeSelected, selectedSearchResultIndex ->
+                    selectedEndDateTime = selectedDateTime
+                    endTimeSelected = timeSelected
+                    selectedEndSearchResultIndex = selectedSearchResultIndex
+                },
+            )
+        }
+        if (!requiresEnd) {
+            TextButton(onClick = { hasEnd = !hasEnd }) {
+                Text(if (!hasEnd) "Set end time" else "Remove end time")
+            }
+        }
     }
 }
 
@@ -157,6 +165,7 @@ fun StartEndAddPlanListItemPreview() {
                 endPlaceHolder = "Enter End point",
                 endLabelText = "End",
                 onEndTextChanged = {},
+                requiresEnd = false,
                 onUpdated = { _, _, _, _, _, _ -> },
             )
         }
