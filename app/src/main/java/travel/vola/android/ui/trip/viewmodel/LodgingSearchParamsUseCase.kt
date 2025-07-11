@@ -62,7 +62,7 @@ class LodgingSearchParamsUseCase(
             it.copy(
                 checkIn = checkIn,
                 checkOut = checkOut,
-                city = it.searchResults[selectedSearchResultIndex]
+                city = it.searchResults.getOrNull(selectedSearchResultIndex) ?: it.city,
             )
         }
     }
