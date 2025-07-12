@@ -163,45 +163,35 @@ class ManualAddLodgingUseCase(
     ) {
         val selected =
             itemStore.getData(itemId)?.searchResults?.getOrNull(selectedSearchResultIndex)
-        itemStore.update(itemId) {
-            it.copy(
-                checkIn = it.checkIn.update(
-                    dayOfMonth = checkIn.dayOfMonth,
-                    month = checkIn.month,
-                    year = checkIn.year,
-                    hour = checkIn.hour,
-                    minute = checkIn.minute,
-                ),
-                isCheckInTimeSet = checkInTimeSelected,
-                checkOut = checkOut?.let { time ->
-                    (it.checkOut ?: it.checkIn).update(
-                        dayOfMonth = time.dayOfMonth,
-                        month = time.month,
-                        year = time.year,
-                        hour = time.hour,
-                        minute = time.minute,
-                    )
-                },
-                isCheckOutTimeSet = checkOutTimeSelected,
-                name = selected?.name ?: it.name,
-                address = selected?.address ?: it.address,
-                searchResults = if (selected != null) emptyList() else it.searchResults,
-            )
-        }
         if (selected != null) {
-            coroutineScope.launch {
-                val (hotelDetails, city) = listOf(async {
-                    repository.details(
-                        selected.id, autocompleteKey = itemId
-                    )
-                }, async { repository.placeCity(selected.id, autocompleteKey = itemId) }).awaitAll()
-                itemStore.update(itemId) { data ->
-                    data.copy(
-                        city = city,
-                        latitude = hotelDetails?.latitude,
-                        longitude = hotelDetails?.longitude
-                    )
-                }
+            itemStore.update(itemId) {
+                it.copy(
+                    city = null,
+                    latitude = null,
+                    longitude = null,
+                )
+            }
+        }
+        coroutineScope.launch {
+            val (hotelDetails, city) = awaitAll(
+                async { selected?.id?.let { repository.details(it, autocompleteKey = itemId) } },
+                async { selected?.id?.let { repository.placeCity(it, autocompleteKey = itemId) } },
+            )
+            itemStore.update(itemId) {
+                PendingLodging(
+                    id = it.id,
+                    entityId = it.entityId,
+                    checkIn = checkIn,
+                    isCheckInTimeSet = checkInTimeSelected,
+                    checkOut = checkOut,
+                    isCheckOutTimeSet = checkOutTimeSelected,
+                    name = selected?.name ?: it.name,
+                    address = selected?.address ?: it.address,
+                    city = city,
+                    latitude = hotelDetails?.latitude,
+                    longitude = hotelDetails?.longitude,
+                    searchResults = emptyList(),
+                )
             }
         }
     }
