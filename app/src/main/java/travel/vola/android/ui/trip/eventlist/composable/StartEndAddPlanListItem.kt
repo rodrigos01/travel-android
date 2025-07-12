@@ -91,12 +91,12 @@ fun StartEndAddPlanListItem(
             } else {
                 {}
             },
-            labelText = "Location",
-            placeHolder = "Enter Location",
+            labelText = startLabelText,
+            placeHolder = startPlaceHolder,
             text = uiState.startState.locationText,
             onTextChanged = onStartTextChanged,
             searchResults = uiState.startState.searchResults,
-            timeSelectorLabel = "Pick Time",
+            timeSelectorLabel = startTimeSelectorLabel,
             showTextField = true,
             onUpdated = { selectedDateTime, timeSelected, selectedSearchResultIndex ->
                 selectedStartDateTime = selectedDateTime
@@ -108,9 +108,16 @@ fun StartEndAddPlanListItem(
             AddPlanRow(
                 initialDateTime = selectedEndDateTime,
                 timeSelectedInitially = endTimeSelected,
-                title = { Text("End") },
-                timeSelectorLabel = "Pick Time",
                 minTime = uiState.endState.minDateTime,
+                searchResults = uiState.endState.searchResults,
+                title = endTitle,
+                timeSelectorLabel = endTimeSelectorLabel,
+                text = uiState.endState.locationText,
+                dateSelectionEnabled = uiState.endState.dateSelectionEnabled,
+                showTextField = showEndTimePickerButton,
+                labelText = endLabelText,
+                placeHolder = endPlaceHolder,
+                onTextChanged = onEndTextChanged,
                 onUpdated = { selectedDateTime, timeSelected, selectedSearchResultIndex ->
                     selectedEndDateTime = selectedDateTime
                     endTimeSelected = timeSelected
