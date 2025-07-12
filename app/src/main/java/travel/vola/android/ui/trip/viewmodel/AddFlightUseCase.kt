@@ -164,6 +164,13 @@ class AddFlightUseCase(
         arrivalTimeSelected: Boolean,
         selectedArrivalSearchResultIndex: Int,
     ) {
+        // Clean current airports if a new one has been selected
+        itemStore.update(itemId) {
+            it.copy(
+                airportFrom = it.airportFrom.takeIf { selectedDepartureSearchResultIndex < 0 },
+                airportTo = it.airportTo.takeIf { selectedArrivalSearchResultIndex < 0 },
+            )
+        }
         val current = itemStore.getData(itemId)
         coroutineScope.launch {
             val (selectedDepartureAirport, selectedArrivalAirport) = awaitAll(
