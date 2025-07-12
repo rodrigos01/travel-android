@@ -86,27 +86,31 @@ class AddPlaceUseCase(
         endTimeSelected: Boolean,
         selectedSearchResultIndex: Int,
     ) {
-        itemStore.update(itemId) {
-            it.copy(
-                startDateTime = startDateTime ?: it.startDateTime,
-                hasStartTime = startTimeSelected,
-                endDateTime = endDateTime,
-                hasEndTime = endTimeSelected,
-            )
-        }
         val current = itemStore.getData(itemId)
         val selected = current?.searchResults?.getOrNull(selectedSearchResultIndex)
+        if (selected != null) {
+            itemStore.update(itemId) {
+                it.copy(
+                    place = null,
+                    city = null,
+                )
+            }
+        }
         coroutineScope.launch {
-            selected?.id?.let { selectedId -> placeRepository.details(selectedId) }
-                ?.let { details ->
-                    itemStore.update(itemId) {
-                        it.copy(
-                            searchResults = emptyList(),
-                            place = details.place,
-                            city = details.city,
-                        )
-                    }
-                }
+            val details = selected?.id?.let { selectedId -> placeRepository.details(selectedId) }
+            itemStore.update(itemId) {
+                PendingData.PendingTimedPlace(
+                    id = it.id,
+                    entityId = it.entityId,
+                    startDateTime = startDateTime ?: it.startDateTime,
+                    hasStartTime = startTimeSelected,
+                    endDateTime = endDateTime,
+                    hasEndTime = endTimeSelected,
+                    searchResults = emptyList(),
+                    place = details?.place,
+                    city = details?.city,
+                )
+            }
         }
     }
 
