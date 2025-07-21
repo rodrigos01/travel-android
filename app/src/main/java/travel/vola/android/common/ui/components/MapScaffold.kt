@@ -201,13 +201,15 @@ private fun Map(
     val boundingBox =
         points.takeIf { it.isNotEmpty() }?.fold(LatLngBounds.Builder()) { builder, point ->
             builder.include(point)
-        }?.build() ?: LatLngBounds(LatLng(0.0, 0.0), LatLng(0.0, 0.0))
+        }?.build()
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(boundingBox.center, 15F)
+        position =
+            boundingBox?.let { CameraPosition.fromLatLngZoom(boundingBox.center, 15F) }
+                ?: CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), 3F)
     }
     LaunchedEffect(boundingBox) {
-        if (boundsPoints.isNotEmpty()) {
-            val update = if (boundsPoints.size > 1 || minZoom == null) {
+        if (boundingBox != null) {
+            val update = if (points.size > 1 || minZoom == null) {
                 CameraUpdateFactory.newLatLngBounds(boundingBox, 64.dp.value.toInt())
             } else {
                 CameraUpdateFactory.newLatLngZoom(boundingBox.center, minZoom)
