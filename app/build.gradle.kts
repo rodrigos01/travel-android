@@ -12,7 +12,7 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
-val ktorVersion = "3.0.3"
+val ktorVersion = "3.2.2"
 val composeVersion = "1.7.8"
 val navigationVersion = "2.8.9"
 val room_version = "2.7.2"

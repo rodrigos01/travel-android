@@ -7,19 +7,24 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.call.replaceResponse
+import io.ktor.client.plugins.HttpSend
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.compression.ContentEncoding
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.plugin
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
-import io.ktor.http.parsing.ParseException
 import io.ktor.http.path
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.firstOrNull
@@ -39,7 +44,6 @@ data class Token(val accessToken: String, val expiration: Long)
 private const val AUTH_URL = "https://us-central1-travel-164715.cloudfunctions.net/auth"
 private const val CLIENT_ID = "travel-app-android"
 private const val CLIENT_SECRET = "QzD70JbccmYDyI4GjqpUlt4MrpBU259iI0ho"
-private const val MAX_AUTH_RETRIES = 3
 
 private suspend fun updateToken(): Token {
     val response = HttpClient {
@@ -100,13 +104,34 @@ private val client = HttpClient {
             }
         }
     }
+}.apply {
+    plugin(HttpSend).intercept { request ->
+        val call = execute(request)
+        if (call.response.status != HttpStatusCode.Unauthorized) {
+            call
+        } else {
+            // Fixes malformed WWW-Authenticate response headers so that Ktor can parse them
+            val content = call.response.bodyAsChannel()
+            val originalAuthHeader = call.request.headers[HttpHeaders.WWWAuthenticate]
+            val fixedAuthHeader =
+                originalAuthHeader?.removePrefix("Bearer ")?.replace(" ", ",") ?: ""
+            call.replaceResponse(
+                headers = Headers.build {
+                    appendAll(call.response.headers)
+                    remove(HttpHeaders.WWWAuthenticate)
+                    append(HttpHeaders.WWWAuthenticate, "Bearer $fixedAuthHeader")
+                },
+                content = { content },
+            )
+        }
+    }
 }
 
 private const val SERVER_URL = BuildConfig.SERVER_URL
 fun httpClient() = client
 
 suspend inline fun <reified T> request(
-    path: String, noinline builder: HttpRequestBuilder.() -> Unit = {}
+    path: String, noinline builder: HttpRequestBuilder.() -> Unit = {},
 ): T? {
     val response = get(path, builder)
     return if (response.status == HttpStatusCode.OK) {
@@ -117,23 +142,13 @@ suspend inline fun <reified T> request(
 }
 
 suspend fun get(
-    path: String, builder: HttpRequestBuilder.() -> Unit = {}, retryCount: Int = 0,
+    path: String, builder: HttpRequestBuilder.() -> Unit = {},
 ): HttpResponse {
-    try {
-        return httpClient().get(SERVER_URL) {
-            url { path(path) }
-            headers {
-                append("accept-language", Locale.getDefault().language)
-            }
-            builder()
+    return httpClient().get(SERVER_URL) {
+        url { path(path) }
+        headers {
+            append(HttpHeaders.AcceptLanguage, Locale.getDefault().language)
         }
-    } catch (e: ParseException) {
-        if (retryCount < MAX_AUTH_RETRIES) {
-            // Ktor can't handle malformed auth 401 headers so we have to handle them ourselves
-            updateToken()
-            return get(path, builder, retryCount + 1)
-        } else {
-            throw e
-        }
+        builder()
     }
 }
