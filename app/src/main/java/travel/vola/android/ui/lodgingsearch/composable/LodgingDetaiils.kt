@@ -209,7 +209,7 @@ fun LodgingDetailsContent(
                 Column(
                     verticalArrangement = spacedBy(8.dp),
                 ) {
-                    val image2SizedState = rememberSizedImageState(photos[1])
+                    val image2SizedState = rememberSizedImageState(photos.getOrNull(1))
                     LodgingImage(
                         rememberAsyncImagePainter(
                             model = image2SizedState.model,
@@ -235,7 +235,7 @@ fun LodgingDetailsContent(
                                 selectedGalleryModel = null
                             },
                     ) {
-                        val sizedImageState = rememberSizedImageState(photos[2])
+                        val sizedImageState = rememberSizedImageState(photos.getOrNull(2))
                         LodgingImage(
                             rememberAsyncImagePainter(
                                 model = sizedImageState.model,

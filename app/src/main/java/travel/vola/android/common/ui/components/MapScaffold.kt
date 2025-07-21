@@ -195,19 +195,21 @@ private fun Map(
 ) {
     val points = boundsPoints.takeIf { it.isNotEmpty() } ?: markers.map {
         LatLng(
-            it.position.first,
-            it.position.second
+            it.position.first, it.position.second
         )
     }
-    val boundingBox = points.fold(LatLngBounds.Builder()) { builder, point ->
-        builder.include(point)
-    }.build()
+    val boundingBox =
+        points.takeIf { it.isNotEmpty() }?.fold(LatLngBounds.Builder()) { builder, point ->
+            builder.include(point)
+        }?.build()
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(boundingBox.center, 15F)
+        position =
+            boundingBox?.let { CameraPosition.fromLatLngZoom(boundingBox.center, 15F) }
+                ?: CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), 3F)
     }
     LaunchedEffect(boundingBox) {
-        if (boundsPoints.isNotEmpty()) {
-            val update = if (boundsPoints.size > 1 || minZoom == null) {
+        if (boundingBox != null) {
+            val update = if (points.size > 1 || minZoom == null) {
                 CameraUpdateFactory.newLatLngBounds(boundingBox, 64.dp.value.toInt())
             } else {
                 CameraUpdateFactory.newLatLngZoom(boundingBox.center, minZoom)
@@ -257,19 +259,15 @@ fun MapScaffoldPreview(
         boundsPoints = listOf(LatLng(0.0, 0.0)),
         topBar = {
             if (showTopBar) {
-                TopAppBar(
-                    title = { Text("Map Scaffold") }
-                )
+                TopAppBar(title = { Text("Map Scaffold") })
             }
         },
         bottomBar = {
             TabBar(modifier = Modifier.fillMaxWidth()) {
-                tab(
-                    "search",
+                tab("search",
                     selected = true,
                     icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
-                tab(
-                    "map",
+                tab("map",
                     selected = false,
                     icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
             }
