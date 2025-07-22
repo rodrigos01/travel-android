@@ -64,7 +64,7 @@ interface ApiData {
     data class SimplePlace(
         val id: String,
         val name: String,
-        val address: String,
+        val address: String?,
     )
 
     @Serializable
