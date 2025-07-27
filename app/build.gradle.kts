@@ -1,5 +1,7 @@
 import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 
 plugins {
     id("com.android.application")
@@ -79,10 +81,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
-    kotlinOptions {
-        jvmTarget = "11"
-        freeCompilerArgs = listOf("-Xcontext-receivers")
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+            freeCompilerArgs = listOf("-Xcontext-receivers")
+        }
     }
     testOptions {
         unitTests {
