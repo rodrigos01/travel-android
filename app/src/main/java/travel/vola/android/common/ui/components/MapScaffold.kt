@@ -51,7 +51,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberMarkerState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
 import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.common.ui.state.MarkerViewState
 
@@ -233,7 +233,8 @@ private fun Map(
     ) {
         markers.forEach { markerState ->
             val position = LatLng(markerState.position.first, markerState.position.second)
-            Marker(state = rememberMarkerState(key = position.toString(), position = position),
+            Marker(
+                state = rememberUpdatedMarkerState(position = position),
                 title = markerState.name,
                 icon = markerDescriptor(markerState),
                 anchor = Offset(0.5F, 0F),
@@ -264,10 +265,12 @@ fun MapScaffoldPreview(
         },
         bottomBar = {
             TabBar(modifier = Modifier.fillMaxWidth()) {
-                tab("search",
+                tab(
+                    "search",
                     selected = true,
                     icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
-                tab("map",
+                tab(
+                    "map",
                     selected = false,
                     icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
             }

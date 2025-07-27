@@ -1,7 +1,6 @@
 import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 
 plugins {
     id("com.android.application")
@@ -17,7 +16,7 @@ plugins {
 
 android {
     namespace = "travel.vola.android"
-    compileSdk = 35
+    compileSdk = 36
 
     signingConfigs {
         create("release") {
@@ -32,7 +31,7 @@ android {
     defaultConfig {
         applicationId = "travel.vola.android"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName =
             "1.0" + System.getenv("BUILD_NUMBER")?.let { ".$it" } + System.getenv("BRANCH_NAME")
@@ -78,13 +77,12 @@ android {
         buildConfig = true
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlin {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
-            freeCompilerArgs = listOf("-Xcontext-receivers")
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
     testOptions {
