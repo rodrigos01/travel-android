@@ -18,13 +18,15 @@ inline fun <reified VM : ViewModel> viewModel(
     additionalExtras: CreationExtras = CreationExtras.Empty
 ): VM {
     val viewModelStoreOwner = LocalViewModelStoreOwner.current
+    val creationExtras = if (viewModelStoreOwner is HasDefaultViewModelProviderFactory) {
+        viewModelStoreOwner.defaultViewModelCreationExtras
+    } else {
+        CreationExtras.Empty
+    } + LocalViewModelCreationExtras.current + additionalExtras
     return viewModel(
+        key = creationExtras.toString(),
         factory = factory,
-        extras = if (viewModelStoreOwner is HasDefaultViewModelProviderFactory) {
-            viewModelStoreOwner.defaultViewModelCreationExtras
-        } else {
-            CreationExtras.Empty
-        } + LocalViewModelCreationExtras.current + additionalExtras,
+        extras = creationExtras,
     )
 }
 

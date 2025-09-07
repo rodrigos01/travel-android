@@ -11,6 +11,10 @@ import androidx.activity.viewModels
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -19,6 +23,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.toRoute
 import travel.vola.android.di.LocalViewModelCreationExtras
 import travel.vola.android.di.initializeViewModelCreationExtras
+import travel.vola.android.model.data.DataSourceType
 import travel.vola.android.ui.home.HomeScreen
 import travel.vola.android.ui.home.HomeScreenDestination
 import travel.vola.android.ui.lodgingsearch.composable.LodgingSearch
@@ -26,8 +31,6 @@ import travel.vola.android.ui.lodgingsearch.composable.LodgingSearchDestination
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.eventlist.composable.TripDetails
 import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
-import travel.vola.android.ui.triplist.composable.TripList
-import travel.vola.android.ui.triplist.composable.TripListDestination
 
 lateinit var applicationContext: Context
     private set
@@ -65,13 +68,21 @@ class MainActivity : ComponentActivity() {
     fun MainScreen() {
         val navController = rememberNavController()
         AppTheme(dynamicColor = false) {
-            val viewModelCreationExtras = initializeViewModelCreationExtras(navController)
+            var dataSourceType by remember { mutableStateOf(DataSourceType.LOCAL) }
+            val viewModelCreationExtras = remember(dataSourceType) {
+                initializeViewModelCreationExtras(
+                    navController,
+                    dataSourceType
+                )
+            }
             CompositionLocalProvider(LocalViewModelCreationExtras provides viewModelCreationExtras) {
                 NavHost(
                     navController = navController, startDestination = HomeScreenDestination.ROUTE
                 ) {
                     composable(HomeScreenDestination.ROUTE) {
-                        HomeScreen(navController)
+                        HomeScreen(navController, onDataSourceTypeChanged = {
+                            dataSourceType = it
+                        })
                     }
                     composable(
                         TripDetailsDestination.ROUTE, arguments = listOf(
