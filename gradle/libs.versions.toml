@@ -2,32 +2,32 @@
 
 kotlinStdlibJdk7 = "2.2.0"
 appcompat = "1.7.1"
-lifecycle = "2.9.2"
+lifecycle = "2.9.3"
 lifecycleExtensions = "2.2.0"
 kotlinxCoroutines = "1.10.2"
-compose = "1.8.3"
+compose = "1.9.0"
 activityCompose = "1.10.1"
-material = "1.12.0"
+material = "1.13.0"
 material3 = "1.3.2"
 material3Adaptative = "1.1.0"
 datastorePreferences = "1.1.7"
-mapsCompose = "6.7.0"
+mapsCompose = "6.9.0"
 coil = "2.7.0"
 coreSplashscreen = "1.0.1"
-firebaseBom = "34.0.0"
+firebaseBom = "34.2.0"
 playServicesAuth = "21.4.0"
-navigation = "2.9.2"
-ktor = "3.2.2"
+navigation = "2.9.3"
+ktor = "3.2.3"
 room = "2.7.2"
 androidxWindow = "1.4.0"
 # Test
-mockitoCore = "5.18.0"
+mockitoCore = "5.19.0"
 mockitoKotlin = "6.0.0"
 mockk = "1.14.5"
-androidxTestRunner = "1.6.2"
-assertjCore = "3.27.3"
+androidxTestRunner = "1.7.0"
+assertjCore = "3.27.4"
 coreTesting = "2.2.0"
-espressoCore = "3.6.1"
+espressoCore = "3.7.0"
 junit = "4.13.2"
 [libraries]
 # General
@@ -69,7 +69,7 @@ compose-foundation = { group = "androidx.compose.foundation", name = "foundation
 # Firebase
 firebase-analytics = { module = "com.google.firebase:firebase-analytics", version = "23.0.0" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
-firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics", version = "20.0.0" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics", version = "20.0.1" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore", version = "26.0.0" }
 # Navigation
 navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigation" }
