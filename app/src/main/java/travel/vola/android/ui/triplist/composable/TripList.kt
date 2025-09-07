@@ -43,7 +43,7 @@ fun TripList(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier,
     ) { index ->
-        val trip = state.trips[index]
+        val trip = state.trips.getOrNull(index) ?: return@ContextualFlowRow
         TripListItem(
             name = trip.name,
             coverImageUrl = trip.coverImage,
