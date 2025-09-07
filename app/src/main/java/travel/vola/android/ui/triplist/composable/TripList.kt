@@ -35,17 +35,35 @@ import androidx.navigation.compose.rememberNavController
 import travel.vola.android.model.data.Trip
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
+import travel.vola.android.ui.triplist.TripListUseCase
 import travel.vola.android.ui.triplist.TripListViewModel
 import kotlin.math.min
 
 const val MAX_ITEMS_PER_LINE = 3
 
+@Composable
+fun TripList(
+    state: TripListUseCase.State,
+    navController: NavController,
+    onAddTrip: () -> Unit,
+) = TripList(
+    state = state,
+    onAddTrip = onAddTrip,
+    onTripClicked = { tripId ->
+        navController.navigate(
+            TripDetailsDestination.getRoute(
+                tripId
+            )
+        )
+    }
+)
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun TripList(
-    state: TripListViewModel.ViewState,
-    navController: NavController,
-    onAddTrip: () -> Unit
+fun TripList(
+    state: TripListUseCase.State,
+    onAddTrip: () -> Unit,
+    onTripClicked: (String) -> Unit,
 ) {
     Scaffold(
         floatingActionButton = {
@@ -82,11 +100,7 @@ private fun TripList(
                         smallerWidth = min(smallerWidth, it.size.width)
                     }
                     .clickable {
-                        navController.navigate(
-                            TripDetailsDestination.getRoute(
-                                trip.id
-                            )
-                        )
+                        onTripClicked(trip.id)
                     },
             )
         }
@@ -105,7 +119,7 @@ fun TripList(viewModel: TripListViewModel, navController: NavController) {
 @Preview(device = "id:pixel_tablet")
 fun TripListPreview() {
     val navController = rememberNavController()
-    val state = TripListViewModel.ViewState(
+    val state = TripListUseCase.State(
         trips = List(7) { index ->
             Trip(
                 id = "$index",
