@@ -47,9 +47,8 @@ import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.rememberMapScaffoldState
 import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.common.ui.state.MarkerType
-import travel.vola.android.model.PlaceRepository
+import travel.vola.android.extensions.viewModel
 import travel.vola.android.model.data.Identifiable
-import travel.vola.android.model.repository.mock.MockTripRepository
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.ConfirmationDialog
 import travel.vola.android.ui.trip.state.AddPlanItemState
@@ -67,9 +66,10 @@ import travel.vola.android.ui.trip.viewmodel.TripViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripDetails(
-    viewModel: TripViewModel,
+    tripId: String,
     navController: NavController,
 ) {
+    val viewModel: TripViewModel = viewModel(factory = TripViewModel.Factory(tripId))
     val state by viewModel.viewState.collectAsStateWithLifecycle()
     val listScrollState = rememberLazyListState()
     val currentPlaceIndex by remember {
@@ -219,7 +219,8 @@ private fun TripDetailItem(
             onTap = { viewModel.emptyDateRowTapped(event.id) },
         )
 
-        is PlaceItemState -> PlaceEventListItem(event.imageUrl,
+        is PlaceItemState -> PlaceEventListItem(
+            event.imageUrl,
             event.placeName,
             event.dateStart,
             event.dateEnd,
@@ -267,10 +268,10 @@ private fun TripDetailItem(
         }
 
         is TripItemState.InitialAddPlanItemState -> EmptyAddPlanListItem(
-            showDivider = false,
-            onAddButtonClick = { viewModel.addButtonTapped(event.id) })
+            showDivider = false, onAddButtonClick = { viewModel.addButtonTapped(event.id) })
 
-        is TripItemState.EmptyAddPlanItemState -> EmptyAddPlanListItem(showDivider = event.showDivider,
+        is TripItemState.EmptyAddPlanItemState -> EmptyAddPlanListItem(
+            showDivider = event.showDivider,
             onAddButtonClick = { viewModel.addButtonTapped(event.id) })
 
         is AddPlanItemState -> AddPlanListItem(
@@ -287,12 +288,7 @@ fun TripDetailsPreview() {
     AppTheme(dynamicColor = false) {
         val navController = rememberNavController()
         TripDetails(
-            TripViewModel(
-                MockTripRepository(),
-                PlaceRepository(),
-                "minhaTrip",
-                navController,
-            ),
+            "minhaTrip",
             navController,
         )
     }

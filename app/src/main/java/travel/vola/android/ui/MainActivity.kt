@@ -10,22 +10,22 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.toRoute
-import travel.vola.android.di.ServiceLocator
-import travel.vola.android.extensions.viewModel
-import travel.vola.android.model.repository.LodgingSearchRepository
+import travel.vola.android.di.LocalViewModelCreationExtras
+import travel.vola.android.di.initializeViewModelCreationExtras
+import travel.vola.android.ui.home.HomeScreen
+import travel.vola.android.ui.home.HomeScreenDestination
 import travel.vola.android.ui.lodgingsearch.composable.LodgingSearch
 import travel.vola.android.ui.lodgingsearch.composable.LodgingSearchDestination
-import travel.vola.android.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.eventlist.composable.TripDetails
 import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
-import travel.vola.android.ui.triplist.TripListViewModel
 import travel.vola.android.ui.triplist.composable.TripList
 import travel.vola.android.ui.triplist.composable.TripListDestination
 
@@ -38,10 +38,6 @@ private fun setApplicationContext(context: Context) {
 
 @ExperimentalMaterial3Api
 class MainActivity : ComponentActivity() {
-
-    private val serviceLocator: ServiceLocator by lazy {
-        ServiceLocator(getApplicationContext = { applicationContext })
-    }
 
     private val viewModel: StartupViewModel by viewModels(factoryProducer = { StartupViewModel.Factory() })
 
@@ -69,43 +65,29 @@ class MainActivity : ComponentActivity() {
     fun MainScreen() {
         val navController = rememberNavController()
         AppTheme(dynamicColor = false) {
-            NavHost(navController = navController, startDestination = TripListDestination.ROUTE) {
-                composable(TripListDestination.ROUTE) {
-                    val viewModel: TripListViewModel = viewModel {
-                        TripListViewModel(serviceLocator.tripRepository, navController)
-                    }
-                    TripList(viewModel = viewModel, navController = navController)
-                }
-                composable(
-                    TripDetailsDestination.ROUTE, arguments = listOf(navArgument(
-                        TripDetailsDestination.ARG_TRIP_ID
-                    ) { type = NavType.StringType })
+            val viewModelCreationExtras = initializeViewModelCreationExtras(navController)
+            CompositionLocalProvider(LocalViewModelCreationExtras provides viewModelCreationExtras) {
+                NavHost(
+                    navController = navController, startDestination = TripListDestination.ROUTE
                 ) {
-                    val tripId = it.arguments?.getString(
-                        TripDetailsDestination.ARG_TRIP_ID
-                    ) ?: error("tripId must be provided")
-                    val viewModel: travel.vola.android.ui.trip.viewmodel.TripViewModel = viewModel {
-                        travel.vola.android.ui.trip.viewmodel.TripViewModel(
-                            serviceLocator, navController, tripId
-                        )
+                    composable(TripListDestination.ROUTE) {
+                        TripList(navController = navController)
                     }
-                    TripDetails(viewModel = viewModel, navController = navController)
-                }
-                composable<LodgingSearchDestination.Params> { backStackEntry ->
-                    val params: LodgingSearchDestination.Params = backStackEntry.toRoute()
-                    val viewModel: LodgingSearchViewModel = viewModel {
-                        LodgingSearchViewModel(
-                            params.tripId,
-                            LodgingSearchRepository(),
-                            serviceLocator.tripRepository,
-                            serviceLocator.placeRepository,
-                            params.locationId,
-                            params.checkIn,
-                            params.checkOut,
-                            params.timeZoneId,
-                        )
+                    composable(
+                        TripDetailsDestination.ROUTE, arguments = listOf(
+                            navArgument(
+                                TripDetailsDestination.ARG_TRIP_ID
+                            ) { type = NavType.StringType })
+                    ) {
+                        val tripId = it.arguments?.getString(
+                            TripDetailsDestination.ARG_TRIP_ID
+                        ) ?: error("tripId must be provided")
+                        TripDetails(tripId, navController)
                     }
-                    LodgingSearch(navController, viewModel)
+                    composable<LodgingSearchDestination.Params> { backStackEntry ->
+                        val params: LodgingSearchDestination.Params = backStackEntry.toRoute()
+                        LodgingSearch(params, navController)
+                    }
                 }
             }
         }

@@ -86,6 +86,7 @@ import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.common.ui.state.MarkerViewState
 import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.viewModel
 import travel.vola.android.ui.lodgingsearch.state.LodgingDetailsState
 import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
 import travel.vola.android.ui.lodgingsearch.state.LodgingSearchResultState
@@ -209,7 +210,8 @@ fun ResultsWithMap(
             }
         }
     }
-    MapScaffold(state = mapScaffoldState,
+    MapScaffold(
+        state = mapScaffoldState,
         markers = markers,
         boundsPoints = boundsMarkers,
         onMarkerTapped = { marker ->
@@ -220,8 +222,10 @@ fun ResultsWithMap(
         markerDescriptor = { marker ->
             val index = markers.indexOf(marker)
             val bitmap = loadedState?.results?.getOrNull(index)?.let {
-                LodgingSearchMarkerIcon(NumberFormat.getCurrencyInstance()
-                    .apply { maximumFractionDigits = 0 }.format(it.price), marker.selected)
+                LodgingSearchMarkerIcon(
+                    NumberFormat.getCurrencyInstance()
+                    .apply { maximumFractionDigits = 0 }.format(it.price), marker.selected
+                )
             } ?: mapMarkerIcon(MarkerType.Lodging, selected = marker.selected)
             BitmapDescriptorFactory.fromBitmap(bitmap)
         },
@@ -272,7 +276,8 @@ fun ResultsWithMap(
                         )
                         .fillMaxWidth()
                 ) {
-                    tab(SEARCH_TAB_ID,
+                    tab(
+                        SEARCH_TAB_ID,
                         selected = loadedState?.selectedResult == null,
                         icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
                     openedResults.forEach { (tabId, lodging) ->
@@ -448,7 +453,8 @@ private fun SearchTopBar(
                     }
                 }
 
-                ControlsVisible.SORT -> SortOptionSelector(state.sortAndFilterState,
+                ControlsVisible.SORT -> SortOptionSelector(
+                    state.sortAndFilterState,
                     onSortOptionSelected = { option ->
                         onSortOptionSelected(option)
                         controlsVisible1 = ControlsVisible.NONE
@@ -656,9 +662,12 @@ object LodgingSearchDestination {
 
 @Composable
 fun LodgingSearch(
+    params: LodgingSearchDestination.Params,
     navController: NavController,
-    viewModel: LodgingSearchViewModel,
 ) {
+    val viewModel: LodgingSearchViewModel = viewModel(
+        factory = LodgingSearchViewModel.Factory(params)
+    )
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     LodgingSearch(
         navController = navController,

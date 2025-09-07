@@ -1,6 +1,7 @@
 package travel.vola.android.ui.lodgingsearch.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -9,11 +10,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import travel.vola.android.di.factoryDependencies
 import travel.vola.android.extensions.MutableMapStateFlow
 import travel.vola.android.extensions.Time
 import travel.vola.android.extensions.get
 import travel.vola.android.extensions.remove
 import travel.vola.android.extensions.set
+import travel.vola.android.extensions.viewModelFactory
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.LodgingSearchResult
@@ -22,6 +25,7 @@ import travel.vola.android.model.data.Time
 import travel.vola.android.model.network.toAppDataModel
 import travel.vola.android.model.repository.LodgingSearchRepository
 import travel.vola.android.model.repository.TripRepository
+import travel.vola.android.ui.lodgingsearch.composable.LodgingSearchDestination
 import travel.vola.android.ui.lodgingsearch.state.LodgingDetailsState
 import travel.vola.android.ui.lodgingsearch.state.LodgingReviewState
 import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
@@ -298,4 +302,18 @@ class LodgingSearchViewModel(
     fun onContinueBrowsingTapped() {
         localState.value = localState.value.copy(showAddConfirmation = false)
     }
+
+    class Factory(params: LodgingSearchDestination.Params) :
+        ViewModelProvider.Factory by viewModelFactory(initializer = {
+            LodgingSearchViewModel(
+                params.tripId,
+                LodgingSearchRepository(),
+                factoryDependencies.tripRepository,
+                factoryDependencies.placeRepository,
+                params.locationId,
+                params.checkIn,
+                params.checkOut,
+                params.timeZoneId,
+            )
+        })
 }

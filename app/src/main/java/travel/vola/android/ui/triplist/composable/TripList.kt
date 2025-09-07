@@ -31,7 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import travel.vola.android.extensions.viewModel
 import travel.vola.android.model.data.Trip
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
@@ -43,20 +43,24 @@ const val MAX_ITEMS_PER_LINE = 3
 
 @Composable
 fun TripList(
-    state: TripListUseCase.State,
     navController: NavController,
-    onAddTrip: () -> Unit,
-) = TripList(
-    state = state,
-    onAddTrip = onAddTrip,
-    onTripClicked = { tripId ->
-        navController.navigate(
-            TripDetailsDestination.getRoute(
-                tripId
+) {
+    val viewModel: TripListViewModel = viewModel(
+        factory = TripListViewModel.Factory()
+    )
+    val state by viewModel.viewState.collectAsStateWithLifecycle()
+    TripList(
+        state = state,
+        onAddTrip = { viewModel.addTrip() },
+        onTripClicked = { tripId ->
+            navController.navigate(
+                TripDetailsDestination.getRoute(
+                    tripId
+                )
             )
-        )
-    }
-)
+        }
+    )
+}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -108,17 +112,10 @@ fun TripList(
 }
 
 @Composable
-fun TripList(viewModel: TripListViewModel, navController: NavController) {
-    val state by viewModel.viewState.collectAsStateWithLifecycle()
-    TripList(state, navController, onAddTrip = { viewModel.addTrip() })
-}
-
-@Composable
 @Preview
 @Preview(device = "spec:parent=pixel_tablet,orientation=portrait")
 @Preview(device = "id:pixel_tablet")
 fun TripListPreview() {
-    val navController = rememberNavController()
     val state = TripListUseCase.State(
         trips = List(7) { index ->
             Trip(
@@ -132,7 +129,7 @@ fun TripListPreview() {
         }
     )
     AppTheme {
-        TripList(state, navController, onAddTrip = {})
+        TripList(state, onTripClicked = {}, onAddTrip = {})
     }
 }
 
