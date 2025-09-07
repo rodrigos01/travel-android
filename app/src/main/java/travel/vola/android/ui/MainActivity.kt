@@ -68,10 +68,10 @@ class MainActivity : ComponentActivity() {
             val viewModelCreationExtras = initializeViewModelCreationExtras(navController)
             CompositionLocalProvider(LocalViewModelCreationExtras provides viewModelCreationExtras) {
                 NavHost(
-                    navController = navController, startDestination = TripListDestination.ROUTE
+                    navController = navController, startDestination = HomeScreenDestination.ROUTE
                 ) {
-                    composable(TripListDestination.ROUTE) {
-                        TripList(navController = navController)
+                    composable(HomeScreenDestination.ROUTE) {
+                        HomeScreen(navController)
                     }
                     composable(
                         TripDetailsDestination.ROUTE, arguments = listOf(
