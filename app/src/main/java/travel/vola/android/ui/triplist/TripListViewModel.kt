@@ -4,28 +4,32 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import travel.vola.android.model.data.Trip
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
 
 class TripListViewModel(
-    private val repository: TripRepository,
     private val navController: NavController,
+    private val tripListUseCase: TripListUseCase,
 ) : ViewModel() {
-    data class ViewState(
-        val trips: List<Trip>
+    constructor(
+        repository: TripRepository,
+        navController: NavController,
+    ) : this(
+        navController = navController,
+        tripListUseCase = TripListUseCase(repository)
     )
 
-    val viewState = repository.trips.map {
-        ViewState(trips = it)
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, initialValue = ViewState(emptyList()))
+    val viewState = tripListUseCase.state.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        initialValue = TripListUseCase.State(emptyList())
+    )
 
     fun addTrip() {
         viewModelScope.launch {
-            val tripId = repository.addTrip()
+            val tripId = tripListUseCase.addTrip()
             navController.navigate(TripDetailsDestination.getRoute(tripId))
         }
     }
