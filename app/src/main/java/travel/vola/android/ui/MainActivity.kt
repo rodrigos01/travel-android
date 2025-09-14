@@ -70,19 +70,14 @@ class MainActivity : ComponentActivity() {
         AppTheme(dynamicColor = false) {
             var dataSourceType by remember { mutableStateOf(DataSourceType.LOCAL) }
             val viewModelCreationExtras = remember(dataSourceType) {
-                initializeViewModelCreationExtras(
-                    navController,
-                    dataSourceType
-                )
+                initializeViewModelCreationExtras(navController)
             }
             CompositionLocalProvider(LocalViewModelCreationExtras provides viewModelCreationExtras) {
                 NavHost(
                     navController = navController, startDestination = HomeScreenDestination.ROUTE
                 ) {
                     composable(HomeScreenDestination.ROUTE) {
-                        HomeScreen(navController, onDataSourceTypeChanged = {
-                            dataSourceType = it
-                        })
+                        HomeScreen(navController)
                     }
                     composable(
                         TripDetailsDestination.ROUTE, arguments = listOf(

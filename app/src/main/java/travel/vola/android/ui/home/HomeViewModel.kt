@@ -11,12 +11,15 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import travel.vola.android.di.factoryDependencies
 import travel.vola.android.extensions.viewModelFactory
+import travel.vola.android.model.data.DataSourceType
+import travel.vola.android.model.repository.UserPreferencesRepository
 import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
 import travel.vola.android.ui.triplist.TripListUseCase
 
 class HomeViewModel private constructor(
     private val navController: NavController,
     private val tripListUseCase: TripListUseCase,
+    private val userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
 
     val uiState: StateFlow<UiState> = tripListUseCase.state.map {
@@ -38,9 +41,19 @@ class HomeViewModel private constructor(
         }
     }
 
+    fun onDataSourceChanged(dataSourceType: DataSourceType) {
+        viewModelScope.launch {
+            userPreferencesRepository.setDataSource(dataSourceType)
+        }
+    }
+
     class Factory() :
         ViewModelProvider.Factory by viewModelFactory(initializer = {
             val tripListUseCase = TripListUseCase(factoryDependencies.tripRepository)
-            HomeViewModel(factoryDependencies.navController, tripListUseCase)
+            HomeViewModel(
+                factoryDependencies.navController,
+                tripListUseCase,
+                factoryDependencies.userPreferencesRepository,
+            )
         })
 }

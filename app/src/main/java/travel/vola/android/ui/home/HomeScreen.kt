@@ -37,7 +37,7 @@ import travel.vola.android.ui.triplist.composable.TripList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController, onDataSourceTypeChanged: (DataSourceType) -> Unit) {
+fun HomeScreen(navController: NavController) {
     val viewModel: HomeViewModel = viewModel(
         factory = HomeViewModel.Factory()
     )
@@ -60,14 +60,14 @@ fun HomeScreen(navController: NavController, onDataSourceTypeChanged: (DataSourc
                 DropdownMenuItem(
                     text = { Text("Local") },
                     onClick = {
-                        onDataSourceTypeChanged(DataSourceType.LOCAL)
+                        viewModel.onDataSourceChanged(DataSourceType.LOCAL)
                         showDataSourceSelector = false
                     }
                 )
                 DropdownMenuItem(
                     text = { Text("Firebase") },
                     onClick = {
-                        onDataSourceTypeChanged(DataSourceType.FIREBASE)
+                        viewModel.onDataSourceChanged(DataSourceType.FIREBASE)
                         showDataSourceSelector = false
                     }
                 )
@@ -99,7 +99,7 @@ fun HomeScreen(navController: NavController, onDataSourceTypeChanged: (DataSourc
 @Preview
 @Composable
 fun HomeScreenPreview() {
-    HomeScreen(rememberNavController(), onDataSourceTypeChanged = {})
+    HomeScreen(rememberNavController())
 }
 
 object HomeScreenDestination {

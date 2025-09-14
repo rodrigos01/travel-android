@@ -12,6 +12,7 @@ plugins {
     id("com.google.firebase.appdistribution")
     id("com.google.firebase.crashlytics")
     id("com.google.devtools.ksp")
+    id("com.google.protobuf") version "0.9.5"
 }
 
 android {
@@ -110,6 +111,24 @@ composeCompiler {
         listOf(rootProject.layout.projectDirectory.file("stability_config.conf"))
 }
 
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.10.0"
+    }
+    // Generates the java Protobuf-lite code for the Protobufs in this project. See
+    // https://github.com/google/protobuf-gradle-plugin#customizing-protobuf-compilation
+    // for more information.
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") {
+                    option("lite")
+                }
+            }
+        }
+    }
+}
+
 dependencies {
     implementation(libs.kotlin.stdlib.jdk7)
     implementation(libs.appcompat)
@@ -128,7 +147,9 @@ dependencies {
     // Firebase
     implementation(libs.play.services.auth)
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.firestore) {
+        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+    }
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
     // Coroutines
@@ -158,6 +179,8 @@ dependencies {
     implementation(libs.ktor.client.encoding)
     // DataStore
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.datastore)
+    implementation(libs.protobuf.javalite)
     // Room
     ksp(libs.room.compiler)
     implementation(libs.room.runtime)
