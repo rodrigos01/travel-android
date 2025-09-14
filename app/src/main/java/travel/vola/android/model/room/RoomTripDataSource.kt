@@ -2,15 +2,19 @@ package travel.vola.android.model.room
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import travel.vola.android.model.data.DataSourceType
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
-import travel.vola.android.model.repository.TripRepository
+import travel.vola.android.model.repository.TripDataSource
 import java.util.UUID
 
-class RoomTripRepository(private val dao: TripDao) : TripRepository {
+class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
+
+    override val dataSourceType: DataSourceType = DataSourceType.LOCAL
+
     override val trips: Flow<List<Trip>>
         get() = dao.observeTrips().map { it.map { trip -> trip.toAppDataModel() } }
 

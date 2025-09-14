@@ -20,6 +20,7 @@ navigation = "2.9.3"
 ktor = "3.2.3"
 room = "2.7.2"
 androidxWindow = "1.4.0"
+protobuf = "4.26.1"
 # Test
 mockitoCore = "5.19.0"
 mockitoKotlin = "6.0.0"
@@ -34,7 +35,9 @@ junit = "4.13.2"
 androidx-adaptive-layout-android = { module = "androidx.compose.material3.adaptive:adaptive-layout-android", version.ref = "material3Adaptative" }
 androidx-adaptive-layout = { module = "androidx.compose.material3.adaptive:adaptive-layout", version.ref = "material3Adaptative" }
 androidx-core-testing = { module = "androidx.arch.core:core-testing", version.ref = "coreTesting" }
+androidx-datastore = { module = "androidx.datastore:datastore", version.ref = "datastorePreferences" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
+protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobuf" }
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
 androidx-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 androidx-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }

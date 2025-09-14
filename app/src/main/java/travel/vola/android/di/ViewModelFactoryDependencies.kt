@@ -9,22 +9,22 @@ import androidx.navigation.NavController
 import androidx.room.Room
 import com.google.firebase.firestore.FirebaseFirestore
 import travel.vola.android.model.PlaceRepository
-import travel.vola.android.model.data.DataSourceType
-import travel.vola.android.model.firebase.FirebaseTripRepository
+import travel.vola.android.model.datastore.DataStoreUserPreferencesRepository
+import travel.vola.android.model.datastore.userPreferencesDataStore
+import travel.vola.android.model.firebase.FirebaseTripDataSource
+import travel.vola.android.model.multisource.MultiSourceTripRepository
 import travel.vola.android.model.repository.TripRepository
-import travel.vola.android.model.room.RoomTripRepository
+import travel.vola.android.model.room.RoomTripDataSource
 import travel.vola.android.model.room.TravelDatabase
 
 private val FACTORY_DEPENDENCIES_KEY = CreationExtras.Key<ViewModelFactoryDependencies>()
 
 class ViewModelFactoryDependencies(
-    val navController: NavController,
-    val dataSourceType: DataSourceType,
-    getApplicationContext: () -> Context
+    val navController: NavController, getApplicationContext: () -> Context
 ) {
 
-    private val roomTripRepository by lazy {
-        RoomTripRepository(
+    private val roomTripDataSource by lazy {
+        RoomTripDataSource(
             Room.databaseBuilder(
                 getApplicationContext(),
                 TravelDatabase::class.java,
@@ -33,15 +33,26 @@ class ViewModelFactoryDependencies(
         )
     }
 
-    private val firebaseTripRepository by lazy {
-        FirebaseTripRepository(FirebaseFirestore.getInstance())
+    private val firebaseTripDataSource by lazy {
+        FirebaseTripDataSource(FirebaseFirestore.getInstance())
+    }
+
+    val userPreferencesRepository by lazy {
+        DataStoreUserPreferencesRepository(
+            dataStore = getApplicationContext().userPreferencesDataStore,
+        )
+    }
+
+    private val multiSourceTripRepository by lazy {
+        MultiSourceTripRepository(
+            userPreferencesRepository = userPreferencesRepository,
+            roomTripDataSource,
+            firebaseTripDataSource
+        )
     }
 
     val tripRepository: TripRepository by lazy {
-        when (dataSourceType) {
-            DataSourceType.LOCAL -> roomTripRepository
-            DataSourceType.FIREBASE -> firebaseTripRepository
-        }
+        multiSourceTripRepository
     }
     val placeRepository: PlaceRepository by lazy {
         PlaceRepository()
@@ -50,12 +61,10 @@ class ViewModelFactoryDependencies(
 
 fun ComponentActivity.initializeViewModelCreationExtras(
     navController: NavController,
-    dataSourceType: DataSourceType,
-): CreationExtras =
-    MutableCreationExtras().also { extras ->
-        extras[FACTORY_DEPENDENCIES_KEY] =
-            ViewModelFactoryDependencies(navController, dataSourceType, ::getApplicationContext)
-    }
+): CreationExtras = MutableCreationExtras().also { extras ->
+    extras[FACTORY_DEPENDENCIES_KEY] =
+        ViewModelFactoryDependencies(navController, ::getApplicationContext)
+}
 
 val LocalViewModelCreationExtras = staticCompositionLocalOf<CreationExtras> { CreationExtras.Empty }
 
