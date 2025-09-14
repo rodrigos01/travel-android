@@ -45,7 +45,6 @@ import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.TripItemState
-import travel.vola.android.ui.triplist.composable.TripListDestination
 import java.util.UUID
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -158,7 +157,7 @@ class TripViewModel(
     fun deleteTrip() {
         viewModelScope.launch {
             repository.deleteTrip(tripId)
-            navController.navigate(TripListDestination.ROUTE)
+            navController.popBackStack()
         }
     }
 
