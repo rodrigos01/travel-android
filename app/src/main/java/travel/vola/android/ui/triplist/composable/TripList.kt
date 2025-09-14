@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.ContextualFlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -82,8 +80,4 @@ fun TripListPreview() {
     AppTheme {
         TripList(state, onTripClicked = {})
     }
-}
-
-object TripListDestination {
-    const val ROUTE = "trip_list"
 }
