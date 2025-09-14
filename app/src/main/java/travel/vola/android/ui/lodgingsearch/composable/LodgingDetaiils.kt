@@ -81,7 +81,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberMarkerState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import travel.vola.android.R
@@ -371,7 +371,7 @@ fun LodgingDetailsContent(
                             .background(color = MaterialTheme.colorScheme.surfaceContainer)
                     ) {
                         val cameraPositionState = rememberCameraPositionState()
-                        val markerState = rememberMarkerState(position = marker)
+                        val markerState = rememberUpdatedMarkerState(position = marker)
                         LaunchedEffect(marker) {
                             cameraPositionState.position =
                                 CameraPosition.fromLatLngZoom(marker, 15f)
@@ -482,7 +482,7 @@ fun LodgingDetailsContent(
             showExpandedMap = false
         }) { paddingValues ->
             val cameraPositionState = rememberCameraPositionState()
-            val markerState = rememberMarkerState(position = marker)
+            val markerState = rememberUpdatedMarkerState(position = marker)
             LaunchedEffect(marker) {
                 cameraPositionState.position = CameraPosition.fromLatLngZoom(marker, 15f)
                 markerState.position = marker

@@ -3,6 +3,7 @@
 package travel.vola.android.ui.trip.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
@@ -18,7 +19,7 @@ import kotlinx.coroutines.launch
 import travel.vola.android.common.coroutines.createUseCaseScope
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.common.ui.state.MarkerViewState
-import travel.vola.android.di.ServiceLocator
+import travel.vola.android.di.factoryDependencies
 import travel.vola.android.extensions.dayAndMonthString
 import travel.vola.android.extensions.dayOfMonthString
 import travel.vola.android.extensions.dayOfWeekString
@@ -27,6 +28,7 @@ import travel.vola.android.extensions.monthString
 import travel.vola.android.extensions.plus
 import travel.vola.android.extensions.timeString
 import travel.vola.android.extensions.toMidnight
+import travel.vola.android.extensions.viewModelFactory
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
@@ -43,9 +45,7 @@ import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.TripItemState
-import travel.vola.android.ui.triplist.composable.TripListDestination
 import java.util.UUID
-import kotlin.collections.set
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.time.Duration.Companion.days
@@ -63,17 +63,6 @@ class TripViewModel(
         coroutineScope = useCaseScope,
     ),
 ) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
-
-    constructor(
-        serviceLocator: ServiceLocator,
-        navController: NavController,
-        tripId: String,
-    ) : this(
-        serviceLocator.tripRepository,
-        serviceLocator.placeRepository,
-        tripId,
-        navController,
-    )
 
     data class ViewState(
         val title: String,
@@ -95,9 +84,8 @@ class TripViewModel(
             value?.let { reversibleItems[id] = it } ?: reversibleItems.remove(id)
         }
 
-    private val trip =
-        repository.findTripById(tripId)
-            .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
+    private val trip = repository.findTripById(tripId)
+        .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
     private val eventsFromTrip = trip.filterNotNull().map { currentTrip ->
         val items = genItems(currentTrip)
         val places =
@@ -169,7 +157,7 @@ class TripViewModel(
     fun deleteTrip() {
         viewModelScope.launch {
             repository.deleteTrip(tripId)
-            navController.navigate(TripListDestination.ROUTE)
+            navController.popBackStack()
         }
     }
 
@@ -197,9 +185,8 @@ class TripViewModel(
         if (reversibleItems.containsKey(itemId)) {
             return
         }
-        val item =
-            viewState.value.items.filterIsInstance<TripItemState.Editable>()
-                .find { it.id == itemId } ?: return
+        val item = viewState.value.items.filterIsInstance<TripItemState.Editable>()
+            .find { it.id == itemId } ?: return
         val entity = item.entity
         if (entity != null) {
             addPlanUseCase.createAddPlanItem(itemId, entity)
@@ -304,9 +291,8 @@ class TripViewModel(
                 return@flatMapIndexed emptyList()
             }
             val placeItem = genPlaceItem(index, pairs)
-            val previousItems =
-                pairs.subList(0, index)
-                    .filterNot { (nextTime, nextEvent) -> nextEvent.isTimedPlaceEnd(nextTime) }
+            val previousItems = pairs.subList(0, index)
+                .filterNot { (nextTime, nextEvent) -> nextEvent.isTimedPlaceEnd(nextTime) }
             val firstInMonth =
                 previousItems.lastOrNull { it.first.monthString == time.monthString } == null
             val firstInDay =
@@ -542,6 +528,16 @@ class TripViewModel(
         super.onCleared()
         useCaseScope.cancel()
     }
+
+    class Factory(tripId: String) :
+        ViewModelProvider.Factory by viewModelFactory(initializer = {
+            TripViewModel(
+                factoryDependencies.tripRepository,
+                factoryDependencies.placeRepository,
+                tripId,
+                factoryDependencies.navController,
+            )
+        })
 
 }
 

@@ -47,7 +47,7 @@ class FirebaseTripRepositoryTest {
 
     @Test
     fun shouldGetTripsFromFirestore() = runTest {
-        val repository = FirebaseTripRepository(firestore)
+        val repository = FirebaseTripDataSource(firestore)
 
         Assert.assertEquals(listOf(MockData.trip.toAppDataModel()), repository.trips.expectItem())
         verify(firestore).collection("/trips")
@@ -55,7 +55,7 @@ class FirebaseTripRepositoryTest {
 
     @Test
     fun shouldGetTripFromFirestore() = runTest {
-        val repository = FirebaseTripRepository(firestore)
+        val repository = FirebaseTripDataSource(firestore)
 
         val tripObservable = repository.findTripById("myTrip")
 
@@ -65,7 +65,7 @@ class FirebaseTripRepositoryTest {
 
     @Test
     fun shouldGetTripFlights() = runTest {
-        val repository = FirebaseTripRepository(firestore)
+        val repository = FirebaseTripDataSource(firestore)
 
         val flightsObservable = repository.getTripFlights("myTrip")
 
@@ -78,7 +78,7 @@ class FirebaseTripRepositoryTest {
 
     @Test
     fun shouldGetTripHotels() = runTest {
-        val repository = FirebaseTripRepository(firestore)
+        val repository = FirebaseTripDataSource(firestore)
 
         val hotelsObservable = repository.getTripHotels("myTrip")
 

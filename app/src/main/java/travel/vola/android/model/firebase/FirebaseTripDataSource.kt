@@ -8,14 +8,18 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import travel.vola.android.extensions.asFlow
+import travel.vola.android.model.data.DataSourceType
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
-import travel.vola.android.model.repository.TripRepository
+import travel.vola.android.model.repository.TripDataSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class FirebaseTripRepository(private val firestore: FirebaseFirestore) : TripRepository {
+class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDataSource {
+
+    override val dataSourceType: DataSourceType = DataSourceType.FIREBASE
+
     override val trips: Flow<List<Trip>> =
         firestore.collection("/trips").asFlow(this::tripConverter)
 
