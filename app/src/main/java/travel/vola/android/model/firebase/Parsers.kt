@@ -7,6 +7,7 @@ import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
@@ -25,7 +26,7 @@ fun FirebaseData.Trip.toAppDataModel(): Trip {
         flights = appFlights,
         lodgings = appLodgings,
         places = places.map { it.toAppDataModel() },
-        restaurants = emptyList() // TODO: parse restaurants,
+        restaurants = restaurants.map { it.toAppDataModel() },
     )
 }
 
@@ -82,6 +83,13 @@ fun FirebaseData.TimedPlace.toAppDataModel() = TimedPlace(
     city = city?.toAppDataModel() ?: error("city is required"),
 )
 
+fun FirebaseData.RestaurantReservation.toAppDataModel() = RestaurantReservation(
+    id = id,
+    dateTime = time?.toTime() ?: error("time is required"),
+    place = place.toAppDataModel(),
+    city = city?.toAppDataModel() ?: error("city is required"),
+)
+
 fun Flight.toFirebaseDataModel() = FirebaseData.Flight(
     id = id,
     segments = segments.map { it.toFirebaseDataModel() },
@@ -131,6 +139,13 @@ fun TimedPlace.toFirebaseDataModel() = FirebaseData.TimedPlace(
     hasTime = hasStartTime,
     endTime = endDateTime?.toFirebaseDataModel(),
     hasEndTime = hasEndTime,
+    city = city.toFirebaseDataModel(),
+)
+
+fun RestaurantReservation.toFirebaseDataModel() = FirebaseData.RestaurantReservation(
+    id = id,
+    time = dateTime.toFirebaseDataModel(),
+    place = place.toFirebaseDataModel(),
     city = city.toFirebaseDataModel(),
 )
 

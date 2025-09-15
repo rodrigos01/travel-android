@@ -64,89 +64,84 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
 
     override suspend fun saveFlight(tripId: String, flight: Flight) {
         val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
-        firestore.document("/trips/$tripId").update("flights", trip.flights.toMutableList().apply {
-            val firebaseFlight = flight.toFirebaseDataModel()
-            // removes the previously saved lodging with same id
-            val index = indexOfFirst { it.id == flight.id }
-            if (index != -1) {
-                // update previously saved item
-                removeAt(index)
-                add(index, firebaseFlight)
-            } else {
-                add(firebaseFlight)
-            }
-        }.toList())
+        firestore.document("/trips/$tripId").update(
+            "flights",
+            trip.flights.addOrReplace(flight.toFirebaseDataModel()) { it.id == flight.id },
+        )
     }
 
     override suspend fun deleteFlight(tripId: String, flightId: String) {
         val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
-        firestore.document("/trips/$tripId").update("flights", trip.flights.toMutableList().apply {
-            removeIf { it.id == flightId }
-        }.toList())
+        firestore.document("/trips/$tripId").update(
+            "flights",
+            trip.flights.filterNot { it.id == flightId },
+        )
     }
 
     override suspend fun saveLodging(tripId: String, lodging: Lodging) {
         val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
-        firestore.document("/trips/$tripId")
-            .update("lodgings", trip.lodgings.toMutableList().apply {
-                val firebaseLodging = lodging.toFirebaseDataModel()
-                // removes the previously saved lodging with same id
-                val index = indexOfFirst { it.id == lodging.id }
-                if (index != -1) {
-                    // update previously saved item
-                    removeAt(index)
-                    add(index, firebaseLodging)
-                } else {
-                    add(firebaseLodging)
-                }
-            }.toList())
+        firestore.document("/trips/$tripId").update(
+            "lodgings",
+            trip.lodgings.addOrReplace(lodging.toFirebaseDataModel()) { it.id == lodging.id },
+        )
     }
 
     override suspend fun deleteLodging(tripId: String, lodgingId: String) {
         val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
         firestore.document("/trips/$tripId")
-            .update("lodgings", trip.lodgings.toMutableList().apply {
-                removeIf { it.id == lodgingId }
-            }.toList())
+            .update(
+                "lodgings",
+                trip.lodgings.filterNot { it.id == lodgingId },
+            )
     }
 
     override suspend fun saveTimedPlace(tripId: String, timedPlace: TimedPlace) {
         val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
-        firestore.document("/trips/$tripId")
-            .update("places", trip.places.toMutableList().apply {
-                val firebasePlace = timedPlace.toFirebaseDataModel()
-                val index = indexOfFirst { it.id == firebasePlace.id }
-                if (index != -1) {
-                    // update previously saved item
-                    removeAt(index)
-                    add(index, firebasePlace)
-                } else {
-                    add(firebasePlace)
-                }
-            }.toList())
+        firestore.document("/trips/$tripId").update(
+            "places",
+            trip.places.addOrReplace(timedPlace.toFirebaseDataModel()) { it.id == timedPlace.id },
+        )
     }
 
     override suspend fun deleteTimedPlace(tripId: String, timedPlaceId: String) {
         val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
-        firestore.document("/trips/$tripId")
-            .update("places", trip.places.toMutableList().apply {
-                removeIf { it.id == timedPlaceId }
-            }.toList())
+        firestore.document("/trips/$tripId").update(
+            "places",
+            trip.places.filterNot { it.id == timedPlaceId },
+        )
     }
 
     override suspend fun saveRestaurantReservation(
-        tripId: String,
-        restaurantReservation: RestaurantReservation
+        tripId: String, restaurantReservation: RestaurantReservation
     ) {
-        TODO("Not yet implemented")
+        val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
+        firestore.document("/trips/$tripId").update(
+            "restaurants",
+            trip.restaurants.addOrReplace(restaurantReservation.toFirebaseDataModel()) { it.id == restaurantReservation.id },
+        )
     }
 
     override suspend fun deleteRestaurantReservation(
-        tripId: String,
-        restaurantReservationId: String
+        tripId: String, restaurantReservationId: String
     ) {
-        TODO("Not yet implemented")
+        val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
+        firestore.document("/trips/$tripId").update(
+            "restaurants",
+            trip.restaurants.filterNot { it.id == restaurantReservationId },
+        )
     }
 
     private suspend fun getTrip(tripId: String) = firestore.document("/trips/$tripId").get().await()
 }
+
+private fun <T> List<T>.addOrReplace(item: T, predicate: (T) -> Boolean): List<T> =
+    toMutableList().apply {
+        val index = indexOfFirst(predicate)
+        if (index != -1) {
+            // update previously saved item
+            removeAt(index)
+            add(index, item)
+        } else {
+            add(item)
+        }
+    }.toList()
