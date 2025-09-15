@@ -130,10 +130,15 @@ fun AddPlanListItem(
                         AddRestaurantListItem(
                             uiState = state,
                             onTextChanged = {
-                                actionHandler.locationTextChanged(state.id, it)
+                                actionHandler.restaurantTextChanged(state.id, it)
                             },
                             onUpdated = { dateTime, timeSelected, selectedSearchResultIndex ->
-
+                                actionHandler.onUpdated(
+                                    state.id,
+                                    dateTime,
+                                    timeSelected,
+                                    selectedSearchResultIndex
+                                )
                             },
                         )
                     }
@@ -270,4 +275,13 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
         checkOutTimeSelected: Boolean,
         selectedSearchResultIndex: Int,
     ) = Unit
+
+    override fun onUpdated(
+        itemId: String,
+        dateTime: ZonedDateTime?,
+        timeSelected: Boolean,
+        selectedSearchResultIndex: Int
+    ) = Unit
+
+    override fun restaurantTextChanged(itemId: String, content: CharSequence) = Unit
 }
