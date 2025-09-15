@@ -74,6 +74,7 @@ fun TripListPreview() {
                 flights = emptyList(),
                 lodgings = emptyList(),
                 places = emptyList(),
+                restaurants = emptyList(),
             )
         }
     )

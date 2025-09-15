@@ -20,6 +20,9 @@ sealed interface RoomData {
         @Relation(
             entity = Schema.TimedPlace::class, parentColumn = "id", entityColumn = "tripId"
         ) val places: List<TimedPlace>,
+        @Relation(
+            entity = Schema.RestaurantReservation::class, parentColumn = "id", entityColumn = "tripId"
+        ) val restaurants: List<RestaurantReservation>,
     )
 
     data class Flight(
@@ -55,6 +58,16 @@ sealed interface RoomData {
 
     data class TimedPlace(
         @Embedded val entity: Schema.TimedPlace,
+        @Relation(
+            parentColumn = "place", entityColumn = "id"
+        ) val place: Place,
+        @Relation(
+            parentColumn = "city", entityColumn = "id"
+        ) val city: Place,
+    )
+
+    data class RestaurantReservation(
+        @Embedded val entity: Schema.RestaurantReservation,
         @Relation(
             parentColumn = "place", entityColumn = "id"
         ) val place: Place,
@@ -130,6 +143,15 @@ sealed interface RoomData {
             val hasStartTime: Boolean,
             val endDateTime: ZonedDateTime?,
             val hasEndTime: Boolean,
+            val place: String,
+            val city: String,
+        )
+
+        @Entity
+        data class RestaurantReservation(
+            @PrimaryKey val id: String,
+            val tripId: String,
+            val dateTime: ZonedDateTime,
             val place: String,
             val city: String,
         )

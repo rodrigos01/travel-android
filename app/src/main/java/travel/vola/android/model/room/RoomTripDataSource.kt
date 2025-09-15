@@ -6,6 +6,7 @@ import travel.vola.android.model.data.DataSourceType
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.repository.TripDataSource
@@ -122,6 +123,23 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
         )
     }
 
+    override suspend fun saveRestaurantReservation(
+        tripId: String,
+        restaurantReservation: RestaurantReservation,
+    ) {
+        savePlace(restaurantReservation.place)
+        savePlace(restaurantReservation.city)
+        dao.saveRestaurantReservation(
+            RoomData.Schema.RestaurantReservation(
+                id = restaurantReservation.id,
+                tripId = tripId,
+                dateTime = restaurantReservation.dateTime,
+                place = restaurantReservation.place.id,
+                city = restaurantReservation.city.id,
+            )
+        )
+    }
+
     override suspend fun deleteFlight(tripId: String, flightId: String) {
         dao.getFlight(tripId, flightId).let { flight ->
             dao.deleteFlight(flight)
@@ -137,6 +155,15 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
     override suspend fun deleteTimedPlace(tripId: String, timedPlaceId: String) {
         dao.getTimedPlace(tripId, timedPlaceId).let { timedPlace ->
             dao.deleteTimedPlace(timedPlace)
+        }
+    }
+
+    override suspend fun deleteRestaurantReservation(
+        tripId: String,
+        restaurantReservationId: String
+    ) {
+        dao.getRestaurantReservation(tripId, restaurantReservationId).let { restaurantReservation ->
+            dao.deleteRestaurantReservation(restaurantReservation)
         }
     }
 
