@@ -244,7 +244,10 @@ class TripViewModel(
                 is Flight -> repository.deleteFlight(tripId, entity.id)
                 is Lodging -> repository.deleteLodging(tripId, entity.id)
                 is TimedPlace -> repository.deleteTimedPlace(tripId, entity.id)
-                is RestaurantReservation -> repository.deleteRestaurantReservation(tripId, entity.id)
+                is RestaurantReservation -> repository.deleteRestaurantReservation(
+                    tripId,
+                    entity.id
+                )
             }
         }
     }
@@ -272,6 +275,7 @@ class TripViewModel(
             }
 
             is TripItemState.PlaceItemState -> trip.value?.places?.firstOrNull { it.id == id }
+            is TripItemState.RestaurantReservationItemState -> trip.value?.restaurants?.firstOrNull { it.id == id }
         }
 
     private fun genItems(trip: Trip): List<TripItemState> {
@@ -286,7 +290,7 @@ class TripViewModel(
                     event.endDateTime?.let { it to event },
                 )
 
-                is RestaurantReservation -> TODO("Not Implemented")
+                is RestaurantReservation -> listOf(event.dateTime to event)
             }
         }.sortedBy { (time, event) ->
             EventComparable(
@@ -530,7 +534,16 @@ class TripViewModel(
                 imageUrl = event.place.coverImage ?: "",
             )
 
-            is RestaurantReservation -> TODO("Not Implemented")
+            is RestaurantReservation -> TripItemState.RestaurantReservationItemState(
+                id = UUID.randomUUID().toString(),
+                timestamp = event.dateTime,
+                showDate = showDate,
+                dayOfMonth = event.dateTime.dayOfMonthString,
+                dayOfWeek = event.dateTime.dayOfWeekString,
+                time = event.dateTime.timeString,
+                restaurantName = event.place.name,
+                restaurantAddress = event.place.address,
+            )
         }
     }
 

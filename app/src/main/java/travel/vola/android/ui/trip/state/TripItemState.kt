@@ -123,6 +123,20 @@ sealed interface TripItemState {
         override val subtitle = cityName
     }
 
+    data class RestaurantReservationItemState(
+        override val id: String,
+        override val timestamp: Time,
+        override val showDate: Boolean,
+        override val dayOfMonth: String,
+        override val dayOfWeek: String,
+        override val time: String,
+        val restaurantName: String,
+        val restaurantAddress: String,
+    ) : EventItemState, Replaceable {
+        override val title = null
+        override val subtitle = restaurantAddress
+    }
+
     data class EmptyAddPlanItemState(
         override val id: String,
         override val timestamp: Time,
