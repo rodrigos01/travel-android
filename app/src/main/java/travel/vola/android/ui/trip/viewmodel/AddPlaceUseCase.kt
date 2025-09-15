@@ -107,8 +107,8 @@ class AddPlaceUseCase(
                     endDateTime = endDateTime,
                     hasEndTime = endTimeSelected,
                     searchResults = emptyList(),
-                    place = details?.place,
-                    city = details?.city,
+                    place = details?.place ?: it.place,
+                    city = details?.city ?: it.city,
                 )
             }
         }
