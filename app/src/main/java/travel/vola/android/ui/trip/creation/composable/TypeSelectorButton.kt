@@ -35,7 +35,8 @@ enum class AddPlanType(
 ) {
     Place(Icons.Default.LocationOn, "Place"),
     Flight(R.drawable.flight_baseline_24, "Flight"),
-    Lodging(R.drawable.hotel_baseline_24, "Lodging");
+    Lodging(R.drawable.hotel_baseline_24, "Lodging"),
+    Restaurant(R.drawable.restaurant_baseline_24, "Restaurant");
 
     constructor(@DrawableRes drawableId: Int, label: String) : this(
         icon = {

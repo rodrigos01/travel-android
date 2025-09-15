@@ -35,6 +35,7 @@ import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.data.Identifiable
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
@@ -89,7 +90,7 @@ class TripViewModel(
     private val eventsFromTrip = trip.filterNotNull().map { currentTrip ->
         val items = genItems(currentTrip)
         val places =
-            (currentTrip.lodgings + currentTrip.places).fold(mapOf<Place, PlaceState>()) { map, entity: WithCity ->
+            (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).fold(mapOf<Place, PlaceState>()) { map, entity: WithCity ->
                 val current = map.getOrDefault(
                     entity.city, PlaceState(
                         place = entity.city,
@@ -111,6 +112,12 @@ class TripViewModel(
                                     position = Pair(entity.place.latitude, entity.place.longitude),
                                     name = entity.place.name,
                                     type = if (entity.place != entity.city) MarkerType.Place else MarkerType.City,
+                                )
+
+                                is RestaurantReservation -> MarkerViewState(
+                                    position = Pair(entity.place.latitude, entity.place.longitude),
+                                    name = entity.place.name,
+                                    type = MarkerType.Restaurant,
                                 )
                             }
                         )
@@ -224,6 +231,7 @@ class TripViewModel(
                 is Flight -> repository.saveFlight(tripId, entity)
                 is Lodging -> repository.saveLodging(tripId, entity)
                 is TimedPlace -> repository.saveTimedPlace(tripId, entity)
+                is RestaurantReservation -> repository.saveRestaurantReservation(tripId, entity)
             }
         }
     }
@@ -240,6 +248,10 @@ class TripViewModel(
                 is Flight -> repository.deleteFlight(tripId, entity.id)
                 is Lodging -> repository.deleteLodging(tripId, entity.id)
                 is TimedPlace -> repository.deleteTimedPlace(tripId, entity.id)
+                is RestaurantReservation -> repository.deleteRestaurantReservation(
+                    tripId,
+                    entity.id
+                )
             }
         }
     }
@@ -267,10 +279,12 @@ class TripViewModel(
             }
 
             is TripItemState.PlaceItemState -> trip.value?.places?.firstOrNull { it.id == id }
+            is TripItemState.RestaurantReservationItemState -> trip.value?.restaurants?.firstOrNull { it.id == id }
         }
 
     private fun genItems(trip: Trip): List<TripItemState> {
-        val events = trip.flights.flatMap { it.segments } + trip.lodgings + trip.places
+        val events =
+            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants
         val pairs = events.flatMap { event ->
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
@@ -279,6 +293,8 @@ class TripViewModel(
                     event.startDateTime to event,
                     event.endDateTime?.let { it to event },
                 )
+
+                is RestaurantReservation -> listOf(event.dateTime to event)
             }
         }.sortedBy { (time, event) ->
             EventComparable(
@@ -521,6 +537,17 @@ class TripViewModel(
                 cityName = event.city.name,
                 imageUrl = event.place.coverImage ?: "",
             )
+
+            is RestaurantReservation -> TripItemState.RestaurantReservationItemState(
+                id = event.id,
+                timestamp = event.dateTime,
+                showDate = showDate,
+                dayOfMonth = event.dateTime.dayOfMonthString,
+                dayOfWeek = event.dateTime.dayOfWeekString,
+                time = event.dateTime.timeString,
+                restaurantName = event.place.name,
+                restaurantAddress = event.place.address,
+            )
         }
     }
 
@@ -548,8 +575,7 @@ private fun TripEvent.getPlace(referenceTime: Time) = when (this) {
         airportTo.city
     }
 
-    is Lodging -> city
-    is TimedPlace -> city
+    is WithCity -> city
 }
 
 private val Time.dateString

@@ -43,6 +43,7 @@ fun StartEndAddPlanListItem(
         selectedEndSearchResultIndex: Int,
     ) -> Unit,
     requiresEnd: Boolean = true,
+    canSetEnd: Boolean = true,
 ) {
     var selectedStartDateTime by remember {
         mutableStateOf(uiState.startState.dateTime)
@@ -53,8 +54,8 @@ fun StartEndAddPlanListItem(
     var selectedStartSearchResultIndex by remember {
         mutableIntStateOf(-1)
     }
-    var hasEnd by remember(requiresEnd) {
-        mutableStateOf(requiresEnd)
+    var hasEnd by remember(requiresEnd, canSetEnd) {
+        mutableStateOf(requiresEnd && canSetEnd)
     }
     var selectedEndDateTime by remember {
         mutableStateOf(uiState.endState.dateTime)
@@ -125,7 +126,7 @@ fun StartEndAddPlanListItem(
                 },
             )
         }
-        if (!requiresEnd) {
+        if (!requiresEnd && canSetEnd) {
             TextButton(onClick = { hasEnd = !hasEnd }) {
                 Text(if (!hasEnd) "Set end time" else "Remove end time")
             }

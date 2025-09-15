@@ -11,6 +11,7 @@ sealed interface FirebaseData {
         val flights: List<Flight> = emptyList(),
         val lodgings: List<Lodging> = emptyList(),
         val places: List<TimedPlace> = emptyList(),
+        val restaurants: List<RestaurantReservation> = emptyList(),
     ) : FirebaseData
 
     data class Flight(
@@ -65,6 +66,13 @@ sealed interface FirebaseData {
         val hasTime: Boolean = false,
         val endTime: String? = null,
         val hasEndTime: Boolean = false,
+        val city: Place? = null,
+    )
+
+    data class RestaurantReservation(
+        val id: String = "",
+        val time: String? = null,
+        val place: Place = Place(),
         val city: Place? = null,
     )
 }

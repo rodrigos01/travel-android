@@ -10,6 +10,7 @@ import travel.vola.android.extensions.mergeMaps
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.TripEntity
@@ -17,10 +18,12 @@ import travel.vola.android.ui.trip.creation.usecase.AddFlightItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddPlaceItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
+import travel.vola.android.ui.trip.creation.usecase.AddRestaurantItemActionHandler
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.AddLodgingItemState
 import travel.vola.android.ui.trip.state.AddPlaceItemState
 import travel.vola.android.ui.trip.state.AddPlanItemState
+import travel.vola.android.ui.trip.state.AddRestaurantItemState
 import travel.vola.android.ui.trip.state.LodgingSearchItemState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import java.util.UUID
@@ -34,8 +37,10 @@ class AddPlanUseCase(
         coroutineScope = coroutineScope,
     ),
     private val addPlaceUseCase: AddPlaceUseCase = AddPlaceUseCase(coroutineScope = coroutineScope),
+    private val addRestaurantUseCase: AddRestaurantUseCase = AddRestaurantUseCase(coroutineScope = coroutineScope),
 ) : AddPlanItemActionHandler, AddFlightItemActionHandler by addFlightUseCase,
     AddLodgingItemActionHandler by addLodgingUseCase, AddPlaceItemActionHandler by addPlaceUseCase,
+    AddRestaurantItemActionHandler by addRestaurantUseCase,
     LodgingSearchParamsFactory by addLodgingUseCase {
 
     data class StateParams(
@@ -61,6 +66,7 @@ class AddPlanUseCase(
         addFlightUseCase.items,
         addPlaceUseCase.items,
         addLodgingUseCase.items,
+        addRestaurantUseCase.items,
     ).stateIn(coroutineScope, SharingStarted.Eagerly, initialValue = emptyMap())
 
     fun createAddPlanItem(
@@ -120,6 +126,7 @@ class AddPlanUseCase(
             is AddFlightItemState -> addFlightUseCase.removeItem(item)
             is AddLodgingItemState -> addLodgingUseCase.removeItem(item)
             is AddPlaceItemState -> addPlaceUseCase.removeItem(item)
+            is AddRestaurantItemState -> addRestaurantUseCase.removeItem(item)
         }
     }
 
@@ -128,6 +135,7 @@ class AddPlanUseCase(
             is AddFlightItemState -> AddPlanItemState.Type.Flight
             is ManualAddLodgingItemState, is LodgingSearchItemState -> AddPlanItemState.Type.Lodging
             is AddPlaceItemState -> AddPlanItemState.Type.Place
+            is AddRestaurantItemState -> AddPlanItemState.Type.Restaurant
         }
 
     private fun AddPlanItemState.Type.useCase(): AddItemUseCase<out TripEntity, out AddPlanItemState> =
@@ -135,6 +143,7 @@ class AddPlanUseCase(
             AddPlanItemState.Type.Flight -> addFlightUseCase
             AddPlanItemState.Type.Lodging -> addLodgingUseCase
             AddPlanItemState.Type.Place -> addPlaceUseCase
+            AddPlanItemState.Type.Restaurant -> addRestaurantUseCase
         }
 
 
@@ -145,6 +154,7 @@ class AddPlanUseCase(
             is Flight -> addFlightUseCase.addItem(id, this, params)
             is Lodging -> addLodgingUseCase.addItem(id, this, params)
             is TimedPlace -> addPlaceUseCase.addItem(id, this, params)
+            is RestaurantReservation -> addRestaurantUseCase.addItem(id, this, params)
         }
     }
 
@@ -154,6 +164,7 @@ class AddPlanUseCase(
             is ManualAddLodgingItemState -> addLodgingUseCase.createEntity(this)
             is LodgingSearchItemState -> error("LodgingSearchItemState entity creation not implemented")
             is AddPlaceItemState -> addPlaceUseCase.createEntity(this)
+            is AddRestaurantItemState -> addRestaurantUseCase.createEntity(this)
         }
     }
 }

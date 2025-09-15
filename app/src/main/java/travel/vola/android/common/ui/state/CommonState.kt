@@ -11,4 +11,5 @@ enum class MarkerType {
     City,
     Lodging,
     Place,
+    Restaurant,
 }

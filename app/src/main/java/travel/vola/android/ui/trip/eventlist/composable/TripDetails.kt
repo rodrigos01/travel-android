@@ -264,6 +264,7 @@ private fun TripDetailItem(
                 )
 
                 is TripItemState.TimedPlaceItemState -> TimedPlaceListItem(event)
+                is TripItemState.RestaurantReservationItemState -> RestaurantListItem(event)
             }
         }
 
