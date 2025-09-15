@@ -1,79 +1,55 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import travel.vola.android.model.data.Time
 import travel.vola.android.ui.theme.AppTheme
-import travel.vola.android.ui.trip.state.AutoCompleteResultState
+import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
+import travel.vola.android.ui.trip.state.ManualAddPlanState
+import travel.vola.android.ui.trip.state.ManualStartEndAddPlanState
 import java.time.ZonedDateTime
-
-class AddPlaceListItemState internal constructor(
-    val startState: AddPlanRowState,
-    val endState: AddPlanRowState,
-    private val hasEndState: MutableState<Boolean>,
-) {
-    var hasEnd: Boolean
-        get() = hasEndState.value
-        internal set(value) {
-            hasEndState.value = value
-        }
-}
-
-@Composable
-fun rememberAddPlaceListItemState(
-    startState: AddPlanRowState = rememberAddPlanRowState(),
-    endState: AddPlanRowState = rememberAddPlanRowState(),
-    hasEnd: Boolean = false,
-) = remember(startState, endState, hasEnd) {
-    AddPlaceListItemState(
-        startState,
-        endState,
-        mutableStateOf(hasEnd),
-    )
-}
 
 @Composable
 fun AddPlaceListItem(
-    state: AddPlaceListItemState,
-    placeName: String?,
-    searchResults: List<AutoCompleteResultState>,
+    uiState: ManualStartEndAddPlanState,
     onTextChanged: (CharSequence) -> Unit,
-    minEndTime: ZonedDateTime? = null,
+    onUpdated: (
+        startDateTime: ZonedDateTime?,
+        startTimeSelected: Boolean,
+        endDateTime: ZonedDateTime?,
+        endTimeSelected: Boolean,
+        selectedSearchResultIndex: Int,
+    ) -> Unit,
 ) {
-    Column {
-        AddPlanRow(
-            state = state.startState,
-            title = if (state.hasEnd) {
-                { Text("Start") }
-            } else {
-                {}
-            },
-            labelText = "Location",
-            placeHolder = "Enter Location",
-            text = placeName,
-            onTextChanged = { onTextChanged(it.toString()) },
-            searchResults = searchResults,
-            timeSelectorLabel = "Pick Time",
-            showTextField = true,
-        )
-        if (state.hasEnd) {
-            AddPlanRow(
-                state = state.endState,
-                title = { Text("End") },
-                timeSelectorLabel = "Pick Time",
-                minTime = minEndTime,
+    StartEndAddPlanListItem(uiState = uiState,
+        startTitle = { Text("Start") },
+        startTimeSelectorLabel = "Pick Start Time",
+        startLabelText = "Location",
+        startPlaceHolder = "Enter Location",
+        onStartTextChanged = onTextChanged,
+        endTitle = { Text("End") },
+        endTimeSelectorLabel = "Pick End Time",
+        showEndTimePickerButton = false,
+        endLabelText = "Pick End Time",
+        requiresEnd = false,
+        onUpdated = {
+                startDateTime,
+                startTimeSelected,
+                selectedStartSearchResultIndex,
+                endDateTime,
+                endTimeSelected,
+                _,
+            ->
+            onUpdated(
+                startDateTime,
+                startTimeSelected,
+                endDateTime,
+                endTimeSelected,
+                selectedStartSearchResultIndex
             )
-        }
-        TextButton(onClick = { state.hasEnd = !state.hasEnd }) {
-            Text(if (!state.hasEnd) "Set end time" else "Remove end time")
-        }
-    }
+        })
 }
 
 @PreviewLightDark
@@ -82,10 +58,30 @@ fun AddPlaceListItemPreview() {
     AppTheme {
         Surface {
             AddPlaceListItem(
-                state = rememberAddPlaceListItemState(),
-                placeName = "New York",
-                searchResults = emptyList(),
+                uiState = ManualAddLodgingItemState(
+                    "", Time.now(),
+                    typeSelectionEnabled = false,
+                    startState = ManualAddPlanState(
+                        dateTime = null,
+                        minDateTime = Time.now(),
+                        isTimeSet = false,
+                        dateSelectionEnabled = false,
+                        locationText = null,
+                        searchResults = emptyList()
+                    ),
+                    endState = ManualAddPlanState(
+                        dateTime = null,
+                        minDateTime = Time.now(),
+                        isTimeSet = false,
+                        dateSelectionEnabled = true,
+                        locationText = null,
+                        searchResults = emptyList()
+                    ),
+                    deleteButtonEnabled = true,
+                    saveButtonEnabled = true,
+                ),
                 onTextChanged = {},
+                onUpdated = { _, _, _, _, _ -> },
             )
         }
     }

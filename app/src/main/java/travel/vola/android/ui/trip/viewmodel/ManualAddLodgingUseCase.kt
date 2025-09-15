@@ -30,32 +30,6 @@ class ManualAddLodgingUseCase(
 
     override val items: MapFlow<String, ManualAddLodgingItemState> = itemStore.items(::createItem)
 
-    override fun setCheckInTime(itemId: String, time: Time) = itemStore.update(itemId) {
-        it.copy(
-            checkIn = it.checkIn.update(
-                dayOfMonth = time.dayOfMonth,
-                month = time.month,
-                year = time.year,
-                hour = time.hour,
-                minute = time.minute,
-            )
-        )
-    }
-
-    override fun setCheckOutTime(itemId: String, time: Time) {
-        itemStore.update(itemId) {
-            it.copy(
-                checkOut = (it.checkOut ?: it.checkIn).update(
-                    dayOfMonth = time.dayOfMonth,
-                    month = time.month,
-                    year = time.year,
-                    hour = time.hour,
-                    minute = time.minute,
-                )
-            )
-        }
-    }
-
     override fun lodgingTextChanged(itemId: String, content: CharSequence) {
         if (content.length < 3) {
             return
@@ -65,31 +39,6 @@ class ManualAddLodgingUseCase(
             itemStore.update(itemId) { data ->
                 data.copy(
                     searchResults = results
-                )
-            }
-        }
-    }
-
-    override fun lodgingSearchResultTapped(itemId: String, index: Int) {
-        val selected = itemStore.getData(itemId)?.searchResults?.getOrNull(index) ?: return
-        itemStore.update(itemId) { data ->
-            data.copy(
-                name = selected.name,
-                address = selected.address,
-                searchResults = emptyList(),
-            )
-        }
-        coroutineScope.launch {
-            val (hotelDetails, city) = listOf(async {
-                repository.details(
-                    selected.id, autocompleteKey = itemId
-                )
-            }, async { repository.placeCity(selected.id, autocompleteKey = itemId) }).awaitAll()
-            itemStore.update(itemId) { data ->
-                data.copy(
-                    city = city,
-                    latitude = hotelDetails?.latitude,
-                    longitude = hotelDetails?.longitude
                 )
             }
         }
@@ -202,5 +151,48 @@ class ManualAddLodgingUseCase(
             data.checkIn,
             data.checkOut,
         )
+    }
+
+    override fun onLodgingUpdated(
+        itemId: String,
+        checkIn: ZonedDateTime,
+        checkInTimeSelected: Boolean,
+        checkOut: ZonedDateTime?,
+        checkOutTimeSelected: Boolean,
+        selectedSearchResultIndex: Int,
+    ) {
+        val searchResults = itemStore.getData(itemId)?.searchResults
+        val selected = searchResults?.getOrNull(selectedSearchResultIndex)
+        if (selected != null) {
+            itemStore.update(itemId) {
+                it.copy(
+                    city = null,
+                    latitude = null,
+                    longitude = null,
+                )
+            }
+        }
+        coroutineScope.launch {
+            val (hotelDetails, city) = awaitAll(
+                async { selected?.id?.let { repository.details(it, autocompleteKey = itemId) } },
+                async { selected?.id?.let { repository.placeCity(it, autocompleteKey = itemId) } },
+            )
+            itemStore.update(itemId) {
+                PendingLodging(
+                    id = it.id,
+                    entityId = it.entityId,
+                    checkIn = checkIn,
+                    isCheckInTimeSet = checkInTimeSelected,
+                    checkOut = checkOut,
+                    isCheckOutTimeSet = checkOutTimeSelected,
+                    name = hotelDetails?.name ?: it.name,
+                    address = hotelDetails?.address ?: it.address,
+                    city = city ?: it.city,
+                    latitude = hotelDetails?.latitude ?: it.latitude,
+                    longitude = hotelDetails?.longitude ?: it.longitude,
+                    searchResults = emptyList(),
+                )
+            }
+        }
     }
 }

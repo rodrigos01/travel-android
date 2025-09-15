@@ -2,7 +2,6 @@ package travel.vola.android.ui.trip.eventlist.composable
 
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.tooling.preview.Preview
 import travel.vola.android.extensions.Time
 import travel.vola.android.model.data.Time
@@ -42,47 +41,9 @@ fun AddPlanListItem(
     ) {
         when (state) {
             is ManualStartEndAddPlanState -> {
-                val itemState = rememberStartEndAddPlanListItemState(
-                    startState = rememberAddPlanRowState(
-                        key = state.startState.searchResults,
-                        selectedDateTime = state.startState.dateTime,
-                        timeSelected = state.startState.isTimeSet,
-                    ), endState = rememberAddPlanRowState(
-                        key = state.endState.searchResults,
-                        selectedDateTime = state.endState.dateTime,
-                        timeSelected = state.endState.isTimeSet,
-                    )
-                )
                 when (state) {
                     is AddFlightItemState -> {
-                        LaunchedEffect(itemState.startState.selectedDateTime) {
-                            itemState.startState.selectedDateTime?.let {
-                                actionHandler.setDepartureTime(state.id, it)
-                            }
-                        }
-                        LaunchedEffect(itemState.startState.selectedSearchResultIndex) {
-                            if (itemState.startState.selectedSearchResultIndex != -1) {
-                                actionHandler.airportFromSearchResultTapped(
-                                    state.id,
-                                    itemState.startState.selectedSearchResultIndex,
-                                )
-                            }
-                        }
-                        LaunchedEffect(itemState.endState.selectedDateTime) {
-                            itemState.endState.selectedDateTime?.let {
-                                actionHandler.setArrivalTime(state.id, it)
-                            }
-                        }
-                        LaunchedEffect(itemState.endState.selectedSearchResultIndex) {
-                            if (itemState.endState.selectedSearchResultIndex != -1) {
-                                actionHandler.airportToSearchResultTapped(
-                                    state.id,
-                                    itemState.endState.selectedSearchResultIndex,
-                                )
-                            }
-                        }
                         AddFlightListItem(
-                            startEndAddPlanState = itemState,
                             uiState = state,
                             onAirportFromTextChanged = {
                                 actionHandler.airportFromSearchTextChanged(
@@ -94,29 +55,29 @@ fun AddPlanListItem(
                                     state.id, it
                                 )
                             },
+                            onUpdated = {
+                                    departureDateTime,
+                                    departureTimeSelected,
+                                    selectedDepartureSearchResultIndex,
+                                    arrivalDateTime,
+                                    arrivalTimeSelected,
+                                    selectedArrivalSearchResultIndex,
+                                ->
+                                actionHandler.onUpdated(
+                                    state.id,
+                                    departureDateTime,
+                                    departureTimeSelected,
+                                    selectedDepartureSearchResultIndex,
+                                    arrivalDateTime,
+                                    arrivalTimeSelected,
+                                    selectedArrivalSearchResultIndex,
+                                )
+                            },
                         )
                     }
 
                     is ManualAddLodgingItemState -> {
-                        LaunchedEffect(itemState.startState.selectedDateTime) {
-                            itemState.startState.selectedDateTime?.let {
-                                actionHandler.setCheckInTime(state.id, it)
-                            }
-                        }
-                        LaunchedEffect(itemState.startState.selectedSearchResultIndex) {
-                            if (itemState.startState.selectedSearchResultIndex != -1) {
-                                actionHandler.lodgingSearchResultTapped(
-                                    state.id,
-                                    itemState.startState.selectedSearchResultIndex,
-                                )
-                            }
-                        }
-                        LaunchedEffect(itemState.endState.selectedDateTime) {
-                            itemState.endState.selectedDateTime?.let {
-                                actionHandler.setCheckOutTime(state.id, it)
-                            }
-                        }
-                        AddLodgingListItem(startEndAddPlanState = itemState,
+                        AddLodgingListItem(
                             uiState = state,
                             onLodgingTextChanged = {
                                 actionHandler.lodgingTextChanged(
@@ -125,7 +86,43 @@ fun AddPlanListItem(
                             },
                             onFindLodgingButtonTapped = {
                                 actionHandler.onFindLodgingButtonTapped(state.id)
-                            })
+                            },
+                            onUpdated = {
+                                    checkIn,
+                                    checkInTimeSelected,
+                                    checkOut,
+                                    checkOutTimeSelected,
+                                    selectedSearchResultIndex,
+                                ->
+                                actionHandler.onLodgingUpdated(
+                                    state.id,
+                                    checkIn,
+                                    checkInTimeSelected,
+                                    checkOut,
+                                    checkOutTimeSelected,
+                                    selectedSearchResultIndex,
+                                )
+                            },
+                        )
+                    }
+
+                    is AddPlaceItemState -> {
+                        AddPlaceListItem(
+                            uiState = state,
+                            onTextChanged = {
+                                actionHandler.locationTextChanged(state.id, it)
+                            },
+                            onUpdated = { startDateTime, startTimeSelected, endDateTime, endTimeSelected, selectedSearchResultIndex ->
+                                actionHandler.onUpdated(
+                                    state.id,
+                                    startDateTime,
+                                    startTimeSelected,
+                                    endDateTime,
+                                    endTimeSelected,
+                                    selectedSearchResultIndex,
+                                )
+                            },
+                        )
                     }
                 }
             }
@@ -137,77 +134,27 @@ fun AddPlanListItem(
                     minCheckOut = state.minCheckOutTime,
                     locationText = state.locationText,
                     searchResults = state.searchResults,
-                    onCheckInDateSelected = { actionHandler.setCheckInTime(state.id, it) },
-                    onCheckOutDateSelected = { actionHandler.setCheckOutTime(state.id, it) },
                     onLocationSearchTextChanged = {
                         actionHandler.lodgingTextChanged(
-                            state.id, it
-                        )
-                    },
-                    onLocationSearchResultSelected = {
-                        actionHandler.lodgingSearchResultTapped(
                             state.id, it
                         )
                     },
                     onSwitchToManualButtonTapped = {
                         actionHandler.onSwitchToManualButtonTapped(state.id)
                     },
-                )
-            }
-
-            is AddPlaceItemState -> {
-                val addPlaceListItemState = rememberAddPlaceListItemState(
-                    startState = rememberAddPlanRowState(
-                        key = state.searchResults,
-                        selectedDateTime = state.timestamp,
-                        timeSelected = state.startTimeSelected,
-                    ),
-                    endState = rememberAddPlanRowState(
-                        key = state.timestamp,
-                        selectedDateTime = state.endDateTime ?: state.minEndTime,
-                        timeSelected = state.endTimeSelected,
-                    ),
-                    hasEnd = state.endDateTime != null,
-                )
-                LaunchedEffect(addPlaceListItemState.startState.selectedDateTime) {
-                    addPlaceListItemState.startState.selectedDateTime?.let {
-                        actionHandler.setPlaceStartDateTime(
-                            state.id, it, addPlaceListItemState.startState.timeSelected
+                    onUpdated = {
+                            checkIn,
+                            checkOut,
+                            selectedSearchResultIndex,
+                        ->
+                        actionHandler.onLodgingUpdated(
+                            state.id,
+                            checkIn,
+                            checkInTimeSelected = false,
+                            checkOut,
+                            checkOutTimeSelected = false,
+                            selectedSearchResultIndex,
                         )
-                    }
-                }
-                LaunchedEffect(addPlaceListItemState.startState.selectedSearchResultIndex) {
-                    actionHandler.locationSearchResultTapped(
-                        state.id, addPlaceListItemState.startState.selectedSearchResultIndex
-                    )
-                }
-                LaunchedEffect(addPlaceListItemState.endState.selectedDateTime) {
-                    addPlaceListItemState.endState.selectedDateTime?.let {
-                        actionHandler.setPlaceEndDateTime(
-                            state.id, it, addPlaceListItemState.endState.timeSelected
-                        )
-                    }
-                }
-                LaunchedEffect(addPlaceListItemState.hasEnd) {
-                    if (addPlaceListItemState.hasEnd) {
-                        addPlaceListItemState.endState.selectedDateTime?.let {
-                            actionHandler.setPlaceEndDateTime(
-                                state.id, it, addPlaceListItemState.endState.timeSelected
-                            )
-                        }
-                    } else {
-                        actionHandler.setPlaceEndDateTime(
-                            state.id, null, false,
-                        )
-                    }
-                }
-                AddPlaceListItem(
-                    placeName = state.placeName,
-                    state = addPlaceListItemState,
-                    searchResults = state.searchResults,
-                    minEndTime = state.minEndTime,
-                    onTextChanged = {
-                        actionHandler.locationTextChanged(state.id, it)
                     },
                 )
             }
@@ -268,30 +215,44 @@ private object NoOpActionHandler : AddPlanItemActionHandler {
     override fun delete(type: AddPlanItemState.Type, itemId: String) = Unit
     override fun save(itemId: String) = Unit
     override fun cancelEdit(itemId: String) = Unit
+
+    // Place list item
     override fun airportFromSearchTextChanged(itemId: String, content: CharSequence) = Unit
+
     override fun airportToSearchTextChanged(itemId: String, content: CharSequence) = Unit
-    override fun airportFromSearchResultTapped(itemId: String, index: Int) = Unit
-    override fun airportToSearchResultTapped(itemId: String, index: Int) = Unit
-    override fun lodgingTextChanged(itemId: String, content: CharSequence) = Unit
-    override fun lodgingSearchResultTapped(itemId: String, index: Int) = Unit
-    override fun onSwitchToManualButtonTapped(itemId: String) = Unit
-    override fun setCheckInTime(itemId: String, time: Time) = Unit
-    override fun setCheckOutTime(itemId: String, time: Time) = Unit
-    override fun setDepartureTime(itemId: String, time: Time) = Unit
-    override fun setArrivalTime(itemId: String, time: Time) = Unit
-    override fun setPlaceStartDateTime(
+    override fun onUpdated(
         itemId: String,
-        dateTime: ZonedDateTime,
-        timeSelected: Boolean,
+        startDateTime: ZonedDateTime?,
+        startTimeSelected: Boolean,
+        endDateTime: ZonedDateTime?,
+        endTimeSelected: Boolean,
+        selectedSearchResultIndex: Int,
     ) = Unit
 
-    override fun setPlaceEndDateTime(
-        itemId: String,
-        dateTime: ZonedDateTime?,
-        timeSelected: Boolean,
-    ) = Unit
-
-    override fun locationSearchResultTapped(itemId: String, index: Int) = Unit
-    override fun locationTextChanged(itemId: String, content: CharSequence) = Unit
     override fun onFindLodgingButtonTapped(itemId: String) = Unit
+
+    // Flight list item
+    override fun locationTextChanged(itemId: String, content: CharSequence) = Unit
+
+    override fun onUpdated(
+        itemId: String,
+        departureTime: ZonedDateTime,
+        departureTimeSelected: Boolean,
+        selectedDepartureSearchResultIndex: Int,
+        arrivalTime: ZonedDateTime?,
+        arrivalTimeSelected: Boolean,
+        selectedArrivalSearchResultIndex: Int,
+    ) = Unit
+
+    // Lodging List Item
+    override fun onSwitchToManualButtonTapped(itemId: String) = Unit
+    override fun lodgingTextChanged(itemId: String, content: CharSequence) = Unit
+    override fun onLodgingUpdated(
+        itemId: String,
+        checkIn: ZonedDateTime,
+        checkInTimeSelected: Boolean,
+        checkOut: ZonedDateTime?,
+        checkOutTimeSelected: Boolean,
+        selectedSearchResultIndex: Int,
+    ) = Unit
 }

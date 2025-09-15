@@ -3,8 +3,14 @@ package travel.vola.android.ui.trip.eventlist.composable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
 import travel.vola.android.extensions.Time
 import travel.vola.android.model.data.Time
@@ -12,21 +18,10 @@ import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
 import travel.vola.android.ui.trip.state.ManualStartEndAddPlanState
-
-data class StartEndAddPlanListItemState(
-    val startState: AddPlanRowState,
-    val endState: AddPlanRowState,
-)
-
-@Composable
-fun rememberStartEndAddPlanListItemState(
-    startState: AddPlanRowState = rememberAddPlanRowState(),
-    endState: AddPlanRowState = rememberAddPlanRowState(),
-) = remember(startState, endState) { StartEndAddPlanListItemState(startState, endState) }
+import java.time.ZonedDateTime
 
 @Composable
 fun StartEndAddPlanListItem(
-    state: StartEndAddPlanListItemState,
     uiState: ManualStartEndAddPlanState,
     startTitle: @Composable () -> Unit,
     startTimeSelectorLabel: String,
@@ -39,33 +34,102 @@ fun StartEndAddPlanListItem(
     endLabelText: String? = null,
     endPlaceHolder: String? = null,
     onEndTextChanged: (CharSequence) -> Unit = {},
+    onUpdated: (
+        startDateTime: ZonedDateTime,
+        startTimeSelected: Boolean,
+        selectedStartSearchResultIndex: Int,
+        endDateTime: ZonedDateTime?,
+        endTimeSelected: Boolean,
+        selectedEndSearchResultIndex: Int,
+    ) -> Unit,
+    requiresEnd: Boolean = true,
 ) {
+    var selectedStartDateTime by remember {
+        mutableStateOf(uiState.startState.dateTime)
+    }
+    var startTimeSelected by remember {
+        mutableStateOf(uiState.startState.isTimeSet)
+    }
+    var selectedStartSearchResultIndex by remember {
+        mutableIntStateOf(-1)
+    }
+    var hasEnd by remember(requiresEnd) {
+        mutableStateOf(requiresEnd)
+    }
+    var selectedEndDateTime by remember {
+        mutableStateOf(uiState.endState.dateTime)
+    }
+    var endTimeSelected by remember {
+        mutableStateOf(uiState.endState.isTimeSet)
+    }
+    var selectedEndSearchResultIndex by remember {
+        mutableIntStateOf(-1)
+    }
+    LaunchedEffect(
+        selectedStartDateTime,
+        startTimeSelected,
+        selectedStartSearchResultIndex,
+        selectedEndDateTime,
+        endTimeSelected,
+        selectedEndSearchResultIndex,
+    ) {
+        onUpdated(
+            selectedStartDateTime ?: error("Start date time should never be null"),
+            startTimeSelected,
+            selectedStartSearchResultIndex,
+            selectedEndDateTime,
+            endTimeSelected,
+            selectedEndSearchResultIndex,
+        )
+    }
     Column {
         AddPlanRow(
-            state = state.startState,
-            minTime = uiState.startState.minDateTime,
-            searchResults = uiState.startState.searchResults,
-            title = startTitle,
-            timeSelectorLabel = startTimeSelectorLabel,
-            dateSelectionEnabled = uiState.startState.dateSelectionEnabled,
-            placeHolder = startPlaceHolder,
+            initialDateTime = selectedStartDateTime,
+            timeSelectedInitially = startTimeSelected,
+            title = if (hasEnd) {
+                startTitle
+            } else {
+                {}
+            },
             labelText = startLabelText,
+            placeHolder = startPlaceHolder,
             text = uiState.startState.locationText,
             onTextChanged = onStartTextChanged,
+            searchResults = uiState.startState.searchResults,
+            timeSelectorLabel = startTimeSelectorLabel,
+            showTextField = true,
+            onUpdated = { selectedDateTime, timeSelected, selectedSearchResultIndex ->
+                selectedStartDateTime = selectedDateTime
+                startTimeSelected = timeSelected
+                selectedStartSearchResultIndex = selectedSearchResultIndex
+            },
         )
-        AddPlanRow(
-            state = state.endState,
-            minTime = uiState.endState.minDateTime,
-            searchResults = uiState.endState.searchResults,
-            title = endTitle,
-            timeSelectorLabel = endTimeSelectorLabel,
-            dateSelectionEnabled = uiState.endState.dateSelectionEnabled,
-            placeHolder = endPlaceHolder,
-            showTextField = showEndTimePickerButton,
-            labelText = endLabelText,
-            text = uiState.endState.locationText,
-            onTextChanged = onEndTextChanged,
-        )
+        if (hasEnd) {
+            AddPlanRow(
+                initialDateTime = selectedEndDateTime,
+                timeSelectedInitially = endTimeSelected,
+                minTime = uiState.endState.minDateTime,
+                searchResults = uiState.endState.searchResults,
+                title = endTitle,
+                timeSelectorLabel = endTimeSelectorLabel,
+                text = uiState.endState.locationText,
+                dateSelectionEnabled = uiState.endState.dateSelectionEnabled,
+                showTextField = showEndTimePickerButton,
+                labelText = endLabelText,
+                placeHolder = endPlaceHolder,
+                onTextChanged = onEndTextChanged,
+                onUpdated = { selectedDateTime, timeSelected, selectedSearchResultIndex ->
+                    selectedEndDateTime = selectedDateTime
+                    endTimeSelected = timeSelected
+                    selectedEndSearchResultIndex = selectedSearchResultIndex
+                },
+            )
+        }
+        if (!requiresEnd) {
+            TextButton(onClick = { hasEnd = !hasEnd }) {
+                Text(if (!hasEnd) "Set end time" else "Remove end time")
+            }
+        }
     }
 }
 
@@ -75,10 +139,6 @@ fun StartEndAddPlanListItemPreview() {
     AppTheme {
         Surface {
             StartEndAddPlanListItem(
-                state = StartEndAddPlanListItemState(
-                    startState = rememberAddPlanRowState(),
-                    endState = rememberAddPlanRowState()
-                ),
                 uiState = AddFlightItemState(
                     id = "",
                     timestamp = Time.now(),
@@ -112,6 +172,8 @@ fun StartEndAddPlanListItemPreview() {
                 endPlaceHolder = "Enter End point",
                 endLabelText = "End",
                 onEndTextChanged = {},
+                requiresEnd = false,
+                onUpdated = { _, _, _, _, _, _ -> },
             )
         }
     }
