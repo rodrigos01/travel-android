@@ -22,6 +22,7 @@ import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.AddLodgingItemState
 import travel.vola.android.ui.trip.state.AddPlaceItemState
 import travel.vola.android.ui.trip.state.AddPlanItemState
+import travel.vola.android.ui.trip.state.AddRestaurantItemState
 import travel.vola.android.ui.trip.state.LodgingSearchItemState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import java.util.UUID
@@ -121,6 +122,7 @@ class AddPlanUseCase(
             is AddFlightItemState -> addFlightUseCase.removeItem(item)
             is AddLodgingItemState -> addLodgingUseCase.removeItem(item)
             is AddPlaceItemState -> addPlaceUseCase.removeItem(item)
+            is AddRestaurantItemState -> TODO("Not yet implemented")
         }
     }
 
@@ -129,6 +131,7 @@ class AddPlanUseCase(
             is AddFlightItemState -> AddPlanItemState.Type.Flight
             is ManualAddLodgingItemState, is LodgingSearchItemState -> AddPlanItemState.Type.Lodging
             is AddPlaceItemState -> AddPlanItemState.Type.Place
+            is AddRestaurantItemState -> AddPlanItemState.Type.Restaurant
         }
 
     private fun AddPlanItemState.Type.useCase(): AddItemUseCase<out TripEntity, out AddPlanItemState> =
@@ -136,6 +139,7 @@ class AddPlanUseCase(
             AddPlanItemState.Type.Flight -> addFlightUseCase
             AddPlanItemState.Type.Lodging -> addLodgingUseCase
             AddPlanItemState.Type.Place -> addPlaceUseCase
+            AddPlanItemState.Type.Restaurant -> TODO("Not yet implemented")
         }
 
 
@@ -156,6 +160,7 @@ class AddPlanUseCase(
             is ManualAddLodgingItemState -> addLodgingUseCase.createEntity(this)
             is LodgingSearchItemState -> error("LodgingSearchItemState entity creation not implemented")
             is AddPlaceItemState -> addPlaceUseCase.createEntity(this)
+            is AddRestaurantItemState -> TODO("Not yet implemented")
         }
     }
 }

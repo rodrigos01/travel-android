@@ -11,6 +11,7 @@ import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.AddPlaceItemState
 import travel.vola.android.ui.trip.state.AddPlanItemState
+import travel.vola.android.ui.trip.state.AddRestaurantItemState
 import travel.vola.android.ui.trip.state.LodgingSearchItemState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
@@ -124,6 +125,18 @@ fun AddPlanListItem(
                             },
                         )
                     }
+
+                    is AddRestaurantItemState -> {
+                        AddRestaurantListItem(
+                            uiState = state,
+                            onTextChanged = {
+                                actionHandler.locationTextChanged(state.id, it)
+                            },
+                            onUpdated = { dateTime, timeSelected, selectedSearchResultIndex ->
+
+                            },
+                        )
+                    }
                 }
             }
 
@@ -166,6 +179,7 @@ fun AddPlanType.toState() = when (this) {
     AddPlanType.Flight -> AddPlanItemState.Type.Flight
     AddPlanType.Lodging -> AddPlanItemState.Type.Lodging
     AddPlanType.Place -> AddPlanItemState.Type.Place
+    AddPlanType.Restaurant -> AddPlanItemState.Type.Restaurant
 }
 
 val AddPlanItemState.uiType
@@ -173,6 +187,7 @@ val AddPlanItemState.uiType
         is AddFlightItemState -> AddPlanType.Flight
         is ManualAddLodgingItemState, is LodgingSearchItemState -> AddPlanType.Lodging
         is AddPlaceItemState -> AddPlanType.Place
+        is AddRestaurantItemState -> AddPlanType.Restaurant
     }
 
 @Preview
