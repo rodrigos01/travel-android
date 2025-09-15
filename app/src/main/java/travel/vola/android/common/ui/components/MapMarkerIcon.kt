@@ -81,6 +81,8 @@ fun mapMarkerIcon(type: MarkerType, selected: Boolean = false): Bitmap {
         MarkerType.City -> painterResource(R.drawable.location_city_baseline_24)
 
         MarkerType.Place -> rememberVectorPainter(Icons.Filled.Place)
+
+        MarkerType.Restaurant -> painterResource(R.drawable.restaurant_baseline_24)
     }
     return mapMarkerIcon(icon, selected)
 }
