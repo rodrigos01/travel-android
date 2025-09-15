@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import travel.vola.android.model.data.DataSourceType
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 
@@ -22,7 +23,12 @@ interface TripDataSource {
     suspend fun saveFlight(tripId: String, flight: Flight)
     suspend fun saveLodging(tripId: String, lodging: Lodging)
     suspend fun saveTimedPlace(tripId: String, timedPlace: TimedPlace)
+    suspend fun saveRestaurantReservation(
+        tripId: String,
+        restaurantReservation: RestaurantReservation,
+    )
     suspend fun deleteFlight(tripId: String, flightId: String)
     suspend fun deleteLodging(tripId: String, lodgingId: String)
     suspend fun deleteTimedPlace(tripId: String, timedPlaceId: String)
+    suspend fun deleteRestaurantReservation(tripId: String, restaurantReservationId: String)
 }

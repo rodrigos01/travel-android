@@ -10,4 +10,5 @@ plugins {
     id("com.google.firebase.crashlytics") version "3.0.5" apply false
 
     id("com.google.devtools.ksp") version "2.2.0-2.0.2" apply false
+    id("androidx.room") version "2.8.0" apply false
 }

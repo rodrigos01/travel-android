@@ -6,7 +6,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.navigation.NavController
-import androidx.room.Room
 import com.google.firebase.firestore.FirebaseFirestore
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.datastore.DataStoreUserPreferencesRepository
@@ -15,7 +14,7 @@ import travel.vola.android.model.firebase.FirebaseTripDataSource
 import travel.vola.android.model.multisource.MultiSourceTripRepository
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.model.room.RoomTripDataSource
-import travel.vola.android.model.room.TravelDatabase
+import travel.vola.android.model.room.buildDatabase
 
 private val FACTORY_DEPENDENCIES_KEY = CreationExtras.Key<ViewModelFactoryDependencies>()
 
@@ -25,11 +24,7 @@ class ViewModelFactoryDependencies(
 
     private val roomTripDataSource by lazy {
         RoomTripDataSource(
-            Room.databaseBuilder(
-                getApplicationContext(),
-                TravelDatabase::class.java,
-                "travel-db",
-            ).build().tripDao
+            buildDatabase(getApplicationContext()).tripDao
         )
     }
 

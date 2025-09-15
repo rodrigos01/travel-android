@@ -11,6 +11,7 @@ import travel.vola.android.extensions.asFlow
 import travel.vola.android.model.data.DataSourceType
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.repository.TripDataSource
@@ -131,6 +132,20 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
             .update("places", trip.places.toMutableList().apply {
                 removeIf { it.id == timedPlaceId }
             }.toList())
+    }
+
+    override suspend fun saveRestaurantReservation(
+        tripId: String,
+        restaurantReservation: RestaurantReservation
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun deleteRestaurantReservation(
+        tripId: String,
+        restaurantReservationId: String
+    ) {
+        TODO("Not yet implemented")
     }
 
     private suspend fun getTrip(tripId: String) = firestore.document("/trips/$tripId").get().await()
