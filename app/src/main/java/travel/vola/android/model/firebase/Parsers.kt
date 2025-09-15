@@ -25,6 +25,7 @@ fun FirebaseData.Trip.toAppDataModel(): Trip {
         flights = appFlights,
         lodgings = appLodgings,
         places = places.map { it.toAppDataModel() },
+        restaurants = emptyList() // TODO: parse restaurants,
     )
 }
 

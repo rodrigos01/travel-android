@@ -26,6 +26,7 @@ fun RoomData.Trip.toAppDataModel(): Trip {
         flights = flights,
         lodgings = lodgings,
         places = places,
+        restaurants = emptyList() // TODO: restaurants table,
     )
 }
 

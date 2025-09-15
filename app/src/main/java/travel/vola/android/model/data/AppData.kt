@@ -24,6 +24,7 @@ data class Trip(
     val flights: List<Flight>,
     val lodgings: List<Lodging>,
     val places: List<TimedPlace>,
+    val restaurants: List<RestaurantReservation>,
 )
 
 sealed interface TripEntity : Identifiable
@@ -96,6 +97,13 @@ data class TimedPlace(
     val place: Place,
     override val city: Place,
 ) : TripEntity, TripEvent, WithCity
+
+data class RestaurantReservation(
+    override val id: String,
+    val dateTime: ZonedDateTime,
+    val place: Place,
+    override val city: Place,
+): TripEntity, TripEvent, WithCity
 
 data class AirportSearchResult(
     val iata: String,

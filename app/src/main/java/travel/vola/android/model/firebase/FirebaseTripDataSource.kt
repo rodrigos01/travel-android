@@ -47,6 +47,7 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
             flights = emptyList(),
             lodgings = emptyList(),
             places = emptyList(),
+            restaurants = emptyList(),
         )
         val reference = firestore.collection("/trips").add(newTrip).await()
         return reference.id
