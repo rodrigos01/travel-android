@@ -264,7 +264,7 @@ private fun TripDetailItem(
                 )
 
                 is TripItemState.TimedPlaceItemState -> TimedPlaceListItem(event)
-                is TripItemState.RestaurantReservationItemState -> TODO("Not yet implemented")
+                is TripItemState.RestaurantReservationItemState -> RestaurantListItem(event)
             }
         }
 
