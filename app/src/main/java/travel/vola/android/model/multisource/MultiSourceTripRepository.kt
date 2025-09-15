@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.stateIn
 import travel.vola.android.model.data.DataSourceType
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.repository.TripDataSource
@@ -74,6 +75,19 @@ class MultiSourceTripRepository(
         currentDataSource.deleteTimedPlace(tripId, timedPlaceId)
     }
 
+    override suspend fun saveRestaurantReservation(
+        tripId: String,
+        restaurantReservation: RestaurantReservation
+    ) {
+        currentDataSource.saveRestaurantReservation(tripId, restaurantReservation)
+    }
+
+    override suspend fun deleteRestaurantReservation(
+        tripId: String,
+        restaurantReservationId: String
+    ) {
+        currentDataSource.deleteRestaurantReservation(tripId, restaurantReservationId)
+    }
 
     private val DataSourceType.dataSource: TripDataSource
         get() = dataSources.first { it.dataSourceType == this }
