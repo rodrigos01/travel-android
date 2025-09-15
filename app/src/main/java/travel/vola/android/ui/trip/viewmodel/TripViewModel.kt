@@ -539,7 +539,7 @@ class TripViewModel(
             )
 
             is RestaurantReservation -> TripItemState.RestaurantReservationItemState(
-                id = UUID.randomUUID().toString(),
+                id = event.id,
                 timestamp = event.dateTime,
                 showDate = showDate,
                 dayOfMonth = event.dateTime.dayOfMonthString,

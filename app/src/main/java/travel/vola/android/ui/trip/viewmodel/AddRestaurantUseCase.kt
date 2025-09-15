@@ -123,7 +123,7 @@ class AddRestaurantUseCase(
     override fun createEntity(item: AddRestaurantItemState): RestaurantReservation {
         val data = itemStore.getData(item.id) ?: error("Item ${item.id} not found in store")
         return RestaurantReservation(
-            id = data.entityId ?: "",
+            id = data.entityId ?: data.id,
             dateTime = data.dateTime,
             place = data.place ?: error("Place not set"),
             city = data.city ?: error("City not set"),
