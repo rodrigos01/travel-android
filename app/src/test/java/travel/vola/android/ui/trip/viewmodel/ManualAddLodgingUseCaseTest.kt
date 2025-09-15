@@ -177,8 +177,6 @@ class ManualAddLodgingUseCaseTest {
     fun `lodging search result tapped should update item with selected lodging`() {
         val expected: SimplePlace = mock {
             on { id } doReturn "hotel_id"
-            on { name } doReturn "Hotel Novotel Paris Les Halles"
-            on { address } doReturn "Blvd Les Halles, 45"
         }
         val originalData = PendingLodging(
             id = "lodging_id", checkIn = mock(), checkOut = mock(), searchResults = listOf(
@@ -208,19 +206,25 @@ class ManualAddLodgingUseCaseTest {
     @Test
     fun `lodging search result tapped should update item with repository result`() {
         val paris = mock<Place>()
-        repository.stub {
-            onBlocking { placeCity("hotel_id", "lodging_id") } doReturn paris
-        }
-        val expected: SimplePlace = mock {
+        val expected: Place = mock {
             on { id } doReturn "hotel_id"
             on { name } doReturn "Hotel Novotel Paris Les Halles"
             on { address } doReturn "Blvd Les Halles, 45"
+            on { latitude } doReturn 48.866667
+            on { longitude } doReturn 2.333333
+        }
+        repository.stub {
+            onBlocking { placeCity("hotel_id", "lodging_id") } doReturn paris
+            onBlocking { details("hotel_id", "lodging_id") } doReturn expected
         }
         val checkInTime: ZonedDateTime = mock()
+        val searchResult: SimplePlace = mock {
+            on { id } doReturn "hotel_id"
+        }
         val originalData = PendingLodging(
             id = "lodging_id", checkIn = checkInTime, checkOut = mock(), searchResults = listOf(
                 mock(),
-                expected,
+                searchResult,
                 mock(),
             )
         )
@@ -237,6 +241,63 @@ class ManualAddLodgingUseCaseTest {
         )
         val result = itemStore.getUpdateResult(originalData)
         assertThat(result.city).isEqualTo(paris)
+        assertThat(result.name).isEqualTo("Hotel Novotel Paris Les Halles")
+        assertThat(result.address).isEqualTo("Blvd Les Halles, 45")
+        assertThat(result.latitude).isEqualTo(48.866667)
+        assertThat(result.longitude).isEqualTo(2.333333)
+    }
+
+    @Test
+    fun `update selectedIndex after selection should keep current details`() {
+        val paris = mock<Place>()
+        val expected: Place = mock {
+            on { id } doReturn "hotel_id"
+            on { name } doReturn "Hotel Novotel Paris Les Halles"
+            on { address } doReturn "Blvd Les Halles, 45"
+            on { latitude } doReturn 48.866667
+            on { longitude } doReturn 2.333333
+        }
+        repository.stub {
+            onBlocking { placeCity("hotel_id", "lodging_id") } doReturn paris
+            onBlocking { details("hotel_id", "lodging_id") } doReturn expected
+        }
+        val checkInTime: ZonedDateTime = mock()
+        val searchResult: SimplePlace = mock {
+            on { id } doReturn "hotel_id"
+        }
+        val originalData = PendingLodging(
+            id = "lodging_id", checkIn = checkInTime, checkOut = mock(), searchResults = listOf(
+                mock(),
+                searchResult,
+                mock(),
+            )
+        )
+        itemStore.stub {
+            on { getData("lodging_id") } doReturn originalData
+        }
+        subject.onLodgingUpdated(
+            itemId = "lodging_id",
+            checkIn = checkInTime,
+            checkInTimeSelected = false,
+            checkOut = null,
+            checkOutTimeSelected = false,
+            selectedSearchResultIndex = 1
+        )
+        val originalResult = itemStore.getUpdateResult(originalData)
+        subject.onLodgingUpdated(
+            itemId = "lodging_id",
+            checkIn = checkInTime,
+            checkInTimeSelected = false,
+            checkOut = null,
+            checkOutTimeSelected = false,
+            selectedSearchResultIndex = -1
+        )
+        val result = itemStore.getUpdateResult(originalResult)
+        assertThat(result.city).isEqualTo(paris)
+        assertThat(result.name).isEqualTo("Hotel Novotel Paris Les Halles")
+        assertThat(result.address).isEqualTo("Blvd Les Halles, 45")
+        assertThat(result.latitude).isEqualTo(48.866667)
+        assertThat(result.longitude).isEqualTo(2.333333)
     }
 
     @Test

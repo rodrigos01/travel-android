@@ -161,8 +161,8 @@ class ManualAddLodgingUseCase(
         checkOutTimeSelected: Boolean,
         selectedSearchResultIndex: Int,
     ) {
-        val selected =
-            itemStore.getData(itemId)?.searchResults?.getOrNull(selectedSearchResultIndex)
+        val searchResults = itemStore.getData(itemId)?.searchResults
+        val selected = searchResults?.getOrNull(selectedSearchResultIndex)
         if (selected != null) {
             itemStore.update(itemId) {
                 it.copy(
@@ -185,11 +185,11 @@ class ManualAddLodgingUseCase(
                     isCheckInTimeSet = checkInTimeSelected,
                     checkOut = checkOut,
                     isCheckOutTimeSet = checkOutTimeSelected,
-                    name = selected?.name ?: it.name,
-                    address = selected?.address ?: it.address,
-                    city = city,
-                    latitude = hotelDetails?.latitude,
-                    longitude = hotelDetails?.longitude,
+                    name = hotelDetails?.name ?: it.name,
+                    address = hotelDetails?.address ?: it.address,
+                    city = city ?: it.city,
+                    latitude = hotelDetails?.latitude ?: it.latitude,
+                    longitude = hotelDetails?.longitude ?: it.longitude,
                     searchResults = emptyList(),
                 )
             }
