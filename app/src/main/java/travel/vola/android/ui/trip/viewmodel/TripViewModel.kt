@@ -90,7 +90,7 @@ class TripViewModel(
     private val eventsFromTrip = trip.filterNotNull().map { currentTrip ->
         val items = genItems(currentTrip)
         val places =
-            (currentTrip.lodgings + currentTrip.places).fold(mapOf<Place, PlaceState>()) { map, entity: WithCity ->
+            (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).fold(mapOf<Place, PlaceState>()) { map, entity: WithCity ->
                 val current = map.getOrDefault(
                     entity.city, PlaceState(
                         place = entity.city,
@@ -114,7 +114,11 @@ class TripViewModel(
                                     type = if (entity.place != entity.city) MarkerType.Place else MarkerType.City,
                                 )
 
-                                is RestaurantReservation -> TODO("Not Implemented")
+                                is RestaurantReservation -> MarkerViewState(
+                                    position = Pair(entity.place.latitude, entity.place.longitude),
+                                    name = entity.place.name,
+                                    type = MarkerType.Restaurant,
+                                )
                             }
                         )
                     )
@@ -280,7 +284,7 @@ class TripViewModel(
 
     private fun genItems(trip: Trip): List<TripItemState> {
         val events =
-            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places
+            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants
         val pairs = events.flatMap { event ->
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
