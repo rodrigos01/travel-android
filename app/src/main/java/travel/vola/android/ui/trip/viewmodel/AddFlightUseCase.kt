@@ -1,6 +1,8 @@
 package travel.vola.android.ui.trip.viewmodel
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import travel.vola.android.common.coroutines.MutexScope
 import travel.vola.android.extensions.MapFlow
@@ -17,6 +19,7 @@ import travel.vola.android.ui.trip.creation.usecase.PendingData.PendingFlight
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.AutoCompleteResultState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
+import java.time.ZonedDateTime
 import kotlin.time.Duration.Companion.hours
 
 class AddFlightUseCase(
@@ -27,103 +30,6 @@ class AddFlightUseCase(
     AddPlanUseCase.EntityFactory<Flight, AddFlightItemState>, AddFlightItemActionHandler {
 
     override val items: MapFlow<String, AddFlightItemState> = itemStore.items(::createItem)
-
-    override fun setDepartureTime(itemId: String, time: Time) {
-        itemStore.update(itemId) {
-            it.copy(
-                departure = it.departure.update(
-                    dayOfMonth = time.dayOfMonth,
-                    month = time.month,
-                    year = time.year,
-                    hour = time.hour,
-                    minute = time.minute,
-                    timeZone = it.airportFrom?.timeZone?.toZoneId() ?: it.departure.zone
-                ),
-                departureTimeSet = true,
-            )
-        }
-    }
-
-    override fun setArrivalTime(itemId: String, time: Time) {
-        itemStore.update(itemId) {
-            it.copy(
-                arrival = (it.arrival ?: it.departure).update(
-                    dayOfMonth = time.dayOfMonth,
-                    month = time.month,
-                    year = time.year,
-                    hour = time.hour,
-                    minute = time.minute,
-                    timeZone = it.airportTo?.timeZone?.toZoneId() ?: it.arrival?.zone
-                    ?: it.departure.zone,
-                ),
-                arrivalTimeSet = true,
-            )
-        }
-    }
-
-    private val autoCompleteScope = MutexScope(coroutineScope.coroutineContext)
-    override fun airportFromSearchTextChanged(
-        itemId: String, content: CharSequence,
-    ) {
-        if (content.length < 3) {
-            return
-        }
-        autoCompleteScope.launch {
-            val results = repository.autocomplete(content.toString())
-            itemStore.update(itemId) {
-                it.copy(airportFromSearchResults = results)
-            }
-        }
-    }
-
-    override fun airportFromSearchResultTapped(itemId: String, index: Int) {
-        val selected =
-            itemStore.getData(itemId)?.airportFromSearchResults?.getOrNull(index) ?: return
-        itemStore.update(itemId) { data ->
-            data.copy(airportFrom = null, airportFromSearchResults = emptyList())
-        }
-        coroutineScope.launch {
-            val airport = repository.details(selected.iata)
-            itemStore.update(itemId) { data ->
-                data.copy(
-                    airportFrom = airport,
-                    departure = data.departure.update(timeZone = airport.timeZone.toZoneId()),
-                    airportFromSearchResults = emptyList(),
-                )
-            }
-        }
-    }
-
-    override fun airportToSearchTextChanged(
-        itemId: String, content: CharSequence,
-    ) {
-        if (content.length < 3) {
-            return
-        }
-        autoCompleteScope.launch {
-            val results = repository.autocomplete(content.toString())
-            itemStore.update(itemId) {
-                it.copy(airportToSearchResults = results)
-            }
-        }
-    }
-
-    override fun airportToSearchResultTapped(itemId: String, index: Int) {
-        val selected = itemStore.getData(itemId)?.airportToSearchResults?.getOrNull(index) ?: return
-        itemStore.update(itemId) { data ->
-            data.copy(airportTo = null, airportToSearchResults = emptyList())
-        }
-        coroutineScope.launch {
-            val airport = repository.details(selected.iata)
-            itemStore.update(itemId) { data ->
-                data.copy(
-                    airportTo = airport,
-                    arrival = data.arrival?.update(timeZone = airport.timeZone.toZoneId()),
-                    airportToSearchResults = emptyList(),
-                )
-            }
-        }
-    }
 
     override fun addItem(
         id: String,
@@ -220,7 +126,84 @@ class AddFlightUseCase(
         )
     }
 
-    private fun PendingFlight.minArrival(
-        departureTime: Time = this.departure,
-    ) = (airportTo?.let { departureTime.atTimeZone(it.timeZone) } ?: departureTime) + 1.hours
+    private val autoCompleteScope = MutexScope(coroutineScope.coroutineContext)
+    override fun airportFromSearchTextChanged(
+        itemId: String, content: CharSequence,
+    ) {
+        if (content.length < 3) {
+            return
+        }
+        autoCompleteScope.launch {
+            val results = repository.autocomplete(content.toString())
+            itemStore.update(itemId) {
+                it.copy(airportFromSearchResults = results)
+            }
+        }
+    }
+
+    override fun airportToSearchTextChanged(
+        itemId: String, content: CharSequence,
+    ) {
+        if (content.length < 3) {
+            return
+        }
+        autoCompleteScope.launch {
+            val results = repository.autocomplete(content.toString())
+            itemStore.update(itemId) {
+                it.copy(airportToSearchResults = results)
+            }
+        }
+    }
+
+    override fun onUpdated(
+        itemId: String,
+        departureTime: ZonedDateTime,
+        departureTimeSelected: Boolean,
+        selectedDepartureSearchResultIndex: Int,
+        arrivalTime: ZonedDateTime?,
+        arrivalTimeSelected: Boolean,
+        selectedArrivalSearchResultIndex: Int,
+    ) {
+        // Clean current airports if a new one has been selected
+        itemStore.update(itemId) {
+            it.copy(
+                airportFrom = it.airportFrom.takeIf { selectedDepartureSearchResultIndex < 0 },
+                airportTo = it.airportTo.takeIf { selectedArrivalSearchResultIndex < 0 },
+            )
+        }
+        val current = itemStore.getData(itemId)
+        coroutineScope.launch {
+            val (selectedDepartureAirport, selectedArrivalAirport) = awaitAll(
+                async {
+                    current?.airportFromSearchResults?.getOrNull(selectedDepartureSearchResultIndex)?.iata?.let { selectedId ->
+                        repository.details(selectedId)
+                    }
+                },
+                async {
+                    current?.airportToSearchResults?.getOrNull(selectedArrivalSearchResultIndex)?.iata?.let { selectedId ->
+                        repository.details(selectedId)
+                    }
+                },
+            )
+            itemStore.update(itemId) { data ->
+                val airportFrom = selectedDepartureAirport ?: data.airportFrom
+                val airportTo = selectedArrivalAirport ?: data.airportTo
+                PendingFlight(
+                    id = data.id,
+                    entityId = data.entityId,
+                    departure = departureTime.update(
+                        timeZone = airportFrom?.timeZone?.toZoneId() ?: data.departure.zone
+                    ),
+                    departureTimeSet = departureTimeSelected,
+                    airportFrom = airportFrom,
+                    arrival = arrivalTime?.update(
+                        timeZone = airportTo?.timeZone?.toZoneId() ?: data.arrival?.zone
+                        ?: data.departure.zone
+                    ),
+                    arrivalTimeSet = arrivalTimeSelected,
+                    airportTo = airportTo,
+                )
+            }
+        }
+    }
 }

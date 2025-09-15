@@ -35,14 +35,6 @@ class LodgingSearchParamsUseCase(
 
     override val items: MapFlow<String, LodgingSearchItemState> = itemStore.items(::createItem)
 
-    override fun setCheckInTime(itemId: String, time: Time) {
-        itemStore.update(itemId) { it.copy(checkIn = time) }
-    }
-
-    override fun setCheckOutTime(itemId: String, time: Time) {
-        itemStore.update(itemId) { it.copy(checkOut = time) }
-    }
-
     private val autoCompleteScope = MutexScope(coroutineScope.coroutineContext)
     override fun lodgingTextChanged(itemId: String, content: CharSequence) {
         if (content.length < 3) {
@@ -58,8 +50,21 @@ class LodgingSearchParamsUseCase(
         }
     }
 
-    override fun lodgingSearchResultTapped(itemId: String, index: Int) {
-        itemStore.update(itemId) { it.copy(city = it.searchResults[index]) }
+    override fun onLodgingUpdated(
+        itemId: String,
+        checkIn: ZonedDateTime,
+        checkInTimeSelected: Boolean,
+        checkOut: ZonedDateTime?,
+        checkOutTimeSelected: Boolean,
+        selectedSearchResultIndex: Int,
+    ) {
+        itemStore.update(itemId) {
+            it.copy(
+                checkIn = checkIn,
+                checkOut = checkOut,
+                city = it.searchResults.getOrNull(selectedSearchResultIndex) ?: it.city,
+            )
+        }
     }
 
     override fun addItem(

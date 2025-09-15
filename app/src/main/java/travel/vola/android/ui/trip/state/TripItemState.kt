@@ -212,7 +212,7 @@ data class LodgingSearchItemState(
     override val dateSelectionEnabled: Boolean,
     val locationText: String?,
     val searchResults: List<SearchResultItemState>,
-    override val checkIn: ZonedDateTime?,
+    override val checkIn: ZonedDateTime,
     val minCheckOutTime: Time?,
     override val checkOut: ZonedDateTime?,
 ) : AddLodgingItemState {
@@ -233,7 +233,24 @@ data class AddPlaceItemState(
     val minEndTime: ZonedDateTime?,
     val placeName: String?,
     val searchResults: List<AutoCompleteResultState>,
-) : AddPlanItemState
+) : ManualStartEndAddPlanState {
+    override val startState: ManualAddPlanState = ManualAddPlanState(
+        dateTime = timestamp,
+        minDateTime = null,
+        isTimeSet = true,
+        dateSelectionEnabled = dateSelectionEnabled,
+        locationText = placeName,
+        searchResults = searchResults,
+    )
+    override val endState: ManualAddPlanState = ManualAddPlanState(
+        dateTime = endDateTime,
+        minDateTime = minEndTime,
+        isTimeSet = endTimeSelected,
+        dateSelectionEnabled = dateSelectionEnabled,
+        locationText = null,
+        searchResults = emptyList(),
+    )
+}
 
 data class SearchResultItemState(val title: String, val subtitle: String)
 

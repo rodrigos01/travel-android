@@ -15,18 +15,24 @@ import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
 import travel.vola.android.ui.trip.state.ManualStartEndAddPlanState
+import java.time.ZonedDateTime
 
 @Composable
 fun AddLodgingListItem(
     uiState: ManualStartEndAddPlanState,
-    startEndAddPlanState: StartEndAddPlanListItemState,
     onLodgingTextChanged: (CharSequence) -> Unit,
+    onUpdated: (
+        checkIn: ZonedDateTime,
+        checkInTimeSelected: Boolean,
+        checkOut: ZonedDateTime?,
+        checkOutTimeSelected: Boolean,
+        selectedSearchResultIndex: Int,
+    ) -> Unit,
     onFindLodgingButtonTapped: () -> Unit,
 ) {
     Column {
         StartEndAddPlanListItem(
             uiState = uiState,
-            state = startEndAddPlanState,
             startTitle = { Text("CheckIn") },
             startTimeSelectorLabel = "Check-in Time",
             startLabelText = "Lodging Name",
@@ -37,6 +43,22 @@ fun AddLodgingListItem(
             endTimeSelectorLabel = "Check-out Time",
             endLabelText = "Check-out time",
             endPlaceHolder = "Check-out time",
+            onUpdated = {
+                    startDateTime,
+                    startTimeSelected,
+                    selectedStartSearchResultIndex,
+                    endDateTime,
+                    endTimeSelected,
+                    _,
+                ->
+                onUpdated(
+                    startDateTime,
+                    startTimeSelected,
+                    endDateTime,
+                    endTimeSelected,
+                    selectedStartSearchResultIndex
+                )
+            },
         )
         TextButton(
             onClick = onFindLodgingButtonTapped,
@@ -54,30 +76,33 @@ fun AddLodgingListItem(
 fun AddLodgingListItemPreview() {
     AppTheme {
         Surface {
-            AddLodgingListItem(uiState = ManualAddLodgingItemState(
-                "", Time.now(),
-                typeSelectionEnabled = false,
-                startState = ManualAddPlanState(
-                    dateTime = null,
-                    minDateTime = Time.now(),
-                    isTimeSet = false,
-                    dateSelectionEnabled = false,
-                    locationText = null,
-                    searchResults = emptyList()
+            AddLodgingListItem(
+                uiState = ManualAddLodgingItemState(
+                    "", Time.now(),
+                    typeSelectionEnabled = false,
+                    startState = ManualAddPlanState(
+                        dateTime = null,
+                        minDateTime = Time.now(),
+                        isTimeSet = false,
+                        dateSelectionEnabled = false,
+                        locationText = null,
+                        searchResults = emptyList()
+                    ),
+                    endState = ManualAddPlanState(
+                        dateTime = null,
+                        minDateTime = Time.now(),
+                        isTimeSet = false,
+                        dateSelectionEnabled = true,
+                        locationText = null,
+                        searchResults = emptyList()
+                    ),
+                    deleteButtonEnabled = true,
+                    saveButtonEnabled = true,
                 ),
-                endState = ManualAddPlanState(
-                    dateTime = null,
-                    minDateTime = Time.now(),
-                    isTimeSet = false,
-                    dateSelectionEnabled = true,
-                    locationText = null,
-                    searchResults = emptyList()
-                ),
-                deleteButtonEnabled = true,
-                saveButtonEnabled = true,
-            ), startEndAddPlanState = rememberStartEndAddPlanListItemState(
-                rememberAddPlanRowState(), rememberAddPlanRowState()
-            ), onLodgingTextChanged = {}, onFindLodgingButtonTapped = {})
+                onLodgingTextChanged = {},
+                onFindLodgingButtonTapped = {},
+                onUpdated = { _, _, _, _, _ -> },
+            )
         }
     }
 }
