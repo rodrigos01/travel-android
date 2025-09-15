@@ -227,7 +227,7 @@ class TripViewModel(
                 is Flight -> repository.saveFlight(tripId, entity)
                 is Lodging -> repository.saveLodging(tripId, entity)
                 is TimedPlace -> repository.saveTimedPlace(tripId, entity)
-                is RestaurantReservation -> TODO("Not Implemented")
+                is RestaurantReservation -> repository.saveRestaurantReservation(tripId, entity)
             }
         }
     }
@@ -244,7 +244,7 @@ class TripViewModel(
                 is Flight -> repository.deleteFlight(tripId, entity.id)
                 is Lodging -> repository.deleteLodging(tripId, entity.id)
                 is TimedPlace -> repository.deleteTimedPlace(tripId, entity.id)
-                is RestaurantReservation -> TODO("Not Implemented")
+                is RestaurantReservation -> repository.deleteRestaurantReservation(tripId, entity.id)
             }
         }
     }
