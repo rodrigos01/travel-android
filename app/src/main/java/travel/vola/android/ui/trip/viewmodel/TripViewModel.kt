@@ -35,6 +35,7 @@ import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.data.Identifiable
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
@@ -112,6 +113,8 @@ class TripViewModel(
                                     name = entity.place.name,
                                     type = if (entity.place != entity.city) MarkerType.Place else MarkerType.City,
                                 )
+
+                                is RestaurantReservation -> TODO("Not Implemented")
                             }
                         )
                     )
@@ -224,6 +227,7 @@ class TripViewModel(
                 is Flight -> repository.saveFlight(tripId, entity)
                 is Lodging -> repository.saveLodging(tripId, entity)
                 is TimedPlace -> repository.saveTimedPlace(tripId, entity)
+                is RestaurantReservation -> TODO("Not Implemented")
             }
         }
     }
@@ -240,6 +244,7 @@ class TripViewModel(
                 is Flight -> repository.deleteFlight(tripId, entity.id)
                 is Lodging -> repository.deleteLodging(tripId, entity.id)
                 is TimedPlace -> repository.deleteTimedPlace(tripId, entity.id)
+                is RestaurantReservation -> TODO("Not Implemented")
             }
         }
     }
@@ -270,7 +275,8 @@ class TripViewModel(
         }
 
     private fun genItems(trip: Trip): List<TripItemState> {
-        val events = trip.flights.flatMap { it.segments } + trip.lodgings + trip.places
+        val events =
+            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places
         val pairs = events.flatMap { event ->
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
@@ -279,6 +285,8 @@ class TripViewModel(
                     event.startDateTime to event,
                     event.endDateTime?.let { it to event },
                 )
+
+                is RestaurantReservation -> TODO("Not Implemented")
             }
         }.sortedBy { (time, event) ->
             EventComparable(
@@ -521,6 +529,8 @@ class TripViewModel(
                 cityName = event.city.name,
                 imageUrl = event.place.coverImage ?: "",
             )
+
+            is RestaurantReservation -> TODO("Not Implemented")
         }
     }
 
@@ -548,8 +558,7 @@ private fun TripEvent.getPlace(referenceTime: Time) = when (this) {
         airportTo.city
     }
 
-    is Lodging -> city
-    is TimedPlace -> city
+    is WithCity -> city
 }
 
 private val Time.dateString

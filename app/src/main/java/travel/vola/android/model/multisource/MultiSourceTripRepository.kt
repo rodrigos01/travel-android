@@ -74,6 +74,7 @@ class MultiSourceTripRepository(
         currentDataSource.deleteTimedPlace(tripId, timedPlaceId)
     }
 
+
     private val DataSourceType.dataSource: TripDataSource
         get() = dataSources.first { it.dataSourceType == this }
 }

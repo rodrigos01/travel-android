@@ -10,6 +10,7 @@ import travel.vola.android.extensions.mergeMaps
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.TripEntity
@@ -145,6 +146,7 @@ class AddPlanUseCase(
             is Flight -> addFlightUseCase.addItem(id, this, params)
             is Lodging -> addLodgingUseCase.addItem(id, this, params)
             is TimedPlace -> addPlaceUseCase.addItem(id, this, params)
+            is RestaurantReservation -> TODO("Not yet implemented")
         }
     }
 
