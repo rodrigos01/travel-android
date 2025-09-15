@@ -57,4 +57,14 @@ sealed interface PendingData {
         val city: Place? = null,
         val searchResults: List<SimplePlace> = emptyList(),
     ) : PendingData
+
+    data class PendingRestaurant(
+        override val id: String,
+        val entityId: String? = null,
+        val dateTime: ZonedDateTime,
+        val hasTime: Boolean = false,
+        val place: Place? = null,
+        val city: Place? = null,
+        val searchResults: List<SimplePlace> = emptyList(),
+    ) : PendingData
 }

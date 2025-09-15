@@ -18,6 +18,7 @@ import travel.vola.android.ui.trip.creation.usecase.AddFlightItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddPlaceItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
+import travel.vola.android.ui.trip.creation.usecase.AddRestaurantItemActionHandler
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.AddLodgingItemState
 import travel.vola.android.ui.trip.state.AddPlaceItemState
@@ -36,8 +37,10 @@ class AddPlanUseCase(
         coroutineScope = coroutineScope,
     ),
     private val addPlaceUseCase: AddPlaceUseCase = AddPlaceUseCase(coroutineScope = coroutineScope),
+    private val addRestaurantUseCase: AddRestaurantUseCase = AddRestaurantUseCase(coroutineScope = coroutineScope),
 ) : AddPlanItemActionHandler, AddFlightItemActionHandler by addFlightUseCase,
     AddLodgingItemActionHandler by addLodgingUseCase, AddPlaceItemActionHandler by addPlaceUseCase,
+    AddRestaurantItemActionHandler by addRestaurantUseCase,
     LodgingSearchParamsFactory by addLodgingUseCase {
 
     data class StateParams(
@@ -63,6 +66,7 @@ class AddPlanUseCase(
         addFlightUseCase.items,
         addPlaceUseCase.items,
         addLodgingUseCase.items,
+        addRestaurantUseCase.items,
     ).stateIn(coroutineScope, SharingStarted.Eagerly, initialValue = emptyMap())
 
     fun createAddPlanItem(
@@ -122,7 +126,7 @@ class AddPlanUseCase(
             is AddFlightItemState -> addFlightUseCase.removeItem(item)
             is AddLodgingItemState -> addLodgingUseCase.removeItem(item)
             is AddPlaceItemState -> addPlaceUseCase.removeItem(item)
-            is AddRestaurantItemState -> TODO("Not yet implemented")
+            is AddRestaurantItemState -> addRestaurantUseCase.removeItem(item)
         }
     }
 
@@ -139,7 +143,7 @@ class AddPlanUseCase(
             AddPlanItemState.Type.Flight -> addFlightUseCase
             AddPlanItemState.Type.Lodging -> addLodgingUseCase
             AddPlanItemState.Type.Place -> addPlaceUseCase
-            AddPlanItemState.Type.Restaurant -> TODO("Not yet implemented")
+            AddPlanItemState.Type.Restaurant -> addRestaurantUseCase
         }
 
 
@@ -150,7 +154,7 @@ class AddPlanUseCase(
             is Flight -> addFlightUseCase.addItem(id, this, params)
             is Lodging -> addLodgingUseCase.addItem(id, this, params)
             is TimedPlace -> addPlaceUseCase.addItem(id, this, params)
-            is RestaurantReservation -> TODO("Not yet implemented")
+            is RestaurantReservation -> addRestaurantUseCase.addItem(id, this, params)
         }
     }
 
@@ -160,7 +164,7 @@ class AddPlanUseCase(
             is ManualAddLodgingItemState -> addLodgingUseCase.createEntity(this)
             is LodgingSearchItemState -> error("LodgingSearchItemState entity creation not implemented")
             is AddPlaceItemState -> addPlaceUseCase.createEntity(this)
-            is AddRestaurantItemState -> TODO("Not yet implemented")
+            is AddRestaurantItemState -> addRestaurantUseCase.createEntity(this)
         }
     }
 }
