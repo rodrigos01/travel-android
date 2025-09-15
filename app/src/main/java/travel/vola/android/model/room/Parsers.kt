@@ -7,6 +7,7 @@ import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import java.time.ZonedDateTime
@@ -16,6 +17,7 @@ fun RoomData.Trip.toAppDataModel(): Trip {
     val flights = flights.map { it.toAppDataModel() }
     val lodgings = lodgings.map { it.toAppDataModel() }
     val places = places.map { it.toAppDataModel() }
+    val restaurants = restaurants.map { it.toAppDataModel() }
     val image =
         entity.coverImage ?: lodgings.firstOrNull()?.city?.coverImage
         ?: flights.firstOrNull()?.segments?.firstOrNull()?.airportTo?.city?.coverImage
@@ -26,7 +28,7 @@ fun RoomData.Trip.toAppDataModel(): Trip {
         flights = flights,
         lodgings = lodgings,
         places = places,
-        restaurants = emptyList() // TODO: restaurants table,
+        restaurants = restaurants,
     )
 }
 
@@ -67,6 +69,13 @@ fun RoomData.TimedPlace.toAppDataModel(): TimedPlace = TimedPlace(
     hasStartTime = entity.hasStartTime,
     endDateTime = entity.endDateTime,
     hasEndTime = entity.hasEndTime,
+    place = place.toAppDataModel(),
+    city = city.toAppDataModel(),
+)
+
+fun RoomData.RestaurantReservation.toAppDataModel(): RestaurantReservation = RestaurantReservation(
+    id = entity.id,
+    dateTime = entity.dateTime,
     place = place.toAppDataModel(),
     city = city.toAppDataModel(),
 )

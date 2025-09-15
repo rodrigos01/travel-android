@@ -13,6 +13,7 @@ plugins {
     id("com.google.firebase.crashlytics")
     id("com.google.devtools.ksp")
     id("com.google.protobuf") version "0.9.5"
+    id("androidx.room")
 }
 
 android {
@@ -102,6 +103,9 @@ android {
                 it.jvmArgs("-Djava.locale.providers=COMPAT", "-Dfile.encoding=UTF-8")
             }
         }
+    }
+    room {
+        schemaDirectory("$projectDir/schemas")
     }
 }
 

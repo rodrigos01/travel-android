@@ -33,6 +33,12 @@ interface TripDao {
     @Query("SELECT * FROM timedPlace WHERE tripId = :tripId AND id = :timedPlaceId")
     suspend fun getTimedPlace(tripId: String, timedPlaceId: String): Schema.TimedPlace
 
+    @Query("SELECT * FROM restaurantReservation WHERE tripId = :tripId AND id = :restaurantReservationId")
+    suspend fun getRestaurantReservation(
+        tripId: String,
+        restaurantReservationId: String,
+    ): Schema.RestaurantReservation
+
     @Insert
     suspend fun addTrip(trip: Schema.Trip)
 
@@ -55,6 +61,9 @@ interface TripDao {
     suspend fun saveTimedPlace(timedPlace: Schema.TimedPlace)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveRestaurantReservation(restaurantReservation: Schema.RestaurantReservation)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun savePlace(place: RoomData.Place)
 
     @Delete
@@ -68,4 +77,7 @@ interface TripDao {
 
     @Delete
     suspend fun deleteTimedPlace(timedPlace: Schema.TimedPlace)
+
+    @Delete
+    suspend fun deleteRestaurantReservation(restaurantReservation: Schema.RestaurantReservation)
 }
