@@ -171,7 +171,7 @@ sealed interface AddPlanItemState : TripItemState, Identifiable, TripItemState.T
         get() = Type.entries
 
     enum class Type {
-        Flight, Lodging, Place
+        Flight, Lodging, Place, Restaurant
     }
 
     enum class ButtonConfiguration {
@@ -266,6 +266,35 @@ data class AddPlaceItemState(
     )
 }
 
+data class AddRestaurantItemState(
+    override val id: String,
+    override val typeSelectionEnabled: Boolean,
+    override val dateSelectionEnabled: Boolean,
+    override val saveButtonEnabled: Boolean,
+    override val deleteButtonEnabled: Boolean,
+    override val timestamp: Time,
+    val timeSelected: Boolean,
+    val restaurantName: String?,
+    val searchResults: List<AutoCompleteResultState>,
+) : ManualStartEndAddPlanState {
+    override val startState: ManualAddPlanState = ManualAddPlanState(
+        dateTime = timestamp,
+        minDateTime = null,
+        isTimeSet = true,
+        dateSelectionEnabled = dateSelectionEnabled,
+        locationText = restaurantName,
+        searchResults = searchResults,
+    )
+    override val endState: ManualAddPlanState = ManualAddPlanState(
+        dateTime = null,
+        minDateTime = null,
+        isTimeSet = false,
+        dateSelectionEnabled = dateSelectionEnabled,
+        locationText = null,
+        searchResults = emptyList(),
+    )
+}
+
 data class SearchResultItemState(val title: String, val subtitle: String)
 
 val AddPlanItemState.type
@@ -274,4 +303,5 @@ val AddPlanItemState.type
         is ManualAddLodgingItemState, is LodgingSearchItemState -> AddPlanItemState.Type.Lodging
 
         is AddPlaceItemState -> AddPlanItemState.Type.Place
+        is AddRestaurantItemState -> AddPlanItemState.Type.Restaurant
     }
