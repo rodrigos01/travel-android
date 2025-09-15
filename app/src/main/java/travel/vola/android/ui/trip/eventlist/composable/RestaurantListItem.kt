@@ -1,7 +1,6 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -18,7 +17,7 @@ fun RestaurantListItem(state: TripItemState.RestaurantReservationItemState) {
         dayOfWeekString = state.dayOfWeek,
         timeString = state.time,
         iconPainter = rememberVectorPainter(Icons.Default.Restaurant),
-        headline = "Reservation at ${state.restaurantName}",
+        headline = state.restaurantName,
         supporting = state.restaurantAddress,
     )
 }
