@@ -8,21 +8,21 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ContextualFlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.ButtonDefaults
@@ -31,7 +31,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -48,9 +47,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.window.core.layout.WindowSizeClass
 import coil.compose.rememberAsyncImagePainter
-import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.ui.theme.AppTheme
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -59,47 +56,37 @@ fun ImageGallery(
     models: List<String>,
     modifier: Modifier = Modifier,
     selectedInitially: String? = null,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     var selectedModel by rememberSaveable { mutableStateOf(selectedInitially) }
-    val galleryScrollState = rememberScrollState()
-
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val maxItemsPerLine = when {
-        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) -> 8
-        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) -> 5
-        else -> 3
-    }
-
     AnimatedContent(selectedModel, contentKey = { it != null }) { selected ->
         if (selected == null) {
-            ContextualFlowRow(
-                models.size,
-                maxItemsInEachRow = maxItemsPerLine,
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 96.dp),
                 horizontalArrangement = Arrangement.spacedBy(
                     8.dp,
                     alignment = Alignment.CenterHorizontally
                 ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(align = Alignment.Top)
-                    .verticalScroll(galleryScrollState)
-                    .then(modifier)
-                    .padding(horizontal = 16.dp),
-            ) { index ->
-                val width = maxWidthInLine / (maxItemsPerLine - indexInLine) - 8.dp
-                GalleryItem(
-                    model = models[index],
-                    modifier = Modifier
-                        .size(width)
-                        .clickable { selectedModel = models[index] },
-                )
+                contentPadding = contentPadding,
+                modifier = modifier.padding(horizontal = 16.dp),
+            ) {
+                items(models) { model ->
+                    GalleryItem(
+                        model = model,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1F)
+                            .clickable { selectedModel = model },
+                    )
+                }
             }
         } else {
             Column(
                 verticalArrangement = Arrangement.SpaceAround,
                 modifier = Modifier
                     .fillMaxHeight()
+                    .padding(contentPadding)
                     .then(modifier)
             ) {
                 TextButton(
@@ -198,7 +185,7 @@ fun GalleryItem(model: String, modifier: Modifier = Modifier, colorFilter: Color
             .asSizedImageTarget(sizedImageState),
         painter = rememberAsyncImagePainter(
             sizedImageState.model,
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
         ),
         contentDescription = "Lodging Image Description",
         contentScale = ContentScale.Crop,
@@ -208,22 +195,19 @@ fun GalleryItem(model: String, modifier: Modifier = Modifier, colorFilter: Color
 
 @Composable
 @Preview
-@TabletPreview
 fun ImageGalleryPreview() {
     val models = List(46, { index ->
         "https://photo.hotellook.com/image_v2/limit/h374703_${index % 23}/1024/768.auto"
     })
     AppTheme {
-        Surface {
-            Overlay {
-                Box {
-                    ImageGallery(
-                        models = models,
-//                        selectedInitially = models.first(),
-                        modifier = Modifier.padding(top = 96.dp)
-                    )
-                }
-            }
+        Surface(modifier = Modifier.fillMaxSize()) {
+            ImageGallery(
+                models = models,
+                selectedInitially = models.first(),
+                contentPadding = PaddingValues(top = 96.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+            )
         }
     }
 }

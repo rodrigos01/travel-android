@@ -90,7 +90,6 @@ import travel.vola.android.common.ui.components.Overlay
 import travel.vola.android.common.ui.components.OverlayHostProvider
 import travel.vola.android.common.ui.components.asSizedImageTarget
 import travel.vola.android.common.ui.components.rememberSizedImageState
-import travel.vola.android.common.ui.modifier.matchWidthToHeight
 import travel.vola.android.common.ui.modifier.skeletonLoader
 import travel.vola.android.common.ui.preview.PreviewLightDarkSystemUI
 import travel.vola.android.common.ui.preview.loremIpsum
@@ -217,7 +216,7 @@ fun LodgingDetailsContent(
                         ),
                         modifier = Modifier
                             .weight(1F)
-                            .matchWidthToHeight()
+                            .aspectRatio(1F)
                             .clickable {
                                 showImageGallery = true
                                 imageGalleryModels = state.photos
@@ -228,7 +227,7 @@ fun LodgingDetailsContent(
                     Box(
                         modifier = Modifier
                             .weight(1F)
-                            .matchWidthToHeight()
+                            .aspectRatio(1F)
                             .clickable {
                                 showImageGallery = true
                                 imageGalleryModels = state.photos
@@ -468,8 +467,7 @@ fun LodgingDetailsContent(
             ImageGallery(
                 imageGalleryModels,
                 selectedInitially = selectedGalleryModel,
-                modifier = Modifier
-                    .padding(paddingValues),
+                contentPadding = paddingValues,
             )
         }
     }
