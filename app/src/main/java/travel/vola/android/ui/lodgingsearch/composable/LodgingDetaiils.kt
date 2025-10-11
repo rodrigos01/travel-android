@@ -467,8 +467,7 @@ fun LodgingDetailsContent(
             ImageGallery(
                 imageGalleryModels,
                 selectedInitially = selectedGalleryModel,
-                modifier = Modifier
-                    .padding(paddingValues),
+                contentPadding = paddingValues,
             )
         }
     }
