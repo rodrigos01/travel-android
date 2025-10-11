@@ -4,8 +4,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ContextualFlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,31 +36,25 @@ fun TripList(
     onTripClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-
-    var smallerWidth by remember { mutableIntStateOf(Int.MAX_VALUE) }
-    ContextualFlowRow(
-        itemCount = state.trips.size,
-        maxItemsInEachRow = MAX_ITEMS_PER_LINE,
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = 380.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = modifier,
-    ) { index ->
-        val trip = state.trips.getOrNull(index) ?: return@ContextualFlowRow
-        TripListItem(
-            name = trip.name,
-            coverImageUrl = trip.coverImage,
-            modifier = Modifier
-                .weight(1F)
-                .widthIn(min = 260.dp, max = with(LocalDensity.current) { smallerWidth.toDp() })
-                .heightIn(min = 280.dp)
-                .shadow(elevation = 8.dp, shape = MaterialTheme.shapes.large)
-                .onPlaced {
-                    smallerWidth = min(smallerWidth, it.size.width)
-                }
-                .clickable {
-                    onTripClicked(trip.id)
-                },
-        )
+    ) {
+        items(state.trips) { trip ->
+            TripListItem(
+                name = trip.name,
+                coverImageUrl = trip.coverImage,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 280.dp)
+                    .shadow(elevation = 8.dp, shape = MaterialTheme.shapes.large)
+                    .clickable {
+                        onTripClicked(trip.id)
+                    },
+            )
+        }
     }
 }
 
