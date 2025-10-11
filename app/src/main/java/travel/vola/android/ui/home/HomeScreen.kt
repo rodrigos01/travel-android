@@ -1,11 +1,9 @@
 package travel.vola.android.ui.home
 
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.DropdownMenu
@@ -84,14 +82,12 @@ fun HomeScreen(navController: NavController) {
             onTripClicked = { tripId ->
                 navController.navigate(TripDetailsDestination.getRoute(tripId))
             },
-            modifier = Modifier
-                .verticalScroll(rememberScrollState())
-                .padding(
-                    top = paddingValues.calculateTopPadding() + 16.dp,
-                    start = paddingValues.calculateStartPadding(LocalLayoutDirection.current) + 16.dp,
-                    bottom = paddingValues.calculateBottomPadding() + 16.dp,
-                    end = paddingValues.calculateEndPadding(LocalLayoutDirection.current) + 16.dp,
-                ),
+            contentPadding = PaddingValues(
+                top = paddingValues.calculateTopPadding() + 16.dp,
+                start = paddingValues.calculateStartPadding(LocalLayoutDirection.current) + 16.dp,
+                bottom = paddingValues.calculateBottomPadding() + 24.dp,
+                end = paddingValues.calculateEndPadding(LocalLayoutDirection.current) + 16.dp,
+            ),
         )
     }
 }

@@ -4,7 +4,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ContextualFlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -27,19 +29,19 @@ import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.triplist.TripListUseCase
 import kotlin.math.min
 
-const val MAX_ITEMS_PER_LINE = 3
-
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TripList(
     state: TripListUseCase.State,
     onTripClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 380.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = contentPadding,
         modifier = modifier,
     ) {
         items(state.trips) { trip ->
@@ -48,7 +50,6 @@ fun TripList(
                 coverImageUrl = trip.coverImage,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 280.dp)
                     .shadow(elevation = 8.dp, shape = MaterialTheme.shapes.large)
                     .clickable {
                         onTripClicked(trip.id)
