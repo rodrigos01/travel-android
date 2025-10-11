@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -18,12 +19,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import travel.vola.android.R
 import travel.vola.android.common.ui.components.asSizedImageTarget
 import travel.vola.android.common.ui.components.rememberSizedImageState
 import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
+import travel.vola.android.ui.theme.AppTheme
 
 @Composable
 fun RoomOfferItem(
@@ -100,3 +103,28 @@ fun RoomOfferItem(
         }
     }
 }
+
+@Preview
+@Composable
+private fun RoomOfferItemPreview() {
+    AppTheme {
+        Surface {
+            RoomOfferItem(
+                state = LodgingRoomOfferState(
+                    description = "Deluxe Room with King Bed and a very nice city view",
+                    photos = listOf("https://picsum.photos/200"),
+                    price = 123.45,
+                    breakfastIncluded = true,
+                    refundable = true,
+                    prePaymentRequired = false,
+                    isAllInclusive = false,
+                    bookingAgency = "Booking.com",
+                    bookingUrl = "https://www.booking.com/",
+                ),
+                onCoverImageTapped = {},
+                onViewOfferTapped = {}
+            )
+        }
+    }
+}
+
