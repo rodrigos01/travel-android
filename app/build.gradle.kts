@@ -8,7 +8,7 @@ plugins {
     id("androidx.navigation.safeargs")
     id("com.google.gms.google-services")
     id("kotlinx-serialization")
-    id("org.jetbrains.kotlin.plugin.compose") version "2.2.10"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.2.20"
     id("com.google.firebase.appdistribution")
     id("com.google.firebase.crashlytics")
     id("com.google.devtools.ksp")
@@ -162,6 +162,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling)
     implementation(libs.compose.foundation)
+    implementation(libs.compose.material.icons)
     implementation(libs.androidx.material3)
     implementation(libs.activity.compose)
     implementation(libs.lifecycle.viewmodel.compose)
