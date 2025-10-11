@@ -56,6 +56,7 @@ fun ImageGallery(
     models: List<String>,
     modifier: Modifier = Modifier,
     selectedInitially: String? = null,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     var selectedModel by rememberSaveable { mutableStateOf(selectedInitially) }
     AnimatedContent(selectedModel, contentKey = { it != null }) { selected ->
@@ -67,6 +68,7 @@ fun ImageGallery(
                     alignment = Alignment.CenterHorizontally
                 ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = contentPadding,
                 modifier = modifier.padding(horizontal = 16.dp),
             ) {
                 items(models) { model ->
@@ -84,6 +86,7 @@ fun ImageGallery(
                 verticalArrangement = Arrangement.SpaceAround,
                 modifier = Modifier
                     .fillMaxHeight()
+                    .padding(contentPadding)
                     .then(modifier)
             ) {
                 TextButton(
@@ -200,10 +203,10 @@ fun ImageGalleryPreview() {
         Surface(modifier = Modifier.fillMaxSize()) {
             ImageGallery(
                 models = models,
-//                        selectedInitially = models.first(),
+                selectedInitially = models.first(),
+                contentPadding = PaddingValues(top = 96.dp),
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 96.dp)
             )
         }
     }
