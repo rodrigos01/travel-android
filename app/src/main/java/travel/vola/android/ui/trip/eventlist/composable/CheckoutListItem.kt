@@ -13,6 +13,7 @@ fun CheckoutListItem(
     dayOfWeekString: String?,
     timeString: String,
     hotelName: String,
+    position: EventListItemPosition = EventListItemPosition.MIDDLE,
 ) {
     EventListItem(
         showDate,
@@ -22,6 +23,7 @@ fun CheckoutListItem(
         icon = R.drawable.hotel_baseline_24,
         headline = stringResource(id = R.string.hotel_checkout_title),
         supporting = hotelName,
+        position = position,
     )
 }
 
