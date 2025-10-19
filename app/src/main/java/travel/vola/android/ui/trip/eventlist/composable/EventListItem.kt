@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -14,12 +15,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import travel.vola.android.R
 import travel.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.trip.state.TripItemState
+
+enum class EventListItemPosition {
+    TOP, MIDDLE, BOTTOM, SINGLE,
+}
 
 @Composable
 fun EventListItem(
@@ -30,6 +37,7 @@ fun EventListItem(
     @DrawableRes icon: Int,
     headline: String,
     supporting: String,
+    position: EventListItemPosition = EventListItemPosition.MIDDLE,
 ) = EventListItem(
     showDate = showDate,
     dayOfMonthString = dayOfMonthString,
@@ -38,6 +46,7 @@ fun EventListItem(
     iconPainter = painterResource(id = icon),
     headline = headline,
     supporting = supporting,
+    position = position,
 )
 
 @Composable
@@ -50,6 +59,7 @@ fun EventListItem(
     iconPainter: Painter,
     headline: String,
     supporting: String,
+    position: EventListItemPosition = EventListItemPosition.MIDDLE
 ) {
     val typography = MaterialTheme.typography
     Row(
@@ -66,6 +76,8 @@ fun EventListItem(
                 )
             }
         }
+        val roundedCornerRadius = 12.dp
+        val separatorPadding = 2.dp
         ListItem(
             colors = ListItemDefaults.colors(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -73,7 +85,20 @@ fun EventListItem(
                 supportingColor = MaterialTheme.colorScheme.onSecondaryContainer,
                 trailingIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
             ),
-            modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp),
+            modifier = Modifier
+                .padding(
+                    start = 8.dp,
+                    top = if (position == EventListItemPosition.TOP || position == EventListItemPosition.SINGLE) 4.dp else separatorPadding,
+                    bottom = if (position == EventListItemPosition.BOTTOM || position == EventListItemPosition.SINGLE) 4.dp else separatorPadding,
+                )
+                .clip(
+                    RoundedCornerShape(
+                        topStart = if (position == EventListItemPosition.TOP || position == EventListItemPosition.SINGLE) roundedCornerRadius else 0.dp,
+                        topEnd = if (position == EventListItemPosition.TOP || position == EventListItemPosition.SINGLE) roundedCornerRadius else 0.dp,
+                        bottomStart = if (position == EventListItemPosition.BOTTOM || position == EventListItemPosition.SINGLE) roundedCornerRadius else 0.dp,
+                        bottomEnd = if (position == EventListItemPosition.BOTTOM || position == EventListItemPosition.SINGLE) roundedCornerRadius else 0.dp,
+                    )
+                ),
             leadingContent = {
                 Icon(
                     painter = iconPainter,
@@ -100,6 +125,13 @@ fun EventListItem(
     }
 }
 
+fun TripItemState.EventItemState.BackgroundStyle.asEvenListItemPosition() = when (this) {
+    TripItemState.EventItemState.BackgroundStyle.TOP -> EventListItemPosition.TOP
+    TripItemState.EventItemState.BackgroundStyle.MIDDLE -> EventListItemPosition.MIDDLE
+    TripItemState.EventItemState.BackgroundStyle.BOTTOM -> EventListItemPosition.BOTTOM
+    TripItemState.EventItemState.BackgroundStyle.SINGLE -> EventListItemPosition.SINGLE
+}
+
 @Composable
 @PreviewLightDark
 fun EventListItemPreview() {
@@ -112,6 +144,7 @@ fun EventListItemPreview() {
             timeString = "6:15 AM",
             headline = "Flight to Paris",
             supporting = "John F. Kennedy Intl.",
+            position = EventListItemPosition.TOP,
         )
     }
 }

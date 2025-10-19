@@ -313,13 +313,14 @@ class TripViewModel(
                 previousItems.lastOrNull { it.first.monthString == time.monthString } == null
             val firstInDay =
                 previousItems.lastOrNull { it.first.dateString == time.dateString } == null
-            val nextItems = pairs.nextItems(index)
-            val nextItem = nextItems.firstOrNull()
             val place = if ((event as? TimedPlace)?.isDayTrip == true) {
                 previousItems.lastOrNull()?.place
             } else {
                 event.getPlace(time)
             }
+            val firstInPlace = previousItems.lastOrNull()?.place != place
+            val nextItems = pairs.nextItems(index)
+            val nextItem = nextItems.firstOrNull()
             val lastInPlace =
                 nextItems.takeWhile { it.place == place || (it.second as? TimedPlace)?.isDayTrip == true }
                     .isEmpty()
@@ -339,7 +340,24 @@ class TripViewModel(
                     )
                 }
                 if (event !is TimedPlace || event.isDayTrip) {
-                    add(genItem(time, event, showDate = firstInDay))
+                    val backgroundStyle =
+                        if (firstInDay && (lastInSection)) {
+                            TripItemState.EventItemState.BackgroundStyle.SINGLE
+                        } else if (firstInDay || firstInPlace) {
+                            TripItemState.EventItemState.BackgroundStyle.TOP
+                        } else if (lastInSection) {
+                            TripItemState.EventItemState.BackgroundStyle.BOTTOM
+                        } else {
+                            TripItemState.EventItemState.BackgroundStyle.MIDDLE
+                        }
+                    add(
+                        genItem(
+                            time,
+                            event,
+                            showDate = firstInDay,
+                            backgroundStyle = backgroundStyle,
+                        )
+                    )
                 }
                 if (dateRangeItem != null) {
                     add(dateRangeItem)
@@ -472,6 +490,7 @@ class TripViewModel(
         timestamp: Time,
         event: TripEvent,
         showDate: Boolean,
+        backgroundStyle: TripItemState.EventItemState.BackgroundStyle,
     ): TripItemState.EventItemState {
         contract { returns() implies (event is FlightSegment || event is Lodging) }
         return when (event) {
@@ -486,6 +505,7 @@ class TripViewModel(
                         time = event.departure.timeString,
                         destination = event.airportTo.city.name,
                         airport = event.airportFrom.name,
+                        backgroundStyle = backgroundStyle,
                     )
                 } else {
                     TripItemState.FlightArrivalItemState(
@@ -496,6 +516,7 @@ class TripViewModel(
                         dayOfWeek = event.arrival.dayOfWeekString,
                         time = event.arrival.timeString,
                         airport = event.airportTo.name,
+                        backgroundStyle = backgroundStyle,
                     )
                 }
             }
@@ -511,6 +532,7 @@ class TripViewModel(
                         time = event.checkIn.timeString,
                         hotelName = event.name ?: "",
                         hotelAddress = event.address,
+                        backgroundStyle = backgroundStyle,
                     )
                 } else {
                     TripItemState.HotelCheckOutItemState(
@@ -521,6 +543,7 @@ class TripViewModel(
                         dayOfMonth = event.checkout.dayOfMonthString,
                         time = event.checkout.timeString,
                         hotelName = event.name ?: event.address,
+                        backgroundStyle = backgroundStyle,
                     )
                 }
             }
@@ -536,6 +559,7 @@ class TripViewModel(
                 placeName = event.place.name,
                 cityName = event.city.name,
                 imageUrl = event.place.coverImage ?: "",
+                backgroundStyle = backgroundStyle,
             )
 
             is RestaurantReservation -> TripItemState.RestaurantReservationItemState(
@@ -547,6 +571,7 @@ class TripViewModel(
                 time = event.dateTime.timeString,
                 restaurantName = event.place.name,
                 restaurantAddress = event.place.address,
+                backgroundStyle = backgroundStyle,
             )
         }
     }
