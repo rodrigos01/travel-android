@@ -5,6 +5,7 @@ import kotlinx.coroutines.launch
 import travel.vola.android.common.coroutines.MutexScope
 import travel.vola.android.extensions.MapFlow
 import travel.vola.android.extensions.toMidnight
+import travel.vola.android.extensions.update
 import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.Time
 import travel.vola.android.model.repository.PlaceAutoCompleteRepository
@@ -97,10 +98,12 @@ class AddRestaurantUseCase(
         coroutineScope.launch {
             val details = selected?.id?.let { selectedId -> placeRepository.details(selectedId) }
             itemStore.update(itemId) {
+                val timeZone = (details?.place?.timeZone ?: details?.city?.timeZone)?.toZoneId()
+                    ?: it.dateTime.zone
                 PendingData.PendingRestaurant(
                     id = it.id,
                     entityId = it.entityId,
-                    dateTime = dateTime ?: it.dateTime,
+                    dateTime = dateTime?.update(timeZone = timeZone) ?: it.dateTime,
                     hasTime = timeSelected,
                     searchResults = emptyList(),
                     place = details?.place ?: it.place,

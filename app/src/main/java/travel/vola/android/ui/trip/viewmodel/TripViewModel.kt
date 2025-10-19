@@ -633,8 +633,8 @@ private class EventComparable(
             EventType.UNKNOWN -> 0
             EventType.ARRIVAL -> 1
             EventType.CHECKIN -> 2
-            EventType.CHECKOUT -> 4
-            EventType.PLACE -> 3
+            EventType.CHECKOUT -> 3
+            EventType.PLACE -> 4
             EventType.DEPARTURE -> 5
         }
 

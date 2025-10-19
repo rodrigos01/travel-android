@@ -5,6 +5,7 @@ import kotlinx.coroutines.launch
 import travel.vola.android.common.coroutines.MutexScope
 import travel.vola.android.extensions.MapFlow
 import travel.vola.android.extensions.toMidnight
+import travel.vola.android.extensions.update
 import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.repository.PlaceAutoCompleteRepository
@@ -99,12 +100,14 @@ class AddPlaceUseCase(
         coroutineScope.launch {
             val details = selected?.id?.let { selectedId -> placeRepository.details(selectedId) }
             itemStore.update(itemId) {
+                val timeZone = (details?.place?.timeZone ?: details?.city?.timeZone)?.toZoneId()
+                    ?: it.startDateTime.zone
                 PendingData.PendingTimedPlace(
                     id = it.id,
                     entityId = it.entityId,
-                    startDateTime = startDateTime ?: it.startDateTime,
+                    startDateTime = startDateTime?.update(timeZone = timeZone) ?: it.startDateTime,
                     hasStartTime = startTimeSelected,
-                    endDateTime = endDateTime,
+                    endDateTime = endDateTime?.update(timeZone = timeZone),
                     hasEndTime = endTimeSelected,
                     searchResults = emptyList(),
                     place = details?.place ?: it.place,
