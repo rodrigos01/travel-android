@@ -3,11 +3,11 @@ package travel.vola.android.ui.trip.eventlist.composable
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -52,46 +52,51 @@ fun EventListItem(
     supporting: String,
 ) {
     val typography = MaterialTheme.typography
-    Column(
+    Row(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 16.dp)
     ) {
-        Row {
-            if (dayOfMonthString != null && dayOfWeekString != null) {
-                Box(modifier = Modifier.alpha(if (showDate) 1F else 0F)) {
-                    LeadingDate(
-                        dayOfMonth = dayOfMonthString,
-                        dayOfWeek = dayOfWeekString,
-                        showSmall = false,
+        if (dayOfMonthString != null && dayOfWeekString != null) {
+            Box(modifier = Modifier.alpha(if (showDate) 1F else 0F)) {
+                LeadingDate(
+                    dayOfMonth = dayOfMonthString,
+                    dayOfWeek = dayOfWeekString,
+                    showSmall = false,
+                )
+            }
+        }
+        ListItem(
+            colors = ListItemDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                headlineColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                supportingColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                trailingIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            ),
+            modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp),
+            leadingContent = {
+                Icon(
+                    painter = iconPainter,
+                    tint = LocalContentColor.current,
+                    contentDescription = "Event Icon",
+                )
+            },
+            overlineContent = {
+                if (showTime) {
+                    Text(
+                        text = timeString,
+                        style = typography.bodyMedium,
                     )
                 }
-            }
-            ListItem(
-                leadingContent = {
-                    Icon(
-                        painter = iconPainter,
-                        tint = LocalContentColor.current,
-                        contentDescription = "Event Icon",
-                    )
-                },
-                overlineContent = {
-                    if (showTime) {
-                        Text(
-                            text = timeString,
-                            style = typography.bodyMedium,
-                        )
-                    }
-                },
-                headlineContent = { Text(headline, style = typography.titleMedium) },
-                supportingContent = {
-                    Text(
-                        text = supporting,
-                        style = typography.bodyMedium
-                    )
-                },
-            )
-        }
+            },
+            headlineContent = { Text(headline, style = typography.titleMedium) },
+            supportingContent = {
+                Text(
+                    text = supporting,
+                    style = typography.bodyMedium
+                )
+            },
+        )
     }
 }
 
