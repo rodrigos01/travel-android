@@ -54,6 +54,7 @@ interface ApiData {
         val address: String,
         val latitude: Double,
         val longitude: Double,
+        val timezone: String,
         val coverImage: String?,
         val city: Place?,
         val externalId: String,

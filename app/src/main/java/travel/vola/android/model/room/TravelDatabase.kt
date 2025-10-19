@@ -6,13 +6,13 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import androidx.room.migration.AutoMigrationSpec
+import androidx.room.migration.Migration
 
 @Database(
     entities = [RoomData.Schema.Trip::class, RoomData.Schema.Flight::class, RoomData.Schema.FlightSegment::class, RoomData.Schema.Airport::class, RoomData.Schema.Lodging::class, RoomData.Schema.TimedPlace::class, RoomData.Place::class, RoomData.Schema.RestaurantReservation::class],
-    version = 2,
+    version = 3,
     autoMigrations = [
-        AutoMigration(from = 1, to = 2)
+        AutoMigration(from = 1, to = 2),
     ]
 )
 @TypeConverters(Converters::class)
@@ -25,5 +25,9 @@ fun buildDatabase(context: Context): TravelDatabase =
         context,
         TravelDatabase::class.java,
         "travel-db",
+    ).addMigrations(
+        Migration(2, 3) {
+            it.execSQL("ALTER TABLE place ADD COLUMN timeZone TEXT")
+        }
     )
         .build()

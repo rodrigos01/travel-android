@@ -177,6 +177,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
                 name = place.name,
                 latitude = place.latitude,
                 longitude = place.longitude,
+                timeZone = place.timeZone,
                 coverImage = place.coverImage,
                 address = place.address,
                 externalId = place.externalId,

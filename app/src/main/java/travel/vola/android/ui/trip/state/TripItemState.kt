@@ -251,7 +251,7 @@ data class AddPlaceItemState(
     override val startState: ManualAddPlanState = ManualAddPlanState(
         dateTime = timestamp,
         minDateTime = null,
-        isTimeSet = true,
+        isTimeSet = startTimeSelected,
         dateSelectionEnabled = dateSelectionEnabled,
         locationText = placeName,
         searchResults = searchResults,

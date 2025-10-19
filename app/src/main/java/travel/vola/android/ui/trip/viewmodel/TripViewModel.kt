@@ -585,7 +585,7 @@ private class EventComparable(
     private val time: Time, private val event: TripEvent,
 ) : Comparable<EventComparable> {
     override fun compareTo(other: EventComparable): Int {
-        if (time.dateString != other.time.dateString) {
+        if (time.dateString != other.time.dateString || type == EventType.UNKNOWN) {
             return time.compareTo(other.time)
         }
         val comparison = if (event.getPlace(time) == other.event.getPlace(other.time)) {
@@ -633,8 +633,8 @@ private class EventComparable(
             EventType.UNKNOWN -> 0
             EventType.ARRIVAL -> 1
             EventType.CHECKIN -> 2
-            EventType.CHECKOUT -> 4
-            EventType.PLACE -> 3
+            EventType.CHECKOUT -> 3
+            EventType.PLACE -> 4
             EventType.DEPARTURE -> 5
         }
 

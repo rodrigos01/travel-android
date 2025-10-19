@@ -86,6 +86,7 @@ fun RoomData.Place.toAppDataModel(): Place = Place(
     address = address,
     latitude = latitude,
     longitude = longitude,
+    timeZone = timeZone ?: TimeZone.getDefault(),
     coverImage = coverImage,
     externalId = externalId,
     source = source,
