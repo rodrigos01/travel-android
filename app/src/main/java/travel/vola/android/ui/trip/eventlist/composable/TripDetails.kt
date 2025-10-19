@@ -208,14 +208,12 @@ private fun TripDetailItem(
             dayOfWeekStart = event.dayOfWeekStart,
             dayOfMonthEnd = event.dayOfMonthEnd,
             dayOfWeekEnd = event.dayOfWeekEnd,
-            showBottomDivider = event.showBottomDivider,
             onAddButtonClick = { viewModel.addButtonTapped(event.id) },
         )
 
         is EmptyDateItemState -> EmptyDateListItem(
             dayOfMonth = event.dayOfMonth,
             dayOfWeek = event.dayOfWeek,
-            showBottomDivider = event.showBottomDivider,
             onTap = { viewModel.emptyDateRowTapped(event.id) },
         )
 
@@ -237,6 +235,7 @@ private fun TripDetailItem(
                     event.time,
                     event.destination,
                     event.airport,
+                    event.backgroundStyle.asEvenListItemPosition(),
                 )
 
                 is FlightArrivalItemState -> ArrivalEventListItem(
@@ -245,6 +244,7 @@ private fun TripDetailItem(
                     event.dayOfWeek,
                     event.time,
                     event.airport,
+                    event.backgroundStyle.asEvenListItemPosition(),
                 )
 
                 is HotelCheckInItemState -> CheckinListItem(
@@ -253,6 +253,7 @@ private fun TripDetailItem(
                     event.dayOfWeek,
                     event.time,
                     event.hotelName,
+                    event.backgroundStyle.asEvenListItemPosition(),
                 )
 
                 is HotelCheckOutItemState -> CheckoutListItem(
@@ -261,6 +262,7 @@ private fun TripDetailItem(
                     event.dayOfWeek,
                     event.time,
                     event.hotelName,
+                    event.backgroundStyle.asEvenListItemPosition(),
                 )
 
                 is TripItemState.TimedPlaceItemState -> TimedPlaceListItem(event)
@@ -269,10 +271,9 @@ private fun TripDetailItem(
         }
 
         is TripItemState.InitialAddPlanItemState -> EmptyAddPlanListItem(
-            showDivider = false, onAddButtonClick = { viewModel.addButtonTapped(event.id) })
+            onAddButtonClick = { viewModel.addButtonTapped(event.id) })
 
         is TripItemState.EmptyAddPlanItemState -> EmptyAddPlanListItem(
-            showDivider = event.showDivider,
             onAddButtonClick = { viewModel.addButtonTapped(event.id) })
 
         is AddPlanItemState -> AddPlanListItem(

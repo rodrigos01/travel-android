@@ -19,6 +19,7 @@ fun RestaurantListItem(state: TripItemState.RestaurantReservationItemState) {
         iconPainter = rememberVectorPainter(Icons.Default.Restaurant),
         headline = state.restaurantName,
         supporting = state.restaurantAddress,
+        position = state.backgroundStyle.asEvenListItemPosition(),
     )
 }
 

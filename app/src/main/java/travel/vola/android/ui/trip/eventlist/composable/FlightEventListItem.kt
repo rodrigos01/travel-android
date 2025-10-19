@@ -14,6 +14,7 @@ fun FlightEventListItem(
     timeString: String,
     destination: String,
     airportName: String,
+    position: EventListItemPosition = EventListItemPosition.MIDDLE,
 ) {
     EventListItem(
         showDate,
@@ -23,6 +24,7 @@ fun FlightEventListItem(
         icon = R.drawable.flight_takeoff_baseline_24,
         headline = stringResource(R.string.flight_event_tile, destination),
         supporting = airportName,
+        position = position
     )
 }
 

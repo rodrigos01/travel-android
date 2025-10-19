@@ -20,6 +20,7 @@ fun TimedPlaceListItem(state: TripItemState.TimedPlaceItemState) {
         iconPainter = rememberVectorPainter(Icons.Default.Place),
         headline = state.placeName,
         supporting = state.cityName,
+        position = state.backgroundStyle.asEvenListItemPosition()
     )
 }
 

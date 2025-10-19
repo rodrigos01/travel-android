@@ -29,7 +29,6 @@ sealed interface TripItemState {
         val dayOfWeekStart: String,
         val dayOfMonthEnd: String,
         val dayOfWeekEnd: String,
-        val showBottomDivider: Boolean,
     ) : TripItemState, Timeable, Replaceable
 
     interface Replaceable : Identifiable
@@ -41,7 +40,6 @@ sealed interface TripItemState {
         override val timestamp: Time,
         val dayOfMonth: String,
         val dayOfWeek: String,
-        val showBottomDivider: Boolean,
     ) : TripItemState, Timeable, Replaceable
 
     sealed interface EventItemState : TripItemState, Timeable, Editable {
@@ -51,6 +49,11 @@ sealed interface TripItemState {
         val time: String
         val title: String?
         val subtitle: String?
+        val backgroundStyle: BackgroundStyle
+
+        enum class BackgroundStyle {
+            TOP, MIDDLE, BOTTOM, SINGLE
+        }
     }
 
     data class FlightDepartureItemState(
@@ -60,6 +63,7 @@ sealed interface TripItemState {
         override val dayOfMonth: String,
         override val dayOfWeek: String,
         override val time: String,
+        override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
         val destination: String,
         val airport: String,
     ) : EventItemState, Replaceable {
@@ -74,6 +78,7 @@ sealed interface TripItemState {
         override val dayOfMonth: String,
         override val dayOfWeek: String,
         override val time: String,
+        override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
         val airport: String,
     ) : EventItemState, Replaceable {
         override val title = null
@@ -87,6 +92,7 @@ sealed interface TripItemState {
         override val dayOfMonth: String,
         override val dayOfWeek: String,
         override val time: String,
+        override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
         val hotelName: String,
         val hotelAddress: String,
     ) : EventItemState, Replaceable {
@@ -101,6 +107,7 @@ sealed interface TripItemState {
         override val dayOfMonth: String,
         override val dayOfWeek: String,
         override val time: String,
+        override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
         val hotelName: String,
     ) : EventItemState, Replaceable {
         override val title = null
@@ -114,6 +121,7 @@ sealed interface TripItemState {
         override val dayOfMonth: String,
         override val dayOfWeek: String,
         override val time: String,
+        override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
         val showTime: Boolean,
         val placeName: String,
         val cityName: String,
@@ -129,6 +137,7 @@ sealed interface TripItemState {
         override val showDate: Boolean,
         override val dayOfMonth: String,
         override val dayOfWeek: String,
+        override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
         override val time: String,
         val restaurantName: String,
         val restaurantAddress: String,
@@ -140,7 +149,6 @@ sealed interface TripItemState {
     data class EmptyAddPlanItemState(
         override val id: String,
         override val timestamp: Time,
-        val showDivider: Boolean,
     ) : Replaceable, Timeable, TripItemState
 
     data class InitialAddPlanItemState(
