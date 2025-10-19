@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import travel.vola.android.ui.theme.AppTheme
 
 @Composable
-fun EmptyAddPlanListItem(showDivider: Boolean = true, onAddButtonClick: () -> Unit) {
+fun EmptyAddPlanListItem(onAddButtonClick: () -> Unit) {
     Column(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.surface)
@@ -29,14 +29,6 @@ fun EmptyAddPlanListItem(showDivider: Boolean = true, onAddButtonClick: () -> Un
         ) {
             Text(text = "Add Plans")
         }
-        if (showDivider) {
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp,
-                modifier = Modifier
-                    .fillMaxWidth(),
-            )
-        }
     }
 }
 
@@ -44,6 +36,6 @@ fun EmptyAddPlanListItem(showDivider: Boolean = true, onAddButtonClick: () -> Un
 @Preview
 fun EmptyAddPlanListItemPreview() {
     AppTheme {
-        EmptyAddPlanListItem(showDivider = true, onAddButtonClick = {})
+        EmptyAddPlanListItem(onAddButtonClick = {})
     }
 }
