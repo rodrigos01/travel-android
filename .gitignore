@@ -116,3 +116,4 @@ gradle-app.setting
 .fleet
 # kotlin session files
 .kotlin/
+/app/schemas/travel.vola.android.model.room.TravelDatabase/3.json

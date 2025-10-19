@@ -237,6 +237,7 @@ private fun TripDetailItem(
                     event.time,
                     event.destination,
                     event.airport,
+                    event.backgroundStyle.asEvenListItemPosition(),
                 )
 
                 is FlightArrivalItemState -> ArrivalEventListItem(
@@ -245,6 +246,7 @@ private fun TripDetailItem(
                     event.dayOfWeek,
                     event.time,
                     event.airport,
+                    event.backgroundStyle.asEvenListItemPosition(),
                 )
 
                 is HotelCheckInItemState -> CheckinListItem(
@@ -253,6 +255,7 @@ private fun TripDetailItem(
                     event.dayOfWeek,
                     event.time,
                     event.hotelName,
+                    event.backgroundStyle.asEvenListItemPosition(),
                 )
 
                 is HotelCheckOutItemState -> CheckoutListItem(
@@ -261,6 +264,7 @@ private fun TripDetailItem(
                     event.dayOfWeek,
                     event.time,
                     event.hotelName,
+                    event.backgroundStyle.asEvenListItemPosition(),
                 )
 
                 is TripItemState.TimedPlaceItemState -> TimedPlaceListItem(event)

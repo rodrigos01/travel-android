@@ -13,6 +13,7 @@ fun ArrivalEventListItem(
     dayOfWeekString: String?,
     timeString: String,
     airportName: String,
+    position: EventListItemPosition = EventListItemPosition.MIDDLE,
 ) {
     EventListItem(
         showDate,
@@ -22,6 +23,7 @@ fun ArrivalEventListItem(
         icon = R.drawable.flight_land_baseline_24,
         headline = stringResource(R.string.flight_arrival_tile),
         supporting = airportName,
+        position = position,
     )
 }
 
