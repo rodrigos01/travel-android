@@ -24,60 +24,41 @@ fun DateRangeListItem(
     dayOfWeekStart: String,
     dayOfMonthEnd: String,
     dayOfWeekEnd: String,
-    showBottomDivider: Boolean,
     onAddButtonClick: () -> Unit,
 ) {
-    Column {
-        HorizontalDivider(
-            color = MaterialTheme.colorScheme.outlineVariant,
-            thickness = 1.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-        )
-        ListItem(headlineContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                LeadingDate(
-                    dayOfMonth = dayOfMonthStart,
-                    dayOfWeek = dayOfWeekStart,
-                    showSmall = true,
-                )
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    thickness = 1.dp,
-                    modifier = Modifier
-                        .width(24.dp)
-                        .padding(horizontal = 8.dp),
-                )
-                LeadingDate(
-                    dayOfMonth = dayOfMonthEnd,
-                    dayOfWeek = dayOfWeekEnd,
-                    showSmall = true,
-                )
-                Spacer(modifier = Modifier.weight(1F))
-                TextButton(
-                    onClick = { onAddButtonClick() },
-                ) {
-                    Text(text = "Add Plans")
-                }
-            }
-        })
-        if (showBottomDivider) {
+    ListItem(headlineContent = {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            LeadingDate(
+                dayOfMonth = dayOfMonthStart,
+                dayOfWeek = dayOfWeekStart,
+                showSmall = true,
+            )
             HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 thickness = 1.dp,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .width(24.dp)
+                    .padding(horizontal = 8.dp),
             )
+            LeadingDate(
+                dayOfMonth = dayOfMonthEnd,
+                dayOfWeek = dayOfWeekEnd,
+                showSmall = true,
+            )
+            Spacer(modifier = Modifier.weight(1F))
+            TextButton(
+                onClick = { onAddButtonClick() },
+            ) {
+                Text(text = "Add Plans")
+            }
         }
-    }
+    })
 }
 
 @Composable
 @Preview
 fun DateRangeListItemPreview() {
     AppTheme {
-        DateRangeListItem("12", "Sat", "20", "Mon", showBottomDivider = true, onAddButtonClick = {})
+        DateRangeListItem("12", "Sat", "20", "Mon", onAddButtonClick = {})
     }
 }

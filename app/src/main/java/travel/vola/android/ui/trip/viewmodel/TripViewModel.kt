@@ -327,7 +327,7 @@ class TripViewModel(
             val lastInDay = nextItem?.first?.dateString != time.dateString
             val lastInSection = index == pairs.lastIndex || lastInDay || lastInPlace
             val dateRangeItem =
-                nextItem?.let { genDateRangeItem(time, it.first, showBottomDivider = !lastInPlace) }
+                nextItem?.let { genDateRangeItem(time, it.first) }
             mutableListOf<TripItemState>().apply {
                 placeItem?.let { add(it) }
                 if (firstInMonth) {
@@ -362,7 +362,7 @@ class TripViewModel(
                 if (dateRangeItem != null) {
                     add(dateRangeItem)
                 } else if (lastInSection && nextItem?.isReturn(pairs) == false) {
-                    add(genEmptyAddPlanItem(time, showDivider = !lastInPlace))
+                    add(genEmptyAddPlanItem(time))
                 }
             }
         }
@@ -451,15 +451,14 @@ class TripViewModel(
 
 
     private fun genEmptyAddPlanItem(
-        emptyAddPlanItemTimestamp: Time, showDivider: Boolean,
+        emptyAddPlanItemTimestamp: Time,
     ) = TripItemState.EmptyAddPlanItemState(
         UUID.randomUUID().toString(),
         emptyAddPlanItemTimestamp,
-        showDivider = showDivider,
     )
 
     private fun genDateRangeItem(
-        from: Time, to: Time, showBottomDivider: Boolean,
+        from: Time, to: Time,
     ): TripItemState? {
         val start = from + 1.days
         val end = to.toMidnight() - 1.minutes
@@ -473,7 +472,6 @@ class TripViewModel(
                 dayOfWeekStart = start.dayOfWeekString,
                 dayOfMonthEnd = end.dayOfMonthString,
                 dayOfWeekEnd = end.dayOfWeekString,
-                showBottomDivider = showBottomDivider,
             )
         } else {
             TripItemState.EmptyDateItemState(
@@ -481,7 +479,6 @@ class TripViewModel(
                 timestamp = from,
                 dayOfMonth = start.dayOfMonthString,
                 dayOfWeek = start.dayOfWeekString,
-                showBottomDivider = showBottomDivider,
             )
         }
     }
