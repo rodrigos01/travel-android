@@ -83,6 +83,7 @@ sealed interface RoomData {
         val address: String,
         val latitude: Double,
         val longitude: Double,
+        val timeZone: TimeZone?,
         val coverImage: String?,
         val externalId: String,
         val source: String,

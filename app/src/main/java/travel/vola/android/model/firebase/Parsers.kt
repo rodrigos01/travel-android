@@ -68,6 +68,7 @@ fun FirebaseData.Place.toAppDataModel() = Place(
     address = address,
     latitude = latitude,
     longitude = longitude,
+    timeZone = TimeZone.getTimeZone(timeZone),
     coverImage = coverImage,
     externalId = externalId,
     source = source,
