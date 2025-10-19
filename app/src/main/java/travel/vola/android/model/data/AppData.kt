@@ -66,7 +66,6 @@ data class Lodging(
     val checkout: Time,
 ) : TripEntity, TripEvent, WithCity
 
-@Serializable
 data class Place(
     val id: String,
     val name: String,
@@ -75,6 +74,7 @@ data class Place(
     val longitude: Double,
     val coverImage: String?,
     val externalId: String,
+    val timeZone: TimeZone,
     val source: String,
 ) {
     override fun equals(other: Any?): Boolean = other is Place && other.id == this.id

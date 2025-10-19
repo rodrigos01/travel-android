@@ -65,9 +65,9 @@ class ManualAddLodgingUseCase(
     ) {
         val data = PendingLodging(
             id = id,
-            checkIn = checkIn,
+            checkIn = checkIn.update(hour = 15),
             isCheckInTimeSet = true,
-            checkOut = checkOut,
+            checkOut = checkOut?.update(hour = 10),
             isCheckOutTimeSet = checkOut != null,
         )
         itemStore.addItem(data, params)
@@ -115,7 +115,7 @@ class ManualAddLodgingUseCase(
                 },
             ),
             endState = ManualAddPlanState(
-                dateTime = data.checkOut ?: minCheckoutTime.update(hour = 11, minute = 0),
+                dateTime = data.checkOut ?: minCheckoutTime.update(hour = 10, minute = 0),
                 minDateTime = minCheckoutTime,
                 isTimeSet = data.isCheckOutTimeSet,
                 dateSelectionEnabled = true,
@@ -123,7 +123,7 @@ class ManualAddLodgingUseCase(
                 searchResults = emptyList(),
             ),
             saveButtonEnabled = data.checkOut != null && data.checkOut > data.checkIn && (data.name
-                ?: data.address) != null,
+                ?: data.address) != null && data.isCheckInTimeSet && data.isCheckOutTimeSet,
             deleteButtonEnabled = stateParams.deleteEnabled,
             typeSelectionEnabled = stateParams.typeSelectionEnabled,
         )
@@ -177,19 +177,22 @@ class ManualAddLodgingUseCase(
                 async { selected?.id?.let { repository.details(it, autocompleteKey = itemId) } },
                 async { selected?.id?.let { repository.placeCity(it, autocompleteKey = itemId) } },
             )
-            itemStore.update(itemId) {
+            itemStore.update(itemId) { data ->
+                val timeZone =
+                    (hotelDetails?.timeZone ?: city?.timeZone ?: data.city?.timeZone)?.toZoneId()
+                        ?: data.checkIn.zone
                 PendingLodging(
-                    id = it.id,
-                    entityId = it.entityId,
-                    checkIn = checkIn,
+                    id = data.id,
+                    entityId = data.entityId,
+                    checkIn = timeZone?.let { checkIn.update(timeZone = it) } ?: checkIn,
                     isCheckInTimeSet = checkInTimeSelected,
-                    checkOut = checkOut,
+                    checkOut = timeZone?.let { checkOut?.update(timeZone = it) },
                     isCheckOutTimeSet = checkOutTimeSelected,
-                    name = hotelDetails?.name ?: it.name,
-                    address = hotelDetails?.address ?: it.address,
-                    city = city ?: it.city,
-                    latitude = hotelDetails?.latitude ?: it.latitude,
-                    longitude = hotelDetails?.longitude ?: it.longitude,
+                    name = hotelDetails?.name ?: data.name,
+                    address = hotelDetails?.address ?: data.address,
+                    city = city ?: data.city,
+                    latitude = hotelDetails?.latitude ?: data.latitude,
+                    longitude = hotelDetails?.longitude ?: data.longitude,
                     searchResults = emptyList(),
                 )
             }
