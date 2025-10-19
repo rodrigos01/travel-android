@@ -33,6 +33,7 @@ fun ApiData.Place.toAppDataModel(): Place = Place(
     address = address,
     latitude = latitude,
     longitude = longitude,
+    timeZone = TimeZone.getTimeZone(timezone),
     coverImage = coverImage,
     externalId = externalId,
     source = source,

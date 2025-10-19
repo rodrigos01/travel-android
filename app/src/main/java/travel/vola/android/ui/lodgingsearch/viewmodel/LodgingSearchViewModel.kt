@@ -16,6 +16,7 @@ import travel.vola.android.extensions.Time
 import travel.vola.android.extensions.get
 import travel.vola.android.extensions.remove
 import travel.vola.android.extensions.set
+import travel.vola.android.extensions.update
 import travel.vola.android.extensions.viewModelFactory
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Lodging
@@ -283,15 +284,16 @@ class LodgingSearchViewModel(
 
     fun onAddLodgingTapped(lodgingId: String) {
         val details = openedResultsState[lodgingId] ?: return
+        val city = lodgingCities[lodgingId] ?: location
         val lodging = Lodging(
             id = lodgingId,
             name = details.name,
             address = details.address,
             latitude = details.latitude,
             longitude = details.longitude,
-            city = lodgingCities[lodgingId] ?: location,
-            checkIn = details.checkIn,
-            checkout = details.checkOut,
+            city = city,
+            checkIn = details.checkIn.update(timeZone = city.timeZone.toZoneId(), hour = 15),
+            checkout = details.checkOut.update(timeZone = city.timeZone.toZoneId(), hour = 10),
         )
         viewModelScope.launch {
             tripRepository.saveLodging(tripId, lodging)
