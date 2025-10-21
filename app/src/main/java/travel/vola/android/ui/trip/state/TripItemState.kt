@@ -10,26 +10,35 @@ sealed interface TripItemState {
         val timestamp: Time
     }
 
-    data class MonthItemState(override val timestamp: Time, val month: String, val year: String) :
-        TripItemState, Timeable
+    interface SectionItemState {
+        val sectionId: String?
+    }
+
+    data class MonthItemState(
+        override val timestamp: Time,
+        override val sectionId: String? = null, val month: String, val year: String,
+    ) :
+        TripItemState, Timeable, SectionItemState
 
     data class PlaceItemState(
         override val id: String,
         override val timestamp: Time,
+        override val sectionId: String? = null,
         val placeName: String,
         val imageUrl: String,
         val dateStart: String,
         val dateEnd: String,
-    ) : TripItemState, Timeable, Editable, Replaceable
+    ) : TripItemState, Timeable, Editable, Replaceable, SectionItemState
 
     data class DateRangeItemState(
         override val id: String,
         override val timestamp: Time,
+        override val sectionId: String? = null,
         val dayOfMonthStart: String,
         val dayOfWeekStart: String,
         val dayOfMonthEnd: String,
         val dayOfWeekEnd: String,
-    ) : TripItemState, Timeable, Replaceable
+    ) : TripItemState, Timeable, Replaceable, SectionItemState
 
     interface Replaceable : Identifiable
 
@@ -38,11 +47,12 @@ sealed interface TripItemState {
     data class EmptyDateItemState(
         override val id: String,
         override val timestamp: Time,
+        override val sectionId: String? = null,
         val dayOfMonth: String,
         val dayOfWeek: String,
-    ) : TripItemState, Timeable, Replaceable
+    ) : TripItemState, Timeable, Replaceable, SectionItemState
 
-    sealed interface EventItemState : TripItemState, Timeable, Editable {
+    sealed interface EventItemState : TripItemState, Timeable, Editable, SectionItemState {
         val showDate: Boolean
         val dayOfMonth: String?
         val dayOfWeek: String?
@@ -64,6 +74,7 @@ sealed interface TripItemState {
         override val dayOfWeek: String,
         override val time: String,
         override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
+        override val sectionId: String? = null,
         val destination: String,
         val airport: String,
     ) : EventItemState, Replaceable {
@@ -79,6 +90,7 @@ sealed interface TripItemState {
         override val dayOfWeek: String,
         override val time: String,
         override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
+        override val sectionId: String? = null,
         val airport: String,
     ) : EventItemState, Replaceable {
         override val title = null
@@ -93,6 +105,7 @@ sealed interface TripItemState {
         override val dayOfWeek: String,
         override val time: String,
         override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
+        override val sectionId: String? = null,
         val hotelName: String,
         val hotelAddress: String,
     ) : EventItemState, Replaceable {
@@ -108,6 +121,7 @@ sealed interface TripItemState {
         override val dayOfWeek: String,
         override val time: String,
         override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
+        override val sectionId: String? = null,
         val hotelName: String,
     ) : EventItemState, Replaceable {
         override val title = null
@@ -122,6 +136,7 @@ sealed interface TripItemState {
         override val dayOfWeek: String,
         override val time: String,
         override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
+        override val sectionId: String? = null,
         val showTime: Boolean,
         val placeName: String,
         val cityName: String,
@@ -138,6 +153,7 @@ sealed interface TripItemState {
         override val dayOfMonth: String,
         override val dayOfWeek: String,
         override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
+        override val sectionId: String? = null,
         override val time: String,
         val restaurantName: String,
         val restaurantAddress: String,
