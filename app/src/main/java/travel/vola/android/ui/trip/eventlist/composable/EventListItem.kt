@@ -83,7 +83,8 @@ fun EventListItem(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 headlineColor = MaterialTheme.colorScheme.onSecondaryContainer,
                 supportingColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                trailingIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                leadingIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                overlineColor = MaterialTheme.colorScheme.onSecondaryContainer,
             ),
             modifier = Modifier
                 .padding(
