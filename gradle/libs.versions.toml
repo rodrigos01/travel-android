@@ -30,6 +30,7 @@ assertjCore = "3.27.6"
 coreTesting = "2.2.0"
 espressoCore = "3.7.0"
 junit = "4.13.2"
+paletteKtx = "1.0.0"
 [libraries]
 # General
 androidx-adaptive-layout-android = { module = "androidx.compose.material3.adaptive:adaptive-layout-android", version.ref = "material3Adaptative" }
@@ -92,6 +93,9 @@ room-compiler = { group = "androidx.room", name = "room-compiler", version.ref =
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
+# Palette
+androidx-palette-ktx = { group = "androidx.palette", name = "palette-ktx", version.ref = "paletteKtx" }
+
 
 [plugins]
 

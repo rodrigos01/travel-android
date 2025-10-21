@@ -186,10 +186,13 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.datastore)
     implementation(libs.protobuf.javalite)
+    implementation(libs.androidx.palette.ktx)
     // Room
     ksp(libs.room.compiler)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+
+    implementation("com.materialkolor:material-kolor:4.0.0") // Or latest version
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)

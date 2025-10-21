@@ -1,8 +1,10 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
+import android.graphics.Bitmap
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SnapshotMutationPolicy
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -39,9 +42,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.window.PopupProperties
+import androidx.core.graphics.drawable.toBitmapOrNull
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.palette.graphics.Palette
+import coil.compose.AsyncImagePainter
 import com.google.android.gms.maps.model.LatLng
+import com.materialkolor.PaletteStyle
+import com.materialkolor.dynamiccolor.ColorSpec
+import com.materialkolor.rememberDynamicColorScheme
 import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.rememberMapScaffoldState
 import travel.vola.android.common.ui.preview.TabletPreview
@@ -223,19 +232,52 @@ fun List(
     onEmptyAddRowTapped: (String) -> Unit,
     onItemTapped: (String) -> Unit,
 ) {
+
+    val colorSchemeBitmaps = remember { mutableStateMapOf<String, Bitmap?>() }
     LazyColumn(contentPadding = contentPadding, state = scrollState) {
-        items(state.items, key = { (it as? Identifiable)?.id ?: it.hashCode() }) { event ->
-            Box(
-                modifier = Modifier.animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
-            ) {
-                TripDetailItem(
-                    event,
-                    addPlanItemActionHandler,
-                    onAddButonTapped,
-                    onEmptyAddRowTapped,
-                    onItemTapped,
+        items(
+            state.items,
+            key = { (it as? Identifiable)?.id ?: it.hashCode() }) { event ->
+            val seedColor = if (event is TripItemState.SectionItemState) {
+                colorSchemeBitmaps[event.sectionId]?.let {
+                    Palette.from(it).generate()
+                }
+            } else {
+                null
+            }?.let {
+                it.vibrantSwatch ?: it.dominantSwatch ?: it.mutedSwatch
+            }?.rgb
+            MaterialTheme(
+                colorScheme = rememberDynamicColorScheme(
+                    seedColor = seedColor?.let { Color(it) }
+                        ?: MaterialTheme.colorScheme.primary,
+                    isDark = isSystemInDarkTheme(),
+                    specVersion = ColorSpec.SpecVersion.SPEC_2025,
+                    style = PaletteStyle.Expressive,
                 )
+            ) {
+                Box(
+                    modifier = Modifier.animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
+                ) {
+                    TripDetailItem(
+                        event,
+                        addPlanItemActionHandler,
+                        onAddButonTapped,
+                        onEmptyAddRowTapped,
+                        onItemTapped,
+                        onImageLoaded = {
+                            val sectionId =
+                                (event as? TripItemState.SectionItemState)?.sectionId
+                            if (sectionId != null) {
+                                colorSchemeBitmaps[sectionId] =
+                                    it.result.drawable.toBitmapOrNull()
+                                        ?.copy(Bitmap.Config.ARGB_8888, true)
+                            }
+                        },
+                    )
+                }
             }
+        }
         }
     }
 }
@@ -247,6 +289,7 @@ private fun TripDetailItem(
     onAddButonTapped: (String) -> Unit,
     onEmptyAddRowTapped: (String) -> Unit,
     onItemTapped: (String) -> Unit,
+    onImageLoaded: (AsyncImagePainter.State.Success) -> Unit,
 ) {
     when (event) {
         is MonthItemState -> MonthEventListItem(event.month, event.year)
@@ -269,6 +312,7 @@ private fun TripDetailItem(
             event.placeName,
             event.dateStart,
             event.dateEnd,
+            onImageLoaded,
             modifier = Modifier.clickable { onItemTapped(event.id) })
 
         is TripItemState.EventItemState -> Surface(
