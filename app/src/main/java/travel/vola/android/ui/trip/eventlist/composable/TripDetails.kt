@@ -3,10 +3,12 @@ package travel.vola.android.ui.trip.eventlist.composable
 import android.graphics.Bitmap
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -39,17 +41,20 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.graphics.drawable.toBitmapOrNull
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.palette.graphics.Palette
-import coil.compose.AsyncImagePainter
+import coil.request.SuccessResult
 import com.google.android.gms.maps.model.LatLng
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
+import com.materialkolor.ktx.animateColorScheme
 import com.materialkolor.rememberDynamicColorScheme
 import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.rememberMapScaffoldState
@@ -125,100 +130,128 @@ private fun TripDetails(
         }
     }
     val focusedPlace by produceState<TripViewModel.PlaceState?>(null, currentPlaceIndex) {
-        value = state.places.firstOrNull { it.listIndex == currentPlaceIndex }
+        value =
+            state.places.sortedBy { it.listIndex }.lastOrNull { it.listIndex <= currentPlaceIndex }
     }
     val allMarkers = state.places.flatMap { it.markers }
     val boundingMarkers = focusedPlace?.markers ?: emptyList()
     val mapScaffoldState = rememberMapScaffoldState()
 
-    MapScaffold(
-        allMarkers.filter { it.type != MarkerType.City },
-        boundingMarkers.map { LatLng(it.position.first, it.position.second) },
-        state = mapScaffoldState,
-        topBar = {
-            var isInEditMode by remember {
-                mutableStateOf(false)
-            }
-            var enteredName by remember(state.title) {
-                mutableStateOf(state.title)
-            }
-            var showToolbarOverflowMenu by remember {
-                mutableStateOf(false)
-            }
-            var showDeleteConfirmation by remember { mutableStateOf(false) }
-            if (showDeleteConfirmation) {
-                ConfirmationDialog(
-                    onConfirm = {
-                        showDeleteConfirmation = false
-                        onDeleteConfirmed()
-                    },
-                    onDismiss = { showDeleteConfirmation = false },
-                    confirmButtonLabel = "Delete",
-                    confirmButtonColors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                    dismissButtonLabel = "Cancel"
-                ) {
-                    Text("Delete ${state.title}?")
-                }
-            }
-            TopAppBar(title = {
-                if (isInEditMode) {
-                    TextField(value = enteredName, onValueChange = { enteredName = it })
-                } else {
-                    Text(text = state.title)
-                }
-            }, navigationIcon = {
-                IconButton(onClick = onBackPressed) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = ""
-                    )
-                }
-            }, actions = {
-                if (isInEditMode) {
-                    IconButton(onClick = { isInEditMode = false }) {
-                        Icon(imageVector = Icons.Filled.Close, contentDescription = "")
-                    }
-                    IconButton(onClick = {
-                        isInEditMode = false
-                        onTripNameChanged(enteredName)
-                    }) {
-                        Icon(imageVector = Icons.Filled.Check, contentDescription = "")
-                    }
-                } else {
-                    IconButton(onClick = { isInEditMode = true }) {
-                        Icon(imageVector = Icons.Filled.Edit, contentDescription = "")
-                    }
-                    Box {
-                        IconButton(onClick = { showToolbarOverflowMenu = true }) {
-                            Icon(imageVector = Icons.Filled.MoreVert, contentDescription = "")
-                        }
-                        DropdownMenu(
-                            expanded = showToolbarOverflowMenu,
-                            onDismissRequest = { showToolbarOverflowMenu = false },
-                            properties = PopupProperties(focusable = false)
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Delete Trip") },
-                                onClick = {
-                                    showToolbarOverflowMenu = false
-                                    showDeleteConfirmation = true
-                                },
-                                colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.onSecondaryContainer),
-                            )
-                        }
-                    }
-                }
-            })
-        },
-    ) { paddingValues ->
-        List(
-            state,
-            listScrollState,
-            paddingValues,
-            addPlanItemActionHandler,
-            onAddButonTapped,
-            onEmptyAddRowTapped,
-            onItemTapped,
+
+    val isDarkTheme = isSystemInDarkTheme()
+    val colorSchemeBitmaps = remember { mutableStateMapOf<String, Bitmap?>() }
+    val seedColor by remember(focusedPlace, colorSchemeBitmaps) {
+        derivedStateOf {
+            colorSchemeBitmaps[focusedPlace?.place?.id]?.let { Palette.from(it) }?.generate()
+                ?.dominantSwatch?.rgb
+        }
+    }
+    val colorScheme = animateColorScheme(seedColor?.let {
+        rememberDynamicColorScheme(
+            seedColor = Color(it),
+            isDark = isDarkTheme,
+            specVersion = ColorSpec.SpecVersion.SPEC_2025,
+            style = PaletteStyle.Expressive,
         )
+    } ?: MaterialTheme.colorScheme)
+    MaterialTheme(
+        colorScheme = colorScheme,
+    ) {
+        MapScaffold(
+            allMarkers.filter { it.type != MarkerType.City },
+            boundingMarkers.map { LatLng(it.position.first, it.position.second) },
+            state = mapScaffoldState,
+            topBar = {
+                var isInEditMode by remember {
+                    mutableStateOf(false)
+                }
+                var enteredName by remember(state.title) {
+                    mutableStateOf(state.title)
+                }
+                var showToolbarOverflowMenu by remember {
+                    mutableStateOf(false)
+                }
+                var showDeleteConfirmation by remember { mutableStateOf(false) }
+                if (showDeleteConfirmation) {
+                    ConfirmationDialog(
+                        onConfirm = {
+                            showDeleteConfirmation = false
+                            onDeleteConfirmed()
+                        },
+                        onDismiss = { showDeleteConfirmation = false },
+                        confirmButtonLabel = "Delete",
+                        confirmButtonColors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                        dismissButtonLabel = "Cancel"
+                    ) {
+                        Text("Delete ${state.title}?")
+                    }
+                }
+                TopAppBar(title = {
+                    if (isInEditMode) {
+                        TextField(value = enteredName, onValueChange = { enteredName = it })
+                    } else {
+                        Text(text = state.title)
+                    }
+                }, navigationIcon = {
+                    IconButton(onClick = onBackPressed) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = ""
+                        )
+                    }
+                }, actions = {
+                    if (isInEditMode) {
+                        IconButton(onClick = { isInEditMode = false }) {
+                            Icon(imageVector = Icons.Filled.Close, contentDescription = "")
+                        }
+                        IconButton(onClick = {
+                            isInEditMode = false
+                            onTripNameChanged(enteredName)
+                        }) {
+                            Icon(imageVector = Icons.Filled.Check, contentDescription = "")
+                        }
+                    } else {
+                        IconButton(onClick = { isInEditMode = true }) {
+                            Icon(imageVector = Icons.Filled.Edit, contentDescription = "")
+                        }
+                        Box {
+                            IconButton(onClick = { showToolbarOverflowMenu = true }) {
+                                Icon(imageVector = Icons.Filled.MoreVert, contentDescription = "")
+                            }
+                            DropdownMenu(
+                                expanded = showToolbarOverflowMenu,
+                                onDismissRequest = { showToolbarOverflowMenu = false },
+                                properties = PopupProperties(focusable = false)
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Delete Trip") },
+                                    onClick = {
+                                        showToolbarOverflowMenu = false
+                                        showDeleteConfirmation = true
+                                    },
+                                    colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.onSecondaryContainer),
+                                )
+                            }
+                        }
+                    }
+                })
+            },
+        ) { paddingValues ->
+            List(
+                state,
+                listScrollState,
+                paddingValues,
+                addPlanItemActionHandler,
+                onAddButonTapped,
+                onEmptyAddRowTapped,
+                onItemTapped,
+                onPlaceImageLoaded = { placeId, result ->
+                    colorSchemeBitmaps[placeId] =
+                        result.drawable.toBitmapOrNull()
+                            ?.copy(Bitmap.Config.ARGB_8888, true)
+                },
+            )
+        }
     }
 }
 
@@ -231,53 +264,33 @@ fun List(
     onAddButonTapped: (String) -> Unit,
     onEmptyAddRowTapped: (String) -> Unit,
     onItemTapped: (String) -> Unit,
+    onPlaceImageLoaded: (String, SuccessResult) -> Unit,
 ) {
-
-    val colorSchemeBitmaps = remember { mutableStateMapOf<String, Bitmap?>() }
     LazyColumn(contentPadding = contentPadding, state = scrollState) {
         items(
             state.items,
             key = { (it as? Identifiable)?.id ?: it.hashCode() }) { event ->
-            val seedColor = if (event is TripItemState.SectionItemState) {
-                colorSchemeBitmaps[event.sectionId]?.let {
-                    Palette.from(it).generate()
-                }
-            } else {
-                null
-            }?.let {
-                it.vibrantSwatch ?: it.dominantSwatch ?: it.mutedSwatch
-            }?.rgb
-            MaterialTheme(
-                colorScheme = rememberDynamicColorScheme(
-                    seedColor = seedColor?.let { Color(it) }
-                        ?: MaterialTheme.colorScheme.primary,
-                    isDark = isSystemInDarkTheme(),
-                    specVersion = ColorSpec.SpecVersion.SPEC_2025,
-                    style = PaletteStyle.Expressive,
-                )
+            Box(
+                modifier = Modifier
+                    .animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = 16.dp)
             ) {
-                Box(
-                    modifier = Modifier.animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
-                ) {
-                    TripDetailItem(
-                        event,
-                        addPlanItemActionHandler,
-                        onAddButonTapped,
-                        onEmptyAddRowTapped,
-                        onItemTapped,
-                        onImageLoaded = {
-                            val sectionId =
-                                (event as? TripItemState.SectionItemState)?.sectionId
-                            if (sectionId != null) {
-                                colorSchemeBitmaps[sectionId] =
-                                    it.result.drawable.toBitmapOrNull()
-                                        ?.copy(Bitmap.Config.ARGB_8888, true)
-                            }
-                        },
-                    )
-                }
+                TripDetailItem(
+                    event,
+                    addPlanItemActionHandler,
+                    onAddButonTapped,
+                    onEmptyAddRowTapped,
+                    onItemTapped,
+                    onImageLoaded = {
+                        val sectionId =
+                            (event as? TripItemState.SectionItemState)?.sectionId
+                        if (sectionId != null) {
+                            onPlaceImageLoaded(sectionId, it)
+                        }
+                    },
+                )
             }
-        }
         }
     }
 }
@@ -289,7 +302,7 @@ private fun TripDetailItem(
     onAddButonTapped: (String) -> Unit,
     onEmptyAddRowTapped: (String) -> Unit,
     onItemTapped: (String) -> Unit,
-    onImageLoaded: (AsyncImagePainter.State.Success) -> Unit,
+    onImageLoaded: (SuccessResult) -> Unit,
 ) {
     when (event) {
         is MonthItemState -> MonthEventListItem(event.month, event.year)

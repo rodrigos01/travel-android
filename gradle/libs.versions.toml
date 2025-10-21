@@ -15,6 +15,7 @@ mapsCompose = "6.12.1"
 coil = "2.7.0"
 coreSplashscreen = "1.0.1"
 firebaseBom = "34.4.0"
+materialKolor = "4.0.1"
 playServicesAuth = "21.4.0"
 navigation = "2.9.5"
 ktor = "3.3.1"
@@ -38,6 +39,7 @@ androidx-adaptive-layout = { module = "androidx.compose.material3.adaptive:adapt
 androidx-core-testing = { module = "androidx.arch.core:core-testing", version.ref = "coreTesting" }
 androidx-datastore = { module = "androidx.datastore:datastore", version.ref = "datastorePreferences" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
+material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobuf" }
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
 androidx-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
