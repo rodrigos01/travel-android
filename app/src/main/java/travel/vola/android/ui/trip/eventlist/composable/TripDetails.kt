@@ -41,20 +41,22 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.LatLng
 import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.rememberMapScaffoldState
 import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.common.ui.state.MarkerType
+import travel.vola.android.extensions.Time
 import travel.vola.android.extensions.viewModel
 import travel.vola.android.model.data.Identifiable
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.ConfirmationDialog
+import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.TripItemState
 import travel.vola.android.ui.trip.state.TripItemState.DateRangeItemState
 import travel.vola.android.ui.trip.state.TripItemState.EmptyDateItemState
+import travel.vola.android.ui.trip.state.TripItemState.EventItemState.BackgroundStyle
 import travel.vola.android.ui.trip.state.TripItemState.FlightArrivalItemState
 import travel.vola.android.ui.trip.state.TripItemState.FlightDepartureItemState
 import travel.vola.android.ui.trip.state.TripItemState.HotelCheckInItemState
@@ -71,6 +73,30 @@ fun TripDetails(
 ) {
     val viewModel: TripViewModel = viewModel(factory = TripViewModel.Factory(tripId))
     val state by viewModel.viewState.collectAsStateWithLifecycle()
+    TripDetails(
+        state,
+        viewModel,
+        onBackPressed = { navController.popBackStack() },
+        onDeleteConfirmed = viewModel::deleteTrip,
+        onTripNameChanged = viewModel::tripNameChanged,
+        onAddButonTapped = viewModel::addButtonTapped,
+        onEmptyAddRowTapped = viewModel::emptyDateRowTapped,
+        onItemTapped = viewModel::itemTapped,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TripDetails(
+    state: TripViewModel.ViewState,
+    addPlanItemActionHandler: AddPlanItemActionHandler = NoOpActionHandler,
+    onBackPressed: () -> Unit = {},
+    onDeleteConfirmed: () -> Unit = {},
+    onTripNameChanged: (String) -> Unit = {},
+    onAddButonTapped: (String) -> Unit = {},
+    onEmptyAddRowTapped: (String) -> Unit = {},
+    onItemTapped: (String) -> Unit = {},
+) {
     val listScrollState = rememberLazyListState()
     val currentPlaceIndex by remember {
         derivedStateOf(policy = object : SnapshotMutationPolicy<Int> {
@@ -115,7 +141,7 @@ fun TripDetails(
                 ConfirmationDialog(
                     onConfirm = {
                         showDeleteConfirmation = false
-                        viewModel.deleteTrip()
+                        onDeleteConfirmed()
                     },
                     onDismiss = { showDeleteConfirmation = false },
                     confirmButtonLabel = "Delete",
@@ -132,7 +158,7 @@ fun TripDetails(
                     Text(text = state.title)
                 }
             }, navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
+                IconButton(onClick = onBackPressed) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = ""
                     )
@@ -144,7 +170,7 @@ fun TripDetails(
                     }
                     IconButton(onClick = {
                         isInEditMode = false
-                        viewModel.tripNameChanged(enteredName)
+                        onTripNameChanged(enteredName)
                     }) {
                         Icon(imageVector = Icons.Filled.Check, contentDescription = "")
                     }
@@ -175,7 +201,15 @@ fun TripDetails(
             })
         },
     ) { paddingValues ->
-        List(state, listScrollState, viewModel, paddingValues)
+        List(
+            state,
+            listScrollState,
+            paddingValues,
+            addPlanItemActionHandler,
+            onAddButonTapped,
+            onEmptyAddRowTapped,
+            onItemTapped,
+        )
     }
 }
 
@@ -183,15 +217,24 @@ fun TripDetails(
 fun List(
     state: TripViewModel.ViewState,
     scrollState: LazyListState,
-    viewModel: TripViewModel,
     contentPadding: PaddingValues,
+    addPlanItemActionHandler: AddPlanItemActionHandler,
+    onAddButonTapped: (String) -> Unit,
+    onEmptyAddRowTapped: (String) -> Unit,
+    onItemTapped: (String) -> Unit,
 ) {
     LazyColumn(contentPadding = contentPadding, state = scrollState) {
         items(state.items, key = { (it as? Identifiable)?.id ?: it.hashCode() }) { event ->
             Box(
                 modifier = Modifier.animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
             ) {
-                TripDetailItem(event, viewModel)
+                TripDetailItem(
+                    event,
+                    addPlanItemActionHandler,
+                    onAddButonTapped,
+                    onEmptyAddRowTapped,
+                    onItemTapped,
+                )
             }
         }
     }
@@ -199,7 +242,11 @@ fun List(
 
 @Composable
 private fun TripDetailItem(
-    event: TripItemState, viewModel: TripViewModel
+    event: TripItemState,
+    addPlanItemActionHandler: AddPlanItemActionHandler,
+    onAddButonTapped: (String) -> Unit,
+    onEmptyAddRowTapped: (String) -> Unit,
+    onItemTapped: (String) -> Unit,
 ) {
     when (event) {
         is MonthItemState -> MonthEventListItem(event.month, event.year)
@@ -208,13 +255,13 @@ private fun TripDetailItem(
             dayOfWeekStart = event.dayOfWeekStart,
             dayOfMonthEnd = event.dayOfMonthEnd,
             dayOfWeekEnd = event.dayOfWeekEnd,
-            onAddButtonClick = { viewModel.addButtonTapped(event.id) },
+            onAddButtonClick = { onAddButonTapped(event.id) },
         )
 
         is EmptyDateItemState -> EmptyDateListItem(
             dayOfMonth = event.dayOfMonth,
             dayOfWeek = event.dayOfWeek,
-            onTap = { viewModel.emptyDateRowTapped(event.id) },
+            onTap = { onEmptyAddRowTapped(event.id) },
         )
 
         is PlaceItemState -> PlaceEventListItem(
@@ -222,10 +269,10 @@ private fun TripDetailItem(
             event.placeName,
             event.dateStart,
             event.dateEnd,
-            modifier = Modifier.clickable { viewModel.itemTapped(event.id) })
+            modifier = Modifier.clickable { onItemTapped(event.id) })
 
         is TripItemState.EventItemState -> Surface(
-            onClick = { viewModel.itemTapped(event.id) },
+            onClick = { onItemTapped(event.id) },
         ) {
             when (event) {
                 is FlightDepartureItemState -> FlightEventListItem(
@@ -271,14 +318,14 @@ private fun TripDetailItem(
         }
 
         is TripItemState.InitialAddPlanItemState -> EmptyAddPlanListItem(
-            onAddButtonClick = { viewModel.addButtonTapped(event.id) })
+            onAddButtonClick = { onAddButonTapped(event.id) })
 
         is TripItemState.EmptyAddPlanItemState -> EmptyAddPlanListItem(
-            onAddButtonClick = { viewModel.addButtonTapped(event.id) })
+            onAddButtonClick = { onAddButonTapped(event.id) })
 
         is AddPlanItemState -> AddPlanListItem(
             event,
-            actionHandler = viewModel,
+            actionHandler = addPlanItemActionHandler,
         )
     }
 }
@@ -287,11 +334,129 @@ private fun TripDetailItem(
 @Preview
 @TabletPreview
 fun TripDetailsPreview() {
+    val state = TripViewModel.ViewState(
+        title = "My Trip",
+        items = listOf(
+            MonthItemState(
+                timestamp = Time("2025-10-17T18:25 +0200"),
+                month = "October",
+                year = "2025",
+            ),
+            FlightDepartureItemState(
+                id = "1",
+                showDate = true,
+                timestamp = Time("2025-10-17T22:25 -0400"),
+                dayOfMonth = "17",
+                dayOfWeek = "Fri",
+                time = "18:25",
+                destination = "Paris",
+                airport = "John F. Kennedy",
+                backgroundStyle = BackgroundStyle.SINGLE,
+            ),
+            PlaceItemState(
+                id = "2",
+                timestamp = Time("2025-10-18T18:25 +0200"),
+                imageUrl = "",
+                placeName = "Paris",
+                dateStart = "18 Oct",
+                dateEnd = "20 Oct",
+            ),
+            FlightArrivalItemState(
+                id = "3",
+                showDate = true,
+                timestamp = Time("2025-10-18T10:05 +0200"),
+                dayOfMonth = "18",
+                dayOfWeek = "Sat",
+                time = "10:05",
+                airport = "Charles de Gaule",
+                backgroundStyle = BackgroundStyle.TOP,
+            ),
+            HotelCheckInItemState(
+                id = "4",
+                showDate = false,
+                timestamp = Time("2025-10-18T15:00 +0200"),
+                dayOfMonth = "18",
+                dayOfWeek = "Sat",
+                time = "15:00",
+                hotelName = "Hotel Novotel Paris Les Halles",
+                hotelAddress = "Rue de fleury, 143",
+                backgroundStyle = BackgroundStyle.MIDDLE,
+            ),
+            TripItemState.RestaurantReservationItemState(
+                id = "5",
+                showDate = false,
+                timestamp = Time("2025-10-18T19:00 +0200"),
+                dayOfWeek = "Sat",
+                dayOfMonth = "18",
+                time = "19:00",
+                restaurantName = "Au pied de cochon",
+                restaurantAddress = "Rue do cochon, 82",
+                backgroundStyle = BackgroundStyle.BOTTOM,
+            ),
+            DateRangeItemState(
+                id = "6",
+                timestamp = Time("2025-10-18T19:00 +0200"),
+                dayOfMonthStart = "18",
+                dayOfWeekStart = "Fri",
+                dayOfMonthEnd = "22",
+                dayOfWeekEnd = "Sat",
+            ),
+            HotelCheckOutItemState(
+                id = "7",
+                showDate = true,
+                timestamp = Time("2025-10-22T11:00 +0200"),
+                dayOfMonth = "22",
+                dayOfWeek = "Sun",
+                time = "11:00",
+                hotelName = "Hotel Novotel Paris Les Halles",
+                backgroundStyle = BackgroundStyle.TOP,
+            ),
+            FlightDepartureItemState(
+                id = "8",
+                showDate = false,
+                timestamp = Time("2025-10-22T16:25 +0200"),
+                dayOfMonth = "22",
+                dayOfWeek = "Sun",
+                time = "16:25",
+                destination = "Rome",
+                airport = "Charles de Gaule",
+                backgroundStyle = BackgroundStyle.BOTTOM,
+            ),
+            PlaceItemState(
+                id = "9",
+                timestamp = Time("2025-10-22T16:25 +0200"),
+                imageUrl = "",
+                placeName = "Rome",
+                dateStart = "22 Oct",
+                dateEnd = "25 Oct",
+            ),
+            FlightArrivalItemState(
+                id = "3",
+                showDate = true,
+                timestamp = Time("2025-10-22T19:05 +0200"),
+                dayOfMonth = "22",
+                dayOfWeek = "Sun",
+                time = "19:05",
+                airport = "Fiumicino Airport",
+                backgroundStyle = BackgroundStyle.TOP,
+            ),
+            HotelCheckInItemState(
+                id = "4",
+                showDate = false,
+                timestamp = Time("2025-10-22T15:00 +0200"),
+                dayOfMonth = "22",
+                dayOfWeek = "Sun",
+                time = "15:00",
+                hotelName = "Hotel Continental Roma",
+                hotelAddress = "Rua di Roma",
+                backgroundStyle = BackgroundStyle.BOTTOM,
+            ),
+        ),
+        places = emptyList(),
+    )
     AppTheme(dynamicColor = false) {
-        val navController = rememberNavController()
         TripDetails(
-            "minhaTrip",
-            navController,
+            state,
         )
     }
 }

@@ -230,7 +230,7 @@ fun AddPlanListItemPreview() {
     }
 }
 
-private object NoOpActionHandler : AddPlanItemActionHandler {
+object NoOpActionHandler : AddPlanItemActionHandler {
     override fun addPlanTypeChanged(itemId: String, newType: AddPlanItemState.Type) = Unit
     override fun delete(type: AddPlanItemState.Type, itemId: String) = Unit
     override fun save(itemId: String) = Unit
