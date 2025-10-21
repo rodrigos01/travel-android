@@ -23,7 +23,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
+import coil.request.SuccessResult
 import travel.vola.android.R
 import travel.vola.android.ui.theme.AppTheme
 
@@ -33,6 +35,7 @@ fun PlaceEventListItem(
     placeName: String,
     startDate: String,
     endDate: String,
+    onImageLoaded: (SuccessResult) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -48,7 +51,14 @@ fun PlaceEventListItem(
                 .background(color = MaterialTheme.colorScheme.tertiary)
         ) {
             Image(
-                painter = rememberAsyncImagePainter(model = imageUrl),
+                painter = rememberAsyncImagePainter(
+                    model = imageUrl,
+                    onState = {
+                        if (it is AsyncImagePainter.State.Success) {
+                            onImageLoaded(it.result)
+                        }
+                    }
+                ),
                 contentDescription = "Place Description",
                 modifier = Modifier
                     .fillMaxWidth()
@@ -91,6 +101,7 @@ fun PlaceEventListItemPreview() {
             "New York City",
             "May 11",
             "May 21",
+            onImageLoaded = {},
         )
     }
 }

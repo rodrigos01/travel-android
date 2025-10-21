@@ -192,7 +192,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
 
-    implementation("com.materialkolor:material-kolor:4.0.0") // Or latest version
+    implementation(libs.material.kolor) // Or latest version
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
