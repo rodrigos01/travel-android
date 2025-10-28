@@ -73,6 +73,7 @@ coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coil" }
 compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "compose" }
 compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "compose" }
 compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "compose" }
+compose-text-googlefonts = { group = "androidx.compose.ui", name = "ui-text-google-fonts", version.ref = "compose" }
 # Firebase
 firebase-analytics = { module = "com.google.firebase:firebase-analytics", version = "23.0.0" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }

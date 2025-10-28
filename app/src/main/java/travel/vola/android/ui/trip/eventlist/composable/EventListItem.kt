@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import travel.vola.android.R
@@ -115,7 +116,12 @@ fun EventListItem(
                     )
                 }
             },
-            headlineContent = { Text(headline, style = typography.titleMedium) },
+            headlineContent = {
+                Text(
+                    headline,
+                    style = typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                )
+            },
             supportingContent = {
                 Text(
                     text = supporting,
