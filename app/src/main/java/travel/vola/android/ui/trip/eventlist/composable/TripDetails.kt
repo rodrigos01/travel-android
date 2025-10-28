@@ -125,7 +125,10 @@ private fun TripDetails(
             } else if (!listScrollState.canScrollForward) {
                 state.places.maxOfOrNull { it.listIndex } ?: -1
             } else {
-                listScrollState.firstVisibleItemIndex
+                listScrollState.layoutInfo.visibleItemsInfo.takeIf { it.isNotEmpty() }
+                    ?.let { visibleItems ->
+                        visibleItems.getOrNull(visibleItems.lastIndex / 2 + 1)?.index
+                    } ?: listScrollState.firstVisibleItemIndex
             }
         }
     }
