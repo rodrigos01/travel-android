@@ -172,6 +172,7 @@ dependencies {
     implementation(libs.androidx.adaptive.layout)
     implementation(libs.androidx.adaptive.layout.android)
     implementation(libs.androidx.window)
+    implementation(libs.compose.text.googlefonts)
     // Google Maps
     implementation(libs.maps.compose)
     // Ktor
