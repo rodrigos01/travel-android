@@ -162,11 +162,6 @@ sealed interface TripItemState {
         override val subtitle = restaurantAddress
     }
 
-    data class EmptyAddPlanItemState(
-        override val id: String,
-        override val timestamp: Time,
-    ) : Replaceable, Timeable, TripItemState
-
     data class InitialAddPlanItemState(
         override val id: String,
         override val timestamp: Time,

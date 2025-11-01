@@ -4,7 +4,9 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -13,8 +15,8 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
@@ -68,14 +70,15 @@ fun EventListItem(
             .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 16.dp)
     ) {
-        if (dayOfMonthString != null && dayOfWeekString != null) {
-            Box(modifier = Modifier.alpha(if (showDate) 1F else 0F)) {
-                LeadingDate(
-                    dayOfMonth = dayOfMonthString,
-                    dayOfWeek = dayOfWeekString,
-                    showSmall = false,
-                )
-            }
+        if (showDate && dayOfMonthString != null && dayOfWeekString != null) {
+            LeadingDate(
+                dayOfMonth = dayOfMonthString,
+                dayOfWeek = dayOfWeekString,
+                showSmall = false,
+                modifier = Modifier.width(32.dp)
+            )
+        } else {
+            Spacer(modifier = Modifier.width(32.dp))
         }
         val roundedCornerRadius = 12.dp
         val separatorPadding = 2.dp
@@ -147,11 +150,11 @@ fun EventListItemPreview() {
             showDate = true,
             icon = R.drawable.flight_takeoff_baseline_24,
             dayOfMonthString = "21",
-            dayOfWeekString = "Fri",
+            dayOfWeekString = "Wed",
             timeString = "6:15 AM",
             headline = "Flight to Paris",
             supporting = "John F. Kennedy Intl.",
-            position = EventListItemPosition.TOP,
+            position = EventListItemPosition.SINGLE,
         )
     }
 }

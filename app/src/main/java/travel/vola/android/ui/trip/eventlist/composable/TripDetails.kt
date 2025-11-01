@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -44,7 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.graphics.drawable.toBitmapOrNull
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -277,7 +275,6 @@ fun List(
                 modifier = Modifier
                     .animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
                     .background(MaterialTheme.colorScheme.surface)
-                    .padding(horizontal = 16.dp)
             ) {
                 TripDetailItem(
                     event,
@@ -380,9 +377,6 @@ private fun TripDetailItem(
         is TripItemState.InitialAddPlanItemState -> EmptyAddPlanListItem(
             onAddButtonClick = { onAddButonTapped(event.id) })
 
-        is TripItemState.EmptyAddPlanItemState -> EmptyAddPlanListItem(
-            onAddButtonClick = { onAddButonTapped(event.id) })
-
         is AddPlanItemState -> AddPlanListItem(
             event,
             actionHandler = addPlanItemActionHandler,
@@ -453,13 +447,11 @@ fun TripDetailsPreview() {
                 restaurantAddress = "Rue do cochon, 82",
                 backgroundStyle = BackgroundStyle.BOTTOM,
             ),
-            DateRangeItemState(
+            EmptyDateItemState(
                 id = "6",
-                timestamp = Time("2025-10-18T19:00 +0200"),
-                dayOfMonthStart = "18",
-                dayOfWeekStart = "Fri",
-                dayOfMonthEnd = "22",
-                dayOfWeekEnd = "Sat",
+                timestamp = Time("2025-10-19T19:00 +0200"),
+                dayOfMonth = "19",
+                dayOfWeek = "Fri",
             ),
             HotelCheckOutItemState(
                 id = "7",

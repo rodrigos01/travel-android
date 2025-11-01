@@ -1,10 +1,10 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ListItem
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,21 +20,27 @@ fun EmptyDateListItem(
     dayOfWeek: String,
     onTap: () -> Unit,
 ) {
-    ListItem(headlineContent = {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.padding(end = 16.dp)) {
-                LeadingDate(
-                    dayOfMonth = dayOfMonth,
-                    dayOfWeek = dayOfWeek,
-                )
-            }
-            Text(
-                text = "No plans yet, tap to add",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.secondary
-            )
-        }
-    }, modifier = Modifier.clickable(onClick = onTap))
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clickable(onClick = onTap)
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 16.dp)
+    ) {
+        LeadingDate(
+            dayOfMonth = dayOfMonth,
+            dayOfWeek = dayOfWeek,
+            modifier = Modifier
+                .padding(end = 8.dp, bottom = 8.dp)
+                .width(32.dp)
+        )
+        Text(
+            text = "No plans yet, tap to add",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.weight(1f)
+        )
+    }
 }
 
 @Composable
