@@ -447,13 +447,11 @@ fun TripDetailsPreview() {
                 restaurantAddress = "Rue do cochon, 82",
                 backgroundStyle = BackgroundStyle.BOTTOM,
             ),
-            DateRangeItemState(
+            EmptyDateItemState(
                 id = "6",
                 timestamp = Time("2025-10-19T19:00 +0200"),
-                dayOfMonthStart = "19",
-                dayOfWeekStart = "Fri",
-                dayOfMonthEnd = "21",
-                dayOfWeekEnd = "Sat",
+                dayOfMonth = "19",
+                dayOfWeek = "Fri",
             ),
             HotelCheckOutItemState(
                 id = "7",
