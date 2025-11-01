@@ -355,7 +355,7 @@ class TripViewModel(
                         genItem(
                             time,
                             event,
-                            showDate = firstInDay,
+                            showDate = firstInDay || firstInPlace,
                             backgroundStyle = backgroundStyle,
                             sectionId = place?.id ?: "",
                         )
