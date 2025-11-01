@@ -277,7 +277,6 @@ fun List(
                 modifier = Modifier
                     .animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
                     .background(MaterialTheme.colorScheme.surface)
-                    .padding(horizontal = 16.dp)
             ) {
                 TripDetailItem(
                     event,
@@ -455,10 +454,10 @@ fun TripDetailsPreview() {
             ),
             DateRangeItemState(
                 id = "6",
-                timestamp = Time("2025-10-18T19:00 +0200"),
-                dayOfMonthStart = "18",
+                timestamp = Time("2025-10-19T19:00 +0200"),
+                dayOfMonthStart = "19",
                 dayOfWeekStart = "Fri",
-                dayOfMonthEnd = "22",
+                dayOfMonthEnd = "21",
                 dayOfWeekEnd = "Sat",
             ),
             HotelCheckOutItemState(
