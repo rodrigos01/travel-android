@@ -325,6 +325,7 @@ class TripViewModel(
                 nextItems.takeWhile { it.place == place || (it.second as? TimedPlace)?.isDayTrip == true }
                     .isEmpty()
             val lastInDay = nextItem?.first?.dateString != time.dateString
+            val firstInSection = firstInDay || firstInPlace
             val lastInSection = index == pairs.lastIndex || lastInDay || lastInPlace
             val dateRangeItem =
                 nextItem?.let { genDateRangeItem(time, it.first, sectionId = place?.id ?: "") }
@@ -342,9 +343,9 @@ class TripViewModel(
                 }
                 if (event !is TimedPlace || event.isDayTrip) {
                     val backgroundStyle =
-                        if (firstInDay && (lastInSection)) {
+                        if (firstInSection && lastInSection) {
                             TripItemState.EventItemState.BackgroundStyle.SINGLE
-                        } else if (firstInDay || firstInPlace) {
+                        } else if (firstInSection) {
                             TripItemState.EventItemState.BackgroundStyle.TOP
                         } else if (lastInSection) {
                             TripItemState.EventItemState.BackgroundStyle.BOTTOM
@@ -355,7 +356,7 @@ class TripViewModel(
                         genItem(
                             time,
                             event,
-                            showDate = firstInDay || firstInPlace,
+                            showDate = firstInSection,
                             backgroundStyle = backgroundStyle,
                             sectionId = place?.id ?: "",
                         )
