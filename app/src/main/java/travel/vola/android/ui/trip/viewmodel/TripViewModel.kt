@@ -363,8 +363,6 @@ class TripViewModel(
                 }
                 if (dateRangeItem != null) {
                     add(dateRangeItem)
-                } else if (lastInSection && nextItem?.isReturn(pairs) == false) {
-                    add(genEmptyAddPlanItem(time))
                 }
             }
         }
@@ -451,14 +449,6 @@ class TripViewModel(
             time
         ) == pairs.originPlace)
     }
-
-
-    private fun genEmptyAddPlanItem(
-        emptyAddPlanItemTimestamp: Time,
-    ) = TripItemState.EmptyAddPlanItemState(
-        UUID.randomUUID().toString(),
-        emptyAddPlanItemTimestamp,
-    )
 
     private fun genDateRangeItem(
         from: Time, to: Time, sectionId: String,
