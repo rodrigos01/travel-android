@@ -519,7 +519,7 @@ fun TripDetailsPreview() {
         ),
         places = emptyList(),
     )
-    AppTheme(dynamicColor = false) {
+    AppTheme {
         TripDetails(
             state,
         )
