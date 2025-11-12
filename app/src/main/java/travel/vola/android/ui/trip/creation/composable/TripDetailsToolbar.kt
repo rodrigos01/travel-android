@@ -1,10 +1,13 @@
 package travel.vola.android.ui.trip.creation.composable
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -32,7 +35,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import travel.vola.android.common.ui.components.toPx
 import travel.vola.android.extensions.Time
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.eventlist.composable.AddPlanContent
@@ -55,21 +60,53 @@ fun TripDetailsToolbar(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.fillMaxWidth(),
     ) {
-        if (addPlanState != null) {
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .shadow(
-                        FloatingToolbarDefaults.ContainerExpandedElevationWithFab,
-                        shape = MaterialTheme.shapes.extraLarge,
-                    )
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        val spaceBetweenInPx = 8.dp.toPx().toInt()
+        val toolbarSize = FloatingToolbarDefaults.ContainerSize.toPx().toInt()
+        AnimatedContent(
+            targetState = addPlanState,
+            transitionSpec = {
+                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) { height ->
+                    height + spaceBetweenInPx
 
+                }
+                    .togetherWith(slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) { height ->
+                        height + spaceBetweenInPx
+                    })
+                    .using(SizeTransform { initialSize, targetSize ->
+                        if (targetSize.height > initialSize.height) {
+                            //enter
+                            keyframes {
+                                IntSize(targetSize.width, toolbarSize) at 0
+                                IntSize(targetSize.width, toolbarSize) at durationMillis / 3
+                                targetSize at durationMillis
+                            }
+                        } else {
+                            keyframes {
+                                initialSize at 0
+                                IntSize(initialSize.width, toolbarSize) at durationMillis * 2 / 3
+                                targetSize at durationMillis
+                            }
+                        }
+                    })
+            },
+            contentAlignment = Alignment.BottomCenter
+        ) { state ->
+            if (state != null) {
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .shadow(
+                            FloatingToolbarDefaults.ContainerExpandedElevationWithFab,
+                            shape = MaterialTheme.shapes.extraLarge,
                         )
-                    .padding(vertical = 16.dp)
-            ) {
-                AddPlanContent(state = addPlanState, actionHandler = NoOpActionHandler)
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+
+                            )
+                        .padding(vertical = 16.dp)
+                ) {
+                    AddPlanContent(state = state, actionHandler = NoOpActionHandler)
+                }
             }
         }
         HorizontalFloatingToolbar(
@@ -152,7 +189,7 @@ fun TripDetailsToolbarPreview() {
         saveButtonEnabled = true,
         deleteButtonEnabled = false,
     )
-    var currentState by remember { mutableStateOf<AddPlanItemState?>(state) }
+    var currentState by remember { mutableStateOf<AddPlanItemState?>(null) }
     AppTheme {
         Box(
             modifier = Modifier
