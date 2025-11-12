@@ -3,6 +3,8 @@ package travel.vola.android.ui.trip.creation.composable
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,8 +14,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
@@ -30,7 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import travel.vola.android.extensions.Time
@@ -50,35 +50,32 @@ fun TripDetailsToolbar(
     addPlanState: AddPlanItemState? = null,
     onTypeSelected: (AddPlanType) -> Unit = {},
 ) {
-    val expanded = addPlanState != null
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier
-            .then(
-                if (expanded) {
-                    Modifier
-                        .padding(horizontal = 16.dp)
-                        .clip(MaterialTheme.shapes.extraLarge)
-                        .background(color = MaterialTheme.colorScheme.surfaceContainerHigh)
-                } else {
-                    Modifier.wrapContentSize()
-                }
-            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier.fillMaxWidth(),
     ) {
-        if (expanded) {
-            AddPlanContent(state = addPlanState, actionHandler = NoOpActionHandler)
+        if (addPlanState != null) {
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .shadow(
+                        FloatingToolbarDefaults.ContainerExpandedElevationWithFab,
+                        shape = MaterialTheme.shapes.extraLarge,
+                    )
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+
+                        )
+                    .padding(vertical = 16.dp)
+            ) {
+                AddPlanContent(state = addPlanState, actionHandler = NoOpActionHandler)
+            }
         }
         HorizontalFloatingToolbar(
-            expanded = expanded,
+            expanded = true,
             colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
-            collapsedShadowElevation = FloatingToolbarDefaults.ContainerExpandedElevationWithFab,
-            expandedShadowElevation = FloatingToolbarDefaults.ContainerExpandedElevation,
-            shape = if (expanded) RoundedCornerShape(0.dp) else FloatingToolbarDefaults.ContainerShape,
-            modifier = if (expanded) {
-                Modifier.fillMaxWidth()
-            } else {
-                Modifier
-            }
+            expandedShadowElevation = FloatingToolbarDefaults.ContainerExpandedElevationWithFab,
         ) {
             types.forEach {
                 ToolbarItem(
@@ -155,7 +152,7 @@ fun TripDetailsToolbarPreview() {
         saveButtonEnabled = true,
         deleteButtonEnabled = false,
     )
-    var currentState by remember { mutableStateOf<AddPlanItemState?>(null) }
+    var currentState by remember { mutableStateOf<AddPlanItemState?>(state) }
     AppTheme {
         Box(
             modifier = Modifier
