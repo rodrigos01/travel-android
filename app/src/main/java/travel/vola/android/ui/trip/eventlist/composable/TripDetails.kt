@@ -8,6 +8,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -42,10 +44,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.graphics.drawable.toBitmapOrNull
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -65,7 +69,9 @@ import travel.vola.android.extensions.Time
 import travel.vola.android.extensions.viewModel
 import travel.vola.android.model.data.Identifiable
 import travel.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.trip.creation.composable.AddPlanType
 import travel.vola.android.ui.trip.creation.composable.ConfirmationDialog
+import travel.vola.android.ui.trip.creation.composable.TripDetailsToolbar
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.TripItemState
@@ -97,6 +103,7 @@ fun TripDetails(
         onAddButonTapped = viewModel::addButtonTapped,
         onEmptyAddRowTapped = viewModel::emptyDateRowTapped,
         onItemTapped = viewModel::itemTapped,
+        onAddPlanTypeSelected = { viewModel.onAddPlanTypeSelected(it?.toState()) }
     )
 }
 
@@ -111,6 +118,7 @@ private fun TripDetails(
     onAddButonTapped: (String) -> Unit = {},
     onEmptyAddRowTapped: (String) -> Unit = {},
     onItemTapped: (String) -> Unit = {},
+    onAddPlanTypeSelected: (AddPlanType?) -> Unit = {},
 ) {
     val listScrollState = rememberLazyListState()
     val currentPlaceIndex by remember {
@@ -251,20 +259,36 @@ private fun TripDetails(
                 })
             },
         ) { paddingValues ->
-            List(
-                state,
-                listScrollState,
-                paddingValues,
-                addPlanItemActionHandler,
-                onAddButonTapped,
-                onEmptyAddRowTapped,
-                onItemTapped,
-                onPlaceImageLoaded = { placeId, result ->
-                    colorSchemeBitmaps[placeId] =
-                        result.drawable.toBitmapOrNull()
-                            ?.copy(Bitmap.Config.ARGB_8888, true)
-                },
-            )
+            Box(modifier = Modifier.fillMaxSize()) {
+                List(
+                    state,
+                    listScrollState,
+                    paddingValues,
+                    addPlanItemActionHandler,
+                    onAddButonTapped,
+                    onEmptyAddRowTapped,
+                    onItemTapped,
+                    onPlaceImageLoaded = { placeId, result ->
+                        colorSchemeBitmaps[placeId] =
+                            result.drawable.toBitmapOrNull()
+                                ?.copy(Bitmap.Config.ARGB_8888, true)
+                    },
+                )
+                if (state.addPlanItemState != null) {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = Color.Transparent,
+                        onClick = { onAddPlanTypeSelected(null) },
+                    ) {}
+                }
+                TripDetailsToolbar(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 24.dp),
+                    addPlanState = state.addPlanItemState,
+                    onTypeSelected = onAddPlanTypeSelected,
+                )
+            }
         }
     }
 }

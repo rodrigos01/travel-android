@@ -46,6 +46,7 @@ import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.TripItemState
+import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -69,6 +70,7 @@ class TripViewModel(
         val title: String,
         val items: List<TripItemState>,
         val places: List<PlaceState>,
+        val addPlanItemState: AddPlanItemState? = null,
     )
 
     data class PlaceState(
@@ -148,7 +150,7 @@ class TripViewModel(
                     item
                 }
             }
-            state.copy(items = items)
+            state.copy(items = items, addPlanItemState = addPlanItems["adding"])
         }.stateIn(
             viewModelScope, started = SharingStarted.Eagerly, initialValue = ViewState(
                 title = "", items = emptyList(), places = emptyList()
@@ -216,6 +218,17 @@ class TripViewModel(
                     deleteEnabled = false,
                 )
             }
+        }
+    }
+
+    fun onAddPlanTypeSelected(type: AddPlanItemState.Type?) {
+        addPlanUseCase.removeItem("adding")
+        if (type != null) {
+            addPlanUseCase.createAddPlanItem(
+                id = "adding",
+                ZonedDateTime.now(),
+                type = type
+            )
         }
     }
 
