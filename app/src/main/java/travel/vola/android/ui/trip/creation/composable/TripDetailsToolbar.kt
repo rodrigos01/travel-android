@@ -3,10 +3,15 @@ package travel.vola.android.ui.trip.creation.composable
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.EaseOutElastic
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
@@ -16,6 +21,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
@@ -34,7 +40,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import travel.vola.android.common.ui.components.toPx
@@ -61,58 +69,62 @@ fun TripDetailsToolbar(
         modifier = modifier.fillMaxWidth(),
     ) {
         val spaceBetweenInPx = 8.dp.toPx().toInt()
-        val toolbarSize = FloatingToolbarDefaults.ContainerSize.toPx().toInt()
+        var toolbarSize by remember { mutableStateOf(IntSize.Zero) }
+        val offset by animateDpAsState(
+            if (addPlanState != null) 0.dp else FloatingToolbarDefaults.ContainerSize + 8.dp,
+            animationSpec = if (addPlanState != null) spring(visibilityThreshold = Dp.VisibilityThreshold) else tween(
+                delayMillis = 100
+            )
+        )
         AnimatedContent(
             targetState = addPlanState,
             transitionSpec = {
-                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) { height ->
+                (fadeIn() + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) { height ->
                     height + spaceBetweenInPx
-
-                }
-                    .togetherWith(slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) { height ->
-                        height + spaceBetweenInPx
-                    })
-                    .using(SizeTransform { initialSize, targetSize ->
-                        if (targetSize.height > initialSize.height) {
-                            //enter
-                            keyframes {
-                                IntSize(targetSize.width, toolbarSize) at 0
-                                IntSize(targetSize.width, toolbarSize) at durationMillis / 3
-                                targetSize at durationMillis
-                            }
-                        } else {
-                            keyframes {
-                                initialSize at 0
-                                IntSize(initialSize.width, toolbarSize) at durationMillis * 2 / 3
-                                targetSize at durationMillis
-                            }
+                }) togetherWith (slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) { height ->
+                    height + spaceBetweenInPx
+                } + fadeOut()) using SizeTransform { initialSize, targetSize ->
+                    if (targetSize.height > initialSize.height) {
+                        //enter
+                        keyframes {
+                            toolbarSize at 0
+                            toolbarSize at durationMillis / 3
+                            targetSize at durationMillis using EaseOutElastic
                         }
-                    })
+                    } else {
+                        keyframes {
+                            initialSize at 0
+                            toolbarSize at durationMillis * 2 / 3 using EaseOutElastic
+                            toolbarSize at durationMillis
+                        }
+                    }
+                }
             },
-            contentAlignment = Alignment.BottomCenter
+            contentAlignment = Alignment.BottomCenter,
+            contentKey = { it != null },
+            modifier = Modifier
+                .offset(x = 0.dp, y = offset)
+                .padding(horizontal = 16.dp)
+                .shadow(
+                    FloatingToolbarDefaults.ContainerExpandedElevationWithFab,
+                    shape = MaterialTheme.shapes.extraLarge,
+                )
+                .background(color = MaterialTheme.colorScheme.surfaceContainerHigh)
+                .padding(vertical = 16.dp),
         ) { state ->
             if (state != null) {
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .shadow(
-                            FloatingToolbarDefaults.ContainerExpandedElevationWithFab,
-                            shape = MaterialTheme.shapes.extraLarge,
-                        )
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-
-                            )
-                        .padding(vertical = 16.dp)
-                ) {
-                    AddPlanContent(state = state, actionHandler = NoOpActionHandler)
-                }
+                AddPlanContent(state = state, actionHandler = NoOpActionHandler)
             }
         }
         HorizontalFloatingToolbar(
             expanded = true,
             colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
             expandedShadowElevation = FloatingToolbarDefaults.ContainerExpandedElevationWithFab,
+            modifier = Modifier.onGloballyPositioned {
+                if (toolbarSize == IntSize.Zero) {
+                    toolbarSize = it.size
+                }
+            }
         ) {
             types.forEach {
                 ToolbarItem(
