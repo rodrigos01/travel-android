@@ -66,8 +66,15 @@ class GenAiUseCase {
         com.google.android.libraries.places.api.model.Place.Field.LOCATION,
     )
 
-    suspend fun getSuggestions(city: Place, date: ZonedDateTime): String? {
-        val prompt = "provide a list of 5 places to visit in ${city.name} on ${date.toLocalDate()}"
+    suspend fun getSuggestions(
+        city: Place,
+        date: ZonedDateTime,
+        existingPlaces: List<Place>
+    ): String? {
+        val prompt =
+            "provide a list of 5 places to visit in ${city.name} on ${date.toLocalDate()}, " +
+                    "considering that the user already has the following places on their " +
+                    "itinerary ${existingPlaces.joinToString()}"
         val jsonString = model.generateContent(prompt).text ?: return null
 
         val response = Json.decodeFromString<GenAiSuggestionResponse>(jsonString)

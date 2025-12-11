@@ -100,15 +100,19 @@ class TripViewModel(
 
     private val genAiSuggestions = trip.filterNotNull().flatMapLatest { currentTrip ->
         val cities = (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).map {
-            it.city
-        }.distinctBy { it.id }
+            it.city to if (it is TripItemState.Timeable) it.timestamp else null
+        }.distinctBy { it.first.id }
         val suggestions: MutableMap<String, String?> =
-            cities.associate { it.id to null }.toMutableMap()
+            cities.associate { it.first.id to null }.toMutableMap()
         MutableStateFlow<Map<String, String?>>(suggestions).also { suggestionsFlow ->
             coroutineScope {
-                cities.forEach { city ->
+                cities.forEach { (city, time) ->
                     async {
-                        val citySuggestions = genAiUseCase.getSuggestions(city, Time.now())
+                        val citySuggestions = genAiUseCase.getSuggestions(
+                            city,
+                            date = time ?: Time.now(),
+                            existingPlaces = currentTrip.places.map { it.place }
+                        )
                         suggestions[city.id] = citySuggestions
                         suggestionsFlow.value = suggestions.toImmutableMap()
                     }
