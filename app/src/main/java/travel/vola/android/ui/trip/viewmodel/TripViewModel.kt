@@ -7,16 +7,19 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import okhttp3.internal.toImmutableMap
 import travel.vola.android.common.coroutines.createUseCaseScope
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.common.ui.state.MarkerViewState
@@ -67,6 +70,7 @@ class TripViewModel(
         placeRepository = placeRepository,
         coroutineScope = useCaseScope,
     ),
+    private val genAiUseCase: GenAiUseCase = GenAiUseCase(),
 ) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
 
     data class ViewState(
@@ -93,49 +97,75 @@ class TripViewModel(
 
     private val trip = repository.findTripById(tripId)
         .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
-    private val eventsFromTrip = trip.filterNotNull().map { currentTrip ->
-        val items = genItems(currentTrip)
-        val places =
-            (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).fold(mapOf<Place, PlaceState>()) { map, entity: WithCity ->
-                val current = map.getOrDefault(
-                    entity.city, PlaceState(
-                        place = entity.city,
-                        listIndex = items.indexOfFirst { it is TripItemState.PlaceItemState && entity.city.name == it.placeName },
-                        markers = emptyList()
-                    )
-                )
-                map.toMutableMap().apply {
-                    set(
-                        entity.city, current.copy(
-                            markers = current.markers + when (entity) {
-                                is Lodging -> MarkerViewState(
-                                    position = Pair(entity.latitude, entity.longitude),
-                                    name = entity.name ?: entity.address,
-                                    type = MarkerType.Lodging,
-                                )
 
-                                is TimedPlace -> MarkerViewState(
-                                    position = Pair(entity.place.latitude, entity.place.longitude),
-                                    name = entity.place.name,
-                                    type = if (entity.place != entity.city) MarkerType.Place else MarkerType.City,
-                                )
-
-                                is RestaurantReservation -> MarkerViewState(
-                                    position = Pair(entity.place.latitude, entity.place.longitude),
-                                    name = entity.place.name,
-                                    type = MarkerType.Restaurant,
-                                )
-                            }
-                        )
-                    )
+    private val genAiSuggestions = trip.filterNotNull().flatMapLatest { currentTrip ->
+        val cities = (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).map {
+            it.city
+        }.distinctBy { it.id }
+        val suggestions: MutableMap<String, String?> =
+            cities.associate { it.id to null }.toMutableMap()
+        MutableStateFlow<Map<String, String?>>(suggestions).also { suggestionsFlow ->
+            coroutineScope {
+                cities.forEach { city ->
+                    async {
+                        val citySuggestions = genAiUseCase.getSuggestions(city, Time.now())
+                        suggestions[city.id] = citySuggestions
+                        suggestionsFlow.value = suggestions.toImmutableMap()
+                    }
                 }
             }
-        ViewState(
-            title = currentTrip.name ?: "Untitled Trip",
-            items = items,
-            places = places.values.toList(),
-        )
-    }
+        }
+    }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = emptyMap())
+    private val eventsFromTrip =
+        trip.filterNotNull().combine(genAiSuggestions) { currentTrip, suggestions ->
+            val items = genItems(currentTrip, suggestions)
+            val places =
+                (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).fold(mapOf<Place, PlaceState>()) { map, entity: WithCity ->
+                    val current = map.getOrDefault(
+                        entity.city, PlaceState(
+                            place = entity.city,
+                            listIndex = items.indexOfFirst { it is TripItemState.PlaceItemState && entity.city.name == it.placeName },
+                            markers = emptyList()
+                        )
+                    )
+                    map.toMutableMap().apply {
+                        set(
+                            entity.city, current.copy(
+                                markers = current.markers + when (entity) {
+                                    is Lodging -> MarkerViewState(
+                                        position = Pair(entity.latitude, entity.longitude),
+                                        name = entity.name ?: entity.address,
+                                        type = MarkerType.Lodging,
+                                    )
+
+                                    is TimedPlace -> MarkerViewState(
+                                        position = Pair(
+                                            entity.place.latitude,
+                                            entity.place.longitude
+                                        ),
+                                        name = entity.place.name,
+                                        type = if (entity.place != entity.city) MarkerType.Place else MarkerType.City,
+                                    )
+
+                                    is RestaurantReservation -> MarkerViewState(
+                                        position = Pair(
+                                            entity.place.latitude,
+                                            entity.place.longitude
+                                        ),
+                                        name = entity.place.name,
+                                        type = MarkerType.Restaurant,
+                                    )
+                                }
+                            )
+                        )
+                    }
+                }
+            ViewState(
+                title = currentTrip.name ?: "Untitled Trip",
+                items = items,
+                places = places.values.toList(),
+            )
+        }
     private val addPlanItemsState = addPlanUseCase.items.onEach { state ->
         reversibleItems.keys.forEach { itemId ->
             if (!state.containsKey(itemId)) {
@@ -332,7 +362,10 @@ class TripViewModel(
             is TripItemState.RestaurantReservationItemState -> trip.value?.restaurants?.firstOrNull { it.id == id }
         }
 
-    private fun genItems(trip: Trip): List<TripItemState> {
+    private fun genItems(
+        trip: Trip,
+        suggestions: Map<String, String?>
+    ): List<TripItemState> {
         val events =
             trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants
         val pairs = events.flatMap { event ->
@@ -414,6 +447,10 @@ class TripViewModel(
                 }
                 if (dateRangeItem != null) {
                     add(dateRangeItem)
+                }
+                if (place != null && lastInPlace) {
+                    val placeSuggestions = suggestions[place.id]
+                    placeSuggestions?.let { add(TripItemState.SuggestionsItemState(it)) }
                 }
             }
         }
