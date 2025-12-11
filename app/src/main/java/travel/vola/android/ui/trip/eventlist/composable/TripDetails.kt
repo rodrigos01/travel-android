@@ -382,7 +382,7 @@ private fun TripDetailItem(
             onImageLoaded,
             modifier = Modifier.clickable { onItemTapped(event.id) })
 
-        is TripItemState.SuggestionsItemState -> Text(event.text)
+        is TripItemState.SuggestionsItemState -> SuggestionsListItem(event)
 
         is TripItemState.EventItemState -> Surface(
             onClick = { onItemTapped(event.id) },

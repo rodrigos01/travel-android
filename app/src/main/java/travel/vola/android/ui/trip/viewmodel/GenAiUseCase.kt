@@ -16,6 +16,7 @@ import kotlinx.serialization.json.Json
 import travel.vola.android.model.data.Place
 import travel.vola.android.ui.applicationContext
 import java.time.ZonedDateTime
+import java.util.TimeZone
 
 class GenAiUseCase {
 
@@ -29,7 +30,10 @@ class GenAiUseCase {
     )
 
     @Serializable
-    private data class GenAiSuggestionResponse(val suggestions: List<GenAISuggestion>)
+    private data class GenAiSuggestionResponse(
+        val suggestions: List<GenAISuggestion>,
+        val predictedChanges: List<String>,
+    )
 
     private val suggestionsSchema = Schema.obj(
         mapOf(
@@ -43,6 +47,9 @@ class GenAiUseCase {
                         "searchQuery" to Schema.string("query to search for the place in google maps"),
                     )
                 )
+            ),
+            "predictedChanges" to Schema.array(
+                Schema.string("A change the user would possibly make to the list of places")
             )
         )
     )
@@ -70,11 +77,13 @@ class GenAiUseCase {
         city: Place,
         date: ZonedDateTime,
         existingPlaces: List<Place>
-    ): String? {
+    ): SuggestionsResult? {
         val prompt =
             "provide a list of 5 places to visit in ${city.name} on ${date.toLocalDate()}, " +
                     "considering that the user already has the following places on their " +
-                    "itinerary ${existingPlaces.joinToString()}"
+                    "itinerary ${existingPlaces.joinToString()}. Alongside the list, " +
+                    "provide 3 possible changes you predict the user might want to make to the list. " +
+                    "Keep those suggestions brief, 3 words maximum so they can fit on a button"
         val jsonString = model.generateContent(prompt).text ?: return null
 
         val response = Json.decodeFromString<GenAiSuggestionResponse>(jsonString)
@@ -89,6 +98,20 @@ class GenAiUseCase {
                 }
             }
         }.awaitAll()
-        return places.mapNotNull { it?.displayName }.joinToString()
+        return SuggestionsResult(places.mapNotNull {
+            Place(
+                id = it?.id ?: "",
+                name = it?.displayName ?: "",
+                latitude = it?.location?.latitude ?: 0.0,
+                longitude = it?.location?.longitude ?: 0.0,
+                coverImage = null,
+                address = "",
+                externalId = it?.id ?: "",
+                timeZone = TimeZone.getTimeZone(date.zone.id),
+                source = "Google"
+            )
+        }, response.predictedChanges)
     }
 }
+
+data class SuggestionsResult(val places: List<Place>, val predictedChanges: List<String>)
