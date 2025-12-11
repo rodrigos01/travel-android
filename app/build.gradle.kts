@@ -8,7 +8,7 @@ plugins {
     id("androidx.navigation.safeargs")
     id("com.google.gms.google-services")
     id("kotlinx-serialization")
-    id("org.jetbrains.kotlin.plugin.compose") version "2.2.20"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.2.21"
     id("com.google.firebase.appdistribution")
     id("com.google.firebase.crashlytics")
     id("com.google.devtools.ksp")
