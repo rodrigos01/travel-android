@@ -374,7 +374,7 @@ class TripViewModel(
 
     private fun genItems(
         trip: Trip,
-        suggestions: Map<String, String?>
+        suggestions: Map<String, TripItemState.SuggestionsItemState?>
     ): List<TripItemState> {
         val events =
             trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants
@@ -460,7 +460,7 @@ class TripViewModel(
                 }
                 if (place != null && lastInPlace) {
                     val placeSuggestions = suggestions[place.id]
-                    placeSuggestions?.let { add(TripItemState.SuggestionsItemState(it)) }
+                    placeSuggestions?.let { add(it) }
                 }
             }
         }
