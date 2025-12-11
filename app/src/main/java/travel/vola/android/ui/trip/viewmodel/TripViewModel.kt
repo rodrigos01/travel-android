@@ -102,9 +102,9 @@ class TripViewModel(
         val cities = (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).map {
             it.city to if (it is TripItemState.Timeable) it.timestamp else null
         }.distinctBy { it.first.id }
-        val suggestions: MutableMap<String, String?> =
+        val suggestions: MutableMap<String, TripItemState.SuggestionsItemState?> =
             cities.associate { it.first.id to null }.toMutableMap()
-        MutableStateFlow<Map<String, String?>>(suggestions).also { suggestionsFlow ->
+        MutableStateFlow<Map<String, TripItemState.SuggestionsItemState?>>(suggestions).also { suggestionsFlow ->
             coroutineScope {
                 cities.forEach { (city, time) ->
                     async {
@@ -113,7 +113,12 @@ class TripViewModel(
                             date = time ?: Time.now(),
                             existingPlaces = currentTrip.places.map { it.place }
                         )
-                        suggestions[city.id] = citySuggestions
+                        suggestions[city.id] = citySuggestions?.let { suggestion ->
+                            TripItemState.SuggestionsItemState(
+                                suggestion.places.joinToString { it.name },
+                                suggestion.predictedChanges
+                            )
+                        }
                         suggestionsFlow.value = suggestions.toImmutableMap()
                     }
                 }
@@ -368,7 +373,7 @@ class TripViewModel(
 
     private fun genItems(
         trip: Trip,
-        suggestions: Map<String, String?>
+        suggestions: Map<String, TripItemState.SuggestionsItemState?>
     ): List<TripItemState> {
         val events =
             trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants
@@ -454,7 +459,7 @@ class TripViewModel(
                 }
                 if (place != null && lastInPlace) {
                     val placeSuggestions = suggestions[place.id]
-                    placeSuggestions?.let { add(TripItemState.SuggestionsItemState(it)) }
+                    placeSuggestions?.let { add(it) }
                 }
             }
         }
