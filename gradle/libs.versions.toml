@@ -76,9 +76,10 @@ compose-foundation = { group = "androidx.compose.foundation", name = "foundation
 compose-text-googlefonts = { group = "androidx.compose.ui", name = "ui-text-google-fonts", version.ref = "compose" }
 # Firebase
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
-firebase-analytics = { module = "com.google.firebase:firebase-analytics"}
-firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics"}
-firebase-firestore = { module = "com.google.firebase:firebase-firestore"}
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+firebase-ai = { module = "com.google.firebase:firebase-ai" }
 # Navigation
 navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigation" }
 navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigation" }

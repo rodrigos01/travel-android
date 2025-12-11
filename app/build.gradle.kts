@@ -156,6 +156,7 @@ dependencies {
     }
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.ai)
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     // Compose
