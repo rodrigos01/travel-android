@@ -21,6 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.toRoute
+import com.google.android.libraries.places.api.Places
 import travel.vola.android.common.ui.components.OverlayHostProvider
 import travel.vola.android.di.LocalViewModelCreationExtras
 import travel.vola.android.di.initializeViewModelCreationExtras
@@ -47,6 +48,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setApplicationContext(this.applicationContext)
+        Places.initializeWithNewPlacesApiEnabled(this.applicationContext, "AIzaSyDZQ7sZBqF_GCR8L-n4HPyH5cyaW8sRSh0")
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent { MainScreen() }

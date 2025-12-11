@@ -32,6 +32,7 @@ coreTesting = "2.2.0"
 espressoCore = "3.7.0"
 junit = "4.13.2"
 paletteKtx = "1.0.0"
+places = "5.1.1"
 [libraries]
 # General
 androidx-adaptive-layout-android = { module = "androidx.compose.material3.adaptive:adaptive-layout-android", version.ref = "material3Adaptative" }
@@ -65,6 +66,7 @@ mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
+places = { module = "com.google.android.libraries.places:places", version.ref = "places" }
 # Coil
 coil = { module = "io.coil-kt:coil", version.ref = "coil" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }

@@ -176,6 +176,7 @@ dependencies {
     implementation(libs.compose.text.googlefonts)
     // Google Maps
     implementation(libs.maps.compose)
+    implementation(libs.places)
     // Ktor
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.android)
