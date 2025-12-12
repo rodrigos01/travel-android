@@ -11,17 +11,25 @@ import travel.vola.android.extensions.viewModelFactory
 import travel.vola.android.model.genai.GenAIData
 import travel.vola.android.model.genai.GenAIRepository
 
-class TripCreationAssistantViewModel(private val repository: GenAIRepository): ViewModel() {
+class TripCreationAssistantViewModel(private val repository: GenAIRepository) : ViewModel() {
     sealed interface UiState {
-        data object Generating: UiState
+        data object Generating : UiState
         data class InitialParameters(
-            val occasions: List<String>,
-            val interests: List<String>,
-            val vibe: List<String>,
-            val focus: List<String>,
-            val mustHave: List<String>,
-            val duration: List<String>,
-        ): UiState
+            val optionGroups: List<OptionGroup>,
+        ) : UiState
+
+        enum class OptionGroupType {
+            OCCASIONS,
+            INTERESTS,
+            VIBE,
+            FOCUS,
+            DURATION,
+            MUST_HAVE
+        }
+
+        data class OptionGroup(val type: OptionGroupType, val options: List<Option>)
+
+        data class Option(val option: String, val isSelected: Boolean = false)
     }
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Generating)
@@ -39,15 +47,52 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository): V
             val options = repository.genInitialParametersOptions(basicInformation)
             if (options != null) {
                 _uiState.value = UiState.InitialParameters(
-                    occasions = options.occasions,
-                    interests = options.interests,
-                    vibe = options.vibe,
-                    focus = options.focus,
-                    duration = options.duration,
-                    mustHave = options.mustHave,
+                    optionGroups = listOf(
+                        UiState.OptionGroup(
+                            UiState.OptionGroupType.OCCASIONS,
+                            options.occasions.map { UiState.Option(it) }
+                        ),
+                        UiState.OptionGroup(
+                            UiState.OptionGroupType.INTERESTS,
+                            options.interests.map { UiState.Option(it) }
+                        ),
+                        UiState.OptionGroup(
+                            UiState.OptionGroupType.VIBE,
+                            options.vibe.map { UiState.Option(it) }
+                        ),
+                        UiState.OptionGroup(
+                            UiState.OptionGroupType.FOCUS,
+                            options.focus.map { UiState.Option(it) }
+                        ),
+                        UiState.OptionGroup(
+                            UiState.OptionGroupType.DURATION,
+                            options.duration.map { UiState.Option(it) }
+                        ),
+                        UiState.OptionGroup(
+                            UiState.OptionGroupType.MUST_HAVE,
+                            options.mustHave.map { UiState.Option(it) }
+                        ),
+                    ),
                 )
             }
         }
+    }
+
+    fun onInitialParameterOptionTapped(index: Int, optionGroupType: UiState.OptionGroupType) {
+        val state = uiState.value as? UiState.InitialParameters ?: return
+        _uiState.value = state.copy(
+            optionGroups = state.optionGroups.map { group ->
+                if (group.type == optionGroupType) {
+                    group.copy(options = group.options.mapIndexed { optionIndex, option ->
+                        option.copy(
+                            isSelected = if (optionIndex == index) !option.isSelected else option.isSelected
+                        )
+                    })
+                } else {
+                    group
+                }
+            }
+        )
     }
 
     class Factory : ViewModelProvider.Factory by viewModelFactory(initializer = {
