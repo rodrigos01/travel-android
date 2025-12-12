@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -371,10 +372,7 @@ class TripViewModel(
             is TripItemState.RestaurantReservationItemState -> trip.value?.restaurants?.firstOrNull { it.id == id }
         }
 
-    private fun genItems(
-        trip: Trip,
-        suggestions: Map<String, TripItemState.SuggestionsItemState?>
-    ): List<TripItemState> {
+    private fun genItems(trip: Trip): List<TripItemState> {
         val events =
             trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants
         val pairs = events.flatMap { event ->
@@ -456,10 +454,6 @@ class TripViewModel(
                 }
                 if (dateRangeItem != null) {
                     add(dateRangeItem)
-                }
-                if (place != null && lastInPlace) {
-                    val placeSuggestions = suggestions[place.id]
-                    placeSuggestions?.let { add(it) }
                 }
             }
         }
