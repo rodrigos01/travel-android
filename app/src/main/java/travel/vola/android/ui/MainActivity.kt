@@ -89,6 +89,9 @@ class MainActivity : ComponentActivity() {
                         composable(TripCreationAssistantDestination.ROUTE) {
                         TripCreationAssistant(navController)
                     }
+                    composable(TripCreationAssistantDestination.ROUTE) {
+                        TripCreationAssistant(navController)
+                    }
                     composable(
                             TripDetailsDestination.ROUTE, arguments = listOf(
                                 navArgument(
