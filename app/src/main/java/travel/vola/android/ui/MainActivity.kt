@@ -31,6 +31,8 @@ import travel.vola.android.ui.home.HomeScreenDestination
 import travel.vola.android.ui.lodgingsearch.composable.LodgingSearch
 import travel.vola.android.ui.lodgingsearch.composable.LodgingSearchDestination
 import travel.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.trip.creation.assistant.composable.TripCreationAssistant
+import travel.vola.android.ui.trip.creation.assistant.composable.TripCreationAssistantDestination
 import travel.vola.android.ui.trip.eventlist.composable.TripDetails
 import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
 
@@ -84,7 +86,10 @@ class MainActivity : ComponentActivity() {
                         composable(HomeScreenDestination.ROUTE) {
                             HomeScreen(navController)
                         }
-                        composable(
+                        composable(TripCreationAssistantDestination.ROUTE) {
+                        TripCreationAssistant(navController)
+                    }
+                    composable(
                             TripDetailsDestination.ROUTE, arguments = listOf(
                                 navArgument(
                                     TripDetailsDestination.ARG_TRIP_ID
