@@ -36,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SnapshotMutationPolicy
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -103,7 +104,8 @@ fun TripDetails(
         onAddButonTapped = viewModel::addButtonTapped,
         onEmptyAddRowTapped = viewModel::emptyDateRowTapped,
         onItemTapped = viewModel::itemTapped,
-        onAddPlanTypeSelected = { viewModel.onAddPlanTypeSelected(it?.toState()) }
+        onAddPlanTypeSelected = { viewModel.onAddPlanTypeSelected(it?.toState()) },
+        onFocusedIndexChange = viewModel::setFocusedIndex,
     )
 }
 
@@ -119,6 +121,7 @@ private fun TripDetails(
     onEmptyAddRowTapped: (String) -> Unit = {},
     onItemTapped: (String) -> Unit = {},
     onAddPlanTypeSelected: (AddPlanType?) -> Unit = {},
+    onFocusedIndexChange: (Int) -> Unit = {},
 ) {
     val listScrollState = rememberLazyListState()
     val currentPlaceIndex by remember {
@@ -144,6 +147,9 @@ private fun TripDetails(
     val focusedPlace by produceState<TripViewModel.PlaceState?>(null, currentPlaceIndex) {
         value =
             state.places.sortedBy { it.listIndex }.lastOrNull { it.listIndex <= currentPlaceIndex }
+    }
+    LaunchedEffect(currentPlaceIndex) {
+        onFocusedIndexChange(currentPlaceIndex)
     }
     val allMarkers = state.places.flatMap { it.markers }
     val boundingMarkers = focusedPlace?.markers ?: emptyList()
@@ -327,6 +333,7 @@ fun List(
                             onPlaceImageLoaded(sectionId, it)
                         }
                     },
+                    highlightDate = event is TripItemState.EventItemState && event.id == state.focusedItemId,
                 )
             }
         }
@@ -341,6 +348,7 @@ private fun TripDetailItem(
     onEmptyAddRowTapped: (String) -> Unit,
     onItemTapped: (String) -> Unit,
     onImageLoaded: (SuccessResult) -> Unit,
+    highlightDate: Boolean = false,
 ) {
     when (event) {
         is MonthItemState -> MonthEventListItem(event.month, event.year)
@@ -372,6 +380,7 @@ private fun TripDetailItem(
             when (event) {
                 is FlightDepartureItemState -> FlightEventListItem(
                     event.showDate,
+                    highlightDate,
                     event.dayOfMonth,
                     event.dayOfWeek,
                     event.time,
@@ -382,6 +391,7 @@ private fun TripDetailItem(
 
                 is FlightArrivalItemState -> ArrivalEventListItem(
                     event.showDate,
+                    highlightDate,
                     event.dayOfMonth,
                     event.dayOfWeek,
                     event.time,
@@ -391,6 +401,7 @@ private fun TripDetailItem(
 
                 is HotelCheckInItemState -> CheckinListItem(
                     event.showDate,
+                    highlightDate,
                     event.dayOfMonth,
                     event.dayOfWeek,
                     event.time,
@@ -400,6 +411,7 @@ private fun TripDetailItem(
 
                 is HotelCheckOutItemState -> CheckoutListItem(
                     event.showDate,
+                    highlightDate,
                     event.dayOfMonth,
                     event.dayOfWeek,
                     event.time,
@@ -407,8 +419,11 @@ private fun TripDetailItem(
                     event.backgroundStyle.asEvenListItemPosition(),
                 )
 
-                is TripItemState.TimedPlaceItemState -> TimedPlaceListItem(event)
-                is TripItemState.RestaurantReservationItemState -> RestaurantListItem(event)
+                is TripItemState.TimedPlaceItemState -> TimedPlaceListItem(event, highlightDate)
+                is TripItemState.RestaurantReservationItemState -> RestaurantListItem(
+                    event,
+                    highlightDate
+                )
             }
         }
 

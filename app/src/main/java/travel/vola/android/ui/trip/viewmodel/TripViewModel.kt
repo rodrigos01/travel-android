@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -71,6 +72,7 @@ class TripViewModel(
         val items: List<TripItemState>,
         val places: List<PlaceState>,
         val addPlanItemState: AddPlanItemState? = null,
+        val focusedItemId: String? = null,
     )
 
     data class PlaceState(
@@ -139,23 +141,35 @@ class TripViewModel(
             }
         }
     }
-    val viewState: StateFlow<ViewState> =
-        eventsFromTrip.combine(addPlanItemsState) { state, addPlanItems ->
-            val items = state.items.map { item ->
-                if (item is TripItemState.Replaceable) {
-                    addPlanItems[item.id]?.let { newItem ->
-                        newItem.also { it.original = item }
-                    } ?: item
-                } else {
-                    item
-                }
+    private val focusedIndex = MutableStateFlow(0)
+    val viewState: StateFlow<ViewState> = combine(
+        eventsFromTrip,
+        addPlanItemsState,
+        focusedIndex
+    ) { state, addPlanItems, currentFocusedIndex ->
+        val items = state.items.mapIndexed { index, item ->
+            if (item is TripItemState.Replaceable) {
+                addPlanItems[item.id]?.let { newItem ->
+                    newItem.also { it.original = item }
+                } ?: item
+            } else {
+                item
             }
-            state.copy(items = items, addPlanItemState = addPlanItems["adding"])
-        }.stateIn(
-            viewModelScope, started = SharingStarted.Eagerly, initialValue = ViewState(
-                title = "", items = emptyList(), places = emptyList()
-            )
+        }
+        val focusedDate =
+            (state.items.getOrNull(currentFocusedIndex) as? TripItemState.Timeable)?.timestamp
+        val focusedId = items.filterIsInstance<TripItemState.EventItemState>()
+            .firstOrNull { it.timestamp.toLocalDate() == focusedDate?.toLocalDate() }?.id
+        state.copy(
+            items = items,
+            addPlanItemState = addPlanItems["adding"],
+            focusedItemId = focusedId
         )
+    }.stateIn(
+        viewModelScope, started = SharingStarted.Eagerly, initialValue = ViewState(
+            title = "", items = emptyList(), places = emptyList()
+        )
+    )
 
     fun tripNameChanged(newName: String) {
         viewModelScope.launch {
@@ -223,10 +237,12 @@ class TripViewModel(
 
     fun onAddPlanTypeSelected(type: AddPlanItemState.Type?) {
         addPlanUseCase.removeItem("adding")
+        val focusedDate =
+            (viewState.value.items.getOrNull(focusedIndex.value) as? TripItemState.Timeable)?.timestamp
         if (type != null) {
             addPlanUseCase.createAddPlanItem(
                 id = "adding",
-                ZonedDateTime.now(),
+                focusedDate ?: ZonedDateTime.now(),
                 type = type
             )
         }
@@ -587,6 +603,10 @@ class TripViewModel(
                 sectionId = sectionId,
             )
         }
+    }
+
+    fun setFocusedIndex(index: Int) {
+        focusedIndex.value = index
     }
 
     override fun onCleared() {
