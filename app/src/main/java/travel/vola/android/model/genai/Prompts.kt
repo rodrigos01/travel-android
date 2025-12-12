@@ -15,22 +15,22 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                 "Must-Have: between 3 and 5 options.",
         Schema.obj(
             mapOf(
-                "Occasions" to Schema.array(
+                "occasions" to Schema.array(
                     Schema.string("occasions travelers commonly travel for. Include a generic option like “vacation” for when there's no special occasion")
                 ),
-                "Interests" to Schema.array(
+                "interests" to Schema.array(
                     Schema.string("occasions travelers commonly travel for. Include a generic option like “vacation” for when there's no special occasion")
                 ),
-                "Vibe" to Schema.array(
+                "vibe" to Schema.array(
                     Schema.string("short (one or two words) atmospheres travelers commonly look for")
                 ),
-                "Focus" to Schema.array(
+                "focus" to Schema.array(
                     Schema.string("\"themes\" travelers would often plan their trips around")
                 ),
-                "Must-Have" to Schema.array(
+                "mustHave" to Schema.array(
                     Schema.string("possible experiences travelers often travel for")
                 ),
-                "Duration" to Schema.array(
+                "duration" to Schema.array(
                     Schema.string("time range options that are optimal for this trip")
                 ),
             )
