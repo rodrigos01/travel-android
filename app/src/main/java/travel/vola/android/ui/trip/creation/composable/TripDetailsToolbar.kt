@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import travel.vola.android.common.ui.components.toPx
 import travel.vola.android.extensions.Time
 import travel.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.eventlist.composable.AddPlanContent
 import travel.vola.android.ui.trip.eventlist.composable.NoOpActionHandler
 import travel.vola.android.ui.trip.eventlist.composable.uiType
@@ -61,6 +62,7 @@ fun TripDetailsToolbar(
     modifier: Modifier = Modifier,
     types: List<AddPlanType> = AddPlanType.entries,
     addPlanState: AddPlanItemState? = null,
+    addPlanActionHandler: AddPlanItemActionHandler,
     onTypeSelected: (AddPlanType) -> Unit = {},
 ) {
     Column(
@@ -113,7 +115,7 @@ fun TripDetailsToolbar(
                 .padding(vertical = 16.dp),
         ) { state ->
             if (state != null) {
-                AddPlanContent(state = state, actionHandler = NoOpActionHandler)
+                AddPlanContent(state = state, actionHandler = addPlanActionHandler)
             }
         }
         HorizontalFloatingToolbar(
@@ -214,6 +216,7 @@ fun TripDetailsToolbarPreview() {
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 16.dp),
                 addPlanState = currentState,
+                addPlanActionHandler = NoOpActionHandler,
                 onTypeSelected = {
                     currentState = state
                 })

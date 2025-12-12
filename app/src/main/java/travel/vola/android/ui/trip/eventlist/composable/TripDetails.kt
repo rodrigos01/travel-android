@@ -286,6 +286,7 @@ private fun TripDetails(
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 24.dp),
                     addPlanState = state.addPlanItemState,
+                    addPlanActionHandler = addPlanItemActionHandler,
                     onTypeSelected = onAddPlanTypeSelected,
                 )
             }
