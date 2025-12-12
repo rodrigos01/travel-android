@@ -10,9 +10,10 @@ import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.TripItemState
 
 @Composable
-fun TimedPlaceListItem(state: TripItemState.TimedPlaceItemState) {
+fun TimedPlaceListItem(state: TripItemState.TimedPlaceItemState, highlightDate: Boolean = false) {
     EventListItem(
         showDate = state.showDate,
+        highlightDate = highlightDate,
         dayOfMonthString = state.dayOfMonth,
         dayOfWeekString = state.dayOfWeek,
         timeString = state.time,
