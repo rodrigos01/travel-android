@@ -15,8 +15,8 @@ object GenAIData {
     @Serializable
     data class BasicInformation(
         val destination: String,
-        val date: String,
-        val duration: String,
+        val dates: String,
+        val duration: String?,
         val groupType: GroupType,
         val travelers: Int,
     )

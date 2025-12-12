@@ -11,6 +11,7 @@ import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.datastore.DataStoreUserPreferencesRepository
 import travel.vola.android.model.datastore.userPreferencesDataStore
 import travel.vola.android.model.firebase.FirebaseTripDataSource
+import travel.vola.android.model.genai.GenAIRepository
 import travel.vola.android.model.multisource.MultiSourceTripRepository
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.model.room.RoomTripDataSource
@@ -51,6 +52,10 @@ class ViewModelFactoryDependencies(
     }
     val placeRepository: PlaceRepository by lazy {
         PlaceRepository()
+    }
+
+    val genAIRepository: GenAIRepository by lazy {
+        GenAIRepository(getApplicationContext())
     }
 }
 
