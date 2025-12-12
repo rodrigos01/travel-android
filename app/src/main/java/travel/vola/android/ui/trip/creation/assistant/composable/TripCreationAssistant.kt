@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -22,6 +24,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,6 +43,7 @@ fun TripCreationAssistant(navController: NavController) {
         state,
         onNavigateBack = { navController.popBackStack() },
         onInitialParameterOptionTapped = viewModel::onInitialParameterOptionTapped,
+        onInitialParametersNextTapped = viewModel::onInitialParametersNextTapped,
     )
 }
 
@@ -49,6 +53,7 @@ fun TripCreationAssistant(
     state: UiState,
     onNavigateBack: () -> Unit,
     onInitialParameterOptionTapped: (Int, UiState.OptionGroupType) -> Unit,
+    onInitialParametersNextTapped: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -83,6 +88,7 @@ fun TripCreationAssistant(
             is UiState.InitialParameters -> {
                 Column(
                     modifier = Modifier
+                        .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
                         .padding(
                             top = contentPadding.calculateTopPadding() + 16.dp,
@@ -105,6 +111,11 @@ fun TripCreationAssistant(
                             onOptionTapped = { onInitialParameterOptionTapped(it, group.type) }
                         )
                     }
+                    Button(
+                        onClick = onInitialParametersNextTapped,
+                        enabled = state.nextButtonEnabled,
+                        modifier = Modifier.align(Alignment.End)
+                    ) { Text("Next") }
                 }
             }
         }
@@ -154,7 +165,8 @@ fun TripCreationAssistantPreview() {
                 )
             ),
             onNavigateBack = {},
-            onInitialParameterOptionTapped = { _, _ -> }
+            onInitialParameterOptionTapped = { _, _ -> },
+            onInitialParametersNextTapped = {},
         )
     }
 }
