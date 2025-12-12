@@ -29,20 +29,26 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import travel.vola.android.extensions.viewModel
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel
+import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel.UiState
 
 @Composable
 fun TripCreationAssistant(navController: NavController) {
     val viewModel: TripCreationAssistantViewModel =
         viewModel(factory = TripCreationAssistantViewModel.Factory())
     val state by viewModel.uiState.collectAsState()
-    TripCreationAssistant(state, onNavigateBack = { navController.popBackStack() })
+    TripCreationAssistant(
+        state,
+        onNavigateBack = { navController.popBackStack() },
+        onInitialParameterOptionTapped = viewModel::onInitialParameterOptionTapped,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripCreationAssistant(
-    state: TripCreationAssistantViewModel.UiState,
-    onNavigateBack: () -> Unit
+    state: UiState,
+    onNavigateBack: () -> Unit,
+    onInitialParameterOptionTapped: (Int, UiState.OptionGroupType) -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -59,7 +65,7 @@ fun TripCreationAssistant(
         }
     ) { contentPadding ->
         when (state) {
-            is TripCreationAssistantViewModel.UiState.Generating -> {
+            is UiState.Generating -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -74,7 +80,7 @@ fun TripCreationAssistant(
                 }
             }
 
-            is TripCreationAssistantViewModel.UiState.InitialParameters -> {
+            is UiState.InitialParameters -> {
                 Column(
                     modifier = Modifier
                         .verticalScroll(rememberScrollState())
@@ -85,12 +91,20 @@ fun TripCreationAssistant(
                             end = contentPadding.calculateStartPadding(LocalLayoutDirection.current) + 16.dp,
                         )
                 ) {
-                    InitialParameterOption("Occasions", state.occasions)
-                    InitialParameterOption("Interests", state.interests)
-                    InitialParameterOption("Vibe", state.vibe)
-                    InitialParameterOption("Focus", state.focus)
-                    InitialParameterOption("Duration", state.duration)
-                    InitialParameterOption("Must Have", state.mustHave)
+                    state.optionGroups.forEach { group ->
+                        InitialParameterOption(
+                            title = when (group.type) {
+                                UiState.OptionGroupType.OCCASIONS -> "Occasions"
+                                UiState.OptionGroupType.INTERESTS -> "Interests"
+                                UiState.OptionGroupType.VIBE -> "Vibe"
+                                UiState.OptionGroupType.FOCUS -> "Focus"
+                                UiState.OptionGroupType.DURATION -> "Duration"
+                                UiState.OptionGroupType.MUST_HAVE -> "Must Have"
+                            },
+                            options = group.options,
+                            onOptionTapped = { onInitialParameterOptionTapped(it, group.type) }
+                        )
+                    }
                 }
             }
         }
@@ -98,7 +112,11 @@ fun TripCreationAssistant(
 }
 
 @Composable
-private fun InitialParameterOption(title: String, options: List<String>) {
+private fun InitialParameterOption(
+    title: String,
+    options: List<UiState.Option>,
+    onOptionTapped: (Int) -> Unit
+) {
     Column {
         Text(title, style = MaterialTheme.typography.titleMedium)
 
@@ -106,10 +124,13 @@ private fun InitialParameterOption(title: String, options: List<String>) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
-            options.forEach {
-                FilterChip(selected = false, onClick = {}, label = {
-                    Text(it)
-                })
+            options.forEachIndexed { index, option ->
+                FilterChip(
+                    selected = option.isSelected,
+                    onClick = { onOptionTapped(index) },
+                    label = {
+                        Text(option.option)
+                    })
             }
         }
     }
@@ -124,24 +145,19 @@ object TripCreationAssistantDestination {
 fun TripCreationAssistantPreview() {
     MaterialTheme {
         TripCreationAssistant(
-            TripCreationAssistantViewModel.UiState.InitialParameters(
-                occasions = listOf("Workation", "Vacation", "Business Trip"),
-                interests = listOf("Adventure", "Food", "Music", "Sports"),
-                vibe = listOf("Chill", "Relax", "Party", "Study"),
-                focus = listOf(
-                    "Arctic Adventure",
-                    "Design & Culture Tour",
-                    "Winter Wellness Retreat",
-                    "Culinary Exploration"
-                ),
-                duration = listOf("1-2 Weeks", "10-15 days", "7-10 days"),
-                mustHave = listOf(
-                    "Chasing the Aurora Borealis",
-                    "Sleeping in an Ice Hotel",
-                    "Traditional Sauna & Cold Plunge"
+            UiState.InitialParameters(
+                optionGroups = listOf(
+                    UiState.OptionGroup(
+                        UiState.OptionGroupType.OCCASIONS,
+                        listOfOptions("Workation", "Vacation", "Business Trip")
+                    )
                 )
             ),
-            onNavigateBack = {}
+            onNavigateBack = {},
+            onInitialParameterOptionTapped = { _, _ -> }
         )
     }
 }
+
+private fun listOfOptions(vararg options: String): List<UiState.Option> =
+    options.map { UiState.Option(it) }
