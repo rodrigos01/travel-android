@@ -16,6 +16,7 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
         data object Generating : UiState
         data class InitialParameters(
             val optionGroups: List<OptionGroup>,
+            val nextButtonEnabled: Boolean = false,
         ) : UiState
 
         enum class OptionGroupType {
@@ -80,19 +81,27 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
 
     fun onInitialParameterOptionTapped(index: Int, optionGroupType: UiState.OptionGroupType) {
         val state = uiState.value as? UiState.InitialParameters ?: return
+        val newOptionGroups = state.optionGroups.map { group ->
+            if (group.type == optionGroupType) {
+                group.copy(options = group.options.mapIndexed { optionIndex, option ->
+                    option.copy(
+                        isSelected = if (optionIndex == index) !option.isSelected else option.isSelected
+                    )
+                })
+            } else {
+                group
+            }
+        }
         _uiState.value = state.copy(
-            optionGroups = state.optionGroups.map { group ->
-                if (group.type == optionGroupType) {
-                    group.copy(options = group.options.mapIndexed { optionIndex, option ->
-                        option.copy(
-                            isSelected = if (optionIndex == index) !option.isSelected else option.isSelected
-                        )
-                    })
-                } else {
-                    group
-                }
+            optionGroups = newOptionGroups,
+            nextButtonEnabled = newOptionGroups.all { group ->
+                group.options.any { it.isSelected }
             }
         )
+    }
+
+    fun onInitialParametersNextTapped() {
+
     }
 
     class Factory : ViewModelProvider.Factory by viewModelFactory(initializer = {
