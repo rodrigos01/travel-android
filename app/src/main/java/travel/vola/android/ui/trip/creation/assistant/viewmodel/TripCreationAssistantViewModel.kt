@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.stateIn
 import travel.vola.android.di.factoryDependencies
 import travel.vola.android.extensions.viewModelFactory
 import travel.vola.android.model.genai.GenAIData
@@ -40,8 +42,26 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
         data class Option(val option: String, val isSelected: Boolean = false)
     }
 
-    private val _uiState = MutableStateFlow<UiState>(UiState.Generating)
-    val uiState = _uiState.asStateFlow()
+    private enum class Stage {
+        INITIAL_PARAMETERS,
+        INITIAL_PARAMETERS_FOLLOW_UP
+    }
+
+    private val stage = MutableStateFlow(Stage.INITIAL_PARAMETERS)
+
+    private val generatedState = stage.map {
+        when (it) {
+            Stage.INITIAL_PARAMETERS -> generateInitialParametersState()
+            Stage.INITIAL_PARAMETERS_FOLLOW_UP -> getInitialParametersFollowUpState()
+        }
+    }
+    private val internalState = MutableStateFlow<UiState>(UiState.Generating)
+
+    val uiState = merge(generatedState, internalState).stateIn(
+        viewModelScope,
+        started = SharingStarted.Lazily,
+        internalState.value
+    )
 
     private val basicInformation = GenAIData.BasicInformation(
         destination = "Scandinavia",
@@ -51,41 +71,61 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
         travelers = 1
     )
 
-    init {
-        viewModelScope.launch {
+    private suspend fun generateInitialParametersState(): UiState.InitialParameters? {
 
-            val options = repository.genInitialParametersOptions(basicInformation)
-            if (options != null) {
-                _uiState.value = UiState.InitialParameters(
-                    optionGroups = listOf(
-                        UiState.OptionGroup(
-                            UiState.OptionGroupType.OCCASIONS,
-                            options.occasions.map { UiState.Option(it) }
-                        ),
-                        UiState.OptionGroup(
-                            UiState.OptionGroupType.INTERESTS,
-                            options.interests.map { UiState.Option(it) }
-                        ),
-                        UiState.OptionGroup(
-                            UiState.OptionGroupType.VIBE,
-                            options.vibe.map { UiState.Option(it) }
-                        ),
-                        UiState.OptionGroup(
-                            UiState.OptionGroupType.FOCUS,
-                            options.focus.map { UiState.Option(it) }
-                        ),
-                        UiState.OptionGroup(
-                            UiState.OptionGroupType.DURATION,
-                            options.duration.map { UiState.Option(it) }
-                        ),
-                        UiState.OptionGroup(
-                            UiState.OptionGroupType.MUST_HAVE,
-                            options.mustHave.map { UiState.Option(it) }
-                        ),
-                    ),
+        val options =
+            repository.genInitialParametersOptions(basicInformation) ?: return null
+        return UiState.InitialParameters(
+            optionGroups = listOf(
+                UiState.OptionGroup(
+                    UiState.OptionGroupType.OCCASIONS,
+                    options.occasions.map { UiState.Option(it) }
+                ),
+                UiState.OptionGroup(
+                    UiState.OptionGroupType.INTERESTS,
+                    options.interests.map { UiState.Option(it) }
+                ),
+                UiState.OptionGroup(
+                    UiState.OptionGroupType.VIBE,
+                    options.vibe.map { UiState.Option(it) }
+                ),
+                UiState.OptionGroup(
+                    UiState.OptionGroupType.FOCUS,
+                    options.focus.map { UiState.Option(it) }
+                ),
+                UiState.OptionGroup(
+                    UiState.OptionGroupType.DURATION,
+                    options.duration.map { UiState.Option(it) }
+                ),
+                UiState.OptionGroup(
+                    UiState.OptionGroupType.MUST_HAVE,
+                    options.mustHave.map { UiState.Option(it) }
+                ),
+            ),
+        )
+    }
+
+    private suspend fun getInitialParametersFollowUpState(): UiState.InitialParametersFollowUp? {
+        val state = uiState.value as? UiState.InitialParameters ?: return null
+        val parameters = GenAIData.InitialParametersOptions(
+            occasions = state.optionGroups.selectedValues(UiState.OptionGroupType.OCCASIONS),
+            interests = state.optionGroups.selectedValues(UiState.OptionGroupType.INTERESTS),
+            vibe = state.optionGroups.selectedValues(UiState.OptionGroupType.VIBE),
+            focus = state.optionGroups.selectedValues(UiState.OptionGroupType.FOCUS),
+            duration = state.optionGroups.selectedValues(UiState.OptionGroupType.DURATION),
+            mustHave = state.optionGroups.selectedValues(UiState.OptionGroupType.MUST_HAVE),
+        )
+
+        val followUpQuestions =
+            repository.genInitialParametersFollowUpQuestions(parameters) ?: return null
+        return UiState.InitialParametersFollowUp(
+            questions = followUpQuestions.questions.map { question ->
+                UiState.FollowUpQuestion(
+                    question = question.question,
+                    answers = question.answers.map { UiState.Option(it) },
                 )
             }
-        }
+        )
     }
 
     fun onInitialParameterOptionTapped(index: Int, optionGroupType: UiState.OptionGroupType) {
@@ -101,7 +141,7 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
                 group
             }
         }
-        _uiState.value = state.copy(
+        internalState.value = state.copy(
             optionGroups = newOptionGroups,
             nextButtonEnabled = newOptionGroups.all { group ->
                 group.options.any { it.isSelected }
@@ -110,31 +150,8 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
     }
 
     fun onInitialParametersNextTapped() {
-        val state = uiState.value as? UiState.InitialParameters ?: return
-        _uiState.value = UiState.Generating
-        viewModelScope.launch {
-            val parameters = GenAIData.InitialParametersOptions(
-                occasions = state.optionGroups.selectedValues(UiState.OptionGroupType.OCCASIONS),
-                interests = state.optionGroups.selectedValues(UiState.OptionGroupType.INTERESTS),
-                vibe = state.optionGroups.selectedValues(UiState.OptionGroupType.VIBE),
-                focus = state.optionGroups.selectedValues(UiState.OptionGroupType.FOCUS),
-                duration = state.optionGroups.selectedValues(UiState.OptionGroupType.DURATION),
-                mustHave = state.optionGroups.selectedValues(UiState.OptionGroupType.MUST_HAVE),
-            )
-
-            val followUpQuestions =
-                repository.genInitialParametersFollowUpQuestions(parameters)
-            if (followUpQuestions != null) {
-                _uiState.value = UiState.InitialParametersFollowUp(
-                    questions = followUpQuestions.questions.map { question ->
-                        UiState.FollowUpQuestion(
-                            question = question.question,
-                            answers = question.answers.map { UiState.Option(it) },
-                        )
-                    }
-                )
-            }
-        }
+        internalState.value = UiState.Generating
+        stage.value = Stage.INITIAL_PARAMETERS_FOLLOW_UP
     }
 
     fun onFollowUpQuestionOptionTapped(index: Int, question: UiState.FollowUpQuestion) {
@@ -148,7 +165,7 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
                 currentQuestion
             }
         }
-        _uiState.value = state.copy(
+        internalState.value = state.copy(
             questions = newQuestions,
             nextButtonEnabled = newQuestions.all { question ->
                 question.answers.any { it.isSelected }
