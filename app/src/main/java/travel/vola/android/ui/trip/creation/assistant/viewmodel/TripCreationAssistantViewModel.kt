@@ -120,7 +120,7 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
             )
 
             val followUpQuestions =
-                repository.genInitialParametersFollowUpQuestions(basicInformation, parameters)
+                repository.genInitialParametersFollowUpQuestions(parameters)
             if (followUpQuestions != null) {
                 _uiState.value = UiState.InitialParametersFollowUp(
                     questions = followUpQuestions.questions.map { question ->
