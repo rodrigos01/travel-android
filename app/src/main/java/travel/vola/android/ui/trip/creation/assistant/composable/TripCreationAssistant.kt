@@ -274,6 +274,13 @@ fun TripCreationAssistant(
                             }
                         }
                     }
+                    state.predictedChanges.forEach { option ->
+                        ElevatedCard(
+                            onClick = {},
+                        ) {
+                            Text(option.option, modifier = Modifier.padding(8.dp))
+                        }
+                    }
                 }
             }
         }
@@ -363,7 +370,7 @@ fun TripCreationAssistantPreview() {
                 )
             )
         ),
-        predictedChanges = listOfOptions(""),
+        predictedChanges = listOfOptions("Gimme more Lights!", "More coffee cities"),
     )
     AppTheme {
         TripCreationAssistant(
