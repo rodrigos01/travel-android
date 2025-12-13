@@ -1,5 +1,6 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,10 +39,12 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.viewModel
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel.UiState
+import java.time.ZonedDateTime
 
 @Composable
 fun TripCreationAssistant(navController: NavController) {
@@ -76,6 +80,7 @@ fun TripCreationAssistant(
 
                     is UiState.InitialParameters -> "Initial Parameters"
                     is UiState.InitialParametersFollowUp -> "Follow Up Questions"
+                    is UiState.HighLevelItineraryOptions -> "High Level Itinerary Options"
                 }
                 Text(title)
             }, navigationIcon = {
@@ -209,6 +214,68 @@ fun TripCreationAssistant(
                     }
                 }
             }
+
+            is UiState.HighLevelItineraryOptions -> {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(paddingValues)
+                ) {
+                    state.itineraries.forEach { itinerary ->
+                        Card(
+                            onClick = {},
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                Text(
+                                    itinerary.name,
+                                    style = MaterialTheme.typography.headlineMedium
+                                )
+                                Text(
+                                    "${itinerary.startDate.dateString} - ${itinerary.endDate.dateString}",
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                                Text(
+                                    itinerary.description,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+
+                                Column(
+                                    modifier = Modifier
+                                        .padding(top = 16.dp)
+                                        .background(
+                                            MaterialTheme.colorScheme.surfaceContainer,
+                                            shape = MaterialTheme.shapes.medium
+                                        )
+                                        .padding(8.dp)
+                                        .fillMaxWidth(),
+                                ) {
+                                    itinerary.cities.forEach { city ->
+                                        Text(
+                                            city.name,
+                                            style = MaterialTheme.typography.headlineSmall,
+                                            modifier = Modifier.padding(top = 8.dp)
+                                        )
+                                        Text(
+                                            "${city.startDate.dateString} - ${city.endDate.dateString}",
+                                            style = MaterialTheme.typography.labelMedium
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -270,9 +337,37 @@ fun TripCreationAssistantPreview() {
             )
         ),
     )
+    val highLevelItineraryOptionsState = UiState.HighLevelItineraryOptions(
+        itineraries = listOf(
+            UiState.Itinerary(
+                name = "Scandi Design",
+                description = "Explore design in scandinavia",
+                startDate = ZonedDateTime.now(),
+                endDate = ZonedDateTime.now().plusDays(10),
+                cities = listOf(
+                    UiState.ItineraryCity(
+                        name = "Copenhagen",
+                        startDate = ZonedDateTime.now(),
+                        endDate = ZonedDateTime.now().plusDays(3),
+                    ),
+                    UiState.ItineraryCity(
+                        name = "Stockholm",
+                        startDate = ZonedDateTime.now().plusDays(3),
+                        endDate = ZonedDateTime.now().plusDays(6),
+                    ),
+                    UiState.ItineraryCity(
+                        name = "Tromso",
+                        startDate = ZonedDateTime.now().plusDays(6),
+                        endDate = ZonedDateTime.now().plusDays(10),
+                    ),
+                )
+            )
+        ),
+        predictedChanges = listOfOptions(""),
+    )
     AppTheme {
         TripCreationAssistant(
-            followUpState,
+            highLevelItineraryOptionsState,
             onNavigateBack = {},
             onInitialParameterOptionTapped = { _, _ -> },
             onInitialParametersNextTapped = {},
