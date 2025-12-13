@@ -30,21 +30,27 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
 
         data class OptionGroup(val type: OptionGroupType, val options: List<Option>)
 
+        data class InitialParametersFollowUp(val questions: List<FollowUpQuestion>) : UiState
+
+        data class FollowUpQuestion(val question: String, val answers: List<Option>)
+
         data class Option(val option: String, val isSelected: Boolean = false)
     }
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Generating)
     val uiState = _uiState.asStateFlow()
 
+    private val basicInformation = GenAIData.BasicInformation(
+        destination = "Scandinavia",
+        dates = "February",
+        duration = null,
+        groupType = GenAIData.GroupType.SOLO,
+        travelers = 1
+    )
+
     init {
         viewModelScope.launch {
-            val basicInformation = GenAIData.BasicInformation(
-                destination = "Scandinavia",
-                dates = "February",
-                duration = null,
-                groupType = GenAIData.GroupType.SOLO,
-                travelers = 1
-            )
+
             val options = repository.genInitialParametersOptions(basicInformation)
             if (options != null) {
                 _uiState.value = UiState.InitialParameters(
@@ -101,8 +107,36 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
     }
 
     fun onInitialParametersNextTapped() {
+        val state = uiState.value as? UiState.InitialParameters ?: return
+        _uiState.value = UiState.Generating
+        viewModelScope.launch {
+            val parameters = GenAIData.InitialParametersOptions(
+                occasions = state.optionGroups.selectedValues(UiState.OptionGroupType.OCCASIONS),
+                interests = state.optionGroups.selectedValues(UiState.OptionGroupType.INTERESTS),
+                vibe = state.optionGroups.selectedValues(UiState.OptionGroupType.VIBE),
+                focus = state.optionGroups.selectedValues(UiState.OptionGroupType.FOCUS),
+                duration = state.optionGroups.selectedValues(UiState.OptionGroupType.DURATION),
+                mustHave = state.optionGroups.selectedValues(UiState.OptionGroupType.MUST_HAVE),
+            )
 
+            val followUpQuestions =
+                repository.genInitialParametersFollowUpQuestions(basicInformation, parameters)
+            if (followUpQuestions != null) {
+                _uiState.value = UiState.InitialParametersFollowUp(
+                    questions = followUpQuestions.questions.map { question ->
+                        UiState.FollowUpQuestion(
+                            question = question.question,
+                            answers = question.answers.map { UiState.Option(it) },
+                        )
+                    }
+                )
+            }
+        }
     }
+
+    private fun List<UiState.OptionGroup>.selectedValues(type: UiState.OptionGroupType): List<String> =
+        find { it.type == type }?.options?.filter { it.isSelected }?.map { it.option }
+            ?: emptyList()
 
     class Factory : ViewModelProvider.Factory by viewModelFactory(initializer = {
         TripCreationAssistantViewModel(factoryDependencies.genAIRepository)
