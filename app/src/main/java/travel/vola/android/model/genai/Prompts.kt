@@ -4,33 +4,52 @@ import com.google.firebase.ai.type.Schema
 
 enum class Prompts(val prompt: String, val outputSchema: Schema) {
     INITIAL_PARAMETERS(
-        "provide sets of options, based on the basic information provided by the user, to allow for the generation of their initial itinerary. The options should be compatible and commonly used with the basic information provided. The options should be associated with the basic information provided",
+        "provide sets of options, based on the basic information provided by the user, to allow for the generation of their initial itinerary. The options should be compatible and commonly used with the basic information provided. The options should be associated with the basic information provided" +
+                "The options should follow the below descriptions and quantity requirements:" +
+                "Occasion: 3-5 occasions travelers commonly travel for. Include a generic option like “vacation” for when there's no special occasion\n" +
+                "Interests: 10-15 short-phrased broad interests (1-3 words)\n" +
+                "Vibe: 5-8 short (one or two words) atmospheres travelers commonly look for\n" +
+                "Focus: 3-5 \"themes\" travelers would often plan their trips around\n" +
+                "Must Have: 3-5 possible experiences travelers often travel for\n" +
+                "Duration (if not provided in the basic information): 3 time range options that are optimal for this trip.\n",
         Schema.obj(
             mapOf(
                 "occasions" to Schema.array(
                     Schema.string("occasions travelers commonly travel for. Include a generic option like “vacation” for when there's no special occasion"),
-                    description = "3-5 occasions travelers commonly travel for. Include a generic option like “vacation” for when there's no special occasion"
+                    description = "occasions travelers commonly travel for. Include a generic option like “vacation” for when there's no special occasion",
+                    minItems = 3,
+                    maxItems = 5,
                 ),
                 "interests" to Schema.array(
                     Schema.string(),
-                    description = "10-15 short-phrased broad interests (1-3 words)",
+                    description = "short-phrased broad interests (1-3 words)",
+                    minItems = 10,
+                    maxItems = 15,
                 ),
                 "vibe" to Schema.array(
                     Schema.string(),
-                    description = "5-8 short (1-3 words) atmospheres travelers commonly look for"
+                    description = "short (1-3 words) atmospheres travelers commonly look for",
+                    minItems = 5,
+                    maxItems = 8,
                 ),
                 "focus" to Schema.array(
                     Schema.string(),
-                    description = "3-5 \"themes\" travelers would often plan their trips around"
+                    description = "\"themes\" travelers would often plan their trips around",
+                    minItems = 3,
+                    maxItems = 5,
                 ),
                 "mustHave" to Schema.array(
                     Schema.string(),
-                    description = "3-5 possible experiences travelers often travel for. Those will be considered non-negotiable in their itinerary and the main reason the user is traveling"
+                    description = "possible experiences travelers often travel for. Those will be considered non-negotiable in their itinerary and the main reason the user is traveling",
+                    minItems = 3,
+                    maxItems = 5,
                 ),
                 "duration" to Schema.array(
                     Schema.string(),
                     description = "(if not provided in the basic information): 3 time range options that are optimal for this trip.",
                     nullable = true,
+                    minItems = 3,
+                    maxItems = 3,
                 ),
             )
         )
@@ -49,13 +68,14 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                                 Schema.string("possible answers to the question")
                             )
                         )
-                    )
+                    ),
+                    maxItems = 3
                 )
             )
         )
     ),
     HIGH_LEVEL_ITINERARY_OPTIONS(
-        prompt = "Generate 3 high-level travel itinerary options based on the user's basic information, the parameters provided and the answers provided to the questions below. These itineraries should be basic skeletons with just cities visited and how long to stay in each. If the destination is not specific (i.e. a region, a country or a continent), suggest itineraries that include multiple cities to match their parameters. If the duration is not specific (a range of days) the itineraries should include suggested start and end dates that best match the destinations and parameters. The itineraries should consider their interests, focus and must-have experiences for their dates. If the itineraries include multiple cities, it should consider travel between the destinations for their order. At the end, suggest 3 short-phrase predicted potential changes the users might want to make to the generated itineraries, focused solely on the cities and periods in each of them.",
+        prompt = "Generate 3 high-level travel itinerary options based on the user's basic information, the parameters provided and the answers provided to the questions below. These itineraries should be basic skeletons with just cities visited and how long to stay in each. If the destination is not specific (i.e. a region, a country or a continent), suggest itineraries that include multiple cities to match their parameters. If the duration is not specific (a range of days) the itineraries should include suggested start and end dates that best match the destinations and parameters. The itineraries should consider their interests, focus and must-have experiences for their dates. If the itineraries include multiple cities, it should consider travel between the destinations for their order. At the end, suggest 3 short-phrase predicted potential changes the users might want to make to the generated itineraries, focused solely on the cities and periods in each of them. The changes should be self-contained and not require follow up questions.",
         outputSchema = Schema.obj(
             mapOf(
                 "itineraries" to Schema.array(
@@ -63,23 +83,27 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                         mapOf(
                             "name" to Schema.string("name of the itinerary"),
                             "description" to Schema.string("A single-sentence description for this itinerary that includes why it fits the user choices"),
-                            "startDate" to Schema.string("ISO-8601 formatted date representing the first day of the itinerary"),
-                            "endDate" to Schema.string("ISO-8601 formatted date representing the last day of the itinerary"),
+                            "startDate" to Schema.string("date representing the first day of the itinerary in the format yyyy-MM-dd'T'HH:mm z"),
+                            "endDate" to Schema.string("date representing the last day of the itinerary in the format yyyy-MM-dd'T'HH:mm z"),
                             "cities" to Schema.array(
                                 Schema.obj(
                                     mapOf(
                                         "name" to Schema.string("name of the city"),
-                                        "startDate" to Schema.string("ISO-8601 formatted date representing the first day in this city"),
-                                        "endDate" to Schema.string("ISO-8601 formatted date representing the last day in  this city"),
+                                        "startDate" to Schema.string("date representing the first day in this city in the format yyyy-MM-dd'T'HH:mm z"),
+                                        "endDate" to Schema.string("date representing the last day in  this city in the format yyyy-MM-dd'T'HH:mm z"),
                                     )
                                 )
                             )
                         )
-                    )
+                    ),
+                    minItems = 3,
+                    maxItems = 3,
                 ),
                 "predictedChanges" to Schema.array(
                     Schema.string(),
-                    description = "3 short-phrase predicted potential changes the users might want to make to the generated itineraries, focused solely on the cities and periods in each of them"
+                    description = "3 short-phrase predicted potential changes the users might want to make to the generated itineraries, focused solely on the cities and periods in each of them",
+                    minItems = 3,
+                    maxItems = 3,
                 ),
             )
         )

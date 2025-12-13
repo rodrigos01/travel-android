@@ -1,6 +1,7 @@
 package travel.vola.android.model.genai
 
 import android.content.Context
+import android.util.Log
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.firebase.Firebase
@@ -12,6 +13,8 @@ import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.Tool
 import com.google.firebase.ai.type.content
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
 class GenAIRepository private constructor(
@@ -49,7 +52,7 @@ class GenAIRepository private constructor(
                             FunctionDeclaration(
                                 name = FunctionNames.HIGH_LEVEL_ITINERARY_OPTIONS.value,
                                 parameters = mapOf("result" to Prompts.HIGH_LEVEL_ITINERARY_OPTIONS.outputSchema),
-                                description = "Creates the high-level itinerary options for the trip creation assistant"
+                                description = "Creates the high-level travel itinerary options for the trip creation assistant"
                             ),
                         )
                     )
@@ -74,7 +77,23 @@ class GenAIRepository private constructor(
             prompt.prompt +
                     "\n Parameters: \n" + Json.encodeToString(parameters)
         val result = chatModel.sendMessage(promptQuery)
-        return result.getFunctionCallParams(FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP, "questions")
+        // The schema is a little confusing for the LLM so the result might change some times, so we need to support both
+        if (result.getJsonArgs(
+                FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP,
+                "questions"
+            ) is JsonArray
+        ) {
+            val questions: List<GenAIData.FollowUpQuestion> = result.getFunctionCallParams(
+                FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP,
+                "questions"
+            ) ?: return null
+            return GenAIData.FollowUpQuestionsOutput(questions)
+        } else {
+            return result.getFunctionCallParams(
+                FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP,
+                "questions"
+            )
+        }
     }
 
     suspend fun genHighLevelItineraryOptions(followUpQuestions: List<GenAIData.FollowUpQuestion>): GenAIData.HighLevelItineraryOptions? {
@@ -86,21 +105,33 @@ class GenAIRepository private constructor(
         return result.getFunctionCallParams(FunctionNames.HIGH_LEVEL_ITINERARY_OPTIONS, "result")
     }
 
+    private fun GenerateContentResponse.getJsonArgs(
+        functionName: FunctionNames,
+        argName: String
+    ): JsonElement? {
+        val functionCall =
+            functionCalls.find { it.name == functionName.value }
+
+        val args = functionCall?.args[argName]
+        if (args == null) {
+            Log.e("GenAIRepository", "No args found for function $functionName")
+            Log.e("GenAIRepository", this.toString())
+        }
+        return args
+    }
+
     private suspend inline fun <reified T> GenerateContentResponse.getFunctionCallParams(
         functionName: FunctionNames,
         argName: String
     ): T? {
-        val functionCall =
-            functionCalls.find { it.name == functionName.value }
-
-        val json = functionCall?.args[argName] ?: return null
+        val json = getJsonArgs(functionName, argName) ?: return null
         val jsonString = json.toString()
         val params = Json.decodeFromString<T>(jsonString)
         chatModel.sendMessage(content("function") {
             part(
                 FunctionResponsePart(
                     functionName.value, JsonObject(
-                        mapOf("questions" to json)
+                        mapOf(argName to json)
                     )
                 )
             )
