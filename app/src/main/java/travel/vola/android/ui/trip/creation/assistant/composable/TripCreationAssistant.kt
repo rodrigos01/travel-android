@@ -52,7 +52,7 @@ fun TripCreationAssistant(navController: NavController) {
         onInitialParameterOptionTapped = viewModel::onInitialParameterOptionTapped,
         onInitialParametersNextTapped = viewModel::onInitialParametersNextTapped,
         onFollowUpQuestionOptionTapped = viewModel::onFollowUpQuestionOptionTapped,
-        onFollowUpQuestionsNextTapped = {},
+        onFollowUpQuestionsNextTapped = viewModel::onFollowUpQuestionsNextTapped,
     )
 }
 

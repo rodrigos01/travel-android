@@ -156,6 +156,10 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
         )
     }
 
+    fun onFollowUpQuestionsNextTapped() {
+
+    }
+
     private fun List<UiState.OptionGroup>.selectedValues(type: UiState.OptionGroupType): List<String> =
         find { it.type == type }?.options?.filter { it.isSelected }?.map { it.option }
             ?: emptyList()
