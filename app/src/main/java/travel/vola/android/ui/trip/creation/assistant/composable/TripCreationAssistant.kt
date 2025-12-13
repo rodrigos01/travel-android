@@ -1,6 +1,5 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,9 +12,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -34,12 +30,10 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.viewModel
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel.UiState
-import java.time.ZonedDateTime
 
 @Composable
 fun TripCreationAssistant(navController: NavController) {
@@ -71,7 +65,8 @@ fun TripCreationAssistant(
             TopAppBar(title = {
                 val title = when (state) {
                     is UiState.Error,
-                    is UiState.Generating -> "Travel Creation Assistant"
+                    is UiState.Generating,
+                    is UiState.BasicInformation -> "Travel Creation Assistant"
 
                     is UiState.InitialParameters -> "Initial Parameters"
                     is UiState.InitialParametersFollowUp -> "Follow Up Questions"
@@ -126,6 +121,16 @@ fun TripCreationAssistant(
                     LoadingIndicator()
                     Text("Generating...", style = MaterialTheme.typography.titleLarge)
                 }
+            }
+
+            is UiState.BasicInformation -> {
+                BasicInformationForm(
+                    state,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(paddingValues),
+                )
             }
 
             is UiState.InitialParameters -> {
