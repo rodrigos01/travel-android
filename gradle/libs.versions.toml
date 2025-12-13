@@ -1,31 +1,31 @@
 [versions]
 
-kotlinStdlibJdk7 = "2.2.20"
+kotlinStdlibJdk7 = "2.2.21"
 appcompat = "1.7.1"
-lifecycle = "2.9.4"
+lifecycle = "2.10.0"
 lifecycleExtensions = "2.2.0"
 kotlinxCoroutines = "1.10.2"
-compose = "1.9.3"
-activityCompose = "1.11.0"
+compose = "1.10.0"
+activityCompose = "1.12.1"
 material = "1.13.0"
 material3 = "1.4.0"
-material3Adaptative = "1.1.0"
-datastorePreferences = "1.1.7"
-mapsCompose = "6.12.1"
+material3Adaptative = "1.2.0"
+datastorePreferences = "1.2.0"
+mapsCompose = "6.12.2"
 coil = "2.7.0"
-coreSplashscreen = "1.0.1"
-firebaseBom = "34.4.0"
-materialKolor = "4.0.1"
+coreSplashscreen = "1.2.0"
+firebaseBom = "34.7.0"
+materialKolor = "4.0.5"
 playServicesAuth = "21.4.0"
-navigation = "2.9.5"
-ktor = "3.3.1"
-room = "2.8.2"
-androidxWindow = "1.5.0"
+navigation = "2.9.6"
+ktor = "3.3.3"
+room = "2.8.4"
+androidxWindow = "1.5.1"
 protobuf = "4.26.1"
 # Test
-mockitoCore = "5.20.0"
+mockitoCore = "5.21.0"
 mockitoKotlin = "6.1.0"
-mockk = "1.14.6"
+mockk = "1.14.7"
 androidxTestRunner = "1.7.0"
 assertjCore = "3.27.6"
 coreTesting = "2.2.0"
@@ -75,10 +75,10 @@ compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", versi
 compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "compose" }
 compose-text-googlefonts = { group = "androidx.compose.ui", name = "ui-text-google-fonts", version.ref = "compose" }
 # Firebase
-firebase-analytics = { module = "com.google.firebase:firebase-analytics", version = "23.0.0" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
-firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics", version = "20.0.3" }
-firebase-firestore = { module = "com.google.firebase:firebase-firestore", version = "26.0.2" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics"}
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics"}
+firebase-firestore = { module = "com.google.firebase:firebase-firestore"}
 # Navigation
 navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigation" }
 navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigation" }
