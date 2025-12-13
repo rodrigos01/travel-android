@@ -39,8 +39,30 @@ object GenAIData {
     @Serializable
     data class FollowUpQuestion(
         val parameter: String,
-        val answer: String,
+        val parameterSelection: String,
         val question: String,
         val answers: List<String>
+    )
+
+    @Serializable
+    data class HighLevelItineraryOptions(
+        val itineraries: List<Itinerary>,
+        val predictedChanges: List<String>
+    )
+
+    @Serializable
+    data class Itinerary(
+        val name: String,
+        val description: String,
+        val startDate: String,
+        val endDate: String,
+        val cities: List<ItineraryCity>
+    )
+
+    @Serializable
+    data class ItineraryCity(
+        val name: String,
+        val startDate: String,
+        val endDate: String,
     )
 }

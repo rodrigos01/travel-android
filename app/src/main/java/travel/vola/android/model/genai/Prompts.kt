@@ -43,7 +43,7 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                     Schema.obj(
                         mapOf(
                             "parameter" to Schema.string("parameter of the selection that generated the question"),
-                            "answer" to Schema.string("selection in the parameter that generated the question"),
+                            "parameterSelection" to Schema.string("selection in the parameter that generated the question"),
                             "question" to Schema.string("question to ask the user"),
                             "answers" to Schema.array(
                                 Schema.string("possible answers to the question")
@@ -53,5 +53,35 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                 )
             )
         )
-    )
+    ),
+    HIGH_LEVEL_ITINERARY_OPTIONS(
+        prompt = "Generate 3 high-level travel itinerary options based on the user's basic information, the parameters provided and the answers provided to the questions below. These itineraries should be basic skeletons with just cities visited and how long to stay in each. If the destination is not specific (i.e. a region, a country or a continent), suggest itineraries that include multiple cities to match their parameters. If the duration is not specific (a range of days) the itineraries should include suggested start and end dates that best match the destinations and parameters. The itineraries should consider their interests, focus and must-have experiences for their dates. If the itineraries include multiple cities, it should consider travel between the destinations for their order. At the end, suggest 3 short-phrase predicted potential changes the users might want to make to the generated itineraries, focused solely on the cities and periods in each of them.",
+        outputSchema = Schema.obj(
+            mapOf(
+                "itineraries" to Schema.array(
+                    Schema.obj(
+                        mapOf(
+                            "name" to Schema.string("name of the itinerary"),
+                            "description" to Schema.string("A single-sentence description for this itinerary that includes why it fits the user choices"),
+                            "startDate" to Schema.string("ISO-8601 formatted date representing the first day of the itinerary"),
+                            "endDate" to Schema.string("ISO-8601 formatted date representing the last day of the itinerary"),
+                            "cities" to Schema.array(
+                                Schema.obj(
+                                    mapOf(
+                                        "name" to Schema.string("name of the city"),
+                                        "startDate" to Schema.string("ISO-8601 formatted date representing the first day in this city"),
+                                        "endDate" to Schema.string("ISO-8601 formatted date representing the last day in  this city"),
+                                    )
+                                )
+                            )
+                        )
+                    )
+                ),
+                "predictedChanges" to Schema.array(
+                    Schema.string(),
+                    description = "3 short-phrase predicted potential changes the users might want to make to the generated itineraries, focused solely on the cities and periods in each of them"
+                ),
+            )
+        )
+    ),
 }
