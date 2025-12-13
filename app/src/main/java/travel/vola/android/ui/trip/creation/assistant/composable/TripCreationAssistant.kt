@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -70,7 +71,9 @@ fun TripCreationAssistant(
         topBar = {
             TopAppBar(title = {
                 val title = when (state) {
+                    is UiState.Error,
                     is UiState.Generating -> "Travel Creation Assistant"
+
                     is UiState.InitialParameters -> "Initial Parameters"
                     is UiState.InitialParametersFollowUp -> "Follow Up Questions"
                 }
@@ -92,6 +95,26 @@ fun TripCreationAssistant(
             end = contentPadding.calculateStartPadding(LocalLayoutDirection.current) + 16.dp,
         )
         when (state) {
+            is UiState.Error -> {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    Icon(
+                        Icons.Default.Error,
+                        contentDescription = "error",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    Text(
+                        "There was an error generating content",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+            }
+
             is UiState.Generating -> {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
