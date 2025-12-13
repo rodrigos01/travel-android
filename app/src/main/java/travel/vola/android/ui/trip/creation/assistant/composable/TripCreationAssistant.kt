@@ -1,7 +1,6 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowScope
@@ -15,10 +14,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -33,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import travel.vola.android.extensions.viewModel
+import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel.UiState
 
@@ -49,7 +54,7 @@ fun TripCreationAssistant(navController: NavController) {
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TripCreationAssistant(
     state: UiState,
@@ -60,7 +65,12 @@ fun TripCreationAssistant(
     Scaffold(
         topBar = {
             TopAppBar(title = {
-                Text("Trip Creation Assistant")
+                val title = when(state) {
+                    is UiState.Generating -> "Travel Creation Assistant"
+                    is UiState.InitialParameters -> "Initial Parameters"
+                    is UiState.InitialParametersFollowUp -> "Follow Up Questions"
+                }
+                Text(title)
             }, navigationIcon = {
                 IconButton(onClick = onNavigateBack) {
                     Icon(
@@ -79,11 +89,14 @@ fun TripCreationAssistant(
         )
         when (state) {
             is UiState.Generating -> {
-                Box(
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
                 ) {
+                    LoadingIndicator()
                     Text("Generating...", style = MaterialTheme.typography.titleLarge)
                 }
             }
@@ -134,18 +147,29 @@ fun TripCreationAssistant(
                             .verticalScroll(rememberScrollState())
                             .padding(paddingValues)
                     ) {
-                        state.questions.forEach { question ->
-                            OptionGroup(title = question.question) {
-                                question.answers.forEach { option ->
-                                    FilterChip(
-                                        selected = option.isSelected,
-                                        onClick = { },
-                                        label = {
-                                            Text(option.option)
-                                        })
+                        state.questions.forEachIndexed { index, question ->
+                            if (index > 0) {
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                            }
+                            Text(question.question, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 8.dp))
+                            question.answers.forEach { option ->
+                                ElevatedCard(
+                                    onClick = {},
+                                    colors = if (option.isSelected) CardDefaults.elevatedCardColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                    ) else CardDefaults.elevatedCardColors(),
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                ) {
+                                    Text(option.option, modifier = Modifier.padding(8.dp))
                                 }
                             }
                         }
+                        Button(
+                            onClick = {},
+                            enabled = false,
+                            modifier = Modifier.align(Alignment.End)
+                        ) { Text("Next") }
                     }
                 }
             }
@@ -158,8 +182,8 @@ private fun OptionGroup(
     title: String,
     options: @Composable FlowRowScope.() -> Unit,
 ) {
-    Column {
-        Text(title, style = MaterialTheme.typography.titleMedium)
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(title, style = MaterialTheme.typography.titleLarge)
 
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -176,16 +200,43 @@ object TripCreationAssistantDestination {
 @Composable
 @Preview
 fun TripCreationAssistantPreview() {
-    MaterialTheme {
-        TripCreationAssistant(
-            UiState.InitialParameters(
-                optionGroups = listOf(
-                    UiState.OptionGroup(
-                        UiState.OptionGroupType.OCCASIONS,
-                        listOfOptions("Workation", "Vacation", "Business Trip")
-                    )
+    val initalParamtersState = UiState.InitialParameters(
+        optionGroups = listOf(
+            UiState.OptionGroup(
+                UiState.OptionGroupType.OCCASIONS,
+                listOfOptions("Workation", "Vacation", "Business Trip", "Family Trip")
+            ),
+            UiState.OptionGroup(
+                UiState.OptionGroupType.INTERESTS,
+                listOfOptions("Hiking", "Shopping", "Sightseeing")
+            )
+        )
+    )
+    val followUpState = UiState.InitialParametersFollowUp(
+        questions = listOf(
+            UiState.FollowUpQuestion(
+                "What time of day would you prefer to work on weekdays?",
+                listOfOptions(
+                    "I prefer to have my work in the Morning, when I'm the most productive",
+                    "Aternoons are my favoriote time for working",
+                    "No need to dedicate time for work, I'll just wing it LOL",
+                    selected = 0
                 )
             ),
+            UiState.FollowUpQuestion(
+                "What time of day would you prefer to work on weekdays?",
+                listOfOptions(
+                    "I prefer to have my work in the Morning, when I'm the most productive",
+                    "Aternoons are my favoriote time for working",
+                    "No need to dedicate time for work, I'll just wing it LOL",
+                    selected = 0
+                )
+            )
+        )
+    )
+    AppTheme {
+        TripCreationAssistant(
+            followUpState,
             onNavigateBack = {},
             onInitialParameterOptionTapped = { _, _ -> },
             onInitialParametersNextTapped = {},
@@ -193,5 +244,5 @@ fun TripCreationAssistantPreview() {
     }
 }
 
-private fun listOfOptions(vararg options: String): List<UiState.Option> =
-    options.map { UiState.Option(it) }
+private fun listOfOptions(vararg options: String, selected: Int = -1): List<UiState.Option> =
+    options.mapIndexed { index, option -> UiState.Option(option, isSelected = index == selected) }
