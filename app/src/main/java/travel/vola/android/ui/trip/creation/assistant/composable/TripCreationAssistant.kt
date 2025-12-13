@@ -3,8 +3,6 @@ package travel.vola.android.ui.trip.creation.assistant.composable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,14 +13,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
@@ -134,172 +129,39 @@ fun TripCreationAssistant(
             }
 
             is UiState.InitialParameters -> {
-                Column(
+                InitialParameters(
+                    state,
+                    onInitialParameterOptionTapped,
+                    onInitialParametersNextTapped,
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
                         .padding(paddingValues)
-                ) {
-                    state.optionGroups.forEach { group ->
-                        OptionGroup(
-                            title = when (group.type) {
-                                UiState.OptionGroupType.OCCASIONS -> "Occasions"
-                                UiState.OptionGroupType.INTERESTS -> "Interests"
-                                UiState.OptionGroupType.VIBE -> "Vibe"
-                                UiState.OptionGroupType.FOCUS -> "Focus"
-                                UiState.OptionGroupType.DURATION -> "Duration"
-                                UiState.OptionGroupType.MUST_HAVE -> "Must Have"
-                            },
-                        ) {
-                            group.options.forEachIndexed { index, option ->
-                                FilterChip(
-                                    selected = option.isSelected,
-                                    onClick = { onInitialParameterOptionTapped(index, group.type) },
-                                    label = {
-                                        Text(option.option)
-                                    })
-                            }
-                        }
-                    }
-                    Button(
-                        onClick = onInitialParametersNextTapped,
-                        enabled = state.nextButtonEnabled,
-                        modifier = Modifier.align(Alignment.End)
-                    ) { Text("Next") }
-                }
+                )
             }
 
             is UiState.InitialParametersFollowUp -> {
-                if (state.questions.isEmpty()) {
-                    Text("No Further questions", style = MaterialTheme.typography.titleLarge)
-                } else {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(rememberScrollState())
-                            .padding(paddingValues)
-                    ) {
-                        state.questions.forEachIndexed { index, question ->
-                            if (index > 0) {
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                            }
-                            Text(
-                                question.question,
-                                style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-                            question.answers.forEachIndexed { optionIndex, option ->
-                                ElevatedCard(
-                                    onClick = {
-                                        onFollowUpQuestionOptionTapped(
-                                            optionIndex,
-                                            question
-                                        )
-                                    },
-                                    colors = if (option.isSelected) CardDefaults.elevatedCardColors(
-                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                    ) else CardDefaults.elevatedCardColors(),
-                                    modifier = Modifier.padding(bottom = 8.dp)
-                                ) {
-                                    Text(option.option, modifier = Modifier.padding(8.dp))
-                                }
-                            }
-                        }
-                        Button(
-                            onClick = onFollowUpQuestionsNextTapped,
-                            enabled = state.nextButtonEnabled,
-                            modifier = Modifier.align(Alignment.End)
-                        ) { Text("Next") }
-                    }
-                }
-            }
-
-            is UiState.HighLevelItineraryOptions -> {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                InitialParametersFollowUp(
+                    state,
+                    onFollowUpQuestionOptionTapped,
+                    onFollowUpQuestionsNextTapped,
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
                         .padding(paddingValues)
-                ) {
-                    state.itineraries.forEach { itinerary ->
-                        Card(
-                            onClick = {},
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .fillMaxWidth()
-                            ) {
-                                Text(
-                                    itinerary.name,
-                                    style = MaterialTheme.typography.headlineMedium
-                                )
-                                Text(
-                                    "${itinerary.startDate.dateString} - ${itinerary.endDate.dateString}",
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                                Text(
-                                    itinerary.description,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
+                )
+            }
 
-                                Column(
-                                    modifier = Modifier
-                                        .padding(top = 16.dp)
-                                        .background(
-                                            MaterialTheme.colorScheme.surfaceContainer,
-                                            shape = MaterialTheme.shapes.medium
-                                        )
-                                        .padding(8.dp)
-                                        .fillMaxWidth(),
-                                ) {
-                                    itinerary.cities.forEach { city ->
-                                        Text(
-                                            city.name,
-                                            style = MaterialTheme.typography.headlineSmall,
-                                            modifier = Modifier.padding(top = 8.dp)
-                                        )
-                                        Text(
-                                            "${city.startDate.dateString} - ${city.endDate.dateString}",
-                                            style = MaterialTheme.typography.labelMedium
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    state.predictedChanges.forEach { option ->
-                        ElevatedCard(
-                            onClick = {},
-                        ) {
-                            Text(option.option, modifier = Modifier.padding(8.dp))
-                        }
-                    }
-                }
+            is UiState.HighLevelItineraryOptions -> {
+                HighLevelItineraryOptions(
+                    state,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(paddingValues),
+                )
             }
         }
-    }
-}
-
-@Composable
-private fun OptionGroup(
-    title: String,
-    options: @Composable FlowRowScope.() -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(title, style = MaterialTheme.typography.titleLarge)
-
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp),
-            content = options,
-        )
     }
 }
 
@@ -310,71 +172,9 @@ object TripCreationAssistantDestination {
 @Composable
 @Preview
 fun TripCreationAssistantPreview() {
-    val initalParamtersState = UiState.InitialParameters(
-        optionGroups = listOf(
-            UiState.OptionGroup(
-                UiState.OptionGroupType.OCCASIONS,
-                listOfOptions("Workation", "Vacation", "Business Trip", "Family Trip")
-            ),
-            UiState.OptionGroup(
-                UiState.OptionGroupType.INTERESTS,
-                listOfOptions("Hiking", "Shopping", "Sightseeing")
-            )
-        )
-    )
-    val followUpState = UiState.InitialParametersFollowUp(
-        questions = listOf(
-            UiState.FollowUpQuestion(
-                "What time of day would you prefer to work on weekdays?",
-                listOfOptions(
-                    "I prefer to have my work in the Morning, when I'm the most productive",
-                    "Aternoons are my favoriote time for working",
-                    "No need to dedicate time for work, I'll just wing it LOL",
-                    selected = 0
-                )
-            ),
-            UiState.FollowUpQuestion(
-                "What time of day would you prefer to work on weekdays?",
-                listOfOptions(
-                    "I prefer to have my work in the Morning, when I'm the most productive",
-                    "Aternoons are my favoriote time for working",
-                    "No need to dedicate time for work, I'll just wing it LOL",
-                    selected = 0
-                )
-            )
-        ),
-    )
-    val highLevelItineraryOptionsState = UiState.HighLevelItineraryOptions(
-        itineraries = listOf(
-            UiState.Itinerary(
-                name = "Scandi Design",
-                description = "Explore design in scandinavia",
-                startDate = ZonedDateTime.now(),
-                endDate = ZonedDateTime.now().plusDays(10),
-                cities = listOf(
-                    UiState.ItineraryCity(
-                        name = "Copenhagen",
-                        startDate = ZonedDateTime.now(),
-                        endDate = ZonedDateTime.now().plusDays(3),
-                    ),
-                    UiState.ItineraryCity(
-                        name = "Stockholm",
-                        startDate = ZonedDateTime.now().plusDays(3),
-                        endDate = ZonedDateTime.now().plusDays(6),
-                    ),
-                    UiState.ItineraryCity(
-                        name = "Tromso",
-                        startDate = ZonedDateTime.now().plusDays(6),
-                        endDate = ZonedDateTime.now().plusDays(10),
-                    ),
-                )
-            )
-        ),
-        predictedChanges = listOfOptions("Gimme more Lights!", "More coffee cities"),
-    )
     AppTheme {
         TripCreationAssistant(
-            highLevelItineraryOptionsState,
+            UiState.Generating,
             onNavigateBack = {},
             onInitialParameterOptionTapped = { _, _ -> },
             onInitialParametersNextTapped = {},
@@ -383,6 +183,3 @@ fun TripCreationAssistantPreview() {
         )
     }
 }
-
-private fun listOfOptions(vararg options: String, selected: Int = -1): List<UiState.Option> =
-    options.mapIndexed { index, option -> UiState.Option(option, isSelected = index == selected) }
