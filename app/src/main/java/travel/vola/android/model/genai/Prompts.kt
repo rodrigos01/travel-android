@@ -35,5 +35,32 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                 ),
             )
         )
+    ),
+    INITIAL_PARAMETERS_FOLLOW_UP(
+        prompt = "Based on the user's basic information and the parameters provided, generate a " +
+                "maximum of 3 follow-up clarifying questions to allow for the generation of high-level " +
+                "travel itineraries focused only on destination and dates. Both the basic information " +
+                "and the parameters were provided by the user so don’t ask them to confirm those, " +
+                "unless they conflict with each other. The Must-Haves should be considered non-negotiable. " +
+                "Each question should be accompanied with 2-3 possible answers for the user to choose. " +
+                "Keep the answers brief. The answers should be definitive and not require further " +
+                "clarification. If the basic information and parameters are enough for generating " +
+                "an itinerary, it is acceptable to return no questions.",
+        outputSchema = Schema.obj(
+            mapOf(
+                "questions" to Schema.array(
+                    Schema.obj(
+                        mapOf(
+                            "parameter" to Schema.string("parameter of the selection that generated the question"),
+                            "answer" to Schema.string("selection in the parameter that generated the question"),
+                            "question" to Schema.string("question to ask the user"),
+                            "answers" to Schema.array(
+                                Schema.string("possible answers to the question")
+                            )
+                        )
+                    )
+                )
+            )
+        )
     )
 }
