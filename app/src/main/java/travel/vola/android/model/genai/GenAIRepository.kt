@@ -22,7 +22,8 @@ class GenAIRepository private constructor(
 
     enum class FunctionNames(val value: String) {
         INITIAL_PARAMETERS("genInitialParameters"),
-        INITIAL_PARAMETERS_FOLLOW_UP("genInitialParametersFollowUp")
+        INITIAL_PARAMETERS_FOLLOW_UP("genInitialParametersFollowUp"),
+        HIGH_LEVEL_ITINERARY_OPTIONS("genHighLevelItineraryOptions"),
     }
 
     private val chatModel by lazy {
@@ -44,6 +45,11 @@ class GenAIRepository private constructor(
                                 name = FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP.value,
                                 parameters = mapOf("questions" to Prompts.INITIAL_PARAMETERS_FOLLOW_UP.outputSchema),
                                 description = "Creates the follow-up questions for the trip creation assistant"
+                            ),
+                            FunctionDeclaration(
+                                name = FunctionNames.HIGH_LEVEL_ITINERARY_OPTIONS.value,
+                                parameters = mapOf("result" to Prompts.HIGH_LEVEL_ITINERARY_OPTIONS.outputSchema),
+                                description = "Creates the high-level itinerary options for the trip creation assistant"
                             ),
                         )
                     )
@@ -69,6 +75,15 @@ class GenAIRepository private constructor(
                     "\n Parameters: \n" + Json.encodeToString(parameters)
         val result = chatModel.sendMessage(promptQuery)
         return result.getFunctionCallParams(FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP, "questions")
+    }
+
+    suspend fun genHighLevelItineraryOptions(followUpQuestions: List<GenAIData.FollowUpQuestion>): GenAIData.HighLevelItineraryOptions? {
+        val prompt = Prompts.HIGH_LEVEL_ITINERARY_OPTIONS
+        val promptQuery = prompt.prompt +
+                "\n Follow-up Questions: \n" +
+                followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" }
+        val result = chatModel.sendMessage(promptQuery)
+        return result.getFunctionCallParams(FunctionNames.HIGH_LEVEL_ITINERARY_OPTIONS, "result")
     }
 
     private suspend inline fun <reified T> GenerateContentResponse.getFunctionCallParams(
