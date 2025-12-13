@@ -30,6 +30,21 @@ class GenAIRepository private constructor(
         return Json.decodeFromString(jsonString)
     }
 
+    suspend fun genInitialParametersFollowUpQuestions(
+        basicInformation: GenAIData.BasicInformation,
+        parameters: GenAIData.InitialParametersOptions
+    ): GenAIData.FollowUpQuestionsOutput? {
+        val prompt = Prompts.INITIAL_PARAMETERS_FOLLOW_UP
+        val model = models[prompt]?.value ?: return null
+
+        val promptQuery =
+            prompt.prompt + "\n User Information: \n" + Json.encodeToString(basicInformation) +
+                    "\n Parameters: \n" + Json.encodeToString(parameters)
+
+        val jsonString = model.generateContent(promptQuery).text ?: return null
+        return Json.decodeFromString(jsonString)
+    }
+
     private fun createModel(schema: Schema): GenerativeModel {
         return Firebase.ai(backend = GenerativeBackend.googleAI())
             .generativeModel(modelName = "gemini-2.5-flash", generationConfig = generationConfig {

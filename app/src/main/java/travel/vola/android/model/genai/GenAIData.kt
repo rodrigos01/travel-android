@@ -30,4 +30,17 @@ object GenAIData {
         val mustHave: List<String>,
         val duration: List<String>,
     )
+
+    @Serializable
+    data class FollowUpQuestionsOutput(
+        val questions: List<FollowUpQuestion>
+    )
+
+    @Serializable
+    data class FollowUpQuestion(
+        val parameter: String,
+        val answer: String,
+        val question: String,
+        val answers: List<String>
+    )
 }
