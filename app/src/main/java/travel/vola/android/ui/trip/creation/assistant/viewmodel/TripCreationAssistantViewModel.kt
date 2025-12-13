@@ -16,6 +16,9 @@ import travel.vola.android.model.genai.GenAIRepository
 class TripCreationAssistantViewModel(private val repository: GenAIRepository) : ViewModel() {
     sealed interface UiState {
         data object Generating : UiState
+
+        data object Error : UiState
+
         data class InitialParameters(
             val optionGroups: List<OptionGroup>,
             val nextButtonEnabled: Boolean = false,
@@ -53,7 +56,7 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
         when (it) {
             Stage.INITIAL_PARAMETERS -> generateInitialParametersState()
             Stage.INITIAL_PARAMETERS_FOLLOW_UP -> getInitialParametersFollowUpState()
-        }
+        } ?: UiState.Error
     }
     private val internalState = MutableStateFlow<UiState>(UiState.Generating)
 
