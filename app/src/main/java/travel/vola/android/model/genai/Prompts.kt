@@ -17,7 +17,7 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                 ),
                 "vibe" to Schema.array(
                     Schema.string(),
-                    description = "5-8 short (one or two words) atmospheres travelers commonly look for"
+                    description = "5-8 short (1-3 words) atmospheres travelers commonly look for"
                 ),
                 "focus" to Schema.array(
                     Schema.string(),
