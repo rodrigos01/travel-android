@@ -21,6 +21,23 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
 
         data object Error : UiState
 
+        data class BasicInformation(
+            val destinations: List<String> = emptyList(),
+            val startDate: ZonedDateTime? = null,
+            val endDate: ZonedDateTime? = null,
+            val fixedDates: Boolean = false,
+            val groupType: TravelGroupType = TravelGroupType.SOLO,
+            val travelers: Int = 1,
+        ) : UiState
+
+        enum class TravelGroupType {
+            SOLO,
+            COUPLE,
+            FAMILY,
+            FRIENDS,
+            COWORKERS
+        }
+
         data class InitialParameters(
             val optionGroups: List<OptionGroup>,
             val nextButtonEnabled: Boolean = false,
@@ -67,21 +84,23 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
     }
 
     private sealed interface Stage {
+        data object BasicInformation : Stage
         data object InitialParameters : Stage
         data class InitialParametersFollowUp(val state: UiState.InitialParameters) : Stage
         data class HighLevelItineraryOptions(val state: UiState.InitialParametersFollowUp) : Stage
     }
 
-    private val stage = MutableStateFlow<Stage>(Stage.InitialParameters)
+    private val stage = MutableStateFlow<Stage>(Stage.BasicInformation)
 
     private val generatedState = stage.map {
         when (it) {
+            is Stage.BasicInformation -> UiState.BasicInformation()
             is Stage.InitialParameters -> generateInitialParametersState()
             is Stage.InitialParametersFollowUp -> getInitialParametersFollowUpState(it.state)
             is Stage.HighLevelItineraryOptions -> getHighLevelItineraryOptionsState(it.state)
         } ?: UiState.Error
     }
-    private val internalState = MutableStateFlow<UiState>(UiState.Generating)
+    private val internalState = MutableStateFlow<UiState>(UiState.BasicInformation())
 
     val uiState = merge(generatedState, internalState).stateIn(
         viewModelScope,
@@ -90,11 +109,11 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
     )
 
     private val basicInformation = GenAIData.BasicInformation(
-        destination = "Scandinavia",
-        dates = "February",
+        destination = "France, Switzerland, Italy",
+        dates = "July",
         duration = null,
-        groupType = GenAIData.GroupType.SOLO,
-        travelers = 1
+        groupType = GenAIData.GroupType.COUPLE,
+        travelers = 2
     )
 
     private suspend fun generateInitialParametersState(): UiState.InitialParameters? {
