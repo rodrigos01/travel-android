@@ -30,7 +30,10 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
 
         data class OptionGroup(val type: OptionGroupType, val options: List<Option>)
 
-        data class InitialParametersFollowUp(val questions: List<FollowUpQuestion>) : UiState
+        data class InitialParametersFollowUp(
+            val questions: List<FollowUpQuestion>,
+            val nextButtonEnabled: Boolean = false,
+        ) : UiState
 
         data class FollowUpQuestion(val question: String, val answers: List<Option>)
 
@@ -132,6 +135,25 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
                 )
             }
         }
+    }
+
+    fun onFollowUpQuestionOptionTapped(index: Int, question: UiState.FollowUpQuestion) {
+        val state = uiState.value as? UiState.InitialParametersFollowUp ?: return
+        val newQuestions = state.questions.map { currentQuestion ->
+            if (currentQuestion == question) {
+                currentQuestion.copy(answers = currentQuestion.answers.mapIndexed { optionIndex, option ->
+                    option.copy(isSelected = optionIndex == index)
+                })
+            } else {
+                currentQuestion
+            }
+        }
+        _uiState.value = state.copy(
+            questions = newQuestions,
+            nextButtonEnabled = newQuestions.all { question ->
+                question.answers.any { it.isSelected }
+            }
+        )
     }
 
     private fun List<UiState.OptionGroup>.selectedValues(type: UiState.OptionGroupType): List<String> =

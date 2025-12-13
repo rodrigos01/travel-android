@@ -51,6 +51,8 @@ fun TripCreationAssistant(navController: NavController) {
         onNavigateBack = { navController.popBackStack() },
         onInitialParameterOptionTapped = viewModel::onInitialParameterOptionTapped,
         onInitialParametersNextTapped = viewModel::onInitialParametersNextTapped,
+        onFollowUpQuestionOptionTapped = viewModel::onFollowUpQuestionOptionTapped,
+        onFollowUpQuestionsNextTapped = {},
     )
 }
 
@@ -61,11 +63,13 @@ fun TripCreationAssistant(
     onNavigateBack: () -> Unit,
     onInitialParameterOptionTapped: (Int, UiState.OptionGroupType) -> Unit,
     onInitialParametersNextTapped: () -> Unit,
+    onFollowUpQuestionOptionTapped: (Int, UiState.FollowUpQuestion) -> Unit,
+    onFollowUpQuestionsNextTapped: () -> Unit,
 ) {
     Scaffold(
         topBar = {
             TopAppBar(title = {
-                val title = when(state) {
+                val title = when (state) {
                     is UiState.Generating -> "Travel Creation Assistant"
                     is UiState.InitialParameters -> "Initial Parameters"
                     is UiState.InitialParametersFollowUp -> "Follow Up Questions"
@@ -151,10 +155,19 @@ fun TripCreationAssistant(
                             if (index > 0) {
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                             }
-                            Text(question.question, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 8.dp))
-                            question.answers.forEach { option ->
+                            Text(
+                                question.question,
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                            question.answers.forEachIndexed { optionIndex, option ->
                                 ElevatedCard(
-                                    onClick = {},
+                                    onClick = {
+                                        onFollowUpQuestionOptionTapped(
+                                            optionIndex,
+                                            question
+                                        )
+                                    },
                                     colors = if (option.isSelected) CardDefaults.elevatedCardColors(
                                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -166,8 +179,8 @@ fun TripCreationAssistant(
                             }
                         }
                         Button(
-                            onClick = {},
-                            enabled = false,
+                            onClick = onFollowUpQuestionsNextTapped,
+                            enabled = state.nextButtonEnabled,
                             modifier = Modifier.align(Alignment.End)
                         ) { Text("Next") }
                     }
@@ -232,7 +245,7 @@ fun TripCreationAssistantPreview() {
                     selected = 0
                 )
             )
-        )
+        ),
     )
     AppTheme {
         TripCreationAssistant(
@@ -240,6 +253,8 @@ fun TripCreationAssistantPreview() {
             onNavigateBack = {},
             onInitialParameterOptionTapped = { _, _ -> },
             onInitialParametersNextTapped = {},
+            onFollowUpQuestionOptionTapped = { _, _ -> },
+            onFollowUpQuestionsNextTapped = {},
         )
     }
 }
