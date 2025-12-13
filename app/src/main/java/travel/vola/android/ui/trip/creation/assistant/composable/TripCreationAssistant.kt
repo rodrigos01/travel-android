@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlowRowScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -69,17 +71,18 @@ fun TripCreationAssistant(
             })
         }
     ) { contentPadding ->
+        val paddingValues = PaddingValues(
+            top = contentPadding.calculateTopPadding() + 16.dp,
+            start = contentPadding.calculateStartPadding(LocalLayoutDirection.current) + 16.dp,
+            bottom = contentPadding.calculateBottomPadding() + 24.dp,
+            end = contentPadding.calculateStartPadding(LocalLayoutDirection.current) + 16.dp,
+        )
         when (state) {
             is UiState.Generating -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(
-                            top = contentPadding.calculateTopPadding() + 16.dp,
-                            start = contentPadding.calculateStartPadding(LocalLayoutDirection.current) + 16.dp,
-                            bottom = contentPadding.calculateBottomPadding() + 24.dp,
-                            end = contentPadding.calculateStartPadding(LocalLayoutDirection.current) + 16.dp,
-                        )
+                        .padding(paddingValues)
                 ) {
                     Text("Generating...", style = MaterialTheme.typography.titleLarge)
                 }
@@ -90,15 +93,10 @@ fun TripCreationAssistant(
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
-                        .padding(
-                            top = contentPadding.calculateTopPadding() + 16.dp,
-                            start = contentPadding.calculateStartPadding(LocalLayoutDirection.current) + 16.dp,
-                            bottom = contentPadding.calculateBottomPadding() + 24.dp,
-                            end = contentPadding.calculateStartPadding(LocalLayoutDirection.current) + 16.dp,
-                        )
+                        .padding(paddingValues)
                 ) {
                     state.optionGroups.forEach { group ->
-                        InitialParameterOption(
+                        OptionGroup(
                             title = when (group.type) {
                                 UiState.OptionGroupType.OCCASIONS -> "Occasions"
                                 UiState.OptionGroupType.INTERESTS -> "Interests"
@@ -107,9 +105,16 @@ fun TripCreationAssistant(
                                 UiState.OptionGroupType.DURATION -> "Duration"
                                 UiState.OptionGroupType.MUST_HAVE -> "Must Have"
                             },
-                            options = group.options,
-                            onOptionTapped = { onInitialParameterOptionTapped(it, group.type) }
-                        )
+                        ) {
+                            group.options.forEachIndexed { index, option ->
+                                FilterChip(
+                                    selected = option.isSelected,
+                                    onClick = { onInitialParameterOptionTapped(index, group.type) },
+                                    label = {
+                                        Text(option.option)
+                                    })
+                            }
+                        }
                     }
                     Button(
                         onClick = onInitialParametersNextTapped,
@@ -118,32 +123,49 @@ fun TripCreationAssistant(
                     ) { Text("Next") }
                 }
             }
+
+            is UiState.InitialParametersFollowUp -> {
+                if (state.questions.isEmpty()) {
+                    Text("No Further questions", style = MaterialTheme.typography.titleLarge)
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .padding(paddingValues)
+                    ) {
+                        state.questions.forEach { question ->
+                            OptionGroup(title = question.question) {
+                                question.answers.forEach { option ->
+                                    FilterChip(
+                                        selected = option.isSelected,
+                                        onClick = { },
+                                        label = {
+                                            Text(option.option)
+                                        })
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun InitialParameterOption(
+private fun OptionGroup(
     title: String,
-    options: List<UiState.Option>,
-    onOptionTapped: (Int) -> Unit
+    options: @Composable FlowRowScope.() -> Unit,
 ) {
     Column {
         Text(title, style = MaterialTheme.typography.titleMedium)
 
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
-        ) {
-            options.forEachIndexed { index, option ->
-                FilterChip(
-                    selected = option.isSelected,
-                    onClick = { onOptionTapped(index) },
-                    label = {
-                        Text(option.option)
-                    })
-            }
-        }
+            verticalArrangement = Arrangement.spacedBy(0.dp),
+            content = options,
+        )
     }
 }
 
