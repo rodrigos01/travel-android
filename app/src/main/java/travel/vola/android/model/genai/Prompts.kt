@@ -76,59 +76,55 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
     ),
     HIGH_LEVEL_ITINERARY_OPTIONS(
         prompt = "Generate 3 high-level travel itinerary options based on the user's basic information, the parameters provided and the answers provided to the questions below. These itineraries should be basic skeletons with just cities visited and how long to stay in each. If the destination is not specific (i.e. a region, a country or a continent), suggest itineraries that include multiple cities to match their parameters. If the duration is not specific (a range of days) the itineraries should include suggested start and end dates that best match the destinations and parameters. The itineraries should consider their interests, focus and must-have experiences for their dates. If the itineraries include multiple cities, it should consider travel between the destinations for their order. For each itinerary, suggest 3 short-phrase predicted potential changes the users might want to make to it, focused solely on the cities and periods in each of them. The changes should be self-contained and not require follow up questions",
-        outputSchema = Schema.obj(
-            mapOf(
-                "itineraries" to Schema.array(
-                    Schema.obj(
+        outputSchema = Schema.array(
+            Schema.obj(
+                mapOf(
+                    "name" to Schema.string("name of the itinerary"),
+                    "description" to Schema.string("A single-sentence description for this itinerary that includes why it fits the user choices"),
+                    "startDate" to Schema.obj(
                         mapOf(
-                            "name" to Schema.string("name of the itinerary"),
-                            "description" to Schema.string("A single-sentence description for this itinerary that includes why it fits the user choices"),
-                            "startDate" to Schema.obj(
-                                mapOf(
-                                    "day" to Schema.integer(),
-                                    "month" to Schema.integer(),
-                                    "year" to Schema.integer(),
-                                ),
-                                description = "date representing the first of the itinerary",
-                            ),
-                            "endDate" to Schema.obj(
-                                mapOf(
-                                    "day" to Schema.integer(),
-                                    "month" to Schema.integer(),
-                                    "year" to Schema.integer(),
-                                ),
-                                description = "date representing the last day of the itinerary",
-                            ),
-                            "cities" to Schema.array(
-                                Schema.obj(
+                            "day" to Schema.integer(),
+                            "month" to Schema.integer(),
+                            "year" to Schema.integer(),
+                        ),
+                        description = "date representing the first of the itinerary",
+                    ),
+                    "endDate" to Schema.obj(
+                        mapOf(
+                            "day" to Schema.integer(),
+                            "month" to Schema.integer(),
+                            "year" to Schema.integer(),
+                        ),
+                        description = "date representing the last day of the itinerary",
+                    ),
+                    "cities" to Schema.array(
+                        Schema.obj(
+                            mapOf(
+                                "name" to Schema.string("name of the city"),
+                                "startDate" to Schema.obj(
                                     mapOf(
-                                        "name" to Schema.string("name of the city"),
-                                        "startDate" to Schema.obj(
-                                            mapOf(
-                                                "day" to Schema.integer(),
-                                                "month" to Schema.integer(),
-                                                "year" to Schema.integer(),
-                                            ),
-                                            description = "date representing the first day in this city",
-                                        ),
-                                        "endDate" to Schema.string(
-                                            description = "date representing the last day in  this city",
-                                        ),
-                                    )
-                                )
-                            ),
-                            "predictedChanges" to Schema.array(
-                                Schema.string(),
-                                description = "3 short-phrase predicted potential changes the users might want to make to the itinerary, focused solely on the cities and period",
-                                minItems = 3,
-                                maxItems = 3,
-                            ),
+                                        "day" to Schema.integer(),
+                                        "month" to Schema.integer(),
+                                        "year" to Schema.integer(),
+                                    ),
+                                    description = "date representing the first day in this city",
+                                ),
+                                "endDate" to Schema.string(
+                                    description = "date representing the last day in  this city",
+                                ),
+                            )
                         )
                     ),
-                    minItems = 3,
-                    maxItems = 3,
-                ),
-            )
-        )
+                    "predictedChanges" to Schema.array(
+                        Schema.string(),
+                        description = "3 short-phrase predicted potential changes the users might want to make to the itinerary, focused solely on the cities and period",
+                        minItems = 3,
+                        maxItems = 3,
+                    ),
+                )
+            ),
+            minItems = 3,
+            maxItems = 3,
+        ),
     ),
 }
