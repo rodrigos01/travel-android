@@ -54,6 +54,8 @@ import kotlin.contracts.contract
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
 
+private const val ADDING_PLAN_STATE_ID = "adding"
+
 @OptIn(ExperimentalContracts::class)
 class TripViewModel(
     private val repository: TripRepository,
@@ -162,7 +164,7 @@ class TripViewModel(
             .firstOrNull { it.timestamp.toLocalDate() == focusedDate?.toLocalDate() }?.id
         state.copy(
             items = items,
-            addPlanItemState = addPlanItems["adding"],
+            addPlanItemState = addPlanItems[ADDING_PLAN_STATE_ID],
             focusedItemId = focusedId
         )
     }.stateIn(
@@ -236,7 +238,7 @@ class TripViewModel(
     }
 
     fun onAddPlanTypeSelected(type: AddPlanItemState.Type?) {
-        addPlanUseCase.removeItem("adding")
+        addPlanUseCase.removeItem(ADDING_PLAN_STATE_ID)
         val currentFocusedIndex = focusedIndex.value
         val focusedItem = if (currentFocusedIndex == -1) {
             viewState.value.items.firstOrNull()
@@ -246,7 +248,7 @@ class TripViewModel(
         val focusedDate = (focusedItem as? TripItemState.Timeable)?.timestamp
         if (type != null) {
             addPlanUseCase.createAddPlanItem(
-                id = "adding",
+                id = ADDING_PLAN_STATE_ID,
                 focusedDate
                     ?: ZonedDateTime.now(),
                 type = type
@@ -260,7 +262,13 @@ class TripViewModel(
             navController.navigate(route = lodgingSearchParams)
             return
         }
-        val entity = addPlanUseCase.saveItem(itemId)
+        val entity = addPlanUseCase.saveItem(itemId).let {
+            if (itemId == ADDING_PLAN_STATE_ID) {
+                it.copy(id = UUID.randomUUID().toString())
+            } else {
+                it
+            }
+        }
         viewModelScope.launch {
             when (entity) {
                 is Flight -> repository.saveFlight(tripId, entity)
@@ -269,6 +277,13 @@ class TripViewModel(
                 is RestaurantReservation -> repository.saveRestaurantReservation(tripId, entity)
             }
         }
+    }
+
+    private fun TripEntity.copy(id: String = this.id) = when (this) {
+        is Flight -> copy(id = id)
+        is Lodging -> copy(id = id)
+        is TimedPlace -> copy(id = id)
+        is RestaurantReservation -> copy(id = id)
     }
 
     override fun cancelEdit(itemId: String) {
