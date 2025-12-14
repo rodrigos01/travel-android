@@ -23,11 +23,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButtonDefaults
@@ -115,7 +117,22 @@ fun TripDetailsToolbar(
                 .padding(vertical = 16.dp),
         ) { state ->
             if (state != null) {
-                AddPlanContent(state = state, actionHandler = addPlanActionHandler)
+                Column {
+                    AddPlanContent(state = state, actionHandler = addPlanActionHandler)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .padding(top = 8.dp, end = 16.dp)
+                            .align(Alignment.End)
+                    ) {
+                        OutlinedButton(onClick = { addPlanActionHandler.cancelEdit(state.id) }) {
+                            Text("Cancel")
+                        }
+                        Button(onClick = {addPlanActionHandler.save(state.id)}, enabled = state.saveButtonEnabled) {
+                            Text("Save")
+                        }
+                    }
+                }
             }
         }
         HorizontalFloatingToolbar(
