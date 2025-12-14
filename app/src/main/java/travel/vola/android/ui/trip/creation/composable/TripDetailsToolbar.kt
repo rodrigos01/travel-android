@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
@@ -32,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.TonalToggleButton
 import androidx.compose.runtime.Composable
@@ -125,10 +127,13 @@ fun TripDetailsToolbar(
                             .padding(top = 8.dp, end = 16.dp)
                             .align(Alignment.End)
                     ) {
-                        OutlinedButton(onClick = { addPlanActionHandler.cancelEdit(state.id) }) {
+                        TextButton(
+                            onClick = { addPlanActionHandler.cancelEdit(state.id) },
+                            colors = ButtonDefaults.textButtonColors()
+                            ) {
                             Text("Cancel")
                         }
-                        Button(onClick = {addPlanActionHandler.save(state.id)}, enabled = state.saveButtonEnabled) {
+                        TextButton(onClick = {addPlanActionHandler.save(state.id)}, enabled = state.saveButtonEnabled) {
                             Text("Save")
                         }
                     }
@@ -220,7 +225,7 @@ fun TripDetailsToolbarPreview() {
         saveButtonEnabled = true,
         deleteButtonEnabled = false,
     )
-    var currentState by remember { mutableStateOf<AddPlanItemState?>(null) }
+    var currentState by remember { mutableStateOf<AddPlanItemState?>(state) }
     AppTheme {
         Box(
             modifier = Modifier
