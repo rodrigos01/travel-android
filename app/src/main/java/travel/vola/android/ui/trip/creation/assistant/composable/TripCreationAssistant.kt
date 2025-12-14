@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -58,6 +59,7 @@ fun TripCreationAssistant(navController: NavController) {
         onInitialParametersNextTapped = viewModel::onInitialParametersNextTapped,
         onFollowUpQuestionOptionTapped = viewModel::onFollowUpQuestionOptionTapped,
         onFollowUpQuestionsNextTapped = viewModel::onFollowUpQuestionsNextTapped,
+        onRetryTapped = viewModel::onRetryTapped,
     )
 }
 
@@ -80,6 +82,7 @@ fun TripCreationAssistant(
     onInitialParametersNextTapped: () -> Unit,
     onFollowUpQuestionOptionTapped: (Int, UiState.FollowUpQuestion) -> Unit,
     onFollowUpQuestionsNextTapped: () -> Unit,
+    onRetryTapped: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -128,6 +131,9 @@ fun TripCreationAssistant(
                         "There was an error generating content",
                         style = MaterialTheme.typography.titleLarge
                     )
+                    Button(onClick = onRetryTapped) {
+                        Text("Retry")
+                    }
                 }
             }
 
@@ -226,6 +232,7 @@ fun TripCreationAssistantPreview() {
             onInitialParametersNextTapped = {},
             onFollowUpQuestionOptionTapped = { _, _ -> },
             onFollowUpQuestionsNextTapped = {},
+            onRetryTapped = {},
         )
     }
 }

@@ -95,10 +95,12 @@ class TripCreationAssistantViewModel(
     }
 
     private sealed interface Stage {
+
+        data object Retry : Stage
         data object BasicInformation : Stage
         data class InitialParameters(val state: UiState.BasicInformation) : Stage
         data class InitialParametersFollowUp(val state: UiState.InitialParameters) : Stage
-        data class HighLevelItineraryOptions(val state: UiState.InitialParametersFollowUp) : Stage
+        data class HighLevelItineraryOptions(val state: UiState) : Stage
     }
 
     private val stage = MutableStateFlow<Stage>(Stage.BasicInformation)
@@ -109,6 +111,7 @@ class TripCreationAssistantViewModel(
             is Stage.InitialParameters -> generateInitialParametersState(it.state)
             is Stage.InitialParametersFollowUp -> getInitialParametersFollowUpState(it.state)
             is Stage.HighLevelItineraryOptions -> getHighLevelItineraryOptionsState(it.state)
+            is Stage.Retry -> UiState.Generating
         } ?: UiState.Error
     }
     private val internalState = MutableStateFlow<UiState>(UiState.BasicInformation())
@@ -172,7 +175,7 @@ class TripCreationAssistantViewModel(
         )
     }
 
-    private suspend fun getInitialParametersFollowUpState(state: UiState.InitialParameters): UiState.InitialParametersFollowUp? {
+    private suspend fun getInitialParametersFollowUpState(state: UiState.InitialParameters): UiState? {
         val parameters = GenAIData.InitialParametersOptions(
             occasions = state.optionGroups.selectedValues(UiState.OptionGroupType.OCCASIONS),
             interests = state.optionGroups.selectedValues(UiState.OptionGroupType.INTERESTS),
@@ -184,24 +187,33 @@ class TripCreationAssistantViewModel(
 
         val followUpQuestions =
             repository.genInitialParametersFollowUpQuestions(parameters) ?: return null
-        return UiState.InitialParametersFollowUp(
-            questions = followUpQuestions.questions.map { question ->
-                UiState.FollowUpQuestion(
-                    question = question.question,
-                    answers = question.answers.map { UiState.Option(it) },
-                )
-            }
-        )
+        if (followUpQuestions.questions.isNotEmpty()) {
+            return UiState.InitialParametersFollowUp(
+                questions = followUpQuestions.questions.map { question ->
+                    UiState.FollowUpQuestion(
+                        question = question.question,
+                        answers = question.answers.map { UiState.Option(it) },
+                    )
+                }
+            )
+        } else {
+            stage.value = Stage.HighLevelItineraryOptions(state)
+            return UiState.Generating
+        }
     }
 
-    private suspend fun getHighLevelItineraryOptionsState(state: UiState.InitialParametersFollowUp): UiState.HighLevelItineraryOptions? {
-        val answeredQuestions = state.questions.map { question ->
-            GenAIData.FollowUpQuestion(
-                parameter = "",
-                parameterSelection = "",
-                question = question.question,
-                answers = question.answers.filter { it.isSelected }.map { it.option },
-            )
+    private suspend fun getHighLevelItineraryOptionsState(state: UiState): UiState.HighLevelItineraryOptions? {
+        val answeredQuestions = if (state is UiState.InitialParametersFollowUp) {
+            state.questions.map { question ->
+                GenAIData.FollowUpQuestion(
+                    parameter = "",
+                    parameterSelection = "",
+                    question = question.question,
+                    answers = question.answers.filter { it.isSelected }.map { it.option },
+                )
+            }
+        } else {
+            emptyList()
         }
         val result = repository.genHighLevelItineraryOptions(answeredQuestions) ?: return null
         return UiState.HighLevelItineraryOptions(
@@ -395,6 +407,13 @@ class TripCreationAssistantViewModel(
         val state = uiState.value as? UiState.InitialParametersFollowUp ?: return
         internalState.value = UiState.Generating
         stage.value = Stage.HighLevelItineraryOptions(state)
+    }
+
+    fun onRetryTapped() {
+        // Resend the current state to retry
+        val currentStage = stage.value
+        stage.value = Stage.Retry
+        stage.value = currentStage
     }
 
     private fun List<UiState.OptionGroup>.selectedValues(type: UiState.OptionGroupType): List<String> =

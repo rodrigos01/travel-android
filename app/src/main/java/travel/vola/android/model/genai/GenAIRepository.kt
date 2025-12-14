@@ -66,8 +66,8 @@ class GenAIRepository private constructor(
         val promptQuery =
             prompt.prompt + "\n Basic Information: \n" + Json.encodeToString(basicInformation)
 
-        val result = chatModel.sendMessage(promptQuery)
-        return result.getFunctionCallParams(FunctionNames.INITIAL_PARAMETERS, "parameters")
+        val result = sendMessage(promptQuery)
+        return result?.getFunctionCallParams(FunctionNames.INITIAL_PARAMETERS, "parameters")
     }
 
     suspend fun genInitialParametersFollowUpQuestions(
@@ -77,9 +77,9 @@ class GenAIRepository private constructor(
         val promptQuery =
             prompt.prompt +
                     "\n Parameters: \n" + Json.encodeToString(parameters)
-        val result = chatModel.sendMessage(promptQuery)
+        val result = sendMessage(promptQuery)
         // The schema is a little confusing for the LLM so the result might change some times, so we need to support both
-        if (result.getJsonArgs(
+        if (result?.getJsonArgs(
                 FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP,
                 "questions"
             ) is JsonArray
@@ -87,10 +87,10 @@ class GenAIRepository private constructor(
             val questions: List<GenAIData.FollowUpQuestion> = result.getFunctionCallParams(
                 FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP,
                 "questions"
-            ) ?: return null
+            ) ?: return GenAIData.FollowUpQuestionsOutput(emptyList())
             return GenAIData.FollowUpQuestionsOutput(questions)
         } else {
-            return result.getFunctionCallParams(
+            return result?.getFunctionCallParams(
                 FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP,
                 "questions"
             )
@@ -102,8 +102,10 @@ class GenAIRepository private constructor(
         val promptQuery = prompt.prompt +
                 "\n Follow-up Questions: \n" +
                 followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" }
-        val result = chatModel.sendMessage(promptQuery)
-        return result.getFunctionCallParams(FunctionNames.HIGH_LEVEL_ITINERARY_OPTIONS, "result")
+        val result = sendMessage(promptQuery)
+        val itineraries: List<GenAIData.Itinerary>? =
+            result?.getFunctionCallParams(FunctionNames.HIGH_LEVEL_ITINERARY_OPTIONS, "result")
+        return itineraries?.let { GenAIData.HighLevelItineraryOptions(itineraries) }
     }
 
     private fun GenerateContentResponse.getJsonArgs(
@@ -141,6 +143,15 @@ class GenAIRepository private constructor(
             return params
         } catch (ignored: SerializationException) {
             Log.e("GenAIRepository", "Error parsing JSON", ignored)
+            return null
+        }
+    }
+
+    private suspend fun sendMessage(prompt: String): GenerateContentResponse? {
+        try {
+            return chatModel.sendMessage(prompt)
+        } catch (t: Throwable) {
+            Log.e("GenAIRepository", "Error sending message", t)
             return null
         }
     }
