@@ -8,14 +8,20 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import travel.vola.android.common.ui.components.SearchResult
 import travel.vola.android.di.factoryDependencies
 import travel.vola.android.extensions.Time
 import travel.vola.android.extensions.viewModelFactory
 import travel.vola.android.model.genai.GenAIData
 import travel.vola.android.model.genai.GenAIRepository
+import travel.vola.android.model.repository.GeographyAutoCompleteRepository
 import java.time.ZonedDateTime
 
-class TripCreationAssistantViewModel(private val repository: GenAIRepository) : ViewModel() {
+class TripCreationAssistantViewModel(
+    private val repository: GenAIRepository,
+    private val destinationAutoCompleteRepository: GeographyAutoCompleteRepository,
+) : ViewModel() {
     sealed interface UiState {
         data object Generating : UiState
 
@@ -23,6 +29,7 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
 
         data class BasicInformation(
             val destinations: List<String> = emptyList(),
+            val destinationSearchResults: List<SearchResult> = emptyList(),
             val startDate: ZonedDateTime? = null,
             val endDate: ZonedDateTime? = null,
             val fixedDates: Boolean = false,
@@ -202,6 +209,38 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
         )
     }
 
+    fun onDestinationSearchTextChanged(query: CharSequence) {
+        val state = uiState.value as? UiState.BasicInformation ?: return
+        viewModelScope.launch {
+            val results = destinationAutoCompleteRepository.autocomplete(query.toString())
+            if (results.isNotEmpty()) {
+                internalState.value = state.copy(
+                    destinationSearchResults = results.map { SearchResult(it.name, it.address) }
+                )
+            }
+        }
+    }
+
+    fun onDestinationSearchResultSelected(index: Int) {
+        viewModelScope.launch {
+            val state = uiState.value as? UiState.BasicInformation ?: return@launch
+            val selected = state.destinationSearchResults[index]
+            val destinationName = selected.title + selected.subtitle.takeIf { it.isNotBlank() }
+                ?.let { ", $it" }.orEmpty()
+            internalState.value = state.copy(
+                destinations = state.destinations + destinationName,
+                destinationSearchResults = emptyList()
+            )
+        }
+    }
+
+    fun onDestinationClearTapped(index: Int) {
+        val state = uiState.value as? UiState.BasicInformation ?: return
+        internalState.value = state.copy(
+            destinations = state.destinations - state.destinations[index]
+        )
+    }
+
     fun onInitialParameterOptionTapped(index: Int, optionGroupType: UiState.OptionGroupType) {
         val state = uiState.value as? UiState.InitialParameters ?: return
         val newOptionGroups = state.optionGroups.map { group ->
@@ -259,6 +298,9 @@ class TripCreationAssistantViewModel(private val repository: GenAIRepository) : 
             ?: emptyList()
 
     class Factory : ViewModelProvider.Factory by viewModelFactory(initializer = {
-        TripCreationAssistantViewModel(factoryDependencies.genAIRepository)
+        TripCreationAssistantViewModel(
+            factoryDependencies.genAIRepository,
+            GeographyAutoCompleteRepository(),
+        )
     })
 }

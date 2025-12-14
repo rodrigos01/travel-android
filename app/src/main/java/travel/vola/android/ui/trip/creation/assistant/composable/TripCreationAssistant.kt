@@ -43,6 +43,9 @@ fun TripCreationAssistant(navController: NavController) {
     TripCreationAssistant(
         state,
         onNavigateBack = { navController.popBackStack() },
+        onDestinationSearchTextChanged = viewModel::onDestinationSearchTextChanged,
+        onDestinationSearchResultSelected = viewModel::onDestinationSearchResultSelected,
+        onDestinationClearTapped = viewModel::onDestinationClearTapped,
         onInitialParameterOptionTapped = viewModel::onInitialParameterOptionTapped,
         onInitialParametersNextTapped = viewModel::onInitialParametersNextTapped,
         onFollowUpQuestionOptionTapped = viewModel::onFollowUpQuestionOptionTapped,
@@ -55,6 +58,9 @@ fun TripCreationAssistant(navController: NavController) {
 fun TripCreationAssistant(
     state: UiState,
     onNavigateBack: () -> Unit,
+    onDestinationSearchTextChanged: (CharSequence) -> Unit,
+    onDestinationClearTapped: (Int) -> Unit,
+    onDestinationSearchResultSelected: (Int) -> Unit,
     onInitialParameterOptionTapped: (Int, UiState.OptionGroupType) -> Unit,
     onInitialParametersNextTapped: () -> Unit,
     onFollowUpQuestionOptionTapped: (Int, UiState.FollowUpQuestion) -> Unit,
@@ -126,6 +132,9 @@ fun TripCreationAssistant(
             is UiState.BasicInformation -> {
                 BasicInformationForm(
                     state,
+                    onDestinationSearchTextChanged,
+                    onDestinationSearchResultSelected,
+                    onDestinationClearTapped,
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
@@ -181,6 +190,9 @@ fun TripCreationAssistantPreview() {
         TripCreationAssistant(
             UiState.Generating,
             onNavigateBack = {},
+            onDestinationSearchTextChanged = {},
+            onDestinationSearchResultSelected = {},
+            onDestinationClearTapped = {},
             onInitialParameterOptionTapped = { _, _ -> },
             onInitialParametersNextTapped = {},
             onFollowUpQuestionOptionTapped = { _, _ -> },
