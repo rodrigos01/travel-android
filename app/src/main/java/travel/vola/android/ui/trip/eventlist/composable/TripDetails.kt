@@ -14,9 +14,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -214,6 +217,16 @@ private fun TripDetails(
                     } else {
                         IconButton(onClick = { isInEditMode = true }) {
                             Icon(imageVector = Icons.Filled.Edit, contentDescription = "")
+                        }
+                        if (mapScaffoldState.showMap) {
+                            IconButton(onClick = { mapScaffoldState.showMap = false }) {
+                                Icon(imageVector = Icons.AutoMirrored.Default.List, contentDescription = "")
+                            }
+                        } else {
+                            IconButton(onClick = { mapScaffoldState.showMap = true }) {
+                                Icon(imageVector = Icons.Default.Map, contentDescription = "")
+                            }
+
                         }
                         Box {
                             IconButton(onClick = { showToolbarOverflowMenu = true }) {
