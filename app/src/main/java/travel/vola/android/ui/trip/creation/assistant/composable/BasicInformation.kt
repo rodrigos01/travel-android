@@ -15,12 +15,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedToggleButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -52,6 +52,11 @@ fun BasicInformationForm(
     onLocationSearchTextChanged: (CharSequence) -> Unit,
     onLocationSearchResultSelected: (Int) -> Unit,
     onDestinationClearTapped: (Int) -> Unit,
+    onFixedDatesSet: (Boolean) -> Unit,
+    onStartDateSet: (ZonedDateTime) -> Unit,
+    onEndDateSet: (ZonedDateTime) -> Unit,
+    onGroupTypeSet: (UiState.TravelGroupType) -> Unit,
+    onTravelersSet: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -88,17 +93,40 @@ fun BasicInformationForm(
                 onLocationSearchResultSelected = onLocationSearchResultSelected,
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = state.fixedDates, onCheckedChange = {})
-            Text("Fixed Dates")
+        Text("Dates", style = MaterialTheme.typography.titleMedium)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+        ) {
+            OutlinedToggleButton(
+                checked = state.fixedDates,
+                onCheckedChange = onFixedDatesSet,
+                shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
+            ) {
+                Text("Fixed")
+            }
+            OutlinedToggleButton(
+                checked = !state.fixedDates,
+                onCheckedChange = { onFixedDatesSet(!it) },
+                shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
+            ) {
+                Text("Flexible")
+            }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Start Date")
-            DatePickerButton(label = "Pick Date", selectedTime = state.startDate) { }
+            Text(if (state.fixedDates) "Start Date" else "Between")
+            DatePickerButton(
+                label = "Pick Date",
+                selectedTime = state.startDate,
+                onDateSelected = onStartDateSet
+            )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("End Date")
-            DatePickerButton(label = "Pick Date", selectedTime = state.startDate) { }
+            Text(if (state.fixedDates) "End Date" else "And")
+            DatePickerButton(
+                label = "Pick Date",
+                selectedTime = state.endDate,
+                onDateSelected = onEndDateSet
+            )
         }
         Text("Group Type", style = MaterialTheme.typography.titleMedium)
         Row(
@@ -108,7 +136,7 @@ fun BasicInformationForm(
             UiState.TravelGroupType.entries.forEachIndexed { index, option ->
                 ToggleButton(
                     checked = state.groupType == option,
-                    onCheckedChange = {},
+                    onCheckedChange = { onGroupTypeSet(option) },
                     shapes = when (index) {
                         0 -> {
                             ButtonGroupDefaults.connectedLeadingButtonShapes()
@@ -129,7 +157,8 @@ fun BasicInformationForm(
         }
         OutlinedTextField(
             state.travelers.toString(),
-            onValueChange = {},
+            enabled = state.travelersChangeEnabled,
+            onValueChange = { onTravelersSet(it.toIntOrNull() ?: 0) },
             label = { Text("Travelers") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -137,7 +166,7 @@ fun BasicInformationForm(
         )
         Button(
             onClick = {},
-            enabled = false,
+            enabled = state.nextButtonEnabled,
             modifier = Modifier.align(Alignment.End)
         ) { Text("Next") }
     }
@@ -201,6 +230,11 @@ fun BasicInformationFormPreview() {
                 onDestinationClearTapped = {},
                 onLocationSearchTextChanged = {},
                 onLocationSearchResultSelected = {},
+                onFixedDatesSet = {},
+                onStartDateSet = {},
+                onEndDateSet = {},
+                onGroupTypeSet = {},
+                onTravelersSet = {},
             )
         }
     }

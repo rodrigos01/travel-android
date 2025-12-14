@@ -34,6 +34,7 @@ import travel.vola.android.extensions.viewModel
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel.UiState
+import java.time.ZonedDateTime
 
 @Composable
 fun TripCreationAssistant(navController: NavController) {
@@ -46,6 +47,11 @@ fun TripCreationAssistant(navController: NavController) {
         onDestinationSearchTextChanged = viewModel::onDestinationSearchTextChanged,
         onDestinationSearchResultSelected = viewModel::onDestinationSearchResultSelected,
         onDestinationClearTapped = viewModel::onDestinationClearTapped,
+        onFixedDatesSet = viewModel::onFixedDatesSet,
+        onStartDateSet = viewModel::onStartDateSet,
+        onEndDateSet = viewModel::onEndDateSet,
+        onGroupTypeSet = viewModel::onGroupTypeSet,
+        onTravelersSet = viewModel::onTravelersSet,
         onInitialParameterOptionTapped = viewModel::onInitialParameterOptionTapped,
         onInitialParametersNextTapped = viewModel::onInitialParametersNextTapped,
         onFollowUpQuestionOptionTapped = viewModel::onFollowUpQuestionOptionTapped,
@@ -61,6 +67,11 @@ fun TripCreationAssistant(
     onDestinationSearchTextChanged: (CharSequence) -> Unit,
     onDestinationClearTapped: (Int) -> Unit,
     onDestinationSearchResultSelected: (Int) -> Unit,
+    onFixedDatesSet: (Boolean) -> Unit,
+    onStartDateSet: (ZonedDateTime) -> Unit,
+    onEndDateSet: (ZonedDateTime) -> Unit,
+    onGroupTypeSet: (UiState.TravelGroupType) -> Unit,
+    onTravelersSet: (Int) -> Unit,
     onInitialParameterOptionTapped: (Int, UiState.OptionGroupType) -> Unit,
     onInitialParametersNextTapped: () -> Unit,
     onFollowUpQuestionOptionTapped: (Int, UiState.FollowUpQuestion) -> Unit,
@@ -135,6 +146,11 @@ fun TripCreationAssistant(
                     onDestinationSearchTextChanged,
                     onDestinationSearchResultSelected,
                     onDestinationClearTapped,
+                    onFixedDatesSet,
+                    onStartDateSet,
+                    onEndDateSet,
+                    onGroupTypeSet,
+                    onTravelersSet,
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
@@ -193,6 +209,11 @@ fun TripCreationAssistantPreview() {
             onDestinationSearchTextChanged = {},
             onDestinationSearchResultSelected = {},
             onDestinationClearTapped = {},
+            onFixedDatesSet = {},
+            onStartDateSet = {},
+            onEndDateSet = {},
+            onGroupTypeSet = {},
+            onTravelersSet = {},
             onInitialParameterOptionTapped = { _, _ -> },
             onInitialParametersNextTapped = {},
             onFollowUpQuestionOptionTapped = { _, _ -> },

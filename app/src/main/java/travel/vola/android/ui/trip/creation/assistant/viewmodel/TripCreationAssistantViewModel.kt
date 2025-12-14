@@ -34,7 +34,9 @@ class TripCreationAssistantViewModel(
             val endDate: ZonedDateTime? = null,
             val fixedDates: Boolean = false,
             val groupType: TravelGroupType = TravelGroupType.SOLO,
+            val travelersChangeEnabled: Boolean = false,
             val travelers: Int = 1,
+            val nextButtonEnabled: Boolean = false,
         ) : UiState
 
         enum class TravelGroupType {
@@ -227,18 +229,66 @@ class TripCreationAssistantViewModel(
             val selected = state.destinationSearchResults[index]
             val destinationName = selected.title + selected.subtitle.takeIf { it.isNotBlank() }
                 ?.let { ", $it" }.orEmpty()
-            internalState.value = state.copy(
-                destinations = state.destinations + destinationName,
-                destinationSearchResults = emptyList()
+            updateBasicState(
+                state.copy(
+                    destinations = state.destinations + destinationName,
+                    destinationSearchResults = emptyList()
+                )
             )
         }
     }
 
     fun onDestinationClearTapped(index: Int) {
         val state = uiState.value as? UiState.BasicInformation ?: return
-        internalState.value = state.copy(
-            destinations = state.destinations - state.destinations[index]
+        updateBasicState(
+            state.copy(
+                destinations = state.destinations - state.destinations[index]
+            )
         )
+    }
+
+    fun onFixedDatesSet(fixedDates: Boolean) {
+        val state = uiState.value as? UiState.BasicInformation ?: return
+        updateBasicState(state.copy(fixedDates = fixedDates))
+    }
+
+    fun onStartDateSet(date: ZonedDateTime) {
+        val state = uiState.value as? UiState.BasicInformation ?: return
+        updateBasicState(state.copy(startDate = date))
+    }
+
+    fun onEndDateSet(date: ZonedDateTime) {
+        val state = uiState.value as? UiState.BasicInformation ?: return
+        updateBasicState(state.copy(endDate = date))
+    }
+
+    fun onGroupTypeSet(groupType: UiState.TravelGroupType) {
+        val state = uiState.value as? UiState.BasicInformation ?: return
+        val newTravelerCount = when (groupType) {
+            UiState.TravelGroupType.SOLO -> 1
+            UiState.TravelGroupType.COUPLE -> 2
+            else -> state.travelers
+        }
+        val travelersChangeEnabled =
+            groupType != UiState.TravelGroupType.SOLO && groupType != UiState.TravelGroupType.COUPLE
+        updateBasicState(
+            state.copy(
+                groupType = groupType,
+                travelersChangeEnabled = travelersChangeEnabled,
+                travelers = newTravelerCount
+            )
+        )
+    }
+
+    fun onTravelersSet(travelers: Int) {
+        val state = uiState.value as? UiState.BasicInformation ?: return
+        updateBasicState(state.copy(travelers = travelers))
+    }
+
+    private fun updateBasicState(state: UiState.BasicInformation) {
+        val nextButtonEnabled =
+            state.destinations.isNotEmpty() && state.startDate != null && state.endDate != null && state.travelers > 0
+        internalState.value = state.copy(nextButtonEnabled = nextButtonEnabled)
     }
 
     fun onInitialParameterOptionTapped(index: Int, optionGroupType: UiState.OptionGroupType) {
