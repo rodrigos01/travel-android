@@ -1,6 +1,7 @@
 package travel.vola.android.model.genai
 
 import com.google.firebase.ai.type.Schema
+import com.google.firebase.ai.type.StringFormat
 
 enum class Prompts(val prompt: String, val outputSchema: Schema) {
     INITIAL_PARAMETERS(
@@ -83,14 +84,26 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                         mapOf(
                             "name" to Schema.string("name of the itinerary"),
                             "description" to Schema.string("A single-sentence description for this itinerary that includes why it fits the user choices"),
-                            "startDate" to Schema.string("date representing the first day of the itinerary in the format yyyy-MM-dd'T'HH:mm z"),
-                            "endDate" to Schema.string("date representing the last day of the itinerary in the format yyyy-MM-dd'T'HH:mm z"),
+                            "startDate" to Schema.string(
+                                "date representing the first day of the itinerary",
+                                format = StringFormat.Custom("yyyy-MM-dd'T'HH:mm z")
+                            ),
+                            "endDate" to Schema.string(
+                                "date representing the last day of the itinerary",
+                                format = StringFormat.Custom("yyyy-MM-dd'T'HH:mm z")
+                            ),
                             "cities" to Schema.array(
                                 Schema.obj(
                                     mapOf(
                                         "name" to Schema.string("name of the city"),
-                                        "startDate" to Schema.string("date representing the first day in this city in the format yyyy-MM-dd'T'HH:mm z"),
-                                        "endDate" to Schema.string("date representing the last day in  this city in the format yyyy-MM-dd'T'HH:mm z"),
+                                        "startDate" to Schema.string(
+                                            "date representing the first day in this city",
+                                            format = StringFormat.Custom("yyyy-MM-dd'T'HH:mm z")
+                                        ),
+                                        "endDate" to Schema.string(
+                                            "date representing the last day in  this city",
+                                            format = StringFormat.Custom("yyyy-MM-dd'T'HH:mm z")
+                                        ),
                                     )
                                 )
                             )
