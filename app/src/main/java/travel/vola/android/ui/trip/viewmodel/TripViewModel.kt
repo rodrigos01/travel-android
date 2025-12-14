@@ -237,12 +237,18 @@ class TripViewModel(
 
     fun onAddPlanTypeSelected(type: AddPlanItemState.Type?) {
         addPlanUseCase.removeItem("adding")
-        val focusedDate =
-            (viewState.value.items.getOrNull(focusedIndex.value) as? TripItemState.Timeable)?.timestamp
+        val currentFocusedIndex = focusedIndex.value
+        val focusedItem = if (currentFocusedIndex == -1) {
+            viewState.value.items.firstOrNull()
+        } else {
+            viewState.value.items.getOrNull(focusedIndex.value)
+        } ?: viewState.value.items.lastOrNull()
+        val focusedDate = (focusedItem as? TripItemState.Timeable)?.timestamp
         if (type != null) {
             addPlanUseCase.createAddPlanItem(
                 id = "adding",
-                focusedDate ?: ZonedDateTime.now(),
+                focusedDate
+                    ?: ZonedDateTime.now(),
                 type = type
             )
         }

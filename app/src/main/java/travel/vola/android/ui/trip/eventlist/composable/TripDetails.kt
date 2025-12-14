@@ -20,7 +20,6 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ButtonDefaults
@@ -135,12 +134,11 @@ private fun TripDetails(
             if (!listScrollState.canScrollBackward) {
                 -1
             } else if (!listScrollState.canScrollForward) {
-                state.places.maxOfOrNull { it.listIndex } ?: -1
+                state.items.lastIndex
             } else {
-                listScrollState.layoutInfo.visibleItemsInfo.takeIf { it.isNotEmpty() }
-                    ?.let { visibleItems ->
-                        visibleItems.getOrNull(visibleItems.lastIndex / 2 + 1)?.index
-                    } ?: listScrollState.firstVisibleItemIndex
+                listScrollState.layoutInfo.visibleItemsInfo.firstOrNull {
+                    it.offset > listScrollState.layoutInfo.viewportSize.height / 2 - it.size / 2
+                }?.index?.minus(1) ?: listScrollState.firstVisibleItemIndex
             }
         }
     }
@@ -234,7 +232,10 @@ private fun TripDetails(
                         }
                         if (mapScaffoldState.showMap) {
                             IconButton(onClick = { mapScaffoldState.showMap = false }) {
-                                Icon(imageVector = Icons.AutoMirrored.Default.List, contentDescription = "")
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Default.List,
+                                    contentDescription = ""
+                                )
                             }
                         } else {
                             IconButton(onClick = { mapScaffoldState.showMap = true }) {
