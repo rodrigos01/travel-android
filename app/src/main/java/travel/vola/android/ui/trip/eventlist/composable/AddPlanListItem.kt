@@ -40,142 +40,150 @@ fun AddPlanListItem(
         secondaryButtonLabel = "Cancel",
         onSecondaryButtonTapped = { actionHandler.cancelEdit(state.id) },
     ) {
-        when (state) {
-            is ManualStartEndAddPlanState -> {
-                when (state) {
-                    is AddFlightItemState -> {
-                        AddFlightListItem(
-                            uiState = state,
-                            onAirportFromTextChanged = {
-                                actionHandler.airportFromSearchTextChanged(
-                                    state.id, it
-                                )
-                            },
-                            onAirportToTextChanged = {
-                                actionHandler.airportToSearchTextChanged(
-                                    state.id, it
-                                )
-                            },
-                            onUpdated = {
-                                    departureDateTime,
-                                    departureTimeSelected,
-                                    selectedDepartureSearchResultIndex,
-                                    arrivalDateTime,
-                                    arrivalTimeSelected,
-                                    selectedArrivalSearchResultIndex,
-                                ->
-                                actionHandler.onUpdated(
-                                    state.id,
-                                    departureDateTime,
-                                    departureTimeSelected,
-                                    selectedDepartureSearchResultIndex,
-                                    arrivalDateTime,
-                                    arrivalTimeSelected,
-                                    selectedArrivalSearchResultIndex,
-                                )
-                            },
-                        )
-                    }
+        AddPlanContent(state, actionHandler)
+    }
+}
 
-                    is ManualAddLodgingItemState -> {
-                        AddLodgingListItem(
-                            uiState = state,
-                            onLodgingTextChanged = {
-                                actionHandler.lodgingTextChanged(
-                                    state.id, it
-                                )
-                            },
-                            onFindLodgingButtonTapped = {
-                                actionHandler.onFindLodgingButtonTapped(state.id)
-                            },
-                            onUpdated = {
-                                    checkIn,
-                                    checkInTimeSelected,
-                                    checkOut,
-                                    checkOutTimeSelected,
-                                    selectedSearchResultIndex,
-                                ->
-                                actionHandler.onLodgingUpdated(
-                                    state.id,
-                                    checkIn,
-                                    checkInTimeSelected,
-                                    checkOut,
-                                    checkOutTimeSelected,
-                                    selectedSearchResultIndex,
-                                )
-                            },
-                        )
-                    }
+@Composable
+fun AddPlanContent(
+    state: AddPlanItemState,
+    actionHandler: AddPlanItemActionHandler
+) {
+    when (state) {
+        is ManualStartEndAddPlanState -> {
+            when (state) {
+                is AddFlightItemState -> {
+                    AddFlightListItem(
+                        uiState = state,
+                        onAirportFromTextChanged = {
+                            actionHandler.airportFromSearchTextChanged(
+                                state.id, it
+                            )
+                        },
+                        onAirportToTextChanged = {
+                            actionHandler.airportToSearchTextChanged(
+                                state.id, it
+                            )
+                        },
+                        onUpdated = {
+                                departureDateTime,
+                                departureTimeSelected,
+                                selectedDepartureSearchResultIndex,
+                                arrivalDateTime,
+                                arrivalTimeSelected,
+                                selectedArrivalSearchResultIndex,
+                            ->
+                            actionHandler.onUpdated(
+                                state.id,
+                                departureDateTime,
+                                departureTimeSelected,
+                                selectedDepartureSearchResultIndex,
+                                arrivalDateTime,
+                                arrivalTimeSelected,
+                                selectedArrivalSearchResultIndex,
+                            )
+                        },
+                    )
+                }
 
-                    is AddPlaceItemState -> {
-                        AddPlaceListItem(
-                            uiState = state,
-                            onTextChanged = {
-                                actionHandler.locationTextChanged(state.id, it)
-                            },
-                            onUpdated = { startDateTime, startTimeSelected, endDateTime, endTimeSelected, selectedSearchResultIndex ->
-                                actionHandler.onUpdated(
-                                    state.id,
-                                    startDateTime,
-                                    startTimeSelected,
-                                    endDateTime,
-                                    endTimeSelected,
-                                    selectedSearchResultIndex,
-                                )
-                            },
-                        )
-                    }
+                is ManualAddLodgingItemState -> {
+                    AddLodgingListItem(
+                        uiState = state,
+                        onLodgingTextChanged = {
+                            actionHandler.lodgingTextChanged(
+                                state.id, it
+                            )
+                        },
+                        onFindLodgingButtonTapped = {
+                            actionHandler.onFindLodgingButtonTapped(state.id)
+                        },
+                        onUpdated = {
+                                checkIn,
+                                checkInTimeSelected,
+                                checkOut,
+                                checkOutTimeSelected,
+                                selectedSearchResultIndex,
+                            ->
+                            actionHandler.onLodgingUpdated(
+                                state.id,
+                                checkIn,
+                                checkInTimeSelected,
+                                checkOut,
+                                checkOutTimeSelected,
+                                selectedSearchResultIndex,
+                            )
+                        },
+                    )
+                }
 
-                    is AddRestaurantItemState -> {
-                        AddRestaurantListItem(
-                            uiState = state,
-                            onTextChanged = {
-                                actionHandler.restaurantTextChanged(state.id, it)
-                            },
-                            onUpdated = { dateTime, timeSelected, selectedSearchResultIndex ->
-                                actionHandler.onUpdated(
-                                    state.id,
-                                    dateTime,
-                                    timeSelected,
-                                    selectedSearchResultIndex
-                                )
-                            },
-                        )
-                    }
+                is AddPlaceItemState -> {
+                    AddPlaceListItem(
+                        uiState = state,
+                        onTextChanged = {
+                            actionHandler.locationTextChanged(state.id, it)
+                        },
+                        onUpdated = { startDateTime, startTimeSelected, endDateTime, endTimeSelected, selectedSearchResultIndex ->
+                            actionHandler.onUpdated(
+                                state.id,
+                                startDateTime,
+                                startTimeSelected,
+                                endDateTime,
+                                endTimeSelected,
+                                selectedSearchResultIndex,
+                            )
+                        },
+                    )
+                }
+
+                is AddRestaurantItemState -> {
+                    AddRestaurantListItem(
+                        uiState = state,
+                        onTextChanged = {
+                            actionHandler.restaurantTextChanged(state.id, it)
+                        },
+                        onUpdated = { dateTime, timeSelected, selectedSearchResultIndex ->
+                            actionHandler.onUpdated(
+                                state.id,
+                                dateTime,
+                                timeSelected,
+                                selectedSearchResultIndex
+                            )
+                        },
+                    )
                 }
             }
+        }
 
-            is LodgingSearchItemState -> {
-                LodgingSearchListItem(
-                    checkIn = state.checkIn,
-                    checkOut = state.checkOut,
-                    minCheckOut = state.minCheckOutTime,
-                    locationText = state.locationText,
-                    searchResults = state.searchResults,
-                    onLocationSearchTextChanged = {
-                        actionHandler.lodgingTextChanged(
-                            state.id, it
-                        )
-                    },
-                    onSwitchToManualButtonTapped = {
-                        actionHandler.onSwitchToManualButtonTapped(state.id)
-                    },
-                    onUpdated = {
-                            checkIn,
-                            checkOut,
-                            selectedSearchResultIndex,
-                        ->
-                        actionHandler.onLodgingUpdated(
-                            state.id,
-                            checkIn,
-                            checkInTimeSelected = false,
-                            checkOut,
-                            checkOutTimeSelected = false,
-                            selectedSearchResultIndex,
-                        )
-                    },
-                )
-            }
+        is LodgingSearchItemState -> {
+            LodgingSearchListItem(
+                checkIn = state.checkIn,
+                checkOut = state.checkOut,
+                minCheckOut = state.minCheckOutTime,
+                locationText = state.locationText,
+                searchResults = state.searchResults,
+                onLocationSearchTextChanged = {
+                    actionHandler.lodgingTextChanged(
+                        state.id, it
+                    )
+                },
+                onSwitchToManualButtonTapped = {
+                    actionHandler.onSwitchToManualButtonTapped(state.id)
+                },
+                onUpdated = {
+                        checkIn,
+                        checkOut,
+                        selectedSearchResultIndex,
+                    ->
+                    actionHandler.onLodgingUpdated(
+                        state.id,
+                        checkIn,
+                        checkInTimeSelected = false,
+                        checkOut,
+                        checkOutTimeSelected = false,
+                        selectedSearchResultIndex,
+                    )
+                },
+            )
         }
     }
 }

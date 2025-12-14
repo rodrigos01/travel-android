@@ -8,6 +8,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -18,7 +20,6 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ButtonDefaults
@@ -34,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SnapshotMutationPolicy
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -42,10 +44,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.graphics.drawable.toBitmapOrNull
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -65,7 +69,9 @@ import travel.vola.android.extensions.Time
 import travel.vola.android.extensions.viewModel
 import travel.vola.android.model.data.Identifiable
 import travel.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.trip.creation.composable.AddPlanType
 import travel.vola.android.ui.trip.creation.composable.ConfirmationDialog
+import travel.vola.android.ui.trip.creation.composable.TripDetailsToolbar
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.TripItemState
@@ -97,6 +103,8 @@ fun TripDetails(
         onAddButonTapped = viewModel::addButtonTapped,
         onEmptyAddRowTapped = viewModel::emptyDateRowTapped,
         onItemTapped = viewModel::itemTapped,
+        onAddPlanTypeSelected = { viewModel.onAddPlanTypeSelected(it?.toState()) },
+        onFocusedIndexChange = viewModel::setFocusedIndex,
     )
 }
 
@@ -111,6 +119,8 @@ private fun TripDetails(
     onAddButonTapped: (String) -> Unit = {},
     onEmptyAddRowTapped: (String) -> Unit = {},
     onItemTapped: (String) -> Unit = {},
+    onAddPlanTypeSelected: (AddPlanType?) -> Unit = {},
+    onFocusedIndexChange: (Int) -> Unit = {},
 ) {
     val listScrollState = rememberLazyListState()
     val currentPlaceIndex by remember {
@@ -124,18 +134,20 @@ private fun TripDetails(
             if (!listScrollState.canScrollBackward) {
                 -1
             } else if (!listScrollState.canScrollForward) {
-                state.places.maxOfOrNull { it.listIndex } ?: -1
+                state.items.lastIndex
             } else {
-                listScrollState.layoutInfo.visibleItemsInfo.takeIf { it.isNotEmpty() }
-                    ?.let { visibleItems ->
-                        visibleItems.getOrNull(visibleItems.lastIndex / 2 + 1)?.index
-                    } ?: listScrollState.firstVisibleItemIndex
+                listScrollState.layoutInfo.visibleItemsInfo.firstOrNull {
+                    it.offset > listScrollState.layoutInfo.viewportSize.height / 2 - it.size / 2
+                }?.index?.minus(1) ?: listScrollState.firstVisibleItemIndex
             }
         }
     }
     val focusedPlace by produceState<TripViewModel.PlaceState?>(null, currentPlaceIndex) {
         value =
             state.places.sortedBy { it.listIndex }.lastOrNull { it.listIndex <= currentPlaceIndex }
+    }
+    LaunchedEffect(currentPlaceIndex) {
+        onFocusedIndexChange(currentPlaceIndex)
     }
     val allMarkers = state.places.flatMap { it.markers }
     val boundingMarkers = focusedPlace?.markers ?: emptyList()
@@ -220,7 +232,10 @@ private fun TripDetails(
                         }
                         if (mapScaffoldState.showMap) {
                             IconButton(onClick = { mapScaffoldState.showMap = false }) {
-                                Icon(imageVector = Icons.AutoMirrored.Default.List, contentDescription = "")
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Default.List,
+                                    contentDescription = ""
+                                )
                             }
                         } else {
                             IconButton(onClick = { mapScaffoldState.showMap = true }) {
@@ -251,20 +266,37 @@ private fun TripDetails(
                 })
             },
         ) { paddingValues ->
-            List(
-                state,
-                listScrollState,
-                paddingValues,
-                addPlanItemActionHandler,
-                onAddButonTapped,
-                onEmptyAddRowTapped,
-                onItemTapped,
-                onPlaceImageLoaded = { placeId, result ->
-                    colorSchemeBitmaps[placeId] =
-                        result.drawable.toBitmapOrNull()
-                            ?.copy(Bitmap.Config.ARGB_8888, true)
-                },
-            )
+            Box(modifier = Modifier.fillMaxSize()) {
+                List(
+                    state,
+                    listScrollState,
+                    paddingValues,
+                    addPlanItemActionHandler,
+                    onAddButonTapped,
+                    onEmptyAddRowTapped,
+                    onItemTapped,
+                    onPlaceImageLoaded = { placeId, result ->
+                        colorSchemeBitmaps[placeId] =
+                            result.drawable.toBitmapOrNull()
+                                ?.copy(Bitmap.Config.ARGB_8888, true)
+                    },
+                )
+                if (state.addPlanItemState != null) {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = Color.Transparent,
+                        onClick = { onAddPlanTypeSelected(null) },
+                    ) {}
+                }
+                TripDetailsToolbar(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 24.dp),
+                    addPlanState = state.addPlanItemState,
+                    addPlanActionHandler = addPlanItemActionHandler,
+                    onTypeSelected = onAddPlanTypeSelected,
+                )
+            }
         }
     }
 }
@@ -302,6 +334,7 @@ fun List(
                             onPlaceImageLoaded(sectionId, it)
                         }
                     },
+                    highlightDate = event is TripItemState.EventItemState && event.id == state.focusedItemId,
                 )
             }
         }
@@ -316,6 +349,7 @@ private fun TripDetailItem(
     onEmptyAddRowTapped: (String) -> Unit,
     onItemTapped: (String) -> Unit,
     onImageLoaded: (SuccessResult) -> Unit,
+    highlightDate: Boolean = false,
 ) {
     when (event) {
         is MonthItemState -> MonthEventListItem(event.month, event.year)
@@ -347,6 +381,7 @@ private fun TripDetailItem(
             when (event) {
                 is FlightDepartureItemState -> FlightEventListItem(
                     event.showDate,
+                    highlightDate,
                     event.dayOfMonth,
                     event.dayOfWeek,
                     event.time,
@@ -357,6 +392,7 @@ private fun TripDetailItem(
 
                 is FlightArrivalItemState -> ArrivalEventListItem(
                     event.showDate,
+                    highlightDate,
                     event.dayOfMonth,
                     event.dayOfWeek,
                     event.time,
@@ -366,6 +402,7 @@ private fun TripDetailItem(
 
                 is HotelCheckInItemState -> CheckinListItem(
                     event.showDate,
+                    highlightDate,
                     event.dayOfMonth,
                     event.dayOfWeek,
                     event.time,
@@ -375,6 +412,7 @@ private fun TripDetailItem(
 
                 is HotelCheckOutItemState -> CheckoutListItem(
                     event.showDate,
+                    highlightDate,
                     event.dayOfMonth,
                     event.dayOfWeek,
                     event.time,
@@ -382,8 +420,11 @@ private fun TripDetailItem(
                     event.backgroundStyle.asEvenListItemPosition(),
                 )
 
-                is TripItemState.TimedPlaceItemState -> TimedPlaceListItem(event)
-                is TripItemState.RestaurantReservationItemState -> RestaurantListItem(event)
+                is TripItemState.TimedPlaceItemState -> TimedPlaceListItem(event, highlightDate)
+                is TripItemState.RestaurantReservationItemState -> RestaurantListItem(
+                    event,
+                    highlightDate
+                )
             }
         }
 
@@ -519,7 +560,7 @@ fun TripDetailsPreview() {
         ),
         places = emptyList(),
     )
-    AppTheme(dynamicColor = false) {
+    AppTheme {
         TripDetails(
             state,
         )
