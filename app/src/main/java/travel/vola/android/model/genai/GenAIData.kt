@@ -54,15 +54,22 @@ object GenAIData {
     data class Itinerary(
         val name: String,
         val description: String,
-        val startDate: String,
-        val endDate: String,
+        val startDate: DateResult,
+        val endDate: DateResult,
         val cities: List<ItineraryCity>
     )
 
     @Serializable
     data class ItineraryCity(
         val name: String,
-        val startDate: String,
-        val endDate: String,
+        val startDate: DateResult,
+        val endDate: DateResult,
+    )
+
+    @Serializable
+    data class DateResult(
+        val day: Int,
+        val month: Int,
+        val year: Int,
     )
 }
