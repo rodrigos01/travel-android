@@ -330,6 +330,23 @@ class TripCreationAssistantViewModel(
         )
     }
 
+    fun onInitialParametersOptionAdded(optionGroupType: UiState.OptionGroupType, option: String) {
+        val state = uiState.value as? UiState.InitialParameters ?: return
+        val newOptionGroups = state.optionGroups.map { group ->
+            if (group.type == optionGroupType) {
+                group.copy(options = group.options + UiState.Option(option, isSelected = true))
+            } else {
+                group
+            }
+        }
+        internalState.value = state.copy(
+            optionGroups = newOptionGroups,
+            nextButtonEnabled = newOptionGroups.all { group ->
+                group.options.any { it.isSelected }
+            }
+        )
+    }
+
     fun onInitialParametersNextTapped() {
         val state = uiState.value as? UiState.InitialParameters ?: return
         internalState.value = UiState.Generating

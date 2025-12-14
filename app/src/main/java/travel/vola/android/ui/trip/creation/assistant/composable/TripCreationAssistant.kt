@@ -54,6 +54,7 @@ fun TripCreationAssistant(navController: NavController) {
         onTravelersSet = viewModel::onTravelersSet,
         onBasicInformationNextTapped = viewModel::onBasicInformationNextTapped,
         onInitialParameterOptionTapped = viewModel::onInitialParameterOptionTapped,
+        onInitialParametersOptionAdded = viewModel::onInitialParametersOptionAdded,
         onInitialParametersNextTapped = viewModel::onInitialParametersNextTapped,
         onFollowUpQuestionOptionTapped = viewModel::onFollowUpQuestionOptionTapped,
         onFollowUpQuestionsNextTapped = viewModel::onFollowUpQuestionsNextTapped,
@@ -75,6 +76,7 @@ fun TripCreationAssistant(
     onTravelersSet: (Int) -> Unit,
     onBasicInformationNextTapped: () -> Unit,
     onInitialParameterOptionTapped: (Int, UiState.OptionGroupType) -> Unit,
+    onInitialParametersOptionAdded: (UiState.OptionGroupType, String) -> Unit,
     onInitialParametersNextTapped: () -> Unit,
     onFollowUpQuestionOptionTapped: (Int, UiState.FollowUpQuestion) -> Unit,
     onFollowUpQuestionsNextTapped: () -> Unit,
@@ -166,6 +168,7 @@ fun TripCreationAssistant(
                     state,
                     onInitialParameterOptionTapped,
                     onInitialParametersNextTapped,
+                    onOptionAdded = onInitialParametersOptionAdded,
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
@@ -219,6 +222,7 @@ fun TripCreationAssistantPreview() {
             onTravelersSet = {},
             onBasicInformationNextTapped = {},
             onInitialParameterOptionTapped = { _, _ -> },
+            onInitialParametersOptionAdded = { _, _ -> },
             onInitialParametersNextTapped = {},
             onFollowUpQuestionOptionTapped = { _, _ -> },
             onFollowUpQuestionsNextTapped = {},

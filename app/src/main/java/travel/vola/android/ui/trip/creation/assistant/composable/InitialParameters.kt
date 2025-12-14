@@ -17,6 +17,7 @@ fun InitialParameters(
     state: UiState.InitialParameters,
     onInitialParameterOptionTapped: (Int, UiState.OptionGroupType) -> Unit,
     onInitialParametersNextTapped: () -> Unit,
+    onOptionAdded: (UiState.OptionGroupType, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -32,6 +33,7 @@ fun InitialParameters(
                     UiState.OptionGroupType.DURATION -> "Duration"
                     UiState.OptionGroupType.MUST_HAVE -> "Must Have"
                 },
+                onOptionAdded = { onOptionAdded(group.type, it) },
             ) {
                 group.options.forEachIndexed { index, option ->
                     FilterChip(
@@ -71,6 +73,7 @@ fun InitialParametersPreview() {
                 ),
                 onInitialParameterOptionTapped = { _, _ -> },
                 onInitialParametersNextTapped = {},
+                onOptionAdded = { _, _ -> },
             )
         }
     }
