@@ -1,8 +1,11 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
 import android.graphics.Bitmap
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -281,10 +284,14 @@ private fun TripDetails(
                                 ?.copy(Bitmap.Config.ARGB_8888, true)
                     },
                 )
-                if (state.addPlanItemState != null) {
+                AnimatedVisibility(
+                    visible = state.addPlanItemState != null,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                ) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = Color.Transparent,
+                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.7f),
                         onClick = { onAddPlanTypeSelected(null) },
                     ) {}
                 }
