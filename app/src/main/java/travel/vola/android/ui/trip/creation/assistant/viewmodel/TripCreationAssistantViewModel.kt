@@ -11,13 +11,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import travel.vola.android.common.ui.components.SearchResult
 import travel.vola.android.di.factoryDependencies
-import travel.vola.android.extensions.Time
 import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.viewModelFactory
 import travel.vola.android.model.genai.GenAIData
 import travel.vola.android.model.genai.GenAIRepository
 import travel.vola.android.model.repository.GeographyAutoCompleteRepository
+import java.time.DateTimeException
 import java.time.ZonedDateTime
+import java.util.TimeZone
 
 class TripCreationAssistantViewModel(
     private val repository: GenAIRepository,
@@ -208,19 +209,28 @@ class TripCreationAssistantViewModel(
                 UiState.Itinerary(
                     name = itinerary.name,
                     description = itinerary.description,
-                    startDate = Time(itinerary.startDate),
-                    endDate = Time(itinerary.endDate),
+                    startDate = itinerary.startDate.parseAsDate(),
+                    endDate = itinerary.endDate.parseAsDate(),
                     cities = itinerary.cities.map {
                         UiState.ItineraryCity(
                             name = it.name,
-                            startDate = Time(it.startDate),
-                            endDate = Time(it.endDate),
+                            startDate = it.startDate.parseAsDate(),
+                            endDate = it.endDate.parseAsDate(),
                         )
                     },
                 )
             },
             predictedChanges = result.predictedChanges.map { UiState.Option(it) },
         )
+    }
+
+    private fun GenAIData.DateResult.parseAsDate(): ZonedDateTime {
+        try {
+            return ZonedDateTime.of(year, month, day, 0, 0, 0, 0, TimeZone.getDefault().toZoneId())
+        } catch (_: DateTimeException) {
+            // The LLM might hallucinate 2/29 on a non-Leap year.
+            return ZonedDateTime.of(year, month, day-1, 0, 0, 0, 0, TimeZone.getDefault().toZoneId())
+        }
     }
 
     fun onDestinationSearchTextChanged(query: CharSequence) {
