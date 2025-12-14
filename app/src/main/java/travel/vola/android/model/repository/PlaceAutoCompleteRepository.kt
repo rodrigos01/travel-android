@@ -7,7 +7,10 @@ import travel.vola.android.model.network.ApiResponse
 import travel.vola.android.model.network.request
 import travel.vola.android.model.network.toAppDataModel
 
-class PlaceAutoCompleteRepository(private val types: List<String>) :
+class PlaceAutoCompleteRepository(
+    private val types: List<String>,
+    private val resolveCity: Boolean = true,
+) :
     AutoCompleteRepository<SimplePlace, PlaceDetailsResult> {
     override suspend fun autocomplete(query: String, autocompleteKey: String): List<SimplePlace> {
         return request<ApiResponse.PlaceAutoComplete>("/places/autocomplete") {
@@ -24,7 +27,7 @@ class PlaceAutoCompleteRepository(private val types: List<String>) :
             url {
                 appendPathSegments(id)
                 parameters.append("autocompleteSessionId", autocompleteKey)
-                parameters.append("resolveCity", "true")
+                parameters.append("resolveCity", if (resolveCity) "true" else "false")
             }
         }?.toAppDataModel()
     }
