@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import travel.vola.android.common.ui.components.SearchResult
 import travel.vola.android.di.factoryDependencies
 import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.viewModelFactory
 import travel.vola.android.model.genai.GenAIData
 import travel.vola.android.model.genai.GenAIRepository
@@ -94,7 +95,7 @@ class TripCreationAssistantViewModel(
 
     private sealed interface Stage {
         data object BasicInformation : Stage
-        data object InitialParameters : Stage
+        data class InitialParameters(val state: UiState.BasicInformation) : Stage
         data class InitialParametersFollowUp(val state: UiState.InitialParameters) : Stage
         data class HighLevelItineraryOptions(val state: UiState.InitialParametersFollowUp) : Stage
     }
@@ -104,7 +105,7 @@ class TripCreationAssistantViewModel(
     private val generatedState = stage.map {
         when (it) {
             is Stage.BasicInformation -> UiState.BasicInformation()
-            is Stage.InitialParameters -> generateInitialParametersState()
+            is Stage.InitialParameters -> generateInitialParametersState(it.state)
             is Stage.InitialParametersFollowUp -> getInitialParametersFollowUpState(it.state)
             is Stage.HighLevelItineraryOptions -> getHighLevelItineraryOptionsState(it.state)
         } ?: UiState.Error
@@ -117,18 +118,29 @@ class TripCreationAssistantViewModel(
         internalState.value
     )
 
-    private val basicInformation = GenAIData.BasicInformation(
-        destination = "France, Switzerland, Italy",
-        dates = "July",
-        duration = null,
-        groupType = GenAIData.GroupType.COUPLE,
-        travelers = 2
-    )
+    private suspend fun generateInitialParametersState(basicInformation: UiState.BasicInformation): UiState.InitialParameters? {
 
-    private suspend fun generateInitialParametersState(): UiState.InitialParameters? {
-
+        val startDateString = basicInformation.startDate?.dateString
+        val endDateString = basicInformation.endDate?.dateString
+        val info = GenAIData.BasicInformation(
+            destination = basicInformation.destinations.joinToString(";"),
+            dates = if (basicInformation.fixedDates) {
+                "from $startDateString to $endDateString"
+            } else {
+                "between $startDateString and $endDateString"
+            },
+            groupType = when (basicInformation.groupType) {
+                UiState.TravelGroupType.SOLO -> GenAIData.GroupType.SOLO
+                UiState.TravelGroupType.COUPLE -> GenAIData.GroupType.COUPLE
+                UiState.TravelGroupType.FAMILY -> GenAIData.GroupType.FAMILY
+                UiState.TravelGroupType.FRIENDS -> GenAIData.GroupType.FRIENDS
+                UiState.TravelGroupType.COWORKERS -> GenAIData.GroupType.COWORKERS
+            },
+            travelers = basicInformation.travelers,
+            duration = null,
+        )
         val options =
-            repository.genInitialParametersOptions(basicInformation) ?: return null
+            repository.genInitialParametersOptions(info) ?: return null
         return UiState.InitialParameters(
             optionGroups = listOf(
                 UiState.OptionGroup(
@@ -289,6 +301,12 @@ class TripCreationAssistantViewModel(
         val nextButtonEnabled =
             state.destinations.isNotEmpty() && state.startDate != null && state.endDate != null && state.travelers > 0
         internalState.value = state.copy(nextButtonEnabled = nextButtonEnabled)
+    }
+
+    fun onBasicInformationNextTapped() {
+        val state = uiState.value as? UiState.BasicInformation ?: return
+        internalState.value = UiState.Generating
+        stage.value = Stage.InitialParameters(state)
     }
 
     fun onInitialParameterOptionTapped(index: Int, optionGroupType: UiState.OptionGroupType) {
