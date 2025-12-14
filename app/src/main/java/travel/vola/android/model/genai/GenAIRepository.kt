@@ -12,6 +12,7 @@ import com.google.firebase.ai.type.GenerateContentResponse
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.Tool
 import com.google.firebase.ai.type.content
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -124,18 +125,23 @@ class GenAIRepository private constructor(
         functionName: FunctionNames,
         argName: String
     ): T? {
-        val json = getJsonArgs(functionName, argName) ?: return null
-        val jsonString = json.toString()
-        val params = Json.decodeFromString<T>(jsonString)
-        chatModel.sendMessage(content("function") {
-            part(
-                FunctionResponsePart(
-                    functionName.value, JsonObject(
-                        mapOf(argName to json)
+        try {
+            val json = getJsonArgs(functionName, argName) ?: return null
+            val jsonString = json.toString()
+            val params = Json.decodeFromString<T>(jsonString)
+            chatModel.sendMessage(content("function") {
+                part(
+                    FunctionResponsePart(
+                        functionName.value, JsonObject(
+                            mapOf(argName to json)
+                        )
                     )
                 )
-            )
-        })
-        return params
+            })
+            return params
+        } catch (ignored: SerializationException) {
+            Log.e("GenAIRepository", "Error parsing JSON", ignored)
+            return null
+        }
     }
 }
