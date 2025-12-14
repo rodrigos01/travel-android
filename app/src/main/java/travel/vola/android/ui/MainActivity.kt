@@ -21,6 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.toRoute
+import travel.vola.android.common.ui.components.OverlayHostProvider
 import travel.vola.android.di.LocalViewModelCreationExtras
 import travel.vola.android.di.initializeViewModelCreationExtras
 import travel.vola.android.model.data.DataSourceType
@@ -67,32 +68,35 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun MainScreen() {
         val navController = rememberNavController()
-        AppTheme(dynamicColor = false) {
+        AppTheme {
             var dataSourceType by remember { mutableStateOf(DataSourceType.LOCAL) }
             val viewModelCreationExtras = remember(dataSourceType) {
                 initializeViewModelCreationExtras(navController)
             }
-            CompositionLocalProvider(LocalViewModelCreationExtras provides viewModelCreationExtras) {
-                NavHost(
-                    navController = navController, startDestination = HomeScreenDestination.ROUTE
-                ) {
-                    composable(HomeScreenDestination.ROUTE) {
-                        HomeScreen(navController)
-                    }
-                    composable(
-                        TripDetailsDestination.ROUTE, arguments = listOf(
-                            navArgument(
-                                TripDetailsDestination.ARG_TRIP_ID
-                            ) { type = NavType.StringType })
+            OverlayHostProvider {
+                CompositionLocalProvider(LocalViewModelCreationExtras provides viewModelCreationExtras) {
+                    NavHost(
+                        navController = navController,
+                        startDestination = HomeScreenDestination.ROUTE
                     ) {
-                        val tripId = it.arguments?.getString(
-                            TripDetailsDestination.ARG_TRIP_ID
-                        ) ?: error("tripId must be provided")
-                        TripDetails(tripId, navController)
-                    }
-                    composable<LodgingSearchDestination.Params> { backStackEntry ->
-                        val params: LodgingSearchDestination.Params = backStackEntry.toRoute()
-                        LodgingSearch(params, navController)
+                        composable(HomeScreenDestination.ROUTE) {
+                            HomeScreen(navController)
+                        }
+                        composable(
+                            TripDetailsDestination.ROUTE, arguments = listOf(
+                                navArgument(
+                                    TripDetailsDestination.ARG_TRIP_ID
+                                ) { type = NavType.StringType })
+                        ) {
+                            val tripId = it.arguments?.getString(
+                                TripDetailsDestination.ARG_TRIP_ID
+                            ) ?: error("tripId must be provided")
+                            TripDetails(tripId, navController)
+                        }
+                        composable<LodgingSearchDestination.Params> { backStackEntry ->
+                            val params: LodgingSearchDestination.Params = backStackEntry.toRoute()
+                            LodgingSearch(params, navController)
+                        }
                     }
                 }
             }

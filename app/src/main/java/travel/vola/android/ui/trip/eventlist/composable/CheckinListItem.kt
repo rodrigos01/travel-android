@@ -9,6 +9,7 @@ import travel.vola.android.ui.theme.AppTheme
 @Composable
 fun CheckinListItem(
     showDate: Boolean = false,
+    highlightDate: Boolean = false,
     dayOfMonthString: String?,
     dayOfWeekString: String?,
     timeString: String,
@@ -17,6 +18,7 @@ fun CheckinListItem(
 ) {
     EventListItem(
         showDate,
+        highlightDate,
         dayOfMonthString,
         dayOfWeekString,
         timeString,

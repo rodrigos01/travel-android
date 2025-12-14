@@ -1,8 +1,8 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -15,9 +15,10 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +35,7 @@ enum class EventListItemPosition {
 @Composable
 fun EventListItem(
     showDate: Boolean = false,
+    highlightDate: Boolean = false,
     dayOfMonthString: String?,
     dayOfWeekString: String?,
     timeString: String,
@@ -43,6 +45,7 @@ fun EventListItem(
     position: EventListItemPosition = EventListItemPosition.MIDDLE,
 ) = EventListItem(
     showDate = showDate,
+    highlightDate = highlightDate,
     dayOfMonthString = dayOfMonthString,
     dayOfWeekString = dayOfWeekString,
     timeString = timeString,
@@ -55,6 +58,7 @@ fun EventListItem(
 @Composable
 fun EventListItem(
     showDate: Boolean = false,
+    highlightDate: Boolean = false,
     dayOfMonthString: String?,
     dayOfWeekString: String?,
     timeString: String,
@@ -62,7 +66,7 @@ fun EventListItem(
     iconPainter: Painter,
     headline: String,
     supporting: String,
-    position: EventListItemPosition = EventListItemPosition.MIDDLE
+    position: EventListItemPosition = EventListItemPosition.MIDDLE,
 ) {
     val typography = MaterialTheme.typography
     Row(
@@ -75,10 +79,10 @@ fun EventListItem(
                 dayOfMonth = dayOfMonthString,
                 dayOfWeek = dayOfWeekString,
                 showSmall = false,
-                modifier = Modifier.width(32.dp)
+                highlightDate = highlightDate,
             )
         } else {
-            Spacer(modifier = Modifier.width(32.dp))
+            Spacer(modifier = Modifier.width(40.dp))
         }
         val roundedCornerRadius = 12.dp
         val separatorPadding = 2.dp
@@ -148,6 +152,7 @@ fun EventListItemPreview() {
     AppTheme {
         EventListItem(
             showDate = true,
+            highlightDate = true,
             icon = R.drawable.flight_takeoff_baseline_24,
             dayOfMonthString = "21",
             dayOfWeekString = "Wed",

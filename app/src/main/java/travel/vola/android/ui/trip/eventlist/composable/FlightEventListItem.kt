@@ -9,6 +9,7 @@ import travel.vola.android.ui.theme.AppTheme
 @Composable
 fun FlightEventListItem(
     showDate: Boolean = false,
+    highlightDate: Boolean = false,
     dayOfMonthString: String?,
     dayOfWeekString: String?,
     timeString: String,
@@ -18,6 +19,7 @@ fun FlightEventListItem(
 ) {
     EventListItem(
         showDate,
+        highlightDate,
         dayOfMonthString,
         dayOfWeekString,
         timeString,
