@@ -74,7 +74,6 @@ class TripCreationAssistantViewModel(
 
         data class HighLevelItineraryOptions(
             val itineraries: List<Itinerary>,
-            val predictedChanges: List<Option>,
         ) : UiState
 
         data class Itinerary(
@@ -83,6 +82,7 @@ class TripCreationAssistantViewModel(
             val startDate: ZonedDateTime,
             val endDate: ZonedDateTime,
             val cities: List<ItineraryCity>,
+            val predictedChanges: List<Option>,
         )
 
         data class ItineraryCity(
@@ -218,9 +218,9 @@ class TripCreationAssistantViewModel(
                             endDate = it.endDate.parseAsDate(),
                         )
                     },
+                    predictedChanges = itinerary.predictedChanges.map { UiState.Option(it) },
                 )
             },
-            predictedChanges = result.predictedChanges.map { UiState.Option(it) },
         )
     }
 
@@ -229,7 +229,16 @@ class TripCreationAssistantViewModel(
             return ZonedDateTime.of(year, month, day, 0, 0, 0, 0, TimeZone.getDefault().toZoneId())
         } catch (_: DateTimeException) {
             // The LLM might hallucinate 2/29 on a non-Leap year.
-            return ZonedDateTime.of(year, month, day-1, 0, 0, 0, 0, TimeZone.getDefault().toZoneId())
+            return ZonedDateTime.of(
+                year,
+                month,
+                day - 1,
+                0,
+                0,
+                0,
+                0,
+                TimeZone.getDefault().toZoneId()
+            )
         }
     }
 

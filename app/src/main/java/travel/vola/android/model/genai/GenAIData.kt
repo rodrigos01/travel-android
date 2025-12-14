@@ -47,7 +47,6 @@ object GenAIData {
     @Serializable
     data class HighLevelItineraryOptions(
         val itineraries: List<Itinerary>,
-        val predictedChanges: List<String>
     )
 
     @Serializable
@@ -56,7 +55,8 @@ object GenAIData {
         val description: String,
         val startDate: DateResult,
         val endDate: DateResult,
-        val cities: List<ItineraryCity>
+        val cities: List<ItineraryCity>,
+        val predictedChanges: List<String>,
     )
 
     @Serializable
