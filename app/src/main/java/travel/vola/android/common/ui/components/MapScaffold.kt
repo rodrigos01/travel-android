@@ -207,8 +207,9 @@ private fun Map(
             boundingBox?.let { CameraPosition.fromLatLngZoom(boundingBox.center, 15F) }
                 ?: CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), 3F)
     }
-    LaunchedEffect(boundingBox) {
-        if (boundingBox != null) {
+    var mapLoaded by remember { mutableStateOf(false) }
+    LaunchedEffect(mapLoaded, boundingBox) {
+        if (mapLoaded && boundingBox != null) {
             val update = if (points.size > 1 || minZoom == null) {
                 CameraUpdateFactory.newLatLngBounds(boundingBox, 64.dp.value.toInt())
             } else {
@@ -227,6 +228,9 @@ private fun Map(
         ),
         contentPadding = WindowInsets.safeContent.asPaddingValues(),
         onMapClick = { onMarkerTapped(null) },
+        onMapLoaded = {
+            mapLoaded = true
+        },
         modifier = modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.tertiaryContainer)
