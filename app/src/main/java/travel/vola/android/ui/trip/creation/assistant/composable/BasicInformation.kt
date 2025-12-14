@@ -57,6 +57,7 @@ fun BasicInformationForm(
     onEndDateSet: (ZonedDateTime) -> Unit,
     onGroupTypeSet: (UiState.TravelGroupType) -> Unit,
     onTravelersSet: (Int) -> Unit,
+    onNextTapped: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -165,7 +166,7 @@ fun BasicInformationForm(
             modifier = Modifier.widthIn(max = 120.dp)
         )
         Button(
-            onClick = {},
+            onClick = onNextTapped,
             enabled = state.nextButtonEnabled,
             modifier = Modifier.align(Alignment.End)
         ) { Text("Next") }
@@ -235,6 +236,7 @@ fun BasicInformationFormPreview() {
                 onEndDateSet = {},
                 onGroupTypeSet = {},
                 onTravelersSet = {},
+                onNextTapped = {},
             )
         }
     }

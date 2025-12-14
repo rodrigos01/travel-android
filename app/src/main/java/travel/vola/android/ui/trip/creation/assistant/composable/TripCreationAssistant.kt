@@ -52,6 +52,7 @@ fun TripCreationAssistant(navController: NavController) {
         onEndDateSet = viewModel::onEndDateSet,
         onGroupTypeSet = viewModel::onGroupTypeSet,
         onTravelersSet = viewModel::onTravelersSet,
+        onBasicInformationNextTapped = viewModel::onBasicInformationNextTapped,
         onInitialParameterOptionTapped = viewModel::onInitialParameterOptionTapped,
         onInitialParametersNextTapped = viewModel::onInitialParametersNextTapped,
         onFollowUpQuestionOptionTapped = viewModel::onFollowUpQuestionOptionTapped,
@@ -72,6 +73,7 @@ fun TripCreationAssistant(
     onEndDateSet: (ZonedDateTime) -> Unit,
     onGroupTypeSet: (UiState.TravelGroupType) -> Unit,
     onTravelersSet: (Int) -> Unit,
+    onBasicInformationNextTapped: () -> Unit,
     onInitialParameterOptionTapped: (Int, UiState.OptionGroupType) -> Unit,
     onInitialParametersNextTapped: () -> Unit,
     onFollowUpQuestionOptionTapped: (Int, UiState.FollowUpQuestion) -> Unit,
@@ -151,6 +153,7 @@ fun TripCreationAssistant(
                     onEndDateSet,
                     onGroupTypeSet,
                     onTravelersSet,
+                    onBasicInformationNextTapped,
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
@@ -214,6 +217,7 @@ fun TripCreationAssistantPreview() {
             onEndDateSet = {},
             onGroupTypeSet = {},
             onTravelersSet = {},
+            onBasicInformationNextTapped = {},
             onInitialParameterOptionTapped = { _, _ -> },
             onInitialParametersNextTapped = {},
             onFollowUpQuestionOptionTapped = { _, _ -> },
