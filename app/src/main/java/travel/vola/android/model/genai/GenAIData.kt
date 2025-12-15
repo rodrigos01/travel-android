@@ -45,6 +45,7 @@ object GenAIData {
 
     @Serializable
     data class HighLevelItineraryOptions(
+        val planningLogic: String,
         val itineraries: List<Itinerary>,
     )
 
