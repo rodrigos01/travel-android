@@ -36,11 +36,11 @@ fun HighLevelItineraryOptions(
 ) {
     var selected by remember { mutableStateOf<UiState.Itinerary?>(null) }
 
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier,
-    ) {
-        AnimatedContent(selected) { selectedItinerary ->
+    AnimatedContent(selected) { selectedItinerary ->
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = modifier,
+        ) {
             if (selectedItinerary != null) {
                 ItineraryCard(selectedItinerary, onTap = {})
                 selectedItinerary.predictedChanges.forEach { option ->

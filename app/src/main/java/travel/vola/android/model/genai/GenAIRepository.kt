@@ -79,18 +79,21 @@ class GenAIRepository private constructor(
                     "\n Parameters: \n" + Json.encodeToString(parameters)
         val result = sendMessage(promptQuery)
         // The schema is a little confusing for the LLM so the result might change some times, so we need to support both
-        if (result?.getJsonArgs(
-                FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP,
-                "questions"
-            ) is JsonArray
-        ) {
+        val args = result?.getJsonArgs(
+            FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP,
+            "questions"
+        )
+        if (args == null) {
+            return GenAIData.FollowUpQuestionsOutput(emptyList())
+        }
+        if (args is JsonArray) {
             val questions: List<GenAIData.FollowUpQuestion> = result.getFunctionCallParams(
                 FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP,
                 "questions"
             ) ?: return GenAIData.FollowUpQuestionsOutput(emptyList())
             return GenAIData.FollowUpQuestionsOutput(questions)
         } else {
-            return result?.getFunctionCallParams(
+            return result.getFunctionCallParams(
                 FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP,
                 "questions"
             )
