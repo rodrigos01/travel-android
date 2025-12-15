@@ -3,6 +3,7 @@ package travel.vola.android.ui.trip.creation.assistant.composable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,6 +46,7 @@ fun InitialParameters(
                 }
             }
         }
+        Text("Anything Else?", style = MaterialTheme.typography.titleLarge)
         Button(
             onClick = onInitialParametersNextTapped,
             enabled = state.nextButtonEnabled,
