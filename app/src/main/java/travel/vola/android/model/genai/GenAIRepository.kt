@@ -17,9 +17,9 @@ import kotlinx.serialization.json.JsonObject
 class GenAIRepository {
 
     enum class FunctionNames(val value: String) {
-        INITIAL_PARAMETERS("genInitialParameters"),
-        INITIAL_PARAMETERS_FOLLOW_UP("genInitialParametersFollowUp"),
-        HIGH_LEVEL_ITINERARY_OPTIONS("genHighLevelItineraryOptions"),
+        INITIAL_PARAMETERS("genInitialParameters"), INITIAL_PARAMETERS_FOLLOW_UP("genInitialParametersFollowUp"), HIGH_LEVEL_ITINERARY_OPTIONS(
+            "genHighLevelItineraryOptions"
+        ),
     }
 
     private val chatModel by lazy {
@@ -27,12 +27,9 @@ class GenAIRepository {
             .generativeModel(
                 generationConfig = generationConfig {
                     maxOutputTokens = 65536 // Use max output tokens to avoid truncation
-                },
-                modelName = "gemini-2.5-flash",
-                systemInstruction = content {
+                }, modelName = "gemini-2.5-flash", systemInstruction = content {
                     text("You are an AI Travel Assistant running on the background of a Travel Planning application. Help the user plan a trip, initially by planning a high-level travel itinerary focused only on destination and dates, then later by planning fine-grained day-by-day itineraries")
-                },
-                tools = listOf(
+                }, tools = listOf(
                     Tool.functionDeclarations(
                         listOf(
                             FunctionDeclaration(
@@ -68,9 +65,7 @@ class GenAIRepository {
         parameters: GenAIData.InitialParametersOptions
     ): GenAIData.FollowUpQuestionsOutput? {
         val prompt = Prompts.INITIAL_PARAMETERS_FOLLOW_UP
-        val promptQuery =
-            prompt.prompt +
-                    "\n Parameters: \n" + Json.encodeToString(parameters)
+        val promptQuery = prompt.prompt + "\n Parameters: \n" + Json.encodeToString(parameters)
         return sendMessage(
             promptQuery,
             FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP,
@@ -80,9 +75,8 @@ class GenAIRepository {
 
     suspend fun genHighLevelItineraryOptions(followUpQuestions: List<GenAIData.FollowUpQuestion>): GenAIData.HighLevelItineraryOptions? {
         val prompt = Prompts.HIGH_LEVEL_ITINERARY_OPTIONS
-        val promptQuery = prompt.prompt +
-                "\n Follow-up Questions: \n" +
-                followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" }
+        val promptQuery =
+            prompt.prompt + "\n Follow-up Questions: \n" + followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" }
         return sendMessage(
             promptQuery,
             FunctionNames.HIGH_LEVEL_ITINERARY_OPTIONS,
@@ -91,11 +85,9 @@ class GenAIRepository {
     }
 
     private fun GenerateContentResponse.getJsonArgs(
-        functionName: FunctionNames,
-        argName: String
+        functionName: FunctionNames, argName: String
     ): JsonElement? {
-        val functionCall =
-            functionCalls.find { it.name == functionName.value }
+        val functionCall = functionCalls.find { it.name == functionName.value }
 
         val args = functionCall?.args[argName]
         if (args == null) {
@@ -106,8 +98,7 @@ class GenAIRepository {
     }
 
     private suspend inline fun <reified T> GenerateContentResponse.getFunctionCallParams(
-        functionName: FunctionNames,
-        argName: String
+        functionName: FunctionNames, argName: String
     ): T? {
         val json = getJsonArgs(functionName, argName)
         if (json == null) {
@@ -128,35 +119,21 @@ class GenAIRepository {
     }
 
     private suspend inline fun <reified T> sendMessage(
-        prompt: String,
-        functionName: FunctionNames,
-        argName: String,
-        attemptCount: Int = 0
+        prompt: String, functionName: FunctionNames, argName: String,
     ): T? {
-        try {
-            val response = chatModel.sendMessage(prompt)
-            return response.getFunctionCallParams(functionName, argName)
-        } catch (t: Throwable) {
-            return handleResponseError(t, attemptCount, functionName, argName)
+        var currentPrompt = prompt
+        var attempts = 0
+        while (attempts < 3) {
+            try {
+                val response = chatModel.sendMessage(currentPrompt)
+                return response.getFunctionCallParams(functionName, argName)
+            } catch (t: Throwable) {
+                Log.e("GenAIRepository", "Error sending message", t)
+                currentPrompt =
+                    "Your previous response triggered the following error:\n${t.message}\n\nplease, regenerate the response"
+                attempts++
+            }
         }
-    }
-
-    private suspend inline fun <reified T> handleResponseError(
-        t: Throwable,
-        attemptCount: Int,
-        functionName: FunctionNames,
-        argName: String
-    ): T? {
-        Log.e("GenAIRepository", "Error sending message", t)
-        return if (attemptCount < 3) {
-            sendMessage(
-                "Your previous response triggered the following error:\n${t.message}\n\nplease, regenerate the response",
-                functionName,
-                argName,
-                attemptCount + 1,
-            )
-        } else {
-            null
-        }
+        return null
     }
 }
