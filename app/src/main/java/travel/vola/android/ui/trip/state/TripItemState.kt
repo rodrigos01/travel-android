@@ -162,6 +162,8 @@ sealed interface TripItemState {
         override val subtitle = restaurantAddress
     }
 
+    data class SuggestionsItemState(val text: String, val predictedChanges: List<String>) : TripItemState
+
     data class InitialAddPlanItemState(
         override val id: String,
         override val timestamp: Time,

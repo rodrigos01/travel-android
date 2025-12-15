@@ -15,6 +15,10 @@ interface TripRepository {
     fun getTripHotels(tripId: String): Flow<List<Lodging>>
 
     suspend fun addTrip(): String
+    suspend fun addTrip(
+        name: String,
+        places: List<TimedPlace>,
+    ): String
     suspend fun updateName(tripId: String, newName: String)
     suspend fun deleteTrip(tripId: String)
     suspend fun saveFlight(tripId: String, flight: Flight)

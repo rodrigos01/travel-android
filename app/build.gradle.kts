@@ -156,6 +156,7 @@ dependencies {
     }
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.ai)
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     // Compose
@@ -175,6 +176,7 @@ dependencies {
     implementation(libs.compose.text.googlefonts)
     // Google Maps
     implementation(libs.maps.compose)
+    implementation(libs.places)
     // Ktor
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.android)

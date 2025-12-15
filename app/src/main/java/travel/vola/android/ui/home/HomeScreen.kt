@@ -30,6 +30,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import travel.vola.android.extensions.viewModel
 import travel.vola.android.model.data.DataSourceType
+import travel.vola.android.ui.trip.creation.assistant.composable.TripCreationAssistantDestination
 import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
 import travel.vola.android.ui.triplist.composable.TripList
 
@@ -72,7 +73,9 @@ fun HomeScreen(navController: NavController) {
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = viewModel::addTrip) {
+            FloatingActionButton(onClick = {
+                navController.navigate(TripCreationAssistantDestination.ROUTE)
+            }) {
                 Icon(imageVector = Icons.Filled.Add, contentDescription = "")
             }
         }

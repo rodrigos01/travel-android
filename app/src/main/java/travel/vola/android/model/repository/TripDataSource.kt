@@ -18,6 +18,11 @@ interface TripDataSource {
     fun getTripHotels(tripId: String): Flow<List<Lodging>>
 
     suspend fun addTrip(): String
+    suspend fun addTrip(
+        name: String,
+        places: List<TimedPlace>,
+    ) : String
+
     suspend fun updateName(tripId: String, newName: String)
     suspend fun deleteTrip(tripId: String)
     suspend fun saveFlight(tripId: String, flight: Flight)
@@ -27,6 +32,7 @@ interface TripDataSource {
         tripId: String,
         restaurantReservation: RestaurantReservation,
     )
+
     suspend fun deleteFlight(tripId: String, flightId: String)
     suspend fun deleteLodging(tripId: String, lodgingId: String)
     suspend fun deleteTimedPlace(tripId: String, timedPlaceId: String)
