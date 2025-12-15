@@ -214,8 +214,7 @@ class TripCreationAssistantViewModel(
         val answeredQuestions = if (state is UiState.InitialParametersFollowUp) {
             state.questions.map { question ->
                 GenAIData.FollowUpQuestion(
-                    parameter = "",
-                    parameterSelection = "",
+                    parameterSelections = emptyList(),
                     question = question.question,
                     answers = question.answers.filter { it.isSelected }.map { it.option },
                 )

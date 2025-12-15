@@ -38,8 +38,7 @@ object GenAIData {
 
     @Serializable
     data class FollowUpQuestion(
-        val parameter: String,
-        val parameterSelection: String,
+        val parameterSelections: List<String>,
         val question: String,
         val answers: List<String>
     )
@@ -56,6 +55,7 @@ object GenAIData {
         val startDate: DateResult,
         val endDate: DateResult,
         val cities: List<ItineraryCity>,
+        val predictedChanges: List<String>,
     )
 
     @Serializable

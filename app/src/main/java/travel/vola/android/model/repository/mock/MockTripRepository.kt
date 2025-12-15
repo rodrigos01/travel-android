@@ -28,6 +28,11 @@ class MockTripRepository : TripRepository {
 
     override suspend fun addTrip(): String = ""
 
+    override suspend fun addTrip(
+        name: String,
+        places: List<TimedPlace>,
+    ): String = ""
+
     override suspend fun updateName(tripId: String, newName: String) = Unit
 
     override suspend fun deleteTrip(tripId: String) = Unit

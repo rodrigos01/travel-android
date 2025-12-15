@@ -12,6 +12,7 @@ import com.google.firebase.ai.type.GenerateContentResponse
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.Tool
 import com.google.firebase.ai.type.content
+import com.google.firebase.ai.type.generationConfig
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -33,6 +34,9 @@ class GenAIRepository private constructor(
     private val chatModel by lazy {
         Firebase.ai(backend = GenerativeBackend.googleAI())
             .generativeModel(
+                generationConfig = generationConfig {
+                    maxOutputTokens = 65536 // Use max output tokens to avoid truncation
+                },
                 modelName = "gemini-2.5-flash",
                 systemInstruction = content {
                     text("You are an AI Travel Assistant running on the background of a Travel Planning application. Help the user plan a trip, initially by planning a high-level travel itinerary focused only on destination and dates, then later by planning fine-grained day-by-day itineraries")
