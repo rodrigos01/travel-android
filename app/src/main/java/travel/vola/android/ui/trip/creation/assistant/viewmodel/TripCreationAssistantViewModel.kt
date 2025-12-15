@@ -49,25 +49,17 @@ class TripCreationAssistantViewModel(
         ) : UiState
 
         enum class TravelGroupType {
-            SOLO,
-            COUPLE,
-            FAMILY,
-            FRIENDS,
-            COWORKERS
+            SOLO, COUPLE, FAMILY, FRIENDS, COWORKERS
         }
 
         data class InitialParameters(
             val optionGroups: List<OptionGroup>,
+            val anythingElse: String = "",
             val nextButtonEnabled: Boolean = false,
         ) : UiState
 
         enum class OptionGroupType {
-            OCCASIONS,
-            INTERESTS,
-            VIBE,
-            FOCUS,
-            DURATION,
-            MUST_HAVE
+            OCCASIONS, INTERESTS, VIBE, FOCUS, DURATION, MUST_HAVE
         }
 
         data class OptionGroup(val type: OptionGroupType, val options: List<Option>)
@@ -78,9 +70,7 @@ class TripCreationAssistantViewModel(
         ) : UiState
 
         data class FollowUpQuestion(
-            val choices: List<String>,
-            val question: String,
-            val answers: List<Option>
+            val choices: List<String>, val question: String, val answers: List<Option>
         )
 
         data class HighLevelItineraryOptions(
@@ -129,9 +119,7 @@ class TripCreationAssistantViewModel(
     private val internalState = MutableStateFlow<UiState>(UiState.BasicInformation())
 
     val uiState = merge(generatedState, internalState).stateIn(
-        viewModelScope,
-        started = SharingStarted.Lazily,
-        internalState.value
+        viewModelScope, started = SharingStarted.Lazily, internalState.value
     )
 
     private suspend fun generateInitialParametersState(basicInformation: UiState.BasicInformation): UiState.InitialParameters? {
@@ -155,34 +143,23 @@ class TripCreationAssistantViewModel(
             travelers = basicInformation.travelers,
             duration = null,
         )
-        val options =
-            repository.genInitialParametersOptions(info) ?: return null
+        val options = repository.genInitialParametersOptions(info) ?: return null
         return UiState.InitialParameters(
             optionGroups = listOf(
                 UiState.OptionGroup(
                     UiState.OptionGroupType.OCCASIONS,
-                    options.occasions.map { UiState.Option(it) }
-                ),
+                    options.occasions.map { UiState.Option(it) }),
                 UiState.OptionGroup(
                     UiState.OptionGroupType.INTERESTS,
-                    options.interests.map { UiState.Option(it) }
-                ),
+                    options.interests.map { UiState.Option(it) }),
                 UiState.OptionGroup(
-                    UiState.OptionGroupType.VIBE,
-                    options.vibe.map { UiState.Option(it) }
-                ),
+                    UiState.OptionGroupType.VIBE, options.vibe.map { UiState.Option(it) }),
                 UiState.OptionGroup(
-                    UiState.OptionGroupType.FOCUS,
-                    options.focus.map { UiState.Option(it) }
-                ),
+                    UiState.OptionGroupType.FOCUS, options.focus.map { UiState.Option(it) }),
                 UiState.OptionGroup(
-                    UiState.OptionGroupType.DURATION,
-                    options.duration.map { UiState.Option(it) }
-                ),
+                    UiState.OptionGroupType.DURATION, options.duration.map { UiState.Option(it) }),
                 UiState.OptionGroup(
-                    UiState.OptionGroupType.MUST_HAVE,
-                    options.mustHave.map { UiState.Option(it) }
-                ),
+                    UiState.OptionGroupType.MUST_HAVE, options.mustHave.map { UiState.Option(it) }),
             ),
         )
     }
@@ -195,6 +172,7 @@ class TripCreationAssistantViewModel(
             focus = state.optionGroups.selectedValues(UiState.OptionGroupType.FOCUS),
             duration = state.optionGroups.selectedValues(UiState.OptionGroupType.DURATION),
             mustHave = state.optionGroups.selectedValues(UiState.OptionGroupType.MUST_HAVE),
+            anythingElse = state.anythingElse,
         )
 
         val followUpQuestions =
@@ -207,8 +185,7 @@ class TripCreationAssistantViewModel(
                         question = question.question,
                         answers = question.answers.map { UiState.Option(it) },
                     )
-                }
-            )
+                })
         } else {
             stage.value = Stage.HighLevelItineraryOptions(state)
             return UiState.Generating
@@ -261,14 +238,7 @@ class TripCreationAssistantViewModel(
         } catch (_: DateTimeException) {
             // The LLM might hallucinate 2/29 on a non-Leap year.
             return ZonedDateTime.of(
-                year,
-                month,
-                day - 1,
-                0,
-                0,
-                0,
-                0,
-                TimeZone.getDefault().toZoneId()
+                year, month, day - 1, 0, 0, 0, 0, TimeZone.getDefault().toZoneId()
             )
         }
     }
@@ -279,8 +249,7 @@ class TripCreationAssistantViewModel(
             val results = destinationAutoCompleteRepository.autocomplete(query.toString())
             if (results.isNotEmpty()) {
                 internalState.value = state.copy(
-                    destinationSearchResults = results.map { SearchResult(it.name, it.address) }
-                )
+                    destinationSearchResults = results.map { SearchResult(it.name, it.address) })
             }
         }
     }
@@ -289,8 +258,9 @@ class TripCreationAssistantViewModel(
         viewModelScope.launch {
             val state = uiState.value as? UiState.BasicInformation ?: return@launch
             val selected = state.destinationSearchResults[index]
-            val destinationName = selected.title + selected.subtitle.takeIf { it.isNotBlank() }
-                ?.let { ", $it" }.orEmpty()
+            val destinationName =
+                selected.title + selected.subtitle.takeIf { it.isNotBlank() }?.let { ", $it" }
+                    .orEmpty()
             updateBasicState(
                 state.copy(
                     destinations = state.destinations + destinationName,
@@ -318,8 +288,7 @@ class TripCreationAssistantViewModel(
         val state = uiState.value as? UiState.BasicInformation ?: return
         updateBasicState(
             state.copy(
-                startDate = date,
-                endDate = state.endDate ?: date.plusDays(7)
+                startDate = date, endDate = state.endDate ?: date.plusDays(7)
             )
         )
     }
@@ -354,10 +323,7 @@ class TripCreationAssistantViewModel(
 
     private fun updateBasicState(state: UiState.BasicInformation) {
         val nextButtonEnabled =
-            state.destinations.isNotEmpty() &&
-                    state.startDate != null && state.endDate != null &&
-                    state.endDate > state.startDate &&
-                    state.travelers != null && state.travelers > 0
+            state.destinations.isNotEmpty() && state.startDate != null && state.endDate != null && state.endDate > state.startDate && state.travelers != null && state.travelers > 0
         internalState.value = state.copy(nextButtonEnabled = nextButtonEnabled)
     }
 
@@ -380,12 +346,7 @@ class TripCreationAssistantViewModel(
                 group
             }
         }
-        internalState.value = state.copy(
-            optionGroups = newOptionGroups,
-            nextButtonEnabled = newOptionGroups.all { group ->
-                group.options.any { it.isSelected }
-            }
-        )
+        updateInitialParametersState(state.copy(optionGroups = newOptionGroups))
     }
 
     fun onInitialParametersOptionAdded(optionGroupType: UiState.OptionGroupType, option: String) {
@@ -397,12 +358,19 @@ class TripCreationAssistantViewModel(
                 group
             }
         }
-        internalState.value = state.copy(
-            optionGroups = newOptionGroups,
-            nextButtonEnabled = newOptionGroups.all { group ->
-                group.options.any { it.isSelected }
-            }
-        )
+        updateInitialParametersState(state.copy(optionGroups = newOptionGroups))
+    }
+
+    fun onInitialParametersAnythingElseUpdated(value: String) {
+        val state = uiState.value as? UiState.InitialParameters ?: return
+        updateInitialParametersState(state.copy(anythingElse = value))
+    }
+
+    private fun updateInitialParametersState(state: UiState.InitialParameters) {
+        val nextButtonEnabled = state.optionGroups.all { group ->
+            group.options.any { it.isSelected }
+        }
+        internalState.value = state.copy(nextButtonEnabled = nextButtonEnabled)
     }
 
     fun onInitialParametersNextTapped() {
@@ -423,11 +391,26 @@ class TripCreationAssistantViewModel(
             }
         }
         internalState.value = state.copy(
-            questions = newQuestions,
-            nextButtonEnabled = newQuestions.all { question ->
+            questions = newQuestions, nextButtonEnabled = newQuestions.all { question ->
                 question.answers.any { it.isSelected }
+            })
+    }
+
+    fun onFollowUpQuestionCustomAnswerAdded(answer: String, question: UiState.FollowUpQuestion) {
+        val state = uiState.value as? UiState.InitialParametersFollowUp ?: return
+        val newQuestions = state.questions.map { currentQuestion ->
+            if (currentQuestion == question) {
+                currentQuestion.copy(answers = currentQuestion.answers.map { it.copy(isSelected = false) } + UiState.Option(
+                    answer, isSelected = true
+                ))
+            } else {
+                currentQuestion
             }
-        )
+        }
+        internalState.value = state.copy(
+            questions = newQuestions, nextButtonEnabled = newQuestions.all { question ->
+                question.answers.any { it.isSelected }
+            })
     }
 
     fun onFollowUpQuestionsNextTapped() {
@@ -453,8 +436,7 @@ class TripCreationAssistantViewModel(
     fun onCreateTripTapped(itinerary: UiState.Itinerary) {
         viewModelScope.launch {
             val tripId = tripRepository.addTrip(
-                name = itinerary.name,
-                places = itinerary.cities.mapNotNull {
+                name = itinerary.name, places = itinerary.cities.mapNotNull {
                     it.place?.let { place ->
                         TimedPlace(
                             id = it.name,
@@ -466,8 +448,7 @@ class TripCreationAssistantViewModel(
                             city = place,
                         )
                     }
-                }
-            )
+                })
             navController.navigate(TripDetailsDestination.getRoute(tripId))
         }
     }
