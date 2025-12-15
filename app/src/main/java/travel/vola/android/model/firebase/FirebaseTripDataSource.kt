@@ -41,15 +41,7 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
             ?: FirebaseData.Trip(snapshot.id)).toAppDataModel()
 
     override suspend fun addTrip(): String {
-        val newTrip = Trip(
-            id = "",
-            name = null,
-            coverImage = null,
-            flights = emptyList(),
-            lodgings = emptyList(),
-            places = emptyList(),
-            restaurants = emptyList(),
-        )
+        val newTrip = FirebaseData.Trip()
         val reference = firestore.collection("/trips").add(newTrip).await()
         return reference.id
     }
@@ -58,14 +50,9 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
         name: String,
         places: List<TimedPlace>
     ): String {
-        val newTrip = Trip(
-            id = "",
+        val newTrip = FirebaseData.Trip(
             name = name,
-            coverImage = null,
-            flights = emptyList(),
-            lodgings = emptyList(),
-            places = places,
-            restaurants = emptyList(),
+            places = places.map { it.toFirebaseDataModel() },
         )
         val reference = firestore.collection("/trips").add(newTrip).await()
         return reference.id
