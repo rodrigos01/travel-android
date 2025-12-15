@@ -244,7 +244,7 @@ class TripCreationAssistantViewModel(
                             place = place?.place,
                         )
                     },
-                    predictedChanges = emptyList(),
+                    predictedChanges = itinerary.predictedChanges.map { UiState.Option(it) },
                 )
             },
         )
