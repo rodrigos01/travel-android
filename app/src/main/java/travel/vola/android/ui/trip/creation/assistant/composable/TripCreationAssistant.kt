@@ -58,8 +58,10 @@ fun TripCreationAssistant() {
         onBasicInformationNextTapped = viewModel::onBasicInformationNextTapped,
         onInitialParameterOptionTapped = viewModel::onInitialParameterOptionTapped,
         onInitialParametersOptionAdded = viewModel::onInitialParametersOptionAdded,
+        onInitialParametersAnythingElseTextChanged = viewModel::onInitialParametersAnythingElseUpdated,
         onInitialParametersNextTapped = viewModel::onInitialParametersNextTapped,
         onFollowUpQuestionOptionTapped = viewModel::onFollowUpQuestionOptionTapped,
+        onFollowUpQuestionCustomAnswerAdded = viewModel::onFollowUpQuestionCustomAnswerAdded,
         onFollowUpQuestionsNextTapped = viewModel::onFollowUpQuestionsNextTapped,
         onRetryTapped = viewModel::onRetryTapped,
         onCreateTripTapped = viewModel::onCreateTripTapped,
@@ -83,8 +85,10 @@ fun TripCreationAssistant(
     onBasicInformationNextTapped: () -> Unit,
     onInitialParameterOptionTapped: (Int, UiState.OptionGroupType) -> Unit,
     onInitialParametersOptionAdded: (UiState.OptionGroupType, String) -> Unit,
+    onInitialParametersAnythingElseTextChanged: (String) -> Unit,
     onInitialParametersNextTapped: () -> Unit,
     onFollowUpQuestionOptionTapped: (Int, UiState.FollowUpQuestion) -> Unit,
+    onFollowUpQuestionCustomAnswerAdded: (String, UiState.FollowUpQuestion) -> Unit,
     onFollowUpQuestionsNextTapped: () -> Unit,
     onCreateTripTapped: (UiState.Itinerary) -> Unit,
     onRetryTapped: () -> Unit,
@@ -187,8 +191,9 @@ fun TripCreationAssistant(
                 InitialParameters(
                     state,
                     onInitialParameterOptionTapped,
-                    onInitialParametersNextTapped,
                     onOptionAdded = onInitialParametersOptionAdded,
+                    onAnythingElseTextChanged = onInitialParametersAnythingElseTextChanged,
+                    onInitialParametersNextTapped,
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
@@ -200,6 +205,7 @@ fun TripCreationAssistant(
                 InitialParametersFollowUp(
                     state,
                     onFollowUpQuestionOptionTapped,
+                    onFollowUpQuestionCustomAnswerAdded,
                     onFollowUpQuestionsNextTapped,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -245,8 +251,10 @@ fun TripCreationAssistantPreview() {
             onBasicInformationNextTapped = {},
             onInitialParameterOptionTapped = { _, _ -> },
             onInitialParametersOptionAdded = { _, _ -> },
+            onInitialParametersAnythingElseTextChanged = {},
             onInitialParametersNextTapped = {},
             onFollowUpQuestionOptionTapped = { _, _ -> },
+            onFollowUpQuestionCustomAnswerAdded = { _, _ -> },
             onFollowUpQuestionsNextTapped = {},
             onRetryTapped = {},
             onCreateTripTapped = {},

@@ -51,6 +51,7 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                     minItems = 3,
                     maxItems = 3,
                 ),
+                "anythingElse" to Schema.string("leave this blank"),
             )
         )
     ),
