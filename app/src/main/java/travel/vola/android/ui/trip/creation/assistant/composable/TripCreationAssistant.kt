@@ -79,7 +79,7 @@ fun TripCreationAssistant(
     onStartDateSet: (ZonedDateTime) -> Unit,
     onEndDateSet: (ZonedDateTime) -> Unit,
     onGroupTypeSet: (UiState.TravelGroupType) -> Unit,
-    onTravelersSet: (Int) -> Unit,
+    onTravelersSet: (Int?) -> Unit,
     onBasicInformationNextTapped: () -> Unit,
     onInitialParameterOptionTapped: (Int, UiState.OptionGroupType) -> Unit,
     onInitialParametersOptionAdded: (UiState.OptionGroupType, String) -> Unit,

@@ -1,10 +1,12 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -30,6 +32,16 @@ fun InitialParametersFollowUp(
         state.questions.forEachIndexed { index, question ->
             if (index > 0) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+            FlowRow {
+                question.choices.forEachIndexed { index, option ->
+                    FilterChip(
+                        selected = false,
+                        onClick = {},
+                        label = {
+                            Text(option)
+                        })
+                }
             }
             Text(
                 question.question,
@@ -71,6 +83,7 @@ fun InitialParametersFollowUpPreview() {
                 state = UiState.InitialParametersFollowUp(
                     questions = listOf(
                         UiState.FollowUpQuestion(
+                            choices = listOf("workation"),
                             "What time of day would you prefer to work on weekdays?",
                             listOfOptions(
                                 "I prefer to have my work in the Morning, when I'm the most productive",
@@ -80,6 +93,7 @@ fun InitialParametersFollowUpPreview() {
                             )
                         ),
                         UiState.FollowUpQuestion(
+                            choices = listOf("workation", "nightlife"),
                             "What time of day would you prefer to work on weekdays?",
                             listOfOptions(
                                 "I prefer to have my work in the Morning, when I'm the most productive",

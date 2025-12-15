@@ -56,7 +56,7 @@ fun BasicInformationForm(
     onStartDateSet: (ZonedDateTime) -> Unit,
     onEndDateSet: (ZonedDateTime) -> Unit,
     onGroupTypeSet: (UiState.TravelGroupType) -> Unit,
-    onTravelersSet: (Int) -> Unit,
+    onTravelersSet: (Int?) -> Unit,
     onNextTapped: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -157,9 +157,9 @@ fun BasicInformationForm(
             }
         }
         OutlinedTextField(
-            state.travelers.toString(),
+            state.travelers?.toString().orEmpty(),
             enabled = state.travelersChangeEnabled,
-            onValueChange = { onTravelersSet(it.toIntOrNull() ?: 0) },
+            onValueChange = { onTravelersSet(it.toIntOrNull()) },
             label = { Text("Travelers") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),

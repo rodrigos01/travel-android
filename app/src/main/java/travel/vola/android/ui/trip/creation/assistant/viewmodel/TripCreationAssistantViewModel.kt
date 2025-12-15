@@ -44,7 +44,7 @@ class TripCreationAssistantViewModel(
             val fixedDates: Boolean = false,
             val groupType: TravelGroupType = TravelGroupType.SOLO,
             val travelersChangeEnabled: Boolean = false,
-            val travelers: Int = 1,
+            val travelers: Int? = 1,
             val nextButtonEnabled: Boolean = false,
         ) : UiState
 
@@ -77,7 +77,11 @@ class TripCreationAssistantViewModel(
             val nextButtonEnabled: Boolean = false,
         ) : UiState
 
-        data class FollowUpQuestion(val question: String, val answers: List<Option>)
+        data class FollowUpQuestion(
+            val choices: List<String>,
+            val question: String,
+            val answers: List<Option>
+        )
 
         data class HighLevelItineraryOptions(
             val itineraries: List<Itinerary>,
@@ -199,6 +203,7 @@ class TripCreationAssistantViewModel(
             return UiState.InitialParametersFollowUp(
                 questions = followUpQuestions.questions.map { question ->
                     UiState.FollowUpQuestion(
+                        choices = question.parameterSelections,
                         question = question.question,
                         answers = question.answers.map { UiState.Option(it) },
                     )
@@ -311,7 +316,12 @@ class TripCreationAssistantViewModel(
 
     fun onStartDateSet(date: ZonedDateTime) {
         val state = uiState.value as? UiState.BasicInformation ?: return
-        updateBasicState(state.copy(startDate = date))
+        updateBasicState(
+            state.copy(
+                startDate = date,
+                endDate = state.endDate ?: date.plusDays(7)
+            )
+        )
     }
 
     fun onEndDateSet(date: ZonedDateTime) {
@@ -337,14 +347,17 @@ class TripCreationAssistantViewModel(
         )
     }
 
-    fun onTravelersSet(travelers: Int) {
+    fun onTravelersSet(travelers: Int?) {
         val state = uiState.value as? UiState.BasicInformation ?: return
         updateBasicState(state.copy(travelers = travelers))
     }
 
     private fun updateBasicState(state: UiState.BasicInformation) {
         val nextButtonEnabled =
-            state.destinations.isNotEmpty() && state.startDate != null && state.endDate != null && state.travelers > 0
+            state.destinations.isNotEmpty() &&
+                    state.startDate != null && state.endDate != null &&
+                    state.endDate > state.startDate &&
+                    state.travelers != null && state.travelers > 0
         internalState.value = state.copy(nextButtonEnabled = nextButtonEnabled)
     }
 
