@@ -479,7 +479,6 @@ class TripCreationAssistantViewModel(
             return
         }
         when (currentStage) {
-            is Stage.InitialParameters -> currentStage.state
             is Stage.InitialParametersFollowUp -> currentStage.state
             is Stage.HighLevelItineraryOptions -> currentStage.state
             else -> null
