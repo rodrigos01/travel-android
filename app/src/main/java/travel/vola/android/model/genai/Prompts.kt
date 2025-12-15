@@ -58,6 +58,7 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
         prompt = "The user has selected the below parameters from the options you provided. generate a maximum of 3 follow-up clarifying questions for any choices they might have made that conflict with each other or with their basic trip information or that require further clarification. Each question should be accompanied with 2-3 possible answers for the user to choose. Keep the questions short and don’t include the user choices that triggered the question in the text as they will be presented to the User in the UI. Keep the answers as brief, single sentences. The answers should be definitive and not require further clarification. If the basic information and parameters are enough for generating an itinerary, it is acceptable to return no questions.",
         outputSchema = Schema.obj(
             mapOf(
+                "numQuestions" to Schema.integer(),
                 "questions" to Schema.array(
                     Schema.obj(
                         mapOf(

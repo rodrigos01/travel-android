@@ -33,6 +33,7 @@ object GenAIData {
 
     @Serializable
     data class FollowUpQuestionsOutput(
+        val numQuestions: Int,
         val questions: List<FollowUpQuestion>
     )
 
