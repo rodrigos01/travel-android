@@ -55,15 +55,17 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
         )
     ),
     INITIAL_PARAMETERS_FOLLOW_UP(
-        prompt = "The user has selected the below parameters from the options you provided. generate a maximum of 3 follow-up clarifying questions for any choices they might have made that conflict with each other or with their basic trip information or that require further clarification. Each question should be accompanied with 2-3 possible answers for the user to choose. Keep the answers as brief, single sentences. The answers should be definitive and not require further clarification. If the basic information and parameters are enough for generating an itinerary, it is acceptable to return no questions.",
+        prompt = "The user has selected the below parameters from the options you provided. generate a maximum of 3 follow-up clarifying questions for any choices they might have made that conflict with each other or with their basic trip information or that require further clarification. Each question should be accompanied with 2-3 possible answers for the user to choose. Keep the questions short and don’t include the user choices that triggered the question in the text as they will be presented to the User in the UI. Keep the answers as brief, single sentences. The answers should be definitive and not require further clarification. If the basic information and parameters are enough for generating an itinerary, it is acceptable to return no questions.",
         outputSchema = Schema.obj(
             mapOf(
                 "questions" to Schema.array(
                     Schema.obj(
                         mapOf(
-                            "parameter" to Schema.string("parameter of the selection that generated the question"),
-                            "parameterSelection" to Schema.string("selection in the parameter that generated the question"),
-                            "question" to Schema.string("question to ask the user"),
+                            "parameterSelections" to Schema.array(
+                                Schema.string(),
+                                "selections in the parameter that generated the question"
+                            ),
+                            "question" to Schema.string("question to ask the user. Keep it short and don't include the options that triggered it as they'll be shown in the UI."),
                             "answers" to Schema.array(
                                 Schema.string("possible answers to the question")
                             )
@@ -75,11 +77,11 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
         )
     ),
     HIGH_LEVEL_ITINERARY_OPTIONS(
-        prompt = "Generate 3 high-level travel itinerary options based on the user's basic information, the parameters provided and the answers provided to the questions below. These itineraries should be basic skeletons with just cities visited and how long to stay in each. If the destination is not specific (i.e. a region, a country or a continent), suggest itineraries that include multiple cities to match their parameters. If the duration is not specific (a range of days) the itineraries should include suggested start and end dates that best match the destinations and parameters. The itineraries should consider their interests, focus and must-have experiences for their dates. If the itineraries include multiple cities, it should consider travel between the destinations for their order.",
+        prompt = "Generate 3 high-level travel itinerary options based on the user's basic information, the parameters provided and the answers provided to the questions below. These itineraries should be basic skeletons with just cities visited and how long to stay in each. If the destination is not specific (i.e. a region, a country or a continent), suggest itineraries that include multiple cities to match their parameters. If the duration is not specific (a range of days) the itineraries should include suggested start and end dates that best match the destinations and parameters. The itineraries should consider their interests, focus and must-have experiences for their dates. If the itineraries include multiple cities, it should consider travel between the destinations for their order. For each itinerary, suggest 3 short-phrase predicted potential changes the users might want to make to it, focused solely on the cities and periods in each of them. The changes should be self-contained and not require follow up questions.",
         outputSchema = Schema.array(
             Schema.obj(
                 mapOf(
-                    "name" to Schema.string("name of the itinerary"),
+                    "name" to Schema.string("Short name for this itinerary"),
                     "description" to Schema.string("A single-sentence description for this itinerary that includes why it fits the user choices"),
                     "startDate" to Schema.obj(
                         mapOf(
@@ -120,6 +122,12 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                                 ),
                             )
                         )
+                    ),
+                    "predictedChanges" to Schema.array(
+                        Schema.string(),
+                        description = "3 short-phrase predicted potential changes the users might want to make to the itinerary, focused solely on the cities and period",
+                        minItems = 3,
+                        maxItems = 3,
                     ),
                 )
             ),

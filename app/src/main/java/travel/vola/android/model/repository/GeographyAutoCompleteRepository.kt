@@ -30,6 +30,6 @@ class GeographyAutoCompleteRepository(
         id: String,
         autocompleteKey: String
     ): PlaceDetailsResult? {
-        return null
+        return areasAutoCompleteRepository.details(id, autocompleteKey)
     }
 }
