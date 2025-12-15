@@ -1,9 +1,6 @@
 package travel.vola.android.model.genai
 
-import android.content.Context
 import android.util.Log
-import com.google.android.libraries.places.api.Places
-import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.firebase.Firebase
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.FunctionDeclaration
@@ -19,11 +16,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
-class GenAIRepository private constructor(
-    private val placesClient: PlacesClient,
-) {
-
-    constructor(applicationContext: Context) : this(Places.createClient(applicationContext))
+class GenAIRepository {
 
     enum class FunctionNames(val value: String) {
         INITIAL_PARAMETERS("genInitialParameters"),

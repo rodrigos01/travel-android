@@ -1,22 +1,14 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import com.google.android.libraries.places.api.Places
-import com.google.android.libraries.places.api.net.SearchByTextRequest
 import com.google.firebase.Firebase
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.Schema
 import com.google.firebase.ai.type.generationConfig
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import travel.vola.android.model.data.Place
-import travel.vola.android.ui.applicationContext
 import java.time.ZonedDateTime
-import java.util.TimeZone
 
 class GenAiUseCase {
 
@@ -62,17 +54,6 @@ class GenAiUseCase {
             })
     }
 
-    private val placesClient by lazy {
-        Places.createClient(applicationContext)
-    }
-
-    private val placeFields = listOf(
-        com.google.android.libraries.places.api.model.Place.Field.ID,
-        com.google.android.libraries.places.api.model.Place.Field.DISPLAY_NAME,
-        com.google.android.libraries.places.api.model.Place.Field.PHOTO_METADATAS,
-        com.google.android.libraries.places.api.model.Place.Field.LOCATION,
-    )
-
     suspend fun getSuggestions(
         city: Place,
         date: ZonedDateTime,
@@ -87,30 +68,8 @@ class GenAiUseCase {
         val jsonString = model.generateContent(prompt).text ?: return null
 
         val response = Json.decodeFromString<GenAiSuggestionResponse>(jsonString)
-        val places = response.suggestions.map {
-            coroutineScope {
-                async {
-                    val request =
-                        SearchByTextRequest.builder(it.searchQuery, placeFields)
-                            .setMaxResultCount(1)
-                            .build()
-                    placesClient.searchByText(request).await().places.firstOrNull()
-                }
-            }
-        }.awaitAll()
-        return SuggestionsResult(places.mapNotNull {
-            Place(
-                id = it?.id ?: "",
-                name = it?.displayName ?: "",
-                latitude = it?.location?.latitude ?: 0.0,
-                longitude = it?.location?.longitude ?: 0.0,
-                coverImage = null,
-                address = "",
-                externalId = it?.id ?: "",
-                timeZone = TimeZone.getTimeZone(date.zone.id),
-                source = "Google"
-            )
-        }, response.predictedChanges)
+        // TODO: get actual places from response
+        return SuggestionsResult(emptyList(), predictedChanges = emptyList())
     }
 }
 

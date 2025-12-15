@@ -55,7 +55,7 @@ class ViewModelFactoryDependencies(
     }
 
     val genAIRepository: GenAIRepository by lazy {
-        GenAIRepository(getApplicationContext())
+        GenAIRepository()
     }
 }
 
