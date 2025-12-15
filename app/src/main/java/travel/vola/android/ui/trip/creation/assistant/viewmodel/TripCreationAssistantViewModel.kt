@@ -472,6 +472,22 @@ class TripCreationAssistantViewModel(
         }
     }
 
+    fun onNavigateBack() {
+        val currentStage = stage.value
+        if (currentStage == Stage.BasicInformation) {
+            navController.popBackStack()
+            return
+        }
+        when (currentStage) {
+            is Stage.InitialParameters -> currentStage.state
+            is Stage.InitialParametersFollowUp -> currentStage.state
+            is Stage.HighLevelItineraryOptions -> currentStage.state
+            else -> null
+        }?.let { newState ->
+            internalState.value = newState
+        }
+    }
+
     private fun List<UiState.OptionGroup>.selectedValues(type: UiState.OptionGroupType): List<String> =
         find { it.type == type }?.options?.filter { it.isSelected }?.map { it.option }
             ?: emptyList()
