@@ -56,7 +56,6 @@ object GenAIData {
         val startDate: DateResult,
         val endDate: DateResult,
         val cities: List<ItineraryCity>,
-        val predictedChanges: List<String>,
     )
 
     @Serializable

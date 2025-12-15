@@ -230,7 +230,7 @@ class TripCreationAssistantViewModel(
                             endDate = it.endDate.parseAsDate(),
                         )
                     },
-                    predictedChanges = itinerary.predictedChanges.map { UiState.Option(it) },
+                    predictedChanges = emptyList(),
                 )
             },
         )
