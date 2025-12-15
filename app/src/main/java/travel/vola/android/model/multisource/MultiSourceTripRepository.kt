@@ -48,6 +48,13 @@ class MultiSourceTripRepository(
 
     override suspend fun addTrip(): String = currentDataSource.addTrip()
 
+    override suspend fun addTrip(
+        name: String,
+        places: List<TimedPlace>
+    ): String {
+        return currentDataSource.addTrip(name, places)
+    }
+
     override suspend fun updateName(tripId: String, newName: String) =
         currentDataSource.updateName(tripId, newName)
 

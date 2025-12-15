@@ -21,6 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.toRoute
+import com.google.android.libraries.places.api.Places
 import travel.vola.android.common.ui.components.OverlayHostProvider
 import travel.vola.android.di.LocalViewModelCreationExtras
 import travel.vola.android.di.initializeViewModelCreationExtras
@@ -30,6 +31,8 @@ import travel.vola.android.ui.home.HomeScreenDestination
 import travel.vola.android.ui.lodgingsearch.composable.LodgingSearch
 import travel.vola.android.ui.lodgingsearch.composable.LodgingSearchDestination
 import travel.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.trip.creation.assistant.composable.TripCreationAssistant
+import travel.vola.android.ui.trip.creation.assistant.composable.TripCreationAssistantDestination
 import travel.vola.android.ui.trip.eventlist.composable.TripDetails
 import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
 
@@ -47,6 +50,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setApplicationContext(this.applicationContext)
+        Places.initializeWithNewPlacesApiEnabled(
+            this.applicationContext,
+            "AIzaSyDZQ7sZBqF_GCR8L-n4HPyH5cyaW8sRSh0"
+        )
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent { MainScreen() }
@@ -81,6 +88,9 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable(HomeScreenDestination.ROUTE) {
                             HomeScreen(navController)
+                        }
+                        composable(TripCreationAssistantDestination.ROUTE) {
+                            TripCreationAssistant()
                         }
                         composable(
                             TripDetailsDestination.ROUTE, arguments = listOf(
