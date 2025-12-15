@@ -10,9 +10,7 @@ import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.Tool
 import com.google.firebase.ai.type.content
 import com.google.firebase.ai.type.generationConfig
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
@@ -63,8 +61,7 @@ class GenAIRepository {
         val promptQuery =
             prompt.prompt + "\n Basic Information: \n" + Json.encodeToString(basicInformation)
 
-        val result = sendMessage(promptQuery)
-        return result?.getFunctionCallParams(FunctionNames.INITIAL_PARAMETERS, "parameters")
+        return sendMessage(promptQuery, FunctionNames.INITIAL_PARAMETERS, "parameters")
     }
 
     suspend fun genInitialParametersFollowUpQuestions(
@@ -74,27 +71,11 @@ class GenAIRepository {
         val promptQuery =
             prompt.prompt +
                     "\n Parameters: \n" + Json.encodeToString(parameters)
-        val result = sendMessage(promptQuery)
-        // The schema is a little confusing for the LLM so the result might change some times, so we need to support both
-        val args = result?.getJsonArgs(
+        return sendMessage(
+            promptQuery,
             FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP,
-            "questions"
+            "questions",
         )
-        if (args == null) {
-            return GenAIData.FollowUpQuestionsOutput(emptyList())
-        }
-        if (args is JsonArray) {
-            val questions: List<GenAIData.FollowUpQuestion> = result.getFunctionCallParams(
-                FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP,
-                "questions"
-            ) ?: return GenAIData.FollowUpQuestionsOutput(emptyList())
-            return GenAIData.FollowUpQuestionsOutput(questions)
-        } else {
-            return result.getFunctionCallParams(
-                FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP,
-                "questions"
-            )
-        }
     }
 
     suspend fun genHighLevelItineraryOptions(followUpQuestions: List<GenAIData.FollowUpQuestion>): GenAIData.HighLevelItineraryOptions? {
@@ -102,10 +83,11 @@ class GenAIRepository {
         val promptQuery = prompt.prompt +
                 "\n Follow-up Questions: \n" +
                 followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" }
-        val result = sendMessage(promptQuery)
-        val response: GenAIData.HighLevelItineraryOptions? =
-            result?.getFunctionCallParams(FunctionNames.HIGH_LEVEL_ITINERARY_OPTIONS, "result")
-        return response
+        return sendMessage(
+            promptQuery,
+            FunctionNames.HIGH_LEVEL_ITINERARY_OPTIONS,
+            argName = "result",
+        )
     }
 
     private fun GenerateContentResponse.getJsonArgs(
@@ -127,32 +109,54 @@ class GenAIRepository {
         functionName: FunctionNames,
         argName: String
     ): T? {
-        try {
-            val json = getJsonArgs(functionName, argName) ?: return null
-            val jsonString = json.toString()
-            val params = Json.decodeFromString<T>(jsonString)
-            chatModel.sendMessage(content("function") {
-                part(
-                    FunctionResponsePart(
-                        functionName.value, JsonObject(
-                            mapOf(argName to json)
-                        )
+        val json = getJsonArgs(functionName, argName)
+        if (json == null) {
+            throw IllegalStateException("No args found for function $functionName")
+        }
+        val jsonString = json.toString()
+        val params = Json.decodeFromString<T>(jsonString)
+        chatModel.sendMessage(content("function") {
+            part(
+                FunctionResponsePart(
+                    functionName.value, JsonObject(
+                        mapOf(argName to json)
                     )
                 )
-            })
-            return params
-        } catch (ignored: SerializationException) {
-            Log.e("GenAIRepository", "Error parsing JSON", ignored)
-            return null
+            )
+        })
+        return params
+    }
+
+    private suspend inline fun <reified T> sendMessage(
+        prompt: String,
+        functionName: FunctionNames,
+        argName: String,
+        attemptCount: Int = 0
+    ): T? {
+        try {
+            val response = chatModel.sendMessage(prompt)
+            return response.getFunctionCallParams(functionName, argName)
+        } catch (t: Throwable) {
+            return handleResponseError(t, attemptCount, functionName, argName)
         }
     }
 
-    private suspend fun sendMessage(prompt: String): GenerateContentResponse? {
-        try {
-            return chatModel.sendMessage(prompt)
-        } catch (t: Throwable) {
-            Log.e("GenAIRepository", "Error sending message", t)
-            return null
+    private suspend inline fun <reified T> handleResponseError(
+        t: Throwable,
+        attemptCount: Int,
+        functionName: FunctionNames,
+        argName: String
+    ): T? {
+        Log.e("GenAIRepository", "Error sending message", t)
+        return if (attemptCount < 3) {
+            sendMessage(
+                "Your previous response triggered the following error:\n${t.message}\n\nplease, regenerate the response",
+                functionName,
+                argName,
+                attemptCount + 1,
+            )
+        } else {
+            null
         }
     }
 }
