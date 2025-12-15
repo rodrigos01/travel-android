@@ -32,6 +32,7 @@ import java.time.ZonedDateTime
 @Composable
 fun HighLevelItineraryOptions(
     state: UiState.HighLevelItineraryOptions,
+    onCreateTripTapped: (UiState.Itinerary) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var selected by remember { mutableStateOf<UiState.Itinerary?>(null) }
@@ -54,7 +55,7 @@ fun HighLevelItineraryOptions(
                     TextButton(onClick = { selected = null }) {
                         Text("Return to list")
                     }
-                    Button(onClick = {}) {
+                    Button(onClick = { onCreateTripTapped(selectedItinerary) }) {
                         Text("Create Trip")
                     }
                 }
@@ -139,16 +140,19 @@ fun HighLevelItineraryOptionsPreview() {
                                     name = "Copenhagen",
                                     startDate = ZonedDateTime.now(),
                                     endDate = ZonedDateTime.now().plusDays(3),
+                                    place = null,
                                 ),
                                 UiState.ItineraryCity(
                                     name = "Stockholm",
                                     startDate = ZonedDateTime.now().plusDays(3),
                                     endDate = ZonedDateTime.now().plusDays(6),
+                                    place = null,
                                 ),
                                 UiState.ItineraryCity(
                                     name = "Tromso",
                                     startDate = ZonedDateTime.now().plusDays(6),
                                     endDate = ZonedDateTime.now().plusDays(10),
+                                    place = null,
                                 ),
                             ),
 
@@ -158,7 +162,8 @@ fun HighLevelItineraryOptionsPreview() {
                             ),
                         )
                     ),
-                )
+                ),
+                onCreateTripTapped = {},
             )
         }
     }

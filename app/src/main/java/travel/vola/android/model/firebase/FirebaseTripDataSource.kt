@@ -54,6 +54,23 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
         return reference.id
     }
 
+    override suspend fun addTrip(
+        name: String,
+        places: List<TimedPlace>
+    ): String {
+        val newTrip = Trip(
+            id = "",
+            name = name,
+            coverImage = null,
+            flights = emptyList(),
+            lodgings = emptyList(),
+            places = places,
+            restaurants = emptyList(),
+        )
+        val reference = firestore.collection("/trips").add(newTrip).await()
+        return reference.id
+    }
+
     override suspend fun updateName(tripId: String, newName: String) {
         firestore.document("/trips/$tripId").update("name", newName)
     }

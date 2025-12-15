@@ -101,6 +101,7 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                         Schema.obj(
                             mapOf(
                                 "name" to Schema.string("name of the city"),
+                                "searchQuery" to Schema.string("query to search for the city in google maps"),
                                 "startDate" to Schema.obj(
                                     mapOf(
                                         "day" to Schema.integer(),
