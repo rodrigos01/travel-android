@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
@@ -107,14 +108,18 @@ class TripCreationAssistantViewModel(
 
     private val stage = MutableStateFlow<Stage>(Stage.BasicInformation)
 
-    private val generatedState = stage.map {
-        when (it) {
-            is Stage.BasicInformation -> UiState.BasicInformation()
-            is Stage.InitialParameters -> generateInitialParametersState(it.state)
-            is Stage.InitialParametersFollowUp -> getInitialParametersFollowUpState(it.state)
-            is Stage.HighLevelItineraryOptions -> getHighLevelItineraryOptionsState(it.state)
-            is Stage.Retry -> UiState.Generating
-        } ?: UiState.Error
+    private val generatedState: Flow<UiState> = stage.map {
+        if (hasExistingState(it)) {
+            uiState.value
+        } else {
+            when (it) {
+                is Stage.BasicInformation -> UiState.BasicInformation()
+                is Stage.InitialParameters -> generateInitialParametersState(it.state)
+                is Stage.InitialParametersFollowUp -> getInitialParametersFollowUpState(it.state)
+                is Stage.HighLevelItineraryOptions -> getHighLevelItineraryOptionsState(it.state)
+                is Stage.Retry -> UiState.Generating
+            } ?: UiState.Error
+        }
     }
     private val internalState = MutableStateFlow<UiState>(UiState.BasicInformation())
 
@@ -122,8 +127,18 @@ class TripCreationAssistantViewModel(
         viewModelScope, started = SharingStarted.Lazily, internalState.value
     )
 
-    private suspend fun generateInitialParametersState(basicInformation: UiState.BasicInformation): UiState.InitialParameters? {
+    private fun hasExistingState(stage: Stage): Boolean {
+        val currentState = uiState.value
+        return when (stage) {
+            is Stage.BasicInformation -> currentState is UiState.BasicInformation
+            is Stage.InitialParameters -> currentState is UiState.InitialParameters
+            is Stage.InitialParametersFollowUp -> currentState is UiState.InitialParametersFollowUp
+            is Stage.HighLevelItineraryOptions -> currentState is UiState.HighLevelItineraryOptions
+            is Stage.Retry -> false
+        }
+    }
 
+    private suspend fun generateInitialParametersState(basicInformation: UiState.BasicInformation): UiState.InitialParameters? {
         val startDateString = basicInformation.startDate?.dateString
         val endDateString = basicInformation.endDate?.dateString
         val info = GenAIData.BasicInformation(
@@ -460,11 +475,18 @@ class TripCreationAssistantViewModel(
             return
         }
         when (currentStage) {
-            is Stage.InitialParametersFollowUp -> currentStage.state
-            is Stage.HighLevelItineraryOptions -> currentStage.state
+            is Stage.InitialParameters -> Stage.BasicInformation to currentStage.state
+            is Stage.InitialParametersFollowUp -> Stage.InitialParameters(UiState.BasicInformation()) to currentStage.state
+            is Stage.HighLevelItineraryOptions -> Stage.InitialParametersFollowUp(
+                UiState.InitialParameters(
+                    emptyList()
+                )
+            ) to currentStage.state
+
             else -> null
-        }?.let { newState ->
+        }?.let { (newStage, newState) ->
             internalState.value = newState
+            stage.value = newStage
         }
     }
 
