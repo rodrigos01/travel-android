@@ -21,6 +21,7 @@ import travel.vola.android.model.genai.GenAIData
 import travel.vola.android.model.genai.GenAIRepository
 import travel.vola.android.model.repository.GeographyAutoCompleteRepository
 import travel.vola.android.model.repository.TripRepository
+import travel.vola.android.ui.home.HomeScreenDestination
 import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
 import java.time.DateTimeException
 import java.time.ZonedDateTime
@@ -464,7 +465,11 @@ class TripCreationAssistantViewModel(
                         )
                     }
                 })
-            navController.navigate(TripDetailsDestination.getRoute(tripId))
+            navController.navigate(
+                TripDetailsDestination.getRoute(tripId)
+            ) {
+                popUpTo(HomeScreenDestination.ROUTE)
+            }
         }
     }
 
