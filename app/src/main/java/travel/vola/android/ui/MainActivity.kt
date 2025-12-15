@@ -50,7 +50,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setApplicationContext(this.applicationContext)
-        Places.initializeWithNewPlacesApiEnabled(this.applicationContext, "AIzaSyDZQ7sZBqF_GCR8L-n4HPyH5cyaW8sRSh0")
+        Places.initializeWithNewPlacesApiEnabled(
+            this.applicationContext,
+            "AIzaSyDZQ7sZBqF_GCR8L-n4HPyH5cyaW8sRSh0"
+        )
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent { MainScreen() }
@@ -87,12 +90,9 @@ class MainActivity : ComponentActivity() {
                             HomeScreen(navController)
                         }
                         composable(TripCreationAssistantDestination.ROUTE) {
-                        TripCreationAssistant(navController)
-                    }
-                    composable(TripCreationAssistantDestination.ROUTE) {
-                        TripCreationAssistant(navController)
-                    }
-                    composable(
+                            TripCreationAssistant()
+                        }
+                        composable(
                             TripDetailsDestination.ROUTE, arguments = listOf(
                                 navArgument(
                                     TripDetailsDestination.ARG_TRIP_ID

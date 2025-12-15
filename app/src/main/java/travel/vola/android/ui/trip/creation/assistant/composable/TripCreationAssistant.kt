@@ -1,5 +1,6 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -31,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import travel.vola.android.extensions.viewModel
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel
@@ -39,13 +39,13 @@ import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssi
 import java.time.ZonedDateTime
 
 @Composable
-fun TripCreationAssistant(navController: NavController) {
+fun TripCreationAssistant() {
     val viewModel: TripCreationAssistantViewModel =
         viewModel(factory = TripCreationAssistantViewModel.Factory())
     val state by viewModel.uiState.collectAsState()
     TripCreationAssistant(
         state,
-        onNavigateBack = { navController.popBackStack() },
+        onNavigateBack = viewModel::onNavigateBack,
         onSkipTapped = viewModel::onSkipTapped,
         onDestinationSearchTextChanged = viewModel::onDestinationSearchTextChanged,
         onDestinationSearchResultSelected = viewModel::onDestinationSearchResultSelected,
@@ -89,6 +89,7 @@ fun TripCreationAssistant(
     onCreateTripTapped: (UiState.Itinerary) -> Unit,
     onRetryTapped: () -> Unit,
 ) {
+    BackHandler(onBack = onNavigateBack)
     Scaffold(
         topBar = {
             TopAppBar(
