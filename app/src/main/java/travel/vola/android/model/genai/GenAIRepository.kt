@@ -110,9 +110,9 @@ class GenAIRepository private constructor(
                 "\n Follow-up Questions: \n" +
                 followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" }
         val result = sendMessage(promptQuery)
-        val itineraries: List<GenAIData.Itinerary>? =
+        val response: GenAIData.HighLevelItineraryOptions? =
             result?.getFunctionCallParams(FunctionNames.HIGH_LEVEL_ITINERARY_OPTIONS, "result")
-        return itineraries?.let { GenAIData.HighLevelItineraryOptions(itineraries) }
+        return response
     }
 
     private fun GenerateContentResponse.getJsonArgs(
