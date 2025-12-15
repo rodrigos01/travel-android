@@ -37,6 +37,18 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
         return id
     }
 
+    override suspend fun addTrip(
+        name: String,
+        places: List<TimedPlace>
+    ): String {
+        val id = UUID.randomUUID().toString()
+        dao.addTrip(RoomData.Schema.Trip(id, name, null))
+        places.forEach {
+            saveTimedPlace(id, it)
+        }
+        return id
+    }
+
     override suspend fun deleteTrip(tripId: String) {
         withTrip(tripId) { trip ->
             dao.deleteTrip(trip)

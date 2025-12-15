@@ -63,6 +63,7 @@ object GenAIData {
         val name: String,
         val startDate: DateResult,
         val endDate: DateResult,
+        val searchQuery: String,
     )
 
     @Serializable

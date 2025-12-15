@@ -21,6 +21,7 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -45,6 +46,7 @@ fun TripCreationAssistant(navController: NavController) {
     TripCreationAssistant(
         state,
         onNavigateBack = { navController.popBackStack() },
+        onSkipTapped = viewModel::onSkipTapped,
         onDestinationSearchTextChanged = viewModel::onDestinationSearchTextChanged,
         onDestinationSearchResultSelected = viewModel::onDestinationSearchResultSelected,
         onDestinationClearTapped = viewModel::onDestinationClearTapped,
@@ -60,6 +62,7 @@ fun TripCreationAssistant(navController: NavController) {
         onFollowUpQuestionOptionTapped = viewModel::onFollowUpQuestionOptionTapped,
         onFollowUpQuestionsNextTapped = viewModel::onFollowUpQuestionsNextTapped,
         onRetryTapped = viewModel::onRetryTapped,
+        onCreateTripTapped = viewModel::onCreateTripTapped,
     )
 }
 
@@ -68,6 +71,7 @@ fun TripCreationAssistant(navController: NavController) {
 fun TripCreationAssistant(
     state: UiState,
     onNavigateBack: () -> Unit,
+    onSkipTapped: () -> Unit,
     onDestinationSearchTextChanged: (CharSequence) -> Unit,
     onDestinationClearTapped: (Int) -> Unit,
     onDestinationSearchResultSelected: (Int) -> Unit,
@@ -82,29 +86,38 @@ fun TripCreationAssistant(
     onInitialParametersNextTapped: () -> Unit,
     onFollowUpQuestionOptionTapped: (Int, UiState.FollowUpQuestion) -> Unit,
     onFollowUpQuestionsNextTapped: () -> Unit,
+    onCreateTripTapped: (UiState.Itinerary) -> Unit,
     onRetryTapped: () -> Unit,
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = {
-                val title = when (state) {
-                    is UiState.Error,
-                    is UiState.Generating,
-                    is UiState.BasicInformation -> "Travel Creation Assistant"
+            TopAppBar(
+                title = {
+                    val title = when (state) {
+                        is UiState.Error,
+                        is UiState.Generating,
+                        is UiState.BasicInformation -> "Travel Creation Assistant"
 
-                    is UiState.InitialParameters -> "Initial Parameters"
-                    is UiState.InitialParametersFollowUp -> "Follow Up Questions"
-                    is UiState.HighLevelItineraryOptions -> "High Level Itinerary Options"
+                        is UiState.InitialParameters -> "Initial Parameters"
+                        is UiState.InitialParametersFollowUp -> "Follow Up Questions"
+                        is UiState.HighLevelItineraryOptions -> "High Level Itinerary Options"
+                    }
+                    Text(title)
+                },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = ""
+                        )
+                    }
+                },
+                actions = {
+                    TextButton(onClick = onSkipTapped) {
+                        Text("skip")
+                    }
                 }
-                Text(title)
-            }, navigationIcon = {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = ""
-                    )
-                }
-            })
+            )
         }
     ) { contentPadding ->
         val paddingValues = PaddingValues(
@@ -197,6 +210,7 @@ fun TripCreationAssistant(
             is UiState.HighLevelItineraryOptions -> {
                 HighLevelItineraryOptions(
                     state,
+                    onCreateTripTapped,
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
@@ -218,6 +232,7 @@ fun TripCreationAssistantPreview() {
         TripCreationAssistant(
             UiState.Generating,
             onNavigateBack = {},
+            onSkipTapped = {},
             onDestinationSearchTextChanged = {},
             onDestinationSearchResultSelected = {},
             onDestinationClearTapped = {},
@@ -233,6 +248,7 @@ fun TripCreationAssistantPreview() {
             onFollowUpQuestionOptionTapped = { _, _ -> },
             onFollowUpQuestionsNextTapped = {},
             onRetryTapped = {},
+            onCreateTripTapped = {},
         )
     }
 }

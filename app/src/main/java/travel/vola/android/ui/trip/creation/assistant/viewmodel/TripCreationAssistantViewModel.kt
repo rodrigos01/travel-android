@@ -3,6 +3,7 @@ package travel.vola.android.ui.trip.creation.assistant.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
@@ -13,16 +14,22 @@ import travel.vola.android.common.ui.components.SearchResult
 import travel.vola.android.di.factoryDependencies
 import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.viewModelFactory
+import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.genai.GenAIData
 import travel.vola.android.model.genai.GenAIRepository
 import travel.vola.android.model.repository.GeographyAutoCompleteRepository
+import travel.vola.android.model.repository.TripRepository
+import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
 import java.time.DateTimeException
 import java.time.ZonedDateTime
 import java.util.TimeZone
 
 class TripCreationAssistantViewModel(
+    private val navController: NavController,
     private val repository: GenAIRepository,
     private val destinationAutoCompleteRepository: GeographyAutoCompleteRepository,
+    private val tripRepository: TripRepository,
 ) : ViewModel() {
     sealed interface UiState {
         data object Generating : UiState
@@ -89,6 +96,7 @@ class TripCreationAssistantViewModel(
             val name: String,
             val startDate: ZonedDateTime,
             val endDate: ZonedDateTime,
+            internal val place: Place?,
         )
 
         data class Option(val option: String, val isSelected: Boolean = false)
@@ -224,10 +232,17 @@ class TripCreationAssistantViewModel(
                     startDate = itinerary.startDate.parseAsDate(),
                     endDate = itinerary.endDate.parseAsDate(),
                     cities = itinerary.cities.map {
+                        val searchResult =
+                            destinationAutoCompleteRepository.autocomplete(it.searchQuery)
+                                .firstOrNull()
+                        val place = searchResult?.id?.let { id ->
+                            destinationAutoCompleteRepository.details(id)
+                        }
                         UiState.ItineraryCity(
                             name = it.name,
                             startDate = it.startDate.parseAsDate(),
                             endDate = it.endDate.parseAsDate(),
+                            place = place?.place,
                         )
                     },
                     predictedChanges = emptyList(),
@@ -416,14 +431,45 @@ class TripCreationAssistantViewModel(
         stage.value = currentStage
     }
 
+    fun onSkipTapped() {
+        viewModelScope.launch {
+            val tripId = tripRepository.addTrip()
+            navController.navigate(TripDetailsDestination.getRoute(tripId))
+        }
+    }
+
+    fun onCreateTripTapped(itinerary: UiState.Itinerary) {
+        viewModelScope.launch {
+            val tripId = tripRepository.addTrip(
+                name = itinerary.name,
+                places = itinerary.cities.mapNotNull {
+                    it.place?.let { place ->
+                        TimedPlace(
+                            id = it.name,
+                            startDateTime = it.startDate,
+                            hasStartTime = true,
+                            endDateTime = it.endDate,
+                            hasEndTime = true,
+                            place = place,
+                            city = place,
+                        )
+                    }
+                }
+            )
+            navController.navigate(TripDetailsDestination.getRoute(tripId))
+        }
+    }
+
     private fun List<UiState.OptionGroup>.selectedValues(type: UiState.OptionGroupType): List<String> =
         find { it.type == type }?.options?.filter { it.isSelected }?.map { it.option }
             ?: emptyList()
 
     class Factory : ViewModelProvider.Factory by viewModelFactory(initializer = {
         TripCreationAssistantViewModel(
+            factoryDependencies.navController,
             factoryDependencies.genAIRepository,
             GeographyAutoCompleteRepository(),
+            factoryDependencies.tripRepository,
         )
     })
 }
