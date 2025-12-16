@@ -16,17 +16,21 @@ import java.util.TimeZone
 fun FirebaseData.Trip.toAppDataModel(): Trip {
     val appFlights = flights.map { it.toAppDataModel() }
     val appLodgings = lodgings.map { it.toAppDataModel() }
+    val appPlaces = places.map { it.toAppDataModel() }
+    val appRestaurants = restaurants.map { it.toAppDataModel() }
     val image =
         coverImage ?: appLodgings.firstOrNull()?.city?.coverImage
         ?: appFlights.firstOrNull()?.segments?.firstOrNull()?.airportTo?.city?.coverImage
+        ?: appPlaces.firstOrNull()?.city?.coverImage
+        ?: appRestaurants.firstOrNull()?.city?.coverImage
     return Trip(
         id = id,
         name = name,
         coverImage = image,
         flights = appFlights,
         lodgings = appLodgings,
-        places = places.map { it.toAppDataModel() },
-        restaurants = restaurants.map { it.toAppDataModel() },
+        places = appPlaces,
+        restaurants = appRestaurants,
     )
 }
 
