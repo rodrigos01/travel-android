@@ -86,62 +86,69 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                     description = "A one-sentence summary of why you chose these 3 options."
                 ),
                 "itineraries" to Schema.array(
-                    Schema.obj(
-                        mapOf(
-                            "name" to Schema.string("Short name for this itinerary"),
-                            "description" to Schema.string("A single-sentence description for this itinerary that includes why it fits the user choices"),
-                            "startDate" to Schema.obj(
-                                mapOf(
-                                    "day" to Schema.integer(),
-                                    "month" to Schema.integer(),
-                                    "year" to Schema.integer(),
-                                ),
-                                description = "date representing the first of the itinerary",
-                            ),
-                            "endDate" to Schema.obj(
-                                mapOf(
-                                    "day" to Schema.integer(),
-                                    "month" to Schema.integer(),
-                                    "year" to Schema.integer(),
-                                ),
-                                description = "date representing the last day of the itinerary",
-                            ),
-                            "cities" to Schema.array(
-                                Schema.obj(
-                                    mapOf(
-                                        "name" to Schema.string("name of the city"),
-                                        "searchQuery" to Schema.string("query to search for the city in google maps"),
-                                        "startDate" to Schema.obj(
-                                            mapOf(
-                                                "day" to Schema.integer(),
-                                                "month" to Schema.integer(),
-                                                "year" to Schema.integer(),
-                                            ),
-                                            description = "date representing the first day in this city",
-                                        ),
-                                        "endDate" to Schema.obj(
-                                            mapOf(
-                                                "day" to Schema.integer(),
-                                                "month" to Schema.integer(),
-                                                "year" to Schema.integer(),
-                                            ),
-                                            description = "date representing the last day in this city",
-                                        ),
-                                    )
-                                )
-                            ),
-                            "predictedChanges" to Schema.array(
-                                Schema.string(),
-                                description = "3 short-phrase predicted potential changes the users might want to make to the itinerary, focused solely on the cities and period",
-                                minItems = 3,
-                                maxItems = 3,
-                            ),
-                        )
-                    ),
+                    itinerarySchema,
                     minItems = 3,
                     maxItems = 3,
                 ),
             ),
         )
+    ),
+    REFINE_ITINERARY(
+        prompt = "The user has given the following feedback to the itinerary below. Re-generate this itinerary according to their feedback and previously chosen preferences. Make sure to call the refineItinerary to generate it",
+        outputSchema = itinerarySchema
     )
 }
+
+
+private val itinerarySchema = Schema.obj(
+    mapOf(
+        "name" to Schema.string("Short name for this itinerary"),
+        "description" to Schema.string("A single-sentence description for this itinerary that includes why it fits the user choices"),
+        "startDate" to Schema.obj(
+            mapOf(
+                "day" to Schema.integer(),
+                "month" to Schema.integer(),
+                "year" to Schema.integer(),
+            ),
+            description = "date representing the first of the itinerary",
+        ),
+        "endDate" to Schema.obj(
+            mapOf(
+                "day" to Schema.integer(),
+                "month" to Schema.integer(),
+                "year" to Schema.integer(),
+            ),
+            description = "date representing the last day of the itinerary",
+        ),
+        "cities" to Schema.array(
+            Schema.obj(
+                mapOf(
+                    "name" to Schema.string("name of the city"),
+                    "searchQuery" to Schema.string("query to search for the city in google maps"),
+                    "startDate" to Schema.obj(
+                        mapOf(
+                            "day" to Schema.integer(),
+                            "month" to Schema.integer(),
+                            "year" to Schema.integer(),
+                        ),
+                        description = "date representing the first day in this city",
+                    ),
+                    "endDate" to Schema.obj(
+                        mapOf(
+                            "day" to Schema.integer(),
+                            "month" to Schema.integer(),
+                            "year" to Schema.integer(),
+                        ),
+                        description = "date representing the last day in this city",
+                    ),
+                )
+            )
+        ),
+        "predictedChanges" to Schema.array(
+            Schema.string(),
+            description = "3 short-phrase predicted potential changes the users might want to make to the itinerary, focused solely on the cities and period",
+            minItems = 3,
+            maxItems = 3,
+        ),
+    )
+)
