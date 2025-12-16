@@ -7,20 +7,16 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import okhttp3.internal.toImmutableMap
 import travel.vola.android.common.coroutines.createUseCaseScope
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.common.ui.state.MarkerViewState
@@ -71,7 +67,6 @@ class TripViewModel(
         placeRepository = placeRepository,
         coroutineScope = useCaseScope,
     ),
-    private val genAiUseCase: GenAiUseCase = GenAiUseCase(),
 ) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
 
     data class ViewState(
@@ -98,34 +93,6 @@ class TripViewModel(
 
     private val trip = repository.findTripById(tripId)
         .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
-
-    private val genAiSuggestions = trip.filterNotNull().flatMapLatest { currentTrip ->
-        val cities = (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).map {
-            it.city to if (it is TripItemState.Timeable) it.timestamp else null
-        }.distinctBy { it.first.id }
-        val suggestions: MutableMap<String, TripItemState.SuggestionsItemState?> =
-            cities.associate { it.first.id to null }.toMutableMap()
-        MutableStateFlow<Map<String, TripItemState.SuggestionsItemState?>>(suggestions).also { suggestionsFlow ->
-            coroutineScope {
-                cities.forEach { (city, time) ->
-                    async {
-                        val citySuggestions = genAiUseCase.getSuggestions(
-                            city,
-                            date = time ?: Time.now(),
-                            existingPlaces = currentTrip.places.map { it.place }
-                        )
-                        suggestions[city.id] = citySuggestions?.let { suggestion ->
-                            TripItemState.SuggestionsItemState(
-                                suggestion.places.joinToString { it.name },
-                                suggestion.predictedChanges
-                            )
-                        }
-                        suggestionsFlow.value = suggestions.toImmutableMap()
-                    }
-                }
-            }
-        }
-    }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = emptyMap())
     private val eventsFromTrip =
         trip.filterNotNull().map { currentTrip ->
             val items = genItems(currentTrip)

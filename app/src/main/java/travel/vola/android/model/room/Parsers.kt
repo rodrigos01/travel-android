@@ -14,21 +14,23 @@ import java.time.ZonedDateTime
 import java.util.TimeZone
 
 fun RoomData.Trip.toAppDataModel(): Trip {
-    val flights = flights.map { it.toAppDataModel() }
-    val lodgings = lodgings.map { it.toAppDataModel() }
-    val places = places.map { it.toAppDataModel() }
-    val restaurants = restaurants.map { it.toAppDataModel() }
+    val appFlights = flights.map { it.toAppDataModel() }
+    val appLodgings = lodgings.map { it.toAppDataModel() }
+    val appPlaces = places.map { it.toAppDataModel() }
+    val appRestaurants = restaurants.map { it.toAppDataModel() }
     val image =
-        entity.coverImage ?: lodgings.firstOrNull()?.city?.coverImage
-        ?: flights.firstOrNull()?.segments?.firstOrNull()?.airportTo?.city?.coverImage
+        entity.coverImage ?: appLodgings.firstOrNull()?.city?.coverImage
+        ?: appFlights.firstOrNull()?.segments?.firstOrNull()?.airportTo?.city?.coverImage
+        ?: appPlaces.firstOrNull()?.city?.coverImage
+        ?: appRestaurants.firstOrNull()?.city?.coverImage
     return Trip(
         id = entity.id,
         name = entity.name,
         coverImage = image,
-        flights = flights,
-        lodgings = lodgings,
-        places = places,
-        restaurants = restaurants,
+        flights = appFlights,
+        lodgings = appLodgings,
+        places = appPlaces,
+        restaurants = appRestaurants,
     )
 }
 
