@@ -1,10 +1,7 @@
 package travel.vola.android.model.datastore
 
-import android.content.Context
 import androidx.datastore.core.CorruptionException
-import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
-import androidx.datastore.dataStore
 import com.google.protobuf.InvalidProtocolBufferException
 import travel.vola.android.proto.UserPreferences
 import java.io.InputStream
