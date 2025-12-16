@@ -22,8 +22,9 @@ import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssi
 @Composable
 fun InitialParametersFollowUp(
     state: UiState.InitialParametersFollowUp,
-    onFollowUpQuestionOptionTapped: (Int, UiState.FollowUpQuestion) -> Unit,
-    onFollowUpQuestionsNextTapped: () -> Unit,
+    onOptionTapped: (Int, UiState.FollowUpQuestion) -> Unit,
+    onCustomAnswerAdded: (String, UiState.FollowUpQuestion) -> Unit,
+    onNextTapped: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -51,7 +52,7 @@ fun InitialParametersFollowUp(
             question.answers.forEachIndexed { optionIndex, option ->
                 ElevatedCard(
                     onClick = {
-                        onFollowUpQuestionOptionTapped(
+                        onOptionTapped(
                             optionIndex,
                             question
                         )
@@ -65,9 +66,14 @@ fun InitialParametersFollowUp(
                     Text(option.option, modifier = Modifier.padding(8.dp))
                 }
             }
+            InlinedTextField(
+                initialValue = "",
+                onDone = { onCustomAnswerAdded(it, question) },
+                label = { Text("Something Else") }
+            )
         }
         Button(
-            onClick = onFollowUpQuestionsNextTapped,
+            onClick = onNextTapped,
             enabled = state.nextButtonEnabled,
             modifier = Modifier.align(Alignment.End)
         ) { Text("Next") }
@@ -104,8 +110,9 @@ fun InitialParametersFollowUpPreview() {
                         )
                     ),
                 ),
-                onFollowUpQuestionOptionTapped = { _, _ -> },
-                onFollowUpQuestionsNextTapped = {},
+                onOptionTapped = { _, _ -> },
+                onCustomAnswerAdded = { _, _ -> },
+                onNextTapped = {},
             )
         }
     }

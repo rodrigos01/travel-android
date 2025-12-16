@@ -16,10 +16,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,10 +28,12 @@ import java.time.ZonedDateTime
 @Composable
 fun HighLevelItineraryOptions(
     state: UiState.HighLevelItineraryOptions,
+    onItinerarySelected: (UiState.Itinerary?) -> Unit,
+    onConfirmationOptionTapped: (String) -> Unit,
     onCreateTripTapped: (UiState.Itinerary) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var selected by remember { mutableStateOf<UiState.Itinerary?>(null) }
+    val selected = state.selected
 
     AnimatedContent(selected) { selectedItinerary ->
         Column(
@@ -46,13 +44,18 @@ fun HighLevelItineraryOptions(
                 ItineraryCard(selectedItinerary, onTap = {})
                 selectedItinerary.predictedChanges.forEach { option ->
                     ElevatedCard(
-                        onClick = {},
+                        onClick = { onConfirmationOptionTapped(option.option) },
                     ) {
                         Text(option.option, modifier = Modifier.padding(8.dp))
                     }
                 }
+                InlinedTextField(
+                    initialValue = "",
+                    onDone = { onConfirmationOptionTapped(it) },
+                    label = { Text("Something Else") }
+                )
                 Row(modifier = Modifier.align(Alignment.End)) {
-                    TextButton(onClick = { selected = null }) {
+                    TextButton(onClick = { onItinerarySelected(null) }) {
                         Text("Return to list")
                     }
                     Button(onClick = { onCreateTripTapped(selectedItinerary) }) {
@@ -62,7 +65,7 @@ fun HighLevelItineraryOptions(
             } else {
                 Text("Select the itinerary that more closely matches your preferences. You can make changes to it after selecting it.")
                 state.itineraries.forEach { itinerary ->
-                    ItineraryCard(itinerary, { selected = itinerary })
+                    ItineraryCard(itinerary, onTap = { onItinerarySelected(itinerary) })
                 }
             }
         }
@@ -163,6 +166,8 @@ fun HighLevelItineraryOptionsPreview() {
                         )
                     ),
                 ),
+                onItinerarySelected = {},
+                onConfirmationOptionTapped = {},
                 onCreateTripTapped = {},
             )
         }

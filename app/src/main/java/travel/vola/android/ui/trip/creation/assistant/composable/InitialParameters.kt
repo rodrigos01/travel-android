@@ -1,23 +1,29 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel.UiState
 
 @Composable
 fun InitialParameters(
     state: UiState.InitialParameters,
-    onInitialParameterOptionTapped: (Int, UiState.OptionGroupType) -> Unit,
-    onInitialParametersNextTapped: () -> Unit,
+    onOptionTapped: (Int, UiState.OptionGroupType) -> Unit,
     onOptionAdded: (UiState.OptionGroupType, String) -> Unit,
+    onAnythingElseTextChanged: (String) -> Unit,
+    onNextTapped: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -38,15 +44,26 @@ fun InitialParameters(
                 group.options.forEachIndexed { index, option ->
                     FilterChip(
                         selected = option.isSelected,
-                        onClick = { onInitialParameterOptionTapped(index, group.type) },
+                        onClick = { onOptionTapped(index, group.type) },
                         label = {
                             Text(option.option)
                         })
                 }
             }
         }
+        Text("Anything Else?", style = MaterialTheme.typography.titleLarge)
+        OutlinedTextField(
+            value = state.anythingElse,
+            placeholder = {
+                Text("Any other information you think it's relevant for creating your trip.")
+            },
+            onValueChange = onAnythingElseTextChanged,
+            modifier = Modifier
+                .padding(top = 4.dp)
+                .height(96.dp)
+        )
         Button(
-            onClick = onInitialParametersNextTapped,
+            onClick = onNextTapped,
             enabled = state.nextButtonEnabled,
             modifier = Modifier.align(Alignment.End)
         ) { Text("Next") }
@@ -71,9 +88,10 @@ fun InitialParametersPreview() {
                         )
                     )
                 ),
-                onInitialParameterOptionTapped = { _, _ -> },
-                onInitialParametersNextTapped = {},
+                onOptionTapped = { _, _ -> },
                 onOptionAdded = { _, _ -> },
+                onAnythingElseTextChanged = {},
+                onNextTapped = {},
             )
         }
     }
