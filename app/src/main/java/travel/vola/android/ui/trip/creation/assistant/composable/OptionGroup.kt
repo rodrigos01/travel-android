@@ -30,33 +30,47 @@ fun OptionGroup(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(title, style = MaterialTheme.typography.titleLarge)
 
-        var textFieldContent by remember { mutableStateOf("") }
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(0.dp),
             content = {
                 options()
-                TextField(
-                    value = textFieldContent,
-                    onValueChange = { textFieldContent = it },
-                    singleLine = true,
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                    ),
-                    modifier = Modifier.widthIn(min = 120.dp),
-                    label = { Text("Add More") },
-                    keyboardActions = KeyboardActions(onDone = {
+                InlinedTextField(
+                    onDone = { textFieldContent ->
                         if (textFieldContent.isNotBlank()) {
                             onOptionAdded(textFieldContent)
-                            textFieldContent = ""
                         }
-                    })
+                    },
+                    label = { Text("Add More") }
                 )
             },
         )
     }
+}
+
+@Composable
+fun InlinedTextField(
+    initialValue: String = "",
+    onDone: (String) -> Unit,
+    label: @Composable (() -> Unit)? = null,
+) {
+    var textFieldContent by remember { mutableStateOf(initialValue) }
+    TextField(
+        value = textFieldContent,
+        onValueChange = { textFieldContent = it },
+        singleLine = true,
+        colors = TextFieldDefaults.colors(
+            unfocusedContainerColor = Color.Transparent,
+            focusedContainerColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+        ),
+        modifier = Modifier.widthIn(min = 120.dp),
+        label = label,
+        keyboardActions = KeyboardActions(onDone = {
+            onDone(textFieldContent)
+            textFieldContent = ""
+        })
+    )
 }
 
 fun listOfOptions(vararg options: String, selected: Int = -1): List<UiState.Option> =

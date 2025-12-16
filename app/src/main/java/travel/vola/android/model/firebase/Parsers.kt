@@ -91,6 +91,16 @@ fun FirebaseData.RestaurantReservation.toAppDataModel() = RestaurantReservation(
     city = city?.toAppDataModel() ?: error("city is required"),
 )
 
+fun Trip.toFirebaseDataModel() = FirebaseData.Trip(
+    id = id,
+    name = name,
+    coverImage = coverImage,
+    flights = flights.map { it.toFirebaseDataModel() },
+    lodgings = lodgings.map { it.toFirebaseDataModel() },
+    places = places.map { it.toFirebaseDataModel() },
+    restaurants = restaurants.map { it.toFirebaseDataModel() },
+)
+
 fun Flight.toFirebaseDataModel() = FirebaseData.Flight(
     id = id,
     segments = segments.map { it.toFirebaseDataModel() },

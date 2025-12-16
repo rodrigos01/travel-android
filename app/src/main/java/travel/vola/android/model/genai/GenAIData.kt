@@ -29,10 +29,12 @@ object GenAIData {
         val focus: List<String>,
         val mustHave: List<String>,
         val duration: List<String>,
+        val anythingElse: String,
     )
 
     @Serializable
     data class FollowUpQuestionsOutput(
+        val numQuestions: Int,
         val questions: List<FollowUpQuestion>
     )
 
