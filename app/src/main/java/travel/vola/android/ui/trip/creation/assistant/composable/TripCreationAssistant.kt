@@ -64,6 +64,8 @@ fun TripCreationAssistant() {
         onFollowUpQuestionCustomAnswerAdded = viewModel::onFollowUpQuestionCustomAnswerAdded,
         onFollowUpQuestionsNextTapped = viewModel::onFollowUpQuestionsNextTapped,
         onRetryTapped = viewModel::onRetryTapped,
+        onItinerarySelected = viewModel::onItinerarySelected,
+        onConfirmationOptionTapped = viewModel::onConfirmationOptionSelected,
         onCreateTripTapped = viewModel::onCreateTripTapped,
     )
 }
@@ -90,6 +92,8 @@ fun TripCreationAssistant(
     onFollowUpQuestionOptionTapped: (Int, UiState.FollowUpQuestion) -> Unit,
     onFollowUpQuestionCustomAnswerAdded: (String, UiState.FollowUpQuestion) -> Unit,
     onFollowUpQuestionsNextTapped: () -> Unit,
+    onItinerarySelected: (UiState.Itinerary?) -> Unit,
+    onConfirmationOptionTapped: (String) -> Unit,
     onCreateTripTapped: (UiState.Itinerary) -> Unit,
     onRetryTapped: () -> Unit,
 ) {
@@ -217,6 +221,8 @@ fun TripCreationAssistant(
             is UiState.HighLevelItineraryOptions -> {
                 HighLevelItineraryOptions(
                     state,
+                    onItinerarySelected,
+                    onConfirmationOptionTapped,
                     onCreateTripTapped,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -257,6 +263,8 @@ fun TripCreationAssistantPreview() {
             onFollowUpQuestionCustomAnswerAdded = { _, _ -> },
             onFollowUpQuestionsNextTapped = {},
             onRetryTapped = {},
+            onItinerarySelected = {},
+            onConfirmationOptionTapped = {},
             onCreateTripTapped = {},
         )
     }

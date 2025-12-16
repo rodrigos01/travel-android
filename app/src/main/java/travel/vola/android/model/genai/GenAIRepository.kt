@@ -17,9 +17,10 @@ import kotlinx.serialization.json.JsonObject
 class GenAIRepository {
 
     enum class FunctionNames(val value: String) {
-        INITIAL_PARAMETERS("genInitialParameters"), INITIAL_PARAMETERS_FOLLOW_UP("genInitialParametersFollowUp"), HIGH_LEVEL_ITINERARY_OPTIONS(
-            "genHighLevelItineraryOptions"
-        ),
+        INITIAL_PARAMETERS("genInitialParameters"),
+        INITIAL_PARAMETERS_FOLLOW_UP("genInitialParametersFollowUp"),
+        HIGH_LEVEL_ITINERARY_OPTIONS("genHighLevelItineraryOptions"),
+        REFINE_ITINERARY("refineItinerary"),
     }
 
     private val chatModel by lazy {
@@ -47,6 +48,11 @@ class GenAIRepository {
                                 parameters = mapOf("result" to Prompts.HIGH_LEVEL_ITINERARY_OPTIONS.outputSchema),
                                 description = "Creates the high-level travel itinerary options for the trip creation assistant"
                             ),
+                            FunctionDeclaration(
+                                name = FunctionNames.REFINE_ITINERARY.value,
+                                parameters = mapOf("result" to Prompts.REFINE_ITINERARY.outputSchema),
+                                description = "Creates the refined itinerary based on the user's feedback for the trip creation assistant",
+                            )
                         )
                     )
                 )
@@ -80,6 +86,21 @@ class GenAIRepository {
         return sendMessage(
             promptQuery,
             FunctionNames.HIGH_LEVEL_ITINERARY_OPTIONS,
+            argName = "result",
+        )
+    }
+
+    suspend fun genRefinedItinerary(
+        refinement: String,
+        itinerary: GenAIData.Itinerary
+    ): GenAIData.Itinerary? {
+        val prompt = Prompts.REFINE_ITINERARY
+        val promptQuery =
+            prompt.prompt + "\n Feedback: " + refinement +
+                    "\n Selected Itinerary:\n" + Json.encodeToString(itinerary)
+        return sendMessage(
+            promptQuery,
+            FunctionNames.REFINE_ITINERARY,
             argName = "result",
         )
     }

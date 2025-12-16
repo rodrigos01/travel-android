@@ -77,6 +77,7 @@ class TripCreationAssistantViewModel(
 
         data class HighLevelItineraryOptions(
             val itineraries: List<Itinerary>,
+            val selected: Itinerary? = null,
         ) : UiState
 
         data class Itinerary(
@@ -105,6 +106,11 @@ class TripCreationAssistantViewModel(
         data class InitialParameters(val state: UiState.BasicInformation) : Stage
         data class InitialParametersFollowUp(val state: UiState.InitialParameters) : Stage
         data class HighLevelItineraryOptions(val state: UiState) : Stage
+
+        data class ItineraryRefinement(
+            val option: String,
+            val state: UiState.HighLevelItineraryOptions,
+        ) : Stage
     }
 
     private val stage = MutableStateFlow<Stage>(Stage.BasicInformation)
@@ -118,6 +124,7 @@ class TripCreationAssistantViewModel(
                 is Stage.InitialParameters -> generateInitialParametersState(it.state)
                 is Stage.InitialParametersFollowUp -> getInitialParametersFollowUpState(it.state)
                 is Stage.HighLevelItineraryOptions -> getHighLevelItineraryOptionsState(it.state)
+                is Stage.ItineraryRefinement -> getItineraryRefinementState(it.option, it.state)
                 is Stage.Retry -> UiState.Generating
             } ?: UiState.Error
         }
@@ -134,7 +141,9 @@ class TripCreationAssistantViewModel(
             is Stage.BasicInformation -> currentState is UiState.BasicInformation
             is Stage.InitialParameters -> currentState is UiState.InitialParameters
             is Stage.InitialParametersFollowUp -> currentState is UiState.InitialParametersFollowUp
-            is Stage.HighLevelItineraryOptions -> currentState is UiState.HighLevelItineraryOptions
+            is Stage.HighLevelItineraryOptions,
+            is Stage.ItineraryRefinement -> currentState is UiState.HighLevelItineraryOptions
+
             is Stage.Retry -> false
         }
     }
@@ -247,6 +256,66 @@ class TripCreationAssistantViewModel(
             },
         )
     }
+
+    private suspend fun getItineraryRefinementState(
+        refinement: String,
+        state: UiState.HighLevelItineraryOptions
+    ): UiState.HighLevelItineraryOptions {
+        val selected = state.selected ?: return state
+        val refinementResult = repository.genRefinedItinerary(
+            refinement,
+            itinerary = GenAIData.Itinerary(
+                name = selected.name,
+                description = selected.description,
+                cities = selected.cities.map {
+                    GenAIData.ItineraryCity(
+                        name = it.name,
+                        startDate = it.startDate.asDateResult(),
+                        endDate = it.endDate.asDateResult(),
+                        searchQuery = "${it.place?.name}, ${it.place?.address}",
+                    )
+                },
+                startDate = selected.startDate.asDateResult(),
+                endDate = selected.endDate.asDateResult(),
+                predictedChanges = selected.predictedChanges.map { it.option },
+            ),
+        ) ?: return state
+        val refinedItinerary = UiState.Itinerary(
+            name = refinementResult.name,
+            description = refinementResult.description,
+            cities = refinementResult.cities.map {
+                val searchResult =
+                    destinationAutoCompleteRepository.autocomplete(it.searchQuery)
+                        .firstOrNull()
+                val place = searchResult?.id?.let { id ->
+                    destinationAutoCompleteRepository.details(id)
+                }
+                UiState.ItineraryCity(
+                    name = it.name,
+                    startDate = it.startDate.parseAsDate(),
+                    endDate = it.endDate.parseAsDate(),
+                    place = place?.place,
+                )
+            },
+            startDate = refinementResult.startDate.parseAsDate(),
+            endDate = refinementResult.endDate.parseAsDate(),
+            predictedChanges = refinementResult.predictedChanges.map { UiState.Option(it) },
+        )
+        return state.copy(
+            selected = refinedItinerary,
+            itineraries = state.itineraries.map {
+                if (it == selected) {
+                    refinedItinerary
+                } else {
+                    it
+                }
+            }
+        )
+    }
+
+    private fun ZonedDateTime.asDateResult() = GenAIData.DateResult(
+        year = year, month = monthValue, day = dayOfMonth
+    )
 
     private fun GenAIData.DateResult.parseAsDate(): ZonedDateTime {
         try {
@@ -449,10 +518,22 @@ class TripCreationAssistantViewModel(
         }
     }
 
+    fun onItinerarySelected(itinerary: UiState.Itinerary?) {
+        val state = uiState.value as? UiState.HighLevelItineraryOptions ?: return
+        internalState.value = state.copy(selected = itinerary)
+    }
+
+    fun onConfirmationOptionSelected(option: String) {
+        val state = uiState.value as? UiState.HighLevelItineraryOptions ?: return
+        internalState.value = UiState.Generating
+        stage.value = Stage.ItineraryRefinement(option, state)
+    }
+
     fun onCreateTripTapped(itinerary: UiState.Itinerary) {
         viewModelScope.launch {
             val tripId = tripRepository.addTrip(
-                name = itinerary.name, places = itinerary.cities.mapNotNull {
+                name = itinerary.name,
+                places = itinerary.cities.mapNotNull {
                     it.place?.let { place ->
                         TimedPlace(
                             id = it.name,
