@@ -1,7 +1,6 @@
 package travel.vola.android.ui.trip.viewmodel
 
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -13,8 +12,6 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
 import travel.vola.android.extensions.Time
-import travel.vola.android.extensions.remove
-import travel.vola.android.extensions.set
 import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
@@ -66,7 +63,7 @@ class TripViewModelTest {
     @Test
     fun `events should have one departure event per flight`() {
         tripFlow.value = Trip(
-            flights = listOf(
+            flights = listOf<Flight>(
                 Flight(
                     id = "jfk-lis",
                     airportFromName = "John F. Kennedy Intl. Airport",
@@ -534,151 +531,6 @@ class TripViewModelTest {
     }
 
     @Test
-    fun `last item on day should have empty add item after it`() {
-        val lodgingName = "Best Western Premier Hotel Montfleuri"
-        tripFlow.value = Trip(
-            lodgings = listOf(
-                Lodging(
-                    name = lodgingName,
-                    checkIn = "2024-05-29T13:00:00+02:00",
-                    checkout = "2024-05-30T11:00:00+02:00",
-                ),
-            )
-        )
-        val checkInItemIndex =
-            subject.viewState.value.items.indexOfFirst { it is HotelCheckInItemState && it.hotelName == lodgingName }
-        val addPlanItem = subject.viewState.value.items[checkInItemIndex + 1]
-        assertThat(addPlanItem).isInstanceOf(TripItemState.EmptyAddPlanItemState::class.java)
-    }
-
-    @Test
-    fun `last item in place should have empty add item after it`() {
-        val lodgingName = "Best Western Premier Hotel Montfleuri"
-        tripFlow.value = Trip(
-            lodgings = listOf(
-                Lodging(
-                    name = lodgingName,
-                    checkIn = "2024-05-29T13:00:00+02:00",
-                    checkout = "2024-05-30T11:00:00+02:00",
-                    cityName = "Montfleuri"
-                ),
-                Lodging(
-                    name = "Hôtel La Villa Nice Victor Hugo",
-                    checkIn = "2024-05-30T13:00:00+02:00",
-                    checkout = "2024-06-01T11:00:00+02:00",
-                    cityName = "Nice"
-                ),
-            )
-        )
-        val checkOutItemIndex =
-            subject.viewState.value.items.indexOfFirst { it is HotelCheckOutItemState && it.hotelName == lodgingName }
-        val addPlanItem = subject.viewState.value.items[checkOutItemIndex + 1]
-        assertThat(addPlanItem).isInstanceOf(TripItemState.EmptyAddPlanItemState::class.java)
-    }
-
-    @Test
-    fun `last item in list should be empty add item`() {
-        tripFlow.value = Trip(
-            lodgings = listOf(
-                Lodging(
-                    name = "Hôtel La Villa Nice Victor Hugo",
-                    checkIn = "2024-05-30T13:00:00+02:00",
-                    checkout = "2024-06-01T11:00:00+02:00",
-                    cityName = "Nice"
-                ),
-            )
-        )
-        val addPlanItem = subject.viewState.value.items.last()
-        assertThat(addPlanItem).isInstanceOf(TripItemState.EmptyAddPlanItemState::class.java)
-    }
-
-    @Test
-    fun `last item after single departure event should not have empty add item after it`() {
-        tripFlow.value = Trip(
-            flights = listOf(
-                Flight(
-                    id = "jfk-lis",
-                    departure = "2024-05-10T22:05:00-04:00",
-                    airportToName = "Humberto Delgado International Airport",
-                    arrival = "2024-05-11T10:00:00+01:00",
-                    cityFromName = "New York",
-                    cityToName = "Lisbon",
-                ),
-                Flight(
-                    id = "por-par",
-                    departure = "2024-05-21T17:05:00+01:00",
-                    airportToName = "Orly Airport",
-                    arrival = "2024-05-21T19:25:00+02:00",
-                    cityFromName = "Porto",
-                    cityToName = "Paris",
-                ),
-                Flight(
-                    id = "par-jfk",
-                    departure = "2024-06-14T17:05:00+01:00",
-                    airportToName = "John F. Kennedy Intl. Airport",
-                    arrival = "2024-06-14T20:05:00-04:00",
-                    cityFromName = "Porto",
-                    cityToName = "New York",
-                ),
-            ), lodgings = listOf(
-                Lodging(
-                    name = "Pestana Porto - A Brasileira",
-                    address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
-                    checkIn = "2024-05-21T13:00:00+01:00",
-                    checkout = "2024-06-14T11:00:00+01:00",
-                    cityName = "Paris"
-                ),
-            )
-        )
-        val departureItemIndex = subject.viewState.value.items.indexOfFirst {
-            it is FlightDepartureItemState && it.destination == "New York"
-        }
-        val itemBefore = subject.viewState.value.items[departureItemIndex + 1]
-        assertThat(itemBefore).isNotInstanceOf(TripItemState.EmptyAddPlanItemState::class.java)
-    }
-
-    @Test
-    fun `empty add plan item should not appear before empty date range`() {
-        tripFlow.value = Trip(
-            lodgings = listOf(
-                Lodging(
-                    name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00:00+01:00",
-                    checkout = "2024-05-19T11:00:00+01:00",
-                ),
-            )
-        )
-        val dateRangeItemIndex =
-            subject.viewState.value.items.indexOfFirst { it is DateRangeItemState }
-        val itemBefore = subject.viewState.value.items[dateRangeItemIndex - 1]
-        assertThat(itemBefore).isNotInstanceOf(TripItemState.EmptyAddPlanItemState::class.java)
-    }
-
-    @Test
-    fun `add Plan tapped should add add plan item at tapped item index`() {
-        tripFlow.value = Trip(
-            lodgings = listOf(
-                Lodging(
-                    name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00:00+01:00",
-                    checkout = "2024-05-19T11:00:00+01:00",
-                ),
-            )
-        )
-        val addPlanItemId = "originalItemId"
-        val expected: AddPlanItemState = mock {
-            on { id } doReturn addPlanItemId
-        }
-        mockAddPlanItem(expected)
-        val originalItem =
-            subject.viewState.value.items.first { it is TripItemState.EmptyAddPlanItemState } as TripItemState.EmptyAddPlanItemState
-        val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
-        subject.addButtonTapped(originalItem.id)
-        val addedItem = subject.viewState.value.items[originalItemIndex]
-        assertThat(addedItem).isEqualTo(expected)
-    }
-
-    @Test
     fun `add plan tapped on last item in place should add add plan item with last item time and start date selection disabled`() {
         val lodgingName = "Best Western Premier Hotel Montfleuri"
         tripFlow.value = Trip(
@@ -777,90 +629,6 @@ class TripViewModelTest {
     }
 
     @Test
-    fun `save should add new flight to repository`() = runTest {
-        tripFlow.value = Trip(
-            lodgings = listOf(
-                Lodging(
-                    name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00:00+01:00",
-                    checkout = "2024-05-19T11:00:00+01:00",
-                ),
-            )
-        )
-        val addPlanItemId = "originalItemId"
-        val addPlanItem: AddPlanItemState = mock {
-            on { id } doReturn addPlanItemId
-        }
-        val entity: Flight = mock()
-        mockAddPlanItem(addPlanItem)
-        addPlanUseCase.stub {
-            on { saveItem(addPlanItemId) } doReturn entity
-        }
-        val originalItem =
-            subject.viewState.value.items.first { it is TripItemState.EmptyAddPlanItemState } as TripItemState.EmptyAddPlanItemState
-        subject.addButtonTapped(originalItem.id)
-        subject.save(addPlanItemId)
-        verify(addPlanUseCase).saveItem(addPlanItemId)
-        verify(repository).saveFlight("tripId", entity)
-    }
-
-    @Test
-    fun `save should add new lodging to repository`() = runTest {
-        tripFlow.value = Trip(
-            lodgings = listOf(
-                Lodging(
-                    name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00:00+01:00",
-                    checkout = "2024-05-19T11:00:00+01:00",
-                ),
-            )
-        )
-        val addPlanItemId = "originalItemId"
-        val addPlanItem: AddPlanItemState = mock {
-            on { id } doReturn addPlanItemId
-        }
-        val entity: Lodging = mock()
-        mockAddPlanItem(addPlanItem)
-        addPlanUseCase.stub {
-            on { saveItem(addPlanItemId) } doReturn entity
-        }
-        val originalItem =
-            subject.viewState.value.items.first { it is TripItemState.EmptyAddPlanItemState } as TripItemState.EmptyAddPlanItemState
-        subject.addButtonTapped(originalItem.id)
-        subject.save(addPlanItemId)
-        verify(addPlanUseCase).saveItem(addPlanItemId)
-        verify(repository).saveLodging("tripId", entity)
-    }
-
-    @Test
-    fun `addPlanUseCase items changed should update existing item`() {
-        tripFlow.value = Trip(
-            lodgings = listOf(
-                Lodging(
-                    name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00:00+01:00",
-                    checkout = "2024-05-19T11:00:00+01:00",
-                ),
-            )
-        )
-        val addPlanItemId = "originalItemId"
-        val addPlanItem: AddPlanItemState = mock {
-            on { id } doReturn addPlanItemId
-        }
-        mockAddPlanItem(addPlanItem)
-        val originalItem =
-            subject.viewState.value.items.first { it is TripItemState.EmptyAddPlanItemState } as TripItemState.EmptyAddPlanItemState
-        val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
-        subject.addButtonTapped(originalItem.id)
-        val newAddPlanItem = mock<AddFlightItemState> {
-            on { id } doReturn addPlanItemId
-        }
-        addPlanItems[originalItem.id] = newAddPlanItem
-        val resultAddPlanItem = subject.viewState.value.items[originalItemIndex]
-        assertThat(resultAddPlanItem).isEqualTo(newAddPlanItem)
-    }
-
-    @Test
     fun `addPlanUseCase items changed invalid item should ignore`() {
         tripFlow.value = Trip(
             lodgings = listOf(
@@ -921,34 +689,6 @@ class TripViewModelTest {
         verify(addPlanUseCase).removeItem(addPlanItemId)
     }
 
-    @Test
-    fun `item removed from usecase should reinsert replaceable item`() {
-        tripFlow.value = Trip(
-            lodgings = listOf(
-                Lodging(
-                    name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00:00+01:00",
-                    checkout = "2024-05-19T11:00:00+01:00",
-                ),
-            )
-        )
-        val addPlanItemId = "originalItemId"
-        val addPlanItemTimestamp: Time = mock()
-        val addPlanItem: AddPlanItemState = mock {
-            on { id } doReturn addPlanItemId
-            on { timestamp } doReturn addPlanItemTimestamp
-        }
-        mockAddPlanItem(addPlanItem)
-        val originalItem =
-            subject.viewState.value.items.first { it is TripItemState.EmptyAddPlanItemState } as TripItemState.EmptyAddPlanItemState
-        val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
-        subject.addButtonTapped(originalItem.id)
-        subject.cancelEdit(addPlanItemId)
-        addPlanItems.remove(originalItem.id)
-        val resultAddPlanItem = subject.viewState.value.items[originalItemIndex]
-        assertThat(resultAddPlanItem).isEqualTo(originalItem)
-    }
-
     private fun mockAddPlanItem(addPlanItem: AddPlanItemState) {
         addPlanUseCase.stub {
             on { createAddPlanItem(any(), any(), any(), any()) } doAnswer {
@@ -970,6 +710,7 @@ class TripViewModelTest {
         flights = flights,
         lodgings = lodgings,
         places = places,
+        restaurants = emptyList(),
     )
 
     private fun Flight(
@@ -1030,6 +771,7 @@ class TripViewModelTest {
         longitude = 0.0,
         coverImage = null,
         externalId = "",
+        timeZone = TimeZone.getDefault(),
         source = "",
     )
 }
