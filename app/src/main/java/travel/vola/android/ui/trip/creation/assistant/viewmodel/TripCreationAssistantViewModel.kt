@@ -4,10 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -33,34 +32,58 @@ class TripCreationAssistantViewModel(
     private val tripRepository: TripRepository,
 ) : ViewModel() {
 
-    private sealed interface Stage {
+    private sealed interface Step {
 
-        data object Retry : Stage
-        data object BasicInformation : Stage
-        data class InitialParameters(val state: UiState.BasicInformation) : Stage
-        data class InitialParametersFollowUp(val state: UiState.InitialParameters) : Stage
-        data class HighLevelItineraryOptions(val state: UiState) : Stage
+        data object Retry : Step
+        data object BasicInformation : Step
+        data class InitialParameters(val state: UiState.BasicInformation) : Step
+        data class InitialParametersFollowUp(val state: UiState.InitialParameters) : Step
+        data class HighLevelItineraryOptions(val state: UiState) : Step
 
         data class ItineraryRefinement(
             val option: String,
             val state: UiState.HighLevelItineraryOptions,
-        ) : Stage
+        ) : Step
     }
 
-    private val stage = MutableStateFlow<Stage>(Stage.BasicInformation)
+    data class CompositeState(
+        val basicInformation: UiState.BasicInformation,
+        val initialParameters: UiState.InitialParameters?,
+        val initialParametersFollowUp: UiState.InitialParametersFollowUp?,
+        val highLevelItineraryOptions: UiState.HighLevelItineraryOptions?,
+    )
 
-    private val generatedState: Flow<UiState> = stage.map {
-        if (hasExistingState(it)) {
-            uiState.value
-        } else {
-            when (it) {
-                is Stage.BasicInformation -> UiState.BasicInformation()
-                is Stage.InitialParameters -> generateInitialParametersState(it.state)
-                is Stage.InitialParametersFollowUp -> getInitialParametersFollowUpState(it.state)
-                is Stage.HighLevelItineraryOptions -> getHighLevelItineraryOptionsState(it.state)
-                is Stage.ItineraryRefinement -> getItineraryRefinementState(it.option, it.state)
-                is Stage.Retry -> UiState.Generating
-            } ?: UiState.Error
+    private val step = MutableStateFlow<Step>(Step.BasicInformation)
+    private val compositeState = MutableStateFlow<CompositeState>(
+        CompositeState(
+            basicInformation = UiState.BasicInformation(),
+            initialParameters = null,
+            initialParametersFollowUp = null,
+            highLevelItineraryOptions = null,
+        )
+    )
+
+    private val generatedState = combine(step, compositeState) { step, state ->
+        step to when (step) {
+            is Step.BasicInformation -> state.basicInformation
+            is Step.InitialParameters -> state.initialParameters ?: generateInitialParametersState(
+                state.basicInformation
+            )
+
+            is Step.InitialParametersFollowUp -> state.initialParametersFollowUp
+                ?: state.initialParameters?.let { getInitialParametersFollowUpState(it) }
+
+            is Step.HighLevelItineraryOptions -> state.highLevelItineraryOptions
+                ?: state.initialParametersFollowUp?.let { getHighLevelItineraryOptionsState(it) }
+
+            is Step.ItineraryRefinement -> state.highLevelItineraryOptions?.let {
+                getItineraryRefinementState(
+                    step.option,
+                    it
+                )
+            }
+
+            is Step.Retry -> UiState.Generating
         }
     }
     private val internalState = MutableStateFlow<UiState>(UiState.BasicInformation())
@@ -68,19 +91,6 @@ class TripCreationAssistantViewModel(
     val uiState = merge(generatedState, internalState).stateIn(
         viewModelScope, started = SharingStarted.Lazily, internalState.value
     )
-
-    private fun hasExistingState(stage: Stage): Boolean {
-        val currentState = uiState.value
-        return when (stage) {
-            is Stage.BasicInformation -> currentState is UiState.BasicInformation
-            is Stage.InitialParameters -> currentState is UiState.InitialParameters
-            is Stage.InitialParametersFollowUp -> currentState is UiState.InitialParametersFollowUp
-            is Stage.HighLevelItineraryOptions,
-            is Stage.ItineraryRefinement -> currentState is UiState.HighLevelItineraryOptions
-
-            is Stage.Retry -> false
-        }
-    }
 
     private suspend fun generateInitialParametersState(basicInformation: UiState.BasicInformation): UiState.InitialParameters? {
         val startDateString = basicInformation.startDate?.dateString
@@ -146,7 +156,7 @@ class TripCreationAssistantViewModel(
                     )
                 })
         } else {
-            stage.value = Stage.HighLevelItineraryOptions(state)
+            step.value = Step.HighLevelItineraryOptions(state)
             return UiState.Generating
         }
     }
@@ -267,8 +277,15 @@ class TripCreationAssistantViewModel(
         viewModelScope.launch {
             val results = destinationAutoCompleteRepository.autocomplete(query.toString())
             if (results.isNotEmpty()) {
-                internalState.value = state.copy(
-                    destinationSearchResults = results.map { SearchResult(it.name, it.address) })
+                updateBasicState(
+                    state.copy(
+                        destinationSearchResults = results.map {
+                            SearchResult(
+                                it.name,
+                                it.address
+                            )
+                        })
+                )
             }
         }
     }
@@ -343,13 +360,15 @@ class TripCreationAssistantViewModel(
     private fun updateBasicState(state: UiState.BasicInformation) {
         val nextButtonEnabled =
             state.destinations.isNotEmpty() && state.startDate != null && state.endDate != null && state.endDate > state.startDate && state.travelers != null && state.travelers > 0
-        internalState.value = state.copy(nextButtonEnabled = nextButtonEnabled)
+        compositeState.update {
+            basicInformation = state.copy(nextButtonEnabled = nextButtonEnabled)
+        }
     }
 
     fun onBasicInformationNextTapped() {
         val state = uiState.value as? UiState.BasicInformation ?: return
         internalState.value = UiState.Generating
-        stage.value = Stage.InitialParameters(state)
+        step.value = Step.InitialParameters(state)
     }
 
     fun onInitialParameterOptionTapped(index: Int, optionGroupType: UiState.OptionGroupType) {
@@ -389,13 +408,15 @@ class TripCreationAssistantViewModel(
         val nextButtonEnabled = state.optionGroups.all { group ->
             group.options.any { it.isSelected }
         }
-        internalState.value = state.copy(nextButtonEnabled = nextButtonEnabled)
+        compositeState.update {
+            initialParameters = state.copy(nextButtonEnabled = nextButtonEnabled)
+        }
     }
 
     fun onInitialParametersNextTapped() {
         val state = uiState.value as? UiState.InitialParameters ?: return
         internalState.value = UiState.Generating
-        stage.value = Stage.InitialParametersFollowUp(state)
+        step.value = Step.InitialParametersFollowUp(state)
     }
 
     fun onFollowUpQuestionOptionTapped(index: Int, question: UiState.FollowUpQuestion) {
@@ -409,10 +430,12 @@ class TripCreationAssistantViewModel(
                 currentQuestion
             }
         }
-        internalState.value = state.copy(
-            questions = newQuestions, nextButtonEnabled = newQuestions.all { question ->
-                question.answers.any { it.isSelected }
-            })
+        compositeState.update {
+            initialParametersFollowUp = state.copy(
+                questions = newQuestions, nextButtonEnabled = newQuestions.all { question ->
+                    question.answers.any { it.isSelected }
+                })
+        }
     }
 
     fun onFollowUpQuestionCustomAnswerAdded(answer: String, question: UiState.FollowUpQuestion) {
@@ -426,23 +449,25 @@ class TripCreationAssistantViewModel(
                 currentQuestion
             }
         }
-        internalState.value = state.copy(
-            questions = newQuestions, nextButtonEnabled = newQuestions.all { question ->
-                question.answers.any { it.isSelected }
-            })
+        compositeState.update {
+            initialParametersFollowUp = state.copy(
+                questions = newQuestions, nextButtonEnabled = newQuestions.all { question ->
+                    question.answers.any { it.isSelected }
+                })
+        }
     }
 
     fun onFollowUpQuestionsNextTapped() {
         val state = uiState.value as? UiState.InitialParametersFollowUp ?: return
         internalState.value = UiState.Generating
-        stage.value = Stage.HighLevelItineraryOptions(state)
+        step.value = Step.HighLevelItineraryOptions(state)
     }
 
     fun onRetryTapped() {
         // Resend the current state to retry
-        val currentStage = stage.value
-        stage.value = Stage.Retry
-        stage.value = currentStage
+        val currentStage = step.value
+        step.value = Step.Retry
+        step.value = currentStage
     }
 
     fun onSkipTapped() {
@@ -454,13 +479,15 @@ class TripCreationAssistantViewModel(
 
     fun onItinerarySelected(itinerary: UiState.Itinerary?) {
         val state = uiState.value as? UiState.HighLevelItineraryOptions ?: return
-        internalState.value = state.copy(selected = itinerary)
+        compositeState.update {
+            highLevelItineraryOptions = state.copy(selected = itinerary)
+        }
     }
 
     fun onConfirmationOptionSelected(option: String) {
         val state = uiState.value as? UiState.HighLevelItineraryOptions ?: return
         internalState.value = UiState.Generating
-        stage.value = Stage.ItineraryRefinement(option, state)
+        step.value = Step.ItineraryRefinement(option, state)
     }
 
     fun onCreateTripTapped(itinerary: UiState.Itinerary) {
@@ -489,15 +516,15 @@ class TripCreationAssistantViewModel(
     }
 
     fun onNavigateBack() {
-        val currentStage = stage.value
-        if (currentStage == Stage.BasicInformation) {
+        val currentStage = step.value
+        if (currentStage == Step.BasicInformation) {
             navController.popBackStack()
             return
         }
         when (currentStage) {
-            is Stage.InitialParameters -> Stage.BasicInformation to currentStage.state
-            is Stage.InitialParametersFollowUp -> Stage.InitialParameters(UiState.BasicInformation()) to currentStage.state
-            is Stage.HighLevelItineraryOptions -> Stage.InitialParametersFollowUp(
+            is Step.InitialParameters -> Step.BasicInformation to currentStage.state
+            is Step.InitialParametersFollowUp -> Step.InitialParameters(UiState.BasicInformation()) to currentStage.state
+            is Step.HighLevelItineraryOptions -> Step.InitialParametersFollowUp(
                 UiState.InitialParameters(
                     emptyList()
                 )
@@ -506,13 +533,36 @@ class TripCreationAssistantViewModel(
             else -> null
         }?.let { (newStage, newState) ->
             internalState.value = newState
-            stage.value = newStage
+            step.value = newStage
         }
     }
 
     private fun List<UiState.OptionGroup>.selectedValues(type: UiState.OptionGroupType): List<String> =
         find { it.type == type }?.options?.filter { it.isSelected }?.map { it.option }
             ?: emptyList()
+
+    private fun MutableStateFlow<CompositeState>.update(operation: MutableCompositeState.() -> Unit) {
+        this.value = MutableCompositeState(
+            this.value.basicInformation,
+            this.value.initialParameters,
+            this.value.initialParametersFollowUp,
+            this.value.highLevelItineraryOptions,
+        ).apply(operation).let {
+            CompositeState(
+                it.basicInformation,
+                it.initialParameters,
+                it.initialParametersFollowUp,
+                it.highLevelItineraryOptions,
+            )
+        }
+    }
+
+    private data class MutableCompositeState(
+        var basicInformation: UiState.BasicInformation,
+        var initialParameters: UiState.InitialParameters?,
+        var initialParametersFollowUp: UiState.InitialParametersFollowUp?,
+        var highLevelItineraryOptions: UiState.HighLevelItineraryOptions?,
+    )
 
     class Factory : ViewModelProvider.Factory by viewModelFactory(initializer = {
         TripCreationAssistantViewModel(
