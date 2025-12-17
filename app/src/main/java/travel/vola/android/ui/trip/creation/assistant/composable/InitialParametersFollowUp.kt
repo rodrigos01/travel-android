@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import travel.vola.android.ui.theme.AppTheme
-import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel.UiState
+import travel.vola.android.ui.trip.creation.assistant.viewmodel.UiState
 
 @Composable
 fun InitialParametersFollowUp(
