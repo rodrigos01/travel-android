@@ -2,6 +2,7 @@ package travel.vola.android.model.genai
 
 import android.util.Log
 import com.google.firebase.Firebase
+import com.google.firebase.ai.Chat
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.FunctionCallingConfig
 import com.google.firebase.ai.type.FunctionDeclaration
@@ -15,8 +16,14 @@ import com.google.firebase.ai.type.generationConfig
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlin.reflect.typeOf
 
-class GenAIRepository {
+class GenAIRepository internal constructor(private val logger: Logger, chatFactory: () -> Chat) {
+
+    interface Logger {
+        fun error(tag: String, message: String, throwable: Throwable? = null): Int
+        fun debug(tag: String, message: String): Int
+    }
 
     enum class FunctionNames(val value: String) {
         INITIAL_PARAMETERS("genInitialParameters"),
@@ -25,7 +32,15 @@ class GenAIRepository {
         REFINE_ITINERARY("refineItinerary"),
     }
 
-    private val chatModel by lazy {
+    constructor() : this(object : Logger {
+        override fun error(
+            tag: String,
+            message: String,
+            throwable: Throwable?
+        ) = Log.e(tag, message, throwable)
+
+        override fun debug(tag: String, message: String): Int = Log.d(tag, message)
+    }, chatFactory = {
         Firebase.ai(backend = GenerativeBackend.googleAI())
             .generativeModel(
                 generationConfig = generationConfig {
@@ -63,14 +78,20 @@ class GenAIRepository {
                     )
                 )
             ).startChat()
-    }
+    })
+
+    private val chatModel by lazy { chatFactory() }
 
     suspend fun genInitialParametersOptions(basicInformation: GenAIData.BasicInformation): GenAIData.InitialParametersOptions? {
         val prompt = Prompts.INITIAL_PARAMETERS
         val promptQuery =
             prompt.prompt + "\n Basic Information: \n" + Json.encodeToString(basicInformation)
 
-        return sendMessage(promptQuery, FunctionNames.INITIAL_PARAMETERS, "parameters")
+        return sendMessage<GenAIData.InitialParametersOptions>(
+            promptQuery,
+            FunctionNames.INITIAL_PARAMETERS,
+            "parameters"
+        )
     }
 
     suspend fun genInitialParametersFollowUpQuestions(
@@ -89,7 +110,7 @@ class GenAIRepository {
         val prompt = Prompts.HIGH_LEVEL_ITINERARY_OPTIONS
         val promptQuery =
             prompt.prompt + "\n Follow-up Questions: \n" + followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" }
-        return sendMessage(
+        return sendMessage<GenAIData.HighLevelItineraryOptions>(
             promptQuery,
             FunctionNames.HIGH_LEVEL_ITINERARY_OPTIONS,
             argName = "result",
@@ -104,7 +125,7 @@ class GenAIRepository {
         val promptQuery =
             prompt.prompt + "\n Feedback: " + refinement +
                     "\n Selected Itinerary:\n" + Json.encodeToString(itinerary)
-        return sendMessage(
+        return sendMessage<GenAIData.Itinerary>(
             promptQuery,
             FunctionNames.REFINE_ITINERARY,
             argName = "result",
@@ -118,18 +139,22 @@ class GenAIRepository {
 
         val args = functionCall?.args[argName]
         if (args == null) {
-            Log.e("GenAIRepository", "No args found for function $functionName")
-            Log.e("GenAIRepository", this.toString())
+            logger.debug("GenAIRepository", "No args found for function $functionName")
+            logger.debug("GenAIRepository", this.toString())
         }
         return args
     }
 
     private suspend inline fun <reified T> GenerateContentResponse.getFunctionCallParams(
         functionName: FunctionNames, argName: String
-    ): T? {
+    ): T {
         val json = getJsonArgs(functionName, argName)
         if (json == null) {
-            throw IllegalStateException("No args found for function $functionName")
+            if (typeOf<T>().isMarkedNullable) {
+                return null as T
+            } else {
+                throw IllegalStateException("No args found for function $functionName")
+            }
         }
         val jsonString = json.toString()
         val params = Json.decodeFromString<T>(jsonString)
@@ -153,9 +178,9 @@ class GenAIRepository {
         while (attempts < 3) {
             try {
                 val response = chatModel.sendMessage(currentPrompt)
-                return response.getFunctionCallParams(functionName, argName)
+                return response.getFunctionCallParams<T>(functionName, argName)
             } catch (t: Throwable) {
-                Log.e("GenAIRepository", "Error sending message", t)
+                logger.error("GenAIRepository", "Error sending message", t)
                 currentPrompt =
                     "Your previous response triggered the following error:\n${t.message}\n\nplease, regenerate the response"
                 attempts++
