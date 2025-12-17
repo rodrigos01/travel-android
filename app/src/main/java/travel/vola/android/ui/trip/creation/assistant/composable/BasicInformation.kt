@@ -41,7 +41,7 @@ import androidx.compose.ui.window.Dialog
 import travel.vola.android.common.ui.components.SearchBox
 import travel.vola.android.common.ui.components.SearchResult
 import travel.vola.android.ui.theme.AppTheme
-import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel.UiState
+import travel.vola.android.ui.trip.creation.assistant.viewmodel.UiState
 import travel.vola.android.ui.trip.creation.composable.DatePickerButton
 import java.time.ZonedDateTime
 
