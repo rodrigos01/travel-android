@@ -12,6 +12,11 @@ object GenAIData {
         COUPLE
     }
 
+    enum class ItineraryType(val value: String) {
+        DETAILED("detailed"),
+        OPEN_ENDED("open-ended"),
+    }
+
     @Serializable
     data class BasicInformation(
         val destination: String,
@@ -75,4 +80,38 @@ object GenAIData {
         val month: Int,
         val year: Int,
     )
+
+    @Serializable
+    data class DailyItinerary(
+        val predictedChanges: List<String>,
+        val days: List<ItineraryDay>,
+    )
+
+    @Serializable
+    data class ItineraryDay(
+        val timedPlaces: List<TimedPlace>,
+        val sections: List<Section>,
+    )
+
+    @Serializable
+    data class TimedPlace(
+        val name: String,
+        val searchQuery: String,
+        val startTime: String?,
+        val endTime: String?,
+    )
+
+    @Serializable
+    data class Section(
+        val type: String,
+        val name: String,
+        val suggestions: SectionSuggestions,
+    )
+
+    @Serializable
+    data class SectionSuggestions(
+        val category: String,
+        val places: List<TimedPlace>,
+    )
+
 }

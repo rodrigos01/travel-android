@@ -30,6 +30,7 @@ class GenAIRepository internal constructor(private val logger: Logger, chatFacto
         INITIAL_PARAMETERS_FOLLOW_UP("genInitialParametersFollowUp"),
         HIGH_LEVEL_ITINERARY_OPTIONS("genHighLevelItineraryOptions"),
         REFINE_ITINERARY("refineItinerary"),
+        DAILY_ITINERARY("genDailyItinerary"),
     }
 
     constructor() : this(object : Logger {
@@ -73,7 +74,12 @@ class GenAIRepository internal constructor(private val logger: Logger, chatFacto
                                 name = FunctionNames.REFINE_ITINERARY.value,
                                 parameters = mapOf("result" to Prompts.REFINE_ITINERARY.outputSchema),
                                 description = "Creates the refined itinerary based on the user's feedback for the trip creation assistant",
-                            )
+                            ),
+                            FunctionDeclaration(
+                                name = FunctionNames.DAILY_ITINERARY.value,
+                                parameters = mapOf("result" to Prompts.DAILY_ITINERARY.outputSchema),
+                                description = "Creates the daily itineraries for the trip creation assistant",
+                            ),
                         )
                     )
                 )
@@ -129,6 +135,27 @@ class GenAIRepository internal constructor(private val logger: Logger, chatFacto
             promptQuery,
             FunctionNames.REFINE_ITINERARY,
             argName = "result",
+        )
+    }
+
+    suspend fun genDailyItinerary(
+        basicInformation: GenAIData.BasicInformation,
+        parameters: GenAIData.InitialParametersOptions,
+        followUpQuestions: List<GenAIData.FollowUpQuestion>,
+        itinerary: GenAIData.Itinerary,
+        itineraryType: GenAIData.ItineraryType,
+    ): GenAIData.DailyItinerary? {
+        val prompt = Prompts.DAILY_ITINERARY
+        val promptQuery =
+            prompt.prompt + "\n Basic Information: \n" + Json.encodeToString(basicInformation) +
+                    "\n Parameters: \n" + Json.encodeToString(parameters) +
+                    "\n Follow-up Questions: \n" + followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" } +
+                    "\n Selected Itinerary:\n" + Json.encodeToString(itinerary) +
+                    "\n Itinerary Type: " + itineraryType.value
+        return sendMessage<GenAIData.DailyItinerary>(
+            promptQuery,
+            FunctionNames.DAILY_ITINERARY,
+            argName = "result"
         )
     }
 
