@@ -1,6 +1,5 @@
 package travel.vola.android.model.data
 
-import kotlinx.serialization.Serializable
 import java.time.ZonedDateTime
 import java.util.TimeZone
 
@@ -21,6 +20,7 @@ data class Trip(
     val id: String,
     val name: String?,
     val coverImage: String?,
+    val preferences: TripPreferences?,
     val flights: List<Flight>,
     val lodgings: List<Lodging>,
     val places: List<TimedPlace>,
@@ -103,7 +103,7 @@ data class RestaurantReservation(
     val dateTime: ZonedDateTime,
     val place: Place,
     override val city: Place,
-): TripEntity, TripEvent, WithCity
+) : TripEntity, TripEvent, WithCity
 
 data class AirportSearchResult(
     val iata: String,
@@ -130,3 +130,38 @@ data class LodgingSearchResult(
     val latitude: Double,
     val longitude: Double,
 )
+
+data class TripPreferences(
+    val basicInformation: BasicInformation,
+    val initialParameters: TripParameters,
+    val questionsAnswers: List<AnsweredQuestion>,
+)
+
+data class BasicInformation(
+    val groupType: GroupType,
+    val travelers: Int,
+)
+
+enum class GroupType {
+    SOLO,
+    FAMILY,
+    FRIENDS,
+    COWORKERS,
+    COUPLE
+}
+
+data class TripParameters(
+    val occasions: List<String>,
+    val interests: List<String>,
+    val vibe: List<String>,
+    val focus: List<String>,
+    val mustHave: List<String>,
+    val duration: List<String>,
+    val anythingElse: String,
+)
+
+data class AnsweredQuestion(
+    val question: String,
+    val answer: String,
+)
+
