@@ -2,7 +2,7 @@ package travel.vola.android.model.genai
 
 import android.util.Log
 import com.google.firebase.Firebase
-import com.google.firebase.ai.Chat
+import com.google.firebase.ai.GenerativeModel
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.FunctionCallingConfig
 import com.google.firebase.ai.type.FunctionDeclaration
@@ -18,7 +18,10 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlin.reflect.typeOf
 
-class GenAIRepository internal constructor(private val logger: Logger, chatFactory: () -> Chat) {
+class GenAIRepository internal constructor(
+    private val logger: Logger,
+    modelFactory: () -> GenerativeModel
+) {
 
     interface Logger {
         fun error(tag: String, message: String, throwable: Throwable? = null): Int
@@ -41,7 +44,7 @@ class GenAIRepository internal constructor(private val logger: Logger, chatFacto
         ) = Log.e(tag, message, throwable)
 
         override fun debug(tag: String, message: String): Int = Log.d(tag, message)
-    }, chatFactory = {
+    }, modelFactory = {
         Firebase.ai(backend = GenerativeBackend.googleAI())
             .generativeModel(
                 generationConfig = generationConfig {
@@ -83,10 +86,12 @@ class GenAIRepository internal constructor(private val logger: Logger, chatFacto
                         )
                     )
                 )
-            ).startChat()
+            )
     })
 
-    private val chatModel by lazy { chatFactory() }
+    private val model by lazy { modelFactory() }
+
+    private val chatModel by lazy { model.startChat() }
 
     suspend fun genInitialParametersOptions(basicInformation: GenAIData.BasicInformation): GenAIData.InitialParametersOptions? {
         val prompt = Prompts.INITIAL_PARAMETERS
@@ -138,6 +143,18 @@ class GenAIRepository internal constructor(private val logger: Logger, chatFacto
         )
     }
 
+    private val dailyItineraryModel by lazy {
+        Firebase.ai(backend = GenerativeBackend.googleAI())
+            .generativeModel(
+                generationConfig = generationConfig {
+                    maxOutputTokens = 65536 // Use max output tokens to avoid truncation
+                    responseMimeType = "application/json"
+                    responseSchema = Prompts.DAILY_ITINERARY.outputSchema
+                },
+                modelName = "gemini-3-flash-preview",
+            )
+    }
+
     suspend fun genDailyItinerary(
         basicInformation: GenAIData.BasicInformation,
         parameters: GenAIData.InitialParametersOptions,
@@ -152,11 +169,8 @@ class GenAIRepository internal constructor(private val logger: Logger, chatFacto
                     "\n Follow-up Questions: \n" + followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" } +
                     "\n Selected Itinerary:\n" + Json.encodeToString(itinerary) +
                     "\n Itinerary Type: " + itineraryType.value
-        return sendMessage<GenAIData.DailyItinerary>(
-            promptQuery,
-            FunctionNames.DAILY_ITINERARY,
-            argName = "result"
-        )
+        val result = dailyItineraryModel.generateContent(promptQuery)
+        return result.text?.let { Json.decodeFromString<GenAIData.DailyItinerary>(it) }
     }
 
     private fun GenerateContentResponse.getJsonArgs(

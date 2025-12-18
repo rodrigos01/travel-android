@@ -18,7 +18,7 @@ class GenAIRepositoryTest {
     private val logger: GenAIRepository.Logger = mock()
     private val chat: Chat = mock()
 
-    private val subject: GenAIRepository = GenAIRepository(logger, chatFactory = { chat })
+    private val subject: GenAIRepository = GenAIRepository(logger, modelFactory = { chat })
 
     @Test
     fun `null parameters should trigger retry with non null type`() = runTest {

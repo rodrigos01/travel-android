@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -44,6 +45,7 @@ import travel.vola.android.model.data.Trip
 import travel.vola.android.model.data.TripEntity
 import travel.vola.android.model.data.TripEvent
 import travel.vola.android.model.data.WithCity
+import travel.vola.android.model.genai.GenAIRepository
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddPlanItemState
@@ -76,6 +78,9 @@ class TripViewModel(
         coroutineScope = useCaseScope,
         flexibleSectionUseCase = flexibleSectionUseCase,
     ),
+    private val suggestionsUseCase: SuggestionsUseCase = SuggestionsUseCase(
+        repository = GenAIRepository(),
+    ),
 ) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
 
     data class ViewState(
@@ -102,11 +107,14 @@ class TripViewModel(
 
     private val trip = repository.findTripById(tripId)
         .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
+    private val suggestions = trip.filterNotNull().map {
+        suggestionsUseCase.getSuggestions(it)
+    }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
 
     private val flexibleSectionItems = flexibleSectionUseCase.flexibleSectionItems
     private val eventsFromTrip =
-        trip.filterNotNull().combine(flexibleSectionItems) { currentTrip, sectionItems ->
-            val items = genItems(currentTrip, sectionItems)
+        trip.filterNotNull().combine(suggestions) { currentTrip, suggestions ->
+            val items = genItems(currentTrip, suggestions)
             val places =
                 (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).fold(mapOf<Place, PlaceState>()) { map, entity: Mapeable ->
                     val current = map.getOrDefault(
@@ -412,12 +420,43 @@ class TripViewModel(
             is TripItemState.FlexibleDaySectionState -> trip.value?.flexibleSections?.firstOrNull { it.id == id }
         }
 
-    private fun genItems(
-        trip: Trip,
-        flexibleSectionItems: List<TripItemState.FlexibleDaySectionState>
-    ): List<TripItemState> {
+    private fun SuggestionsUseCase.TimedPlaceSuggestion.asTimedPlace(city: Place) = TimedPlace(
+        id = id,
+        startDateTime = startTime ?: ZonedDateTime.now(),
+        hasStartTime = startTime != null,
+        endDateTime = endTime,
+        hasEndTime = endTime != null,
+        city = city,
+        place = Place(
+            id = name,
+            name = name,
+            coverImage = coverImage,
+            latitude = 0.0,
+            longitude = 0.0,
+            address = reason,
+            externalId = "",
+            timeZone = TimeZone.getDefault(),
+            source = "",
+        ),
+    )
+
+    private fun genItems(trip: Trip, suggestions: DailyItineraryState?): List<TripItemState> {
+        val cities =
+            trip.places.filter { it.city == it.place }.map { it.city }.associateBy { it.id }
+        val suggestedPlaces = suggestions?.days?.flatMap { day ->
+            day.timedPlaces.mapNotNull { place ->
+                cities[place.cityId]?.let { place.asTimedPlace(it) }
+            } + day.sections.flatMap { section ->
+                section.suggestions.mapNotNull { place ->
+                    cities[place.cityId]?.let {
+                        place.asTimedPlace(it)
+                    }
+                }
+            }
+        }
         val events =
-            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants + trip.flexibleSections
+            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants + (suggestedPlaces
+                ?: emptyList())
         val pairs = events.flatMap { event ->
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
@@ -690,7 +729,7 @@ class TripViewModel(
                 time = event.startDateTime.timeString,
                 showTime = event.hasStartTime,
                 placeName = event.place.name,
-                cityName = event.city.name,
+                cityName = event.place.address ?: event.city.name,
                 imageUrl = event.place.coverImage ?: "",
                 backgroundStyle = backgroundStyle,
                 sectionId = sectionId,
