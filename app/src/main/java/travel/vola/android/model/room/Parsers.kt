@@ -1,15 +1,21 @@
 package travel.vola.android.model.room
 
 import androidx.room.TypeConverter
+import kotlinx.serialization.json.Json
 import travel.vola.android.extensions.asISO8601String
 import travel.vola.android.model.data.Airport
+import travel.vola.android.model.data.AnsweredQuestion
+import travel.vola.android.model.data.BasicInformation
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
+import travel.vola.android.model.data.GroupType
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
+import travel.vola.android.model.data.TripParameters
+import travel.vola.android.model.data.TripPreferences
 import java.time.ZonedDateTime
 import java.util.TimeZone
 
@@ -27,6 +33,31 @@ fun RoomData.Trip.toAppDataModel(): Trip {
         id = entity.id,
         name = entity.name,
         coverImage = image,
+        preferences = TripPreferences(
+            basicInformation = BasicInformation(
+                groupType = entity.preferences?.basicInformation?.groupType?.toAppDataModel()
+                    ?: GroupType.SOLO,
+                travelers = entity.preferences?.basicInformation?.travelers
+                    ?: 0,
+            ),
+            initialParameters = entity.preferences?.initialParameters.let {
+                TripParameters(
+                    occasions = it?.occasions ?: emptyList(),
+                    interests = it?.interests ?: emptyList(),
+                    vibe = it?.vibe ?: emptyList(),
+                    focus = it?.focus ?: emptyList(),
+                    mustHave = it?.mustHave ?: emptyList(),
+                    duration = it?.duration ?: emptyList(),
+                    anythingElse = it?.anythingElse ?: "",
+                )
+            },
+            questionsAnswers = entity.preferences?.questionsAnswers?.map {
+                AnsweredQuestion(
+                    it.question,
+                    it.answer
+                )
+            } ?: emptyList()
+        ),
         flights = appFlights,
         lodgings = appLodgings,
         places = appPlaces,
@@ -94,6 +125,14 @@ fun RoomData.Place.toAppDataModel(): Place = Place(
     source = source,
 )
 
+fun RoomData.GroupType.toAppDataModel(): GroupType = when (this) {
+    RoomData.GroupType.SOLO -> GroupType.SOLO
+    RoomData.GroupType.FAMILY -> GroupType.FAMILY
+    RoomData.GroupType.FRIENDS -> GroupType.FRIENDS
+    RoomData.GroupType.COWORKERS -> GroupType.COWORKERS
+    RoomData.GroupType.COUPLE -> GroupType.COUPLE
+}
+
 class Converters {
     @TypeConverter
     fun parseZonedDateTime(value: String): ZonedDateTime = ZonedDateTime.parse(value)
@@ -106,4 +145,10 @@ class Converters {
 
     @TypeConverter
     fun encodeTimeZone(value: TimeZone): String = value.id
+
+    @TypeConverter
+    fun parseTripPreferences(value: String): RoomData.TripPreferences = Json.decodeFromString(value)
+
+    @TypeConverter
+    fun encodeTripPreferences(value: RoomData.TripPreferences): String = Json.encodeToString(value)
 }

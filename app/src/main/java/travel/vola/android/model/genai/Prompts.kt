@@ -1,6 +1,7 @@
 package travel.vola.android.model.genai
 
 import com.google.firebase.ai.type.Schema
+import com.google.firebase.ai.type.StringFormat
 
 enum class Prompts(val prompt: String, val outputSchema: Schema) {
     INITIAL_PARAMETERS(
@@ -96,6 +97,48 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
     REFINE_ITINERARY(
         prompt = "The user has given the following feedback to the itinerary below. Re-generate this itinerary according to their feedback and previously chosen preferences. Make sure to call the refineItinerary to generate it",
         outputSchema = itinerarySchema
+    ),
+    DAILY_ITINERARY(
+        prompt = "Based on the trip itinerary below, generate a day-by-day itinerary considering the user parameters and the type of itinerary they've chosen. Consider travel time between cities for the itineraries on travel days but don't include travel details (hotel check-in or check-out, transportation) or lodging to it. Open-ended daily itineraries should have sections for each day with a list of suggested places in each and may have timed places for time-sensitive, must-have activities. Sections in Open-ended itineraries must be logically organized by areas so that the user is able to explore a given area or neighborhood using the suggestions. Detailed itineraries must consider realistic travel time between locations and have specific stops for lunch and dinner. Both itinerary types must consider times of operation of places on the dates they're been suggested. For each city, suggest 3 predicted possible changes the user might want to make to the generated day-by-day itinerary for it.",
+        outputSchema = Schema.obj(
+            mapOf(
+                "predictedChanges" to Schema.array(
+                    Schema.obj(
+                        mapOf(
+                            "cityId" to Schema.string("id of the city as provided in the original itinerary"),
+                            "changes" to Schema.array(Schema.string())
+                        )
+                    )
+                ),
+                "days" to Schema.obj(
+                    mapOf(
+                        "timedPlaces" to Schema.array(placeSchema),
+                        "sections" to Schema.array(
+                            Schema.obj(
+                                mapOf(
+                                    "type" to Schema.enumeration(
+                                        listOf(
+                                            "morning",
+                                            "afternoon",
+                                            "evening",
+                                            "late-night",
+                                        ),
+                                        description = "type of section in the day",
+                                    ),
+                                    "name" to Schema.string("A name for the section"),
+                                    "suggestions" to Schema.obj(
+                                        mapOf(
+                                            "category" to Schema.string("the category of the places being suggested"),
+                                            "places" to Schema.array(placeSchema)
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
     )
 }
 
@@ -150,5 +193,22 @@ private val itinerarySchema = Schema.obj(
             minItems = 3,
             maxItems = 3,
         ),
+    )
+)
+
+private val placeSchema = Schema.obj(
+    mapOf(
+        "name" to Schema.string("name of the place"),
+        "searchQuery" to Schema.string("query to search for the place in google maps"),
+        "startTime" to Schema.string(
+            "time the user needs to be at this place, including the date",
+            nullable = true,
+            format = StringFormat.Custom("date-time"),
+        ),
+        "endTime" to Schema.string(
+            "time the user needs to leave this place, including the date",
+            nullable = true,
+            format = StringFormat.Custom("date-time"),
+        )
     )
 )

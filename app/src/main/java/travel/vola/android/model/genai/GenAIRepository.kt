@@ -2,35 +2,57 @@ package travel.vola.android.model.genai
 
 import android.util.Log
 import com.google.firebase.Firebase
+import com.google.firebase.ai.Chat
 import com.google.firebase.ai.ai
+import com.google.firebase.ai.type.FunctionCallingConfig
 import com.google.firebase.ai.type.FunctionDeclaration
 import com.google.firebase.ai.type.FunctionResponsePart
 import com.google.firebase.ai.type.GenerateContentResponse
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.Tool
+import com.google.firebase.ai.type.ToolConfig
 import com.google.firebase.ai.type.content
 import com.google.firebase.ai.type.generationConfig
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlin.reflect.typeOf
 
-class GenAIRepository {
+class GenAIRepository internal constructor(private val logger: Logger, chatFactory: () -> Chat) {
+
+    interface Logger {
+        fun error(tag: String, message: String, throwable: Throwable? = null): Int
+        fun debug(tag: String, message: String): Int
+    }
 
     enum class FunctionNames(val value: String) {
         INITIAL_PARAMETERS("genInitialParameters"),
         INITIAL_PARAMETERS_FOLLOW_UP("genInitialParametersFollowUp"),
         HIGH_LEVEL_ITINERARY_OPTIONS("genHighLevelItineraryOptions"),
         REFINE_ITINERARY("refineItinerary"),
+        DAILY_ITINERARY("genDailyItinerary"),
     }
 
-    private val chatModel by lazy {
+    constructor() : this(object : Logger {
+        override fun error(
+            tag: String,
+            message: String,
+            throwable: Throwable?
+        ) = Log.e(tag, message, throwable)
+
+        override fun debug(tag: String, message: String): Int = Log.d(tag, message)
+    }, chatFactory = {
         Firebase.ai(backend = GenerativeBackend.googleAI())
             .generativeModel(
                 generationConfig = generationConfig {
                     maxOutputTokens = 65536 // Use max output tokens to avoid truncation
-                }, modelName = "gemini-2.5-flash", systemInstruction = content {
+                },
+                modelName = "gemini-3-flash-preview",
+                systemInstruction = content {
                     text("You are an AI Travel Assistant running on the background of a Travel Planning application. Help the user plan a trip, initially by planning a high-level travel itinerary focused only on destination and dates, then later by planning fine-grained day-by-day itineraries")
-                }, tools = listOf(
+                },
+                toolConfig = ToolConfig(FunctionCallingConfig.any()),
+                tools = listOf(
                     Tool.functionDeclarations(
                         listOf(
                             FunctionDeclaration(
@@ -52,19 +74,30 @@ class GenAIRepository {
                                 name = FunctionNames.REFINE_ITINERARY.value,
                                 parameters = mapOf("result" to Prompts.REFINE_ITINERARY.outputSchema),
                                 description = "Creates the refined itinerary based on the user's feedback for the trip creation assistant",
-                            )
+                            ),
+                            FunctionDeclaration(
+                                name = FunctionNames.DAILY_ITINERARY.value,
+                                parameters = mapOf("result" to Prompts.DAILY_ITINERARY.outputSchema),
+                                description = "Creates the daily itineraries for the trip creation assistant",
+                            ),
                         )
                     )
                 )
             ).startChat()
-    }
+    })
+
+    private val chatModel by lazy { chatFactory() }
 
     suspend fun genInitialParametersOptions(basicInformation: GenAIData.BasicInformation): GenAIData.InitialParametersOptions? {
         val prompt = Prompts.INITIAL_PARAMETERS
         val promptQuery =
             prompt.prompt + "\n Basic Information: \n" + Json.encodeToString(basicInformation)
 
-        return sendMessage(promptQuery, FunctionNames.INITIAL_PARAMETERS, "parameters")
+        return sendMessage<GenAIData.InitialParametersOptions>(
+            promptQuery,
+            FunctionNames.INITIAL_PARAMETERS,
+            "parameters"
+        )
     }
 
     suspend fun genInitialParametersFollowUpQuestions(
@@ -83,7 +116,7 @@ class GenAIRepository {
         val prompt = Prompts.HIGH_LEVEL_ITINERARY_OPTIONS
         val promptQuery =
             prompt.prompt + "\n Follow-up Questions: \n" + followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" }
-        return sendMessage(
+        return sendMessage<GenAIData.HighLevelItineraryOptions>(
             promptQuery,
             FunctionNames.HIGH_LEVEL_ITINERARY_OPTIONS,
             argName = "result",
@@ -98,10 +131,31 @@ class GenAIRepository {
         val promptQuery =
             prompt.prompt + "\n Feedback: " + refinement +
                     "\n Selected Itinerary:\n" + Json.encodeToString(itinerary)
-        return sendMessage(
+        return sendMessage<GenAIData.Itinerary>(
             promptQuery,
             FunctionNames.REFINE_ITINERARY,
             argName = "result",
+        )
+    }
+
+    suspend fun genDailyItinerary(
+        basicInformation: GenAIData.BasicInformation,
+        parameters: GenAIData.InitialParametersOptions,
+        followUpQuestions: List<GenAIData.FollowUpQuestion>,
+        itinerary: GenAIData.Itinerary,
+        itineraryType: GenAIData.ItineraryType,
+    ): GenAIData.DailyItinerary? {
+        val prompt = Prompts.DAILY_ITINERARY
+        val promptQuery =
+            prompt.prompt + "\n Basic Information: \n" + Json.encodeToString(basicInformation) +
+                    "\n Parameters: \n" + Json.encodeToString(parameters) +
+                    "\n Follow-up Questions: \n" + followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" } +
+                    "\n Selected Itinerary:\n" + Json.encodeToString(itinerary) +
+                    "\n Itinerary Type: " + itineraryType.value
+        return sendMessage<GenAIData.DailyItinerary>(
+            promptQuery,
+            FunctionNames.DAILY_ITINERARY,
+            argName = "result"
         )
     }
 
@@ -112,18 +166,22 @@ class GenAIRepository {
 
         val args = functionCall?.args[argName]
         if (args == null) {
-            Log.e("GenAIRepository", "No args found for function $functionName")
-            Log.e("GenAIRepository", this.toString())
+            logger.debug("GenAIRepository", "No args found for function $functionName")
+            logger.debug("GenAIRepository", this.toString())
         }
         return args
     }
 
     private suspend inline fun <reified T> GenerateContentResponse.getFunctionCallParams(
         functionName: FunctionNames, argName: String
-    ): T? {
+    ): T {
         val json = getJsonArgs(functionName, argName)
         if (json == null) {
-            throw IllegalStateException("No args found for function $functionName")
+            if (typeOf<T>().isMarkedNullable) {
+                return null as T
+            } else {
+                throw IllegalStateException("No args found for function $functionName")
+            }
         }
         val jsonString = json.toString()
         val params = Json.decodeFromString<T>(jsonString)
@@ -147,9 +205,9 @@ class GenAIRepository {
         while (attempts < 3) {
             try {
                 val response = chatModel.sendMessage(currentPrompt)
-                return response.getFunctionCallParams(functionName, argName)
+                return response.getFunctionCallParams<T>(functionName, argName)
             } catch (t: Throwable) {
-                Log.e("GenAIRepository", "Error sending message", t)
+                logger.error("GenAIRepository", "Error sending message", t)
                 currentPrompt =
                     "Your previous response triggered the following error:\n${t.message}\n\nplease, regenerate the response"
                 attempts++
