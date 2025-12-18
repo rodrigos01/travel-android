@@ -56,6 +56,7 @@ import travel.vola.android.ui.trip.state.TripItemState
 import travel.vola.android.ui.trip.state.type
 import travel.vola.android.ui.trip.state.type
 import java.time.ZonedDateTime
+import java.util.TimeZone
 import java.util.UUID
 import kotlin.contracts.ExperimentalContracts
 import kotlin.time.Duration.Companion.days
@@ -787,7 +788,7 @@ class TripViewModel(
                 time = event.startDateTime.timeString,
                 showTime = event.hasStartTime,
                 placeName = event.place.name,
-                cityName = event.place.address,
+                cityName = event.place.address ?: event.place.address,
                 imageUrl = event.place.coverImage ?: "",
                 backgroundStyle = backgroundStyle,
                 sectionId = sectionId,
