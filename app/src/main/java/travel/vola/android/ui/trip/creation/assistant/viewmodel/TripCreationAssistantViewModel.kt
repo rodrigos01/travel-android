@@ -219,6 +219,7 @@ class TripCreationAssistantViewModel(
                 description = selected.description,
                 cities = selected.cities.map {
                     GenAIData.ItineraryCity(
+                        id = "",
                         name = it.name,
                         startDate = it.startDate.asDateResult(),
                         endDate = it.endDate.asDateResult(),

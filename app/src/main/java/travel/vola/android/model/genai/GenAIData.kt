@@ -68,6 +68,7 @@ object GenAIData {
 
     @Serializable
     data class ItineraryCity(
+        val id: String,
         val name: String,
         val startDate: DateResult,
         val endDate: DateResult,
@@ -83,19 +84,29 @@ object GenAIData {
 
     @Serializable
     data class DailyItinerary(
-        val predictedChanges: List<String>,
+        val predictedChanges: List<DailyItineraryChange>,
         val days: List<ItineraryDay>,
     )
 
     @Serializable
+    data class DailyItineraryChange(
+        val cityId: String,
+        val changes: List<String>,
+    )
+
+    @Serializable
     data class ItineraryDay(
+        val date: String,
         val timedPlaces: List<TimedPlace>,
         val sections: List<Section>,
     )
 
     @Serializable
     data class TimedPlace(
+        val id: String,
         val name: String,
+        val reason: String,
+        val cityId: String,
         val searchQuery: String,
         val startTime: String?,
         val endTime: String?,
