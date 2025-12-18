@@ -8,6 +8,7 @@ sealed interface FirebaseData {
         @Exclude val id: String = "",
         val name: String? = null,
         val coverImage: String? = null,
+        val preferences: TripPreferences? = null,
         val flights: List<Flight> = emptyList(),
         val lodgings: List<Lodging> = emptyList(),
         val places: List<TimedPlace> = emptyList(),
@@ -75,4 +76,39 @@ sealed interface FirebaseData {
         val place: Place = Place(),
         val city: Place? = null,
     )
+
+    data class TripPreferences(
+        val basicInformation: BasicInformation = BasicInformation(),
+        val initialParameters: TripParameters = TripParameters(),
+        val questionsAnswers: List<AnsweredQuestion> = emptyList(),
+    )
+
+    data class BasicInformation(
+        val groupType: GroupType = GroupType.SOLO,
+        val travelers: Int = 0,
+    )
+
+    enum class GroupType {
+        SOLO,
+        FAMILY,
+        FRIENDS,
+        COWORKERS,
+        COUPLE
+    }
+
+    data class TripParameters(
+        val occasions: List<String> = emptyList(),
+        val interests: List<String> = emptyList(),
+        val vibe: List<String> = emptyList(),
+        val focus: List<String> = emptyList(),
+        val mustHave: List<String> = emptyList(),
+        val duration: List<String> = emptyList(),
+        val anythingElse: String = "",
+    )
+
+    data class AnsweredQuestion(
+        val question: String = "",
+        val answer: String = "",
+    )
+
 }

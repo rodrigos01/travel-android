@@ -3,14 +3,19 @@ package travel.vola.android.model.firebase
 import travel.vola.android.extensions.Time
 import travel.vola.android.extensions.asISO8601String
 import travel.vola.android.model.data.Airport
+import travel.vola.android.model.data.AnsweredQuestion
+import travel.vola.android.model.data.BasicInformation
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
+import travel.vola.android.model.data.GroupType
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
+import travel.vola.android.model.data.TripParameters
+import travel.vola.android.model.data.TripPreferences
 import java.util.TimeZone
 
 fun FirebaseData.Trip.toAppDataModel(): Trip {
@@ -27,6 +32,7 @@ fun FirebaseData.Trip.toAppDataModel(): Trip {
         id = id,
         name = name,
         coverImage = image,
+        preferences = preferences?.toAppDataModel(),
         flights = appFlights,
         lodgings = appLodgings,
         places = appPlaces,
@@ -163,6 +169,31 @@ fun RestaurantReservation.toFirebaseDataModel() = FirebaseData.RestaurantReserva
     place = place.toFirebaseDataModel(),
     city = city.toFirebaseDataModel(),
 )
+
+fun FirebaseData.TripPreferences.toAppDataModel() = TripPreferences(
+    basicInformation = BasicInformation(
+        groupType = basicInformation.groupType.toAppDataModel(),
+        travelers = basicInformation.travelers
+    ),
+    initialParameters = TripParameters(
+        occasions = initialParameters.occasions,
+        interests = initialParameters.interests,
+        vibe = initialParameters.vibe,
+        focus = initialParameters.focus,
+        mustHave = initialParameters.mustHave,
+        duration = initialParameters.duration,
+        anythingElse = initialParameters.anythingElse
+    ),
+    questionsAnswers = questionsAnswers.map { AnsweredQuestion(it.question, it.answer) }
+)
+
+fun FirebaseData.GroupType.toAppDataModel() = when (this) {
+    FirebaseData.GroupType.SOLO -> GroupType.SOLO
+    FirebaseData.GroupType.FAMILY -> GroupType.FAMILY
+    FirebaseData.GroupType.FRIENDS -> GroupType.FRIENDS
+    FirebaseData.GroupType.COWORKERS -> GroupType.COWORKERS
+    FirebaseData.GroupType.COUPLE -> GroupType.COUPLE
+}
 
 fun String.toTime(): Time = Time(this)
 
