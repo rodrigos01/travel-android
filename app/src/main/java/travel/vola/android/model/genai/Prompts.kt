@@ -110,26 +110,32 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                         )
                     )
                 ),
-                "days" to Schema.obj(
-                    mapOf(
-                        "timedPlaces" to Schema.array(placeSchema),
-                        "sections" to Schema.array(
-                            Schema.obj(
-                                mapOf(
-                                    "type" to Schema.enumeration(
-                                        listOf(
-                                            "morning",
-                                            "afternoon",
-                                            "evening",
-                                            "late-night",
+                "days" to Schema.array(
+                    Schema.obj(
+                        mapOf(
+                            "date" to Schema.string(
+                                "date of the day in the format YYYY-MM-DD",
+                                format = StringFormat.Custom("date")
+                            ),
+                            "timedPlaces" to Schema.array(placeSchema),
+                            "sections" to Schema.array(
+                                Schema.obj(
+                                    mapOf(
+                                        "type" to Schema.enumeration(
+                                            listOf(
+                                                "morning",
+                                                "afternoon",
+                                                "evening",
+                                                "late-night",
+                                            ),
+                                            description = "type of section in the day",
                                         ),
-                                        description = "type of section in the day",
-                                    ),
-                                    "name" to Schema.string("A name for the section"),
-                                    "suggestions" to Schema.obj(
-                                        mapOf(
-                                            "category" to Schema.string("the category of the places being suggested"),
-                                            "places" to Schema.array(placeSchema)
+                                        "name" to Schema.string("A name for the section"),
+                                        "suggestions" to Schema.obj(
+                                            mapOf(
+                                                "category" to Schema.string("the category of the places being suggested"),
+                                                "places" to Schema.array(placeSchema)
+                                            )
                                         )
                                     )
                                 )
@@ -166,6 +172,7 @@ private val itinerarySchema = Schema.obj(
         "cities" to Schema.array(
             Schema.obj(
                 mapOf(
+                    "id" to Schema.string("leave this blank"),
                     "name" to Schema.string("name of the city"),
                     "searchQuery" to Schema.string("query to search for the city in google maps"),
                     "startDate" to Schema.obj(
@@ -198,7 +205,10 @@ private val itinerarySchema = Schema.obj(
 
 private val placeSchema = Schema.obj(
     mapOf(
+        "id" to Schema.string("A randomized unique string"),
         "name" to Schema.string("name of the place"),
+        "cityId" to Schema.string("id of the city as provided in the original itinerary"),
+        "reason" to Schema.string("brief reason for the userto visit this place"),
         "searchQuery" to Schema.string("query to search for the place in google maps"),
         "startTime" to Schema.string(
             "time the user needs to be at this place, including the date",

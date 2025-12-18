@@ -43,11 +43,14 @@ import travel.vola.android.model.data.Trip
 import travel.vola.android.model.data.TripEntity
 import travel.vola.android.model.data.TripEvent
 import travel.vola.android.model.data.WithCity
+import travel.vola.android.model.genai.GenAIRepository
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.TripItemState
+import travel.vola.android.ui.trip.viewmodel.SuggestionsUseCase.DailyItineraryState
 import java.time.ZonedDateTime
+import java.util.TimeZone
 import java.util.UUID
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -66,6 +69,9 @@ class TripViewModel(
     private val addPlanUseCase: AddPlanUseCase = AddPlanUseCase(
         placeRepository = placeRepository,
         coroutineScope = useCaseScope,
+    ),
+    private val suggestionsUseCase: SuggestionsUseCase = SuggestionsUseCase(
+        repository = GenAIRepository(),
     ),
 ) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
 
@@ -93,9 +99,12 @@ class TripViewModel(
 
     private val trip = repository.findTripById(tripId)
         .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
+    private val suggestions = trip.filterNotNull().map {
+        suggestionsUseCase.getSuggestions(it)
+    }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
     private val eventsFromTrip =
-        trip.filterNotNull().map { currentTrip ->
-            val items = genItems(currentTrip)
+        trip.filterNotNull().combine(suggestions) { currentTrip, suggestions ->
+            val items = genItems(currentTrip, suggestions)
             val places =
                 (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).fold(mapOf<Place, PlaceState>()) { map, entity: WithCity ->
                     val current = map.getOrDefault(
@@ -345,9 +354,43 @@ class TripViewModel(
             is TripItemState.RestaurantReservationItemState -> trip.value?.restaurants?.firstOrNull { it.id == id }
         }
 
-    private fun genItems(trip: Trip): List<TripItemState> {
+    private fun SuggestionsUseCase.TimedPlaceSuggestion.asTimedPlace(city: Place) = TimedPlace(
+        id = id,
+        startDateTime = startTime ?: ZonedDateTime.now(),
+        hasStartTime = startTime != null,
+        endDateTime = endTime,
+        hasEndTime = endTime != null,
+        city = city,
+        place = Place(
+            id = name,
+            name = name,
+            coverImage = coverImage,
+            latitude = 0.0,
+            longitude = 0.0,
+            address = reason,
+            externalId = "",
+            timeZone = TimeZone.getDefault(),
+            source = "",
+        ),
+    )
+
+    private fun genItems(trip: Trip, suggestions: DailyItineraryState?): List<TripItemState> {
+        val cities =
+            trip.places.filter { it.city == it.place }.map { it.city }.associateBy { it.id }
+        val suggestedPlaces = suggestions?.days?.flatMap { day ->
+            day.timedPlaces.mapNotNull { place ->
+                cities[place.cityId]?.let { place.asTimedPlace(it) }
+            } + day.sections.flatMap { section ->
+                section.suggestions.mapNotNull { place ->
+                    cities[place.cityId]?.let {
+                        place.asTimedPlace(it)
+                    }
+                }
+            }
+        }
         val events =
-            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants
+            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants + (suggestedPlaces
+                ?: emptyList())
         val pairs = events.flatMap { event ->
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
@@ -618,7 +661,7 @@ class TripViewModel(
                 time = event.startDateTime.timeString,
                 showTime = event.hasStartTime,
                 placeName = event.place.name,
-                cityName = event.city.name,
+                cityName = event.place.address ?: event.city.name,
                 imageUrl = event.place.coverImage ?: "",
                 backgroundStyle = backgroundStyle,
                 sectionId = sectionId,
