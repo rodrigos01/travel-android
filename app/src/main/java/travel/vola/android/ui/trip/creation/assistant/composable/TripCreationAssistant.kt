@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import travel.vola.android.extensions.viewModel
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel
-import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel.UiState
+import travel.vola.android.ui.trip.creation.assistant.viewmodel.UiState
 import java.time.ZonedDateTime
 
 @Composable
