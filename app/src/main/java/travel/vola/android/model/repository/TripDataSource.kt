@@ -7,6 +7,7 @@ import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
+import travel.vola.android.model.data.TripPreferences
 
 interface TripDataSource {
 
@@ -21,6 +22,7 @@ interface TripDataSource {
     suspend fun addTrip(
         name: String,
         places: List<TimedPlace>,
+        preferences: TripPreferences,
     ) : String
 
     suspend fun updateName(tripId: String, newName: String)
