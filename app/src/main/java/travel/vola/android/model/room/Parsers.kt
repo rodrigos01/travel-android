@@ -125,6 +125,14 @@ fun RoomData.Place.toAppDataModel(): Place = Place(
     source = source,
 )
 
+fun GroupType.toRoomDataModel(): RoomData.GroupType = when (this) {
+    GroupType.SOLO -> RoomData.GroupType.SOLO
+    GroupType.FAMILY -> RoomData.GroupType.FAMILY
+    GroupType.FRIENDS -> RoomData.GroupType.FRIENDS
+    GroupType.COWORKERS -> RoomData.GroupType.COWORKERS
+    GroupType.COUPLE -> RoomData.GroupType.COUPLE
+}
+
 fun RoomData.GroupType.toAppDataModel(): GroupType = when (this) {
     RoomData.GroupType.SOLO -> GroupType.SOLO
     RoomData.GroupType.FAMILY -> GroupType.FAMILY

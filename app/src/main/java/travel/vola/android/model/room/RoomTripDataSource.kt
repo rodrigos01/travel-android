@@ -9,6 +9,7 @@ import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
+import travel.vola.android.model.data.TripPreferences
 import travel.vola.android.model.repository.TripDataSource
 import java.util.UUID
 
@@ -39,10 +40,36 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
 
     override suspend fun addTrip(
         name: String,
-        places: List<TimedPlace>
+        places: List<TimedPlace>,
+        preferences: TripPreferences,
     ): String {
         val id = UUID.randomUUID().toString()
-        dao.addTrip(RoomData.Schema.Trip(id, name, null, null))
+        dao.addTrip(
+            RoomData.Schema.Trip(
+                id, name, coverImage = null,
+                preferences = RoomData.TripPreferences(
+                    RoomData.BasicInformation(
+                        preferences.basicInformation.groupType.toRoomDataModel(),
+                        preferences.basicInformation.travelers,
+                    ),
+                    RoomData.TripParameters(
+                        preferences.initialParameters.occasions,
+                        preferences.initialParameters.interests,
+                        preferences.initialParameters.vibe,
+                        preferences.initialParameters.focus,
+                        preferences.initialParameters.mustHave,
+                        preferences.initialParameters.duration,
+                        preferences.initialParameters.anythingElse,
+                    ),
+                    preferences.questionsAnswers.map {
+                        RoomData.AnsweredQuestion(
+                            it.question,
+                            it.answer
+                        )
+                    }
+                ),
+            )
+        )
         places.forEach {
             saveTimedPlace(id, it)
         }

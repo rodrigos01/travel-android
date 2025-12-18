@@ -14,6 +14,7 @@ import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
+import travel.vola.android.model.data.TripPreferences
 import travel.vola.android.model.repository.TripDataSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -48,11 +49,13 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
 
     override suspend fun addTrip(
         name: String,
-        places: List<TimedPlace>
+        places: List<TimedPlace>,
+        preferences: TripPreferences
     ): String {
         val newTrip = FirebaseData.Trip(
             name = name,
             places = places.map { it.toFirebaseDataModel() },
+            preferences = preferences.toFirebaseDataModel(),
         )
         val reference = firestore.collection("/trips").add(newTrip).await()
         return reference.id

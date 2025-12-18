@@ -15,7 +15,12 @@ import travel.vola.android.common.ui.components.SearchResult
 import travel.vola.android.di.factoryDependencies
 import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.viewModelFactory
+import travel.vola.android.model.data.AnsweredQuestion
+import travel.vola.android.model.data.BasicInformation
+import travel.vola.android.model.data.GroupType
 import travel.vola.android.model.data.TimedPlace
+import travel.vola.android.model.data.TripParameters
+import travel.vola.android.model.data.TripPreferences
 import travel.vola.android.model.genai.GenAIData
 import travel.vola.android.model.genai.GenAIRepository
 import travel.vola.android.model.repository.GeographyAutoCompleteRepository
@@ -492,6 +497,7 @@ class TripCreationAssistantViewModel(
     }
 
     fun onCreateTripTapped(itinerary: UiState.Itinerary) {
+        val state = compositeState.value
         viewModelScope.launch {
             val tripId = tripRepository.addTrip(
                 name = itinerary.name,
@@ -507,7 +513,37 @@ class TripCreationAssistantViewModel(
                             city = place,
                         )
                     }
-                })
+                },
+                preferences = TripPreferences(
+                    basicInformation = BasicInformation(
+                        groupType = when (state.basicInformation.groupType) {
+                            UiState.TravelGroupType.SOLO -> GroupType.SOLO
+                            UiState.TravelGroupType.COUPLE -> GroupType.COUPLE
+                            UiState.TravelGroupType.FAMILY -> GroupType.FAMILY
+                            UiState.TravelGroupType.FRIENDS -> GroupType.FRIENDS
+                            UiState.TravelGroupType.COWORKERS -> GroupType.COWORKERS
+                        },
+                        travelers = state.basicInformation.travelers ?: 1,
+                    ),
+                    initialParameters = TripParameters(
+                        occasions = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.OCCASIONS),
+                        interests = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.INTERESTS),
+                        vibe = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.VIBE),
+                        focus = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.FOCUS),
+                        duration = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.DURATION),
+                        mustHave = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.MUST_HAVE),
+                        anythingElse = state.initialParameters?.anythingElse ?: "",
+                    ),
+                    questionsAnswers = state.initialParametersFollowUp?.questions?.mapNotNull { question ->
+                        question.answers.firstOrNull { it.isSelected }?.option?.let { answer ->
+                            AnsweredQuestion(
+                                question.question,
+                                answer
+                            )
+                        }
+                    } ?: emptyList(),
+                ),
+            )
             navController.navigate(
                 TripDetailsDestination.getRoute(tripId)
             ) {
@@ -515,6 +551,10 @@ class TripCreationAssistantViewModel(
             }
         }
     }
+
+    fun List<UiState.OptionGroup>?.valuesByType(type: UiState.OptionGroupType) =
+        this?.first { it.type == type }?.options?.filter { it.isSelected }
+            ?.map { it.option } ?: emptyList()
 
     fun onNavigateBack() {
         val currentStage = step.value

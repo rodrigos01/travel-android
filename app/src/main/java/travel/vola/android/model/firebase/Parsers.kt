@@ -105,6 +105,7 @@ fun Trip.toFirebaseDataModel() = FirebaseData.Trip(
     id = id,
     name = name,
     coverImage = coverImage,
+    preferences = preferences?.toFirebaseDataModel(),
     flights = flights.map { it.toFirebaseDataModel() },
     lodgings = lodgings.map { it.toFirebaseDataModel() },
     places = places.map { it.toFirebaseDataModel() },
@@ -186,6 +187,36 @@ fun FirebaseData.TripPreferences.toAppDataModel() = TripPreferences(
     ),
     questionsAnswers = questionsAnswers.map { AnsweredQuestion(it.question, it.answer) }
 )
+
+fun TripPreferences.toFirebaseDataModel() = FirebaseData.TripPreferences(
+    basicInformation = FirebaseData.BasicInformation(
+        groupType = basicInformation.groupType.toFirebaseDataModel(),
+        travelers = basicInformation.travelers,
+    ),
+    initialParameters = FirebaseData.TripParameters(
+        occasions = initialParameters.occasions,
+        interests = initialParameters.interests,
+        vibe = initialParameters.vibe,
+        focus = initialParameters.focus,
+        mustHave = initialParameters.mustHave,
+        duration = initialParameters.duration,
+        anythingElse = initialParameters.anythingElse
+    ),
+    questionsAnswers = questionsAnswers.map {
+        FirebaseData.AnsweredQuestion(
+            it.question,
+            it.answer
+        )
+    }
+)
+
+fun GroupType.toFirebaseDataModel() = when (this) {
+    GroupType.SOLO -> FirebaseData.GroupType.SOLO
+    GroupType.FAMILY -> FirebaseData.GroupType.FAMILY
+    GroupType.FRIENDS -> FirebaseData.GroupType.FRIENDS
+    GroupType.COWORKERS -> FirebaseData.GroupType.COWORKERS
+    GroupType.COUPLE -> FirebaseData.GroupType.COUPLE
+}
 
 fun FirebaseData.GroupType.toAppDataModel() = when (this) {
     FirebaseData.GroupType.SOLO -> GroupType.SOLO
