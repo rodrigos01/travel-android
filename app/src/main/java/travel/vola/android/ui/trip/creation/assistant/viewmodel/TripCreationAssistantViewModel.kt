@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import travel.vola.android.common.ui.components.SearchResult
@@ -85,7 +86,7 @@ class TripCreationAssistantViewModel(
 
             is Step.Retry -> UiState.Generating
         } ?: UiState.Error
-    }
+    }.onEach { internalState.value = it }
     private val internalState = MutableStateFlow<UiState>(UiState.BasicInformation())
 
     val uiState = merge(generatedState, internalState).stateIn(
