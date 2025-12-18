@@ -4,6 +4,7 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import kotlinx.serialization.Serializable
 import java.time.ZonedDateTime
 import java.util.TimeZone
 
@@ -21,7 +22,9 @@ sealed interface RoomData {
             entity = Schema.TimedPlace::class, parentColumn = "id", entityColumn = "tripId"
         ) val places: List<TimedPlace>,
         @Relation(
-            entity = Schema.RestaurantReservation::class, parentColumn = "id", entityColumn = "tripId"
+            entity = Schema.RestaurantReservation::class,
+            parentColumn = "id",
+            entityColumn = "tripId"
         ) val restaurants: List<RestaurantReservation>,
     )
 
@@ -89,6 +92,45 @@ sealed interface RoomData {
         val source: String,
     )
 
+    @Serializable
+    data class TripPreferences(
+        val basicInformation: BasicInformation,
+        val initialParameters: TripParameters,
+        val questionsAnswers: List<AnsweredQuestion>,
+    )
+
+    @Serializable
+    data class BasicInformation(
+        val groupType: GroupType,
+        val travelers: Int,
+    )
+
+    @Serializable
+    enum class GroupType {
+        SOLO,
+        FAMILY,
+        FRIENDS,
+        COWORKERS,
+        COUPLE
+    }
+
+    @Serializable
+    data class TripParameters(
+        val occasions: List<String>,
+        val interests: List<String>,
+        val vibe: List<String>,
+        val focus: List<String>,
+        val mustHave: List<String>,
+        val duration: List<String>,
+        val anythingElse: String,
+    )
+
+    @Serializable
+    data class AnsweredQuestion(
+        val question: String,
+        val answer: String,
+    )
+
     interface Schema {
 
         @Entity
@@ -96,6 +138,7 @@ sealed interface RoomData {
             @PrimaryKey val id: String,
             val name: String?,
             val coverImage: String?,
+            val preferences: TripPreferences?,
         )
 
         @Entity

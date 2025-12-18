@@ -33,7 +33,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
 
     override suspend fun addTrip(): String {
         val id = UUID.randomUUID().toString()
-        dao.addTrip(RoomData.Schema.Trip(id, null, null))
+        dao.addTrip(RoomData.Schema.Trip(id, null, null, null))
         return id
     }
 
@@ -42,7 +42,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
         places: List<TimedPlace>
     ): String {
         val id = UUID.randomUUID().toString()
-        dao.addTrip(RoomData.Schema.Trip(id, name, null))
+        dao.addTrip(RoomData.Schema.Trip(id, name, null, null))
         places.forEach {
             saveTimedPlace(id, it)
         }

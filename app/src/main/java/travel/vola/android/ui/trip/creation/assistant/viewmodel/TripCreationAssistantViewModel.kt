@@ -64,7 +64,7 @@ class TripCreationAssistantViewModel(
     )
 
     private val generatedState = combine(step, compositeState) { step, state ->
-        step to when (step) {
+        when (step) {
             is Step.BasicInformation -> state.basicInformation
             is Step.InitialParameters -> state.initialParameters ?: generateInitialParametersState(
                 state.basicInformation
@@ -84,7 +84,7 @@ class TripCreationAssistantViewModel(
             }
 
             is Step.Retry -> UiState.Generating
-        }
+        } ?: UiState.Error
     }
     private val internalState = MutableStateFlow<UiState>(UiState.BasicInformation())
 
