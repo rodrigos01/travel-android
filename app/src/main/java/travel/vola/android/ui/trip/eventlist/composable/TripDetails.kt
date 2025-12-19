@@ -373,6 +373,7 @@ private fun TripDetailItem(
             dayOfWeekStart = event.dayOfWeekStart,
             dayOfMonthEnd = event.dayOfMonthEnd,
             dayOfWeekEnd = event.dayOfWeekEnd,
+            focused = highlightDate,
             onAddButtonClick = { onAddButonTapped(event.id) },
         )
 
