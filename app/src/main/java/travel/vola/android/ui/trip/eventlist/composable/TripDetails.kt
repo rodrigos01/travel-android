@@ -56,7 +56,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.graphics.drawable.toBitmapOrNull
@@ -112,7 +111,7 @@ fun TripDetails(
         onEmptyAddRowTapped = viewModel::emptyDateRowTapped,
         onItemTapped = viewModel::itemTapped,
         onAddPlanTypeSelected = { viewModel.onAddPlanTypeSelected(it?.toState()) },
-        onFocusedIndexChange = viewModel::setFocusedIndex,
+        onScrollStateChange = viewModel::setScrollState,
     )
 }
 
@@ -128,7 +127,7 @@ private fun TripDetails(
     onEmptyAddRowTapped: (String) -> Unit = {},
     onItemTapped: (String) -> Unit = {},
     onAddPlanTypeSelected: (AddPlanType?) -> Unit = {},
-    onFocusedIndexChange: (Int) -> Unit = {},
+    onScrollStateChange: (Int, Int) -> Unit = { _, _ -> },
 ) {
     val listScrollState = rememberLazyListState()
     val currentPlaceIndex by remember {
@@ -155,7 +154,7 @@ private fun TripDetails(
             state.places.sortedBy { it.listIndex }.lastOrNull { it.listIndex <= currentPlaceIndex }
     }
     LaunchedEffect(currentPlaceIndex) {
-        onFocusedIndexChange(currentPlaceIndex)
+        onScrollStateChange(currentPlaceIndex, listScrollState.firstVisibleItemIndex)
     }
     val allMarkers = state.places.flatMap { it.markers }
     val boundingMarkers = focusedPlace?.markers ?: emptyList()
@@ -350,7 +349,7 @@ fun List(
                             onPlaceImageLoaded(sectionId, it)
                         }
                     },
-                    highlightDate = event is TripItemState.EventItemState && event.id == state.focusedItemId,
+                    highlightDate = event is TripItemState.Focusable && event.id == state.focusedItemId,
                 )
             }
         }
@@ -380,6 +379,7 @@ private fun TripDetailItem(
         is EmptyDateItemState -> EmptyDateListItem(
             dayOfMonth = event.dayOfMonth,
             dayOfWeek = event.dayOfWeek,
+            highlightDate = highlightDate,
             onTap = { onEmptyAddRowTapped(event.id) },
         )
 
