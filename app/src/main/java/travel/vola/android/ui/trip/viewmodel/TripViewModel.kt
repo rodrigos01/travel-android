@@ -30,6 +30,7 @@ import travel.vola.android.extensions.monthString
 import travel.vola.android.extensions.plus
 import travel.vola.android.extensions.timeString
 import travel.vola.android.extensions.toMidnight
+import travel.vola.android.extensions.update
 import travel.vola.android.extensions.viewModelFactory
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.FlexibleDaySection
@@ -420,25 +421,28 @@ class TripViewModel(
             is TripItemState.FlexibleDaySectionState -> trip.value?.flexibleSections?.firstOrNull { it.id == id }
         }
 
-    private fun SuggestionsUseCase.TimedPlaceSuggestion.asTimedPlace(city: Place) = TimedPlace(
-        id = id,
-        startDateTime = startTime ?: ZonedDateTime.now(),
-        hasStartTime = startTime != null,
-        endDateTime = endTime,
-        hasEndTime = endTime != null,
-        city = city,
-        place = Place(
-            id = name,
-            name = name,
-            coverImage = coverImage,
-            latitude = 0.0,
-            longitude = 0.0,
-            address = reason,
-            externalId = "",
-            timeZone = TimeZone.getDefault(),
-            source = "",
-        ),
-    )
+    private fun SuggestionsUseCase.TimedPlaceSuggestion.asTimedPlace(city: Place): TimedPlace {
+        val timeZoneId = city.timeZone.toZoneId()
+        return TimedPlace(
+            id = id,
+            startDateTime = startTime?.update(timeZone = timeZoneId) ?: ZonedDateTime.now(),
+            hasStartTime = startTime != null,
+            endDateTime = endTime?.update(timeZone = timeZoneId),
+            hasEndTime = endTime != null,
+            city = city,
+            place = Place(
+                id = name,
+                name = name,
+                coverImage = coverImage,
+                latitude = 0.0,
+                longitude = 0.0,
+                address = reason,
+                externalId = "",
+                timeZone = city.timeZone,
+                source = "",
+            ),
+        )
+    }
 
     private fun genItems(trip: Trip, suggestions: DailyItineraryState?): List<TripItemState> {
         val cities =
