@@ -169,8 +169,10 @@ class GenAIRepository internal constructor(
                     "\n Follow-up Questions: \n" + followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" } +
                     "\n Selected Itinerary:\n" + Json.encodeToString(itinerary) +
                     "\n Itinerary Type: " + itineraryType.value
-        val result = dailyItineraryModel.generateContent(promptQuery)
-        return result.text?.let { Json.decodeFromString<GenAIData.DailyItinerary>(it) }
+        return withMeasuredLatency("genDailyItinerary") {
+            val result = dailyItineraryModel.generateContent(promptQuery)
+            result.text?.let { Json.decodeFromString<GenAIData.DailyItinerary>(it) }
+        }
     }
 
     private fun GenerateContentResponse.getJsonArgs(
@@ -215,18 +217,35 @@ class GenAIRepository internal constructor(
         prompt: String, functionName: FunctionNames, argName: String,
     ): T? {
         var currentPrompt = prompt
-        var attempts = 0
-        while (attempts < 3) {
-            try {
-                val response = chatModel.sendMessage(currentPrompt)
-                return response.getFunctionCallParams<T>(functionName, argName)
-            } catch (t: Throwable) {
-                logger.error("GenAIRepository", "Error sending message", t)
-                currentPrompt =
-                    "Your previous response triggered the following error:\n${t.message}\n\nplease, regenerate the response"
-                attempts++
+        return withMeasuredLatency("sendMessage") {
+            var attempts = 0
+            while (attempts < 3) {
+                try {
+                    val response = chatModel.sendMessage(currentPrompt)
+                    return@withMeasuredLatency response.getFunctionCallParams<T>(
+                        functionName,
+                        argName
+                    )
+                } catch (t: Throwable) {
+                    logger.error("GenAIRepository", "Error sending message", t)
+                    currentPrompt =
+                        "Your previous response triggered the following error:\n${t.message}\n\nplease, regenerate the response"
+                    attempts++
+                }
             }
+            return@withMeasuredLatency null
         }
-        return null
+    }
+
+    private suspend fun <T> withMeasuredLatency(
+        processIdentifier: String,
+        block: suspend () -> T
+    ): T {
+        logger.debug("GenAIRepository", "starting $processIdentifier")
+        val startTime = System.currentTimeMillis()
+        val result = block()
+        val latency = System.currentTimeMillis() - startTime
+        logger.debug("GenAIRepository", "finished $processIdentifier in ${latency}ms")
+        return result
     }
 }
