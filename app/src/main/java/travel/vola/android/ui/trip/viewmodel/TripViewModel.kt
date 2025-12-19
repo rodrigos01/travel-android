@@ -524,7 +524,7 @@ class TripViewModel(
         } else if (end - 1.days >= start) {
             TripItemState.DateRangeItemState(
                 id = UUID.randomUUID().toString(),
-                timestamp = from,
+                timestamp = start,
                 dayOfMonthStart = start.dayOfMonthString,
                 dayOfWeekStart = start.dayOfWeekString,
                 dayOfMonthEnd = end.dayOfMonthString,
@@ -534,7 +534,7 @@ class TripViewModel(
         } else {
             TripItemState.EmptyDateItemState(
                 id = UUID.randomUUID().toString(),
-                timestamp = from,
+                timestamp = start,
                 dayOfMonth = start.dayOfMonthString,
                 dayOfWeek = start.dayOfWeekString,
                 sectionId = sectionId,

@@ -24,6 +24,7 @@ fun DateRangeListItem(
     dayOfWeekStart: String,
     dayOfMonthEnd: String,
     dayOfWeekEnd: String,
+    focused: Boolean,
     onAddButtonClick: () -> Unit,
 ) {
     ListItem(headlineContent = {
@@ -32,6 +33,7 @@ fun DateRangeListItem(
                 dayOfMonth = dayOfMonthStart,
                 dayOfWeek = dayOfWeekStart,
                 showSmall = true,
+                highlightDate = focused
             )
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -59,6 +61,6 @@ fun DateRangeListItem(
 @Preview
 fun DateRangeListItemPreview() {
     AppTheme {
-        DateRangeListItem("12", "Sat", "20", "Mon", onAddButtonClick = {})
+        DateRangeListItem("12", "Sat", "20", "Mon", true, onAddButtonClick = {})
     }
 }
