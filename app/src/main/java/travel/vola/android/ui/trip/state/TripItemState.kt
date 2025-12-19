@@ -44,16 +44,23 @@ sealed interface TripItemState {
 
     sealed interface Editable : Identifiable
 
+    sealed interface Focusable : TripItemState, Identifiable, Timeable {
+        val showDate: Boolean
+    }
+
     data class EmptyDateItemState(
         override val id: String,
         override val timestamp: Time,
         override val sectionId: String? = null,
         val dayOfMonth: String,
         val dayOfWeek: String,
-    ) : TripItemState, Timeable, Replaceable, SectionItemState
+    ) : TripItemState, Timeable, Replaceable, SectionItemState, Focusable {
+        override val showDate: Boolean = true
+    }
 
-    sealed interface EventItemState : TripItemState, Timeable, Editable, SectionItemState {
-        val showDate: Boolean
+    sealed interface EventItemState : TripItemState, Timeable, Editable, SectionItemState,
+        Focusable {
+        override val showDate: Boolean
         val dayOfMonth: String?
         val dayOfWeek: String?
         val time: String
@@ -162,7 +169,8 @@ sealed interface TripItemState {
         override val subtitle = restaurantAddress
     }
 
-    data class SuggestionsItemState(val text: String, val predictedChanges: List<String>) : TripItemState
+    data class SuggestionsItemState(val text: String, val predictedChanges: List<String>) :
+        TripItemState
 
     data class InitialAddPlanItemState(
         override val id: String,

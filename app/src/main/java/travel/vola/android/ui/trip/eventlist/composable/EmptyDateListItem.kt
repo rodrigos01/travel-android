@@ -2,6 +2,7 @@ package travel.vola.android.ui.trip.eventlist.composable
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -18,10 +19,12 @@ import travel.vola.android.ui.theme.AppTheme
 fun EmptyDateListItem(
     dayOfMonth: String,
     dayOfWeek: String,
+    highlightDate: Boolean,
     onTap: () -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
             .clickable(onClick = onTap)
             .background(MaterialTheme.colorScheme.surface)
@@ -30,9 +33,7 @@ fun EmptyDateListItem(
         LeadingDate(
             dayOfMonth = dayOfMonth,
             dayOfWeek = dayOfWeek,
-            modifier = Modifier
-                .padding(end = 8.dp, bottom = 8.dp)
-                .width(32.dp)
+            highlightDate = highlightDate,
         )
         Text(
             text = "No plans yet, tap to add",
@@ -47,6 +48,6 @@ fun EmptyDateListItem(
 @Preview
 fun EmptyDateListItemPreview() {
     AppTheme {
-        EmptyDateListItem("12", "Sat", onTap = {})
+        EmptyDateListItem("12", "Sat", true, onTap = {})
     }
 }
