@@ -56,7 +56,6 @@ import travel.vola.android.ui.trip.state.TripItemState
 import travel.vola.android.ui.trip.state.type
 import travel.vola.android.ui.trip.state.type
 import java.time.ZonedDateTime
-import java.util.TimeZone
 import java.util.UUID
 import kotlin.contracts.ExperimentalContracts
 import kotlin.time.Duration.Companion.days
