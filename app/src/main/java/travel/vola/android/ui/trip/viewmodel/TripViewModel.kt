@@ -150,12 +150,15 @@ class TripViewModel(
             }
         }
     }
-    private val focusedIndex = MutableStateFlow(0)
+
+    private data class ScrollState(val focusedIndex: Int, val firstVisibleIndex: Int)
+
+    private val scrollState = MutableStateFlow(ScrollState(0, 0))
     val viewState: StateFlow<ViewState> = combine(
         eventsFromTrip,
         addPlanItemsState,
-        focusedIndex
-    ) { state, addPlanItems, currentFocusedIndex ->
+        scrollState
+    ) { state, addPlanItems, currentScrollState ->
         val items = state.items.mapIndexed { index, item ->
             if (item is TripItemState.Replaceable) {
                 addPlanItems[item.id]?.let { newItem ->
@@ -166,13 +169,16 @@ class TripViewModel(
             }
         }
         val focusedDate =
-            (state.items.getOrNull(currentFocusedIndex) as? TripItemState.Timeable)?.timestamp
-        val focusedId = items.filterIsInstance<TripItemState.EventItemState>()
-            .firstOrNull { it.timestamp.toLocalDate() == focusedDate?.toLocalDate() }?.id
+            (state.items.getOrNull(currentScrollState.focusedIndex) as? TripItemState.Timeable)?.timestamp?.toLocalDate()
+        val focusedDateItem = items.filterIsInstance<TripItemState.Focusable>().lastOrNull {
+            items.indexOf(it)
+                .let { index -> index >= currentScrollState.firstVisibleIndex && index <= currentScrollState.focusedIndex }
+                    && it.timestamp.toLocalDate() == focusedDate && it.showDate
+        }
         state.copy(
             items = items,
             addPlanItemState = addPlanItems[ADDING_PLAN_STATE_ID],
-            focusedItemId = focusedId
+            focusedItemId = focusedDateItem?.id
         )
     }.stateIn(
         viewModelScope, started = SharingStarted.Eagerly, initialValue = ViewState(
@@ -246,11 +252,11 @@ class TripViewModel(
 
     fun onAddPlanTypeSelected(type: AddPlanItemState.Type?) {
         addPlanUseCase.removeItem(ADDING_PLAN_STATE_ID)
-        val currentFocusedIndex = focusedIndex.value
+        val currentFocusedIndex = scrollState.value.focusedIndex
         val focusedItem = if (currentFocusedIndex == -1) {
             viewState.value.items.firstOrNull()
         } else {
-            viewState.value.items.getOrNull(focusedIndex.value)
+            viewState.value.items.getOrNull(currentFocusedIndex)
         } ?: viewState.value.items.lastOrNull()
         val focusedDate = (focusedItem as? TripItemState.Timeable)?.timestamp
         if (type != null) {
@@ -518,7 +524,7 @@ class TripViewModel(
         } else if (end - 1.days >= start) {
             TripItemState.DateRangeItemState(
                 id = UUID.randomUUID().toString(),
-                timestamp = from,
+                timestamp = start,
                 dayOfMonthStart = start.dayOfMonthString,
                 dayOfWeekStart = start.dayOfWeekString,
                 dayOfMonthEnd = end.dayOfMonthString,
@@ -528,7 +534,7 @@ class TripViewModel(
         } else {
             TripItemState.EmptyDateItemState(
                 id = UUID.randomUUID().toString(),
-                timestamp = from,
+                timestamp = start,
                 dayOfMonth = start.dayOfMonthString,
                 dayOfWeek = start.dayOfWeekString,
                 sectionId = sectionId,
@@ -633,8 +639,8 @@ class TripViewModel(
         }
     }
 
-    fun setFocusedIndex(index: Int) {
-        focusedIndex.value = index
+    fun setScrollState(focusedIndex: Int, firstVisibleIndex: Int) {
+        scrollState.value = ScrollState(focusedIndex, firstVisibleIndex)
     }
 
     override fun onCleared() {
