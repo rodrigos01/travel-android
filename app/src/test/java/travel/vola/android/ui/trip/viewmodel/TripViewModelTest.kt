@@ -23,6 +23,7 @@ import travel.vola.android.model.data.Trip
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.test.UnconfinedDispatcherTestRule
 import travel.vola.android.ui.trip.state.AddFlightItemState
+import travel.vola.android.ui.trip.state.AddLodgingItemState
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.TripItemState
 import travel.vola.android.ui.trip.state.TripItemState.DateRangeItemState
@@ -398,15 +399,15 @@ class TripViewModelTest {
                     departure = "2024-05-10T22:05:00-04:00",
                     airportFromName = "John F. Kennedy Intl. Airport",
                     cityFromName = "New York",
-                    airportToName = "Humberto Delgado International Airport",
-                    cityToName = "Lisbon",
+                    airportToName = "Francisco Sá Carneiro Airport",
+                    cityToName = "Porto",
                     arrival = "2024-05-11T10:25:00+01:00",
                 ),
                 Flight(
                     id = "lis-jfk",
                     departure = "2024-06-14T17:05:00+01:00",
-                    airportFromName = "Humberto Delgado International Airport",
-                    cityFromName = "Lisbon",
+                    airportFromName = "Francisco Sá Carneiro Airport",
+                    cityFromName = "Porto",
                     airportToName = "John F. Kennedy Intl. Airport",
                     cityToName = "New York",
                     arrival = "2024-06-14T20:15:00-04:00",
@@ -430,7 +431,7 @@ class TripViewModelTest {
             },
             {
                 val item = it as FlightArrivalItemState
-                assertThat(item.airport).isEqualTo("Humberto Delgado International Airport")
+                assertThat(item.airport).isEqualTo("Francisco Sá Carneiro Airport")
                 assertThat(item.showDate).isTrue
             },
             {
@@ -445,7 +446,7 @@ class TripViewModelTest {
             },
             {
                 val item = it as FlightDepartureItemState
-                assertThat(item.airport).isEqualTo("Humberto Delgado International Airport")
+                assertThat(item.airport).isEqualTo("Francisco Sá Carneiro Airport")
                 assertThat(item.showDate).isFalse
             },
             {
@@ -572,7 +573,7 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val expected: AddPlanItemState = mock {
+        val expected: AddFlightItemState = mock {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)
@@ -616,7 +617,7 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val expected: AddPlanItemState = mock {
+        val expected: AddFlightItemState = mock {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)
@@ -659,7 +660,7 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val expected: AddPlanItemState = mock {
+        val expected: AddFlightItemState = mock {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)

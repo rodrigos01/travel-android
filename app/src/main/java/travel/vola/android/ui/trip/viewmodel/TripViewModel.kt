@@ -419,7 +419,7 @@ class TripViewModel(
                         genItem(
                             time,
                             event,
-                            showDate = firstInSection,
+                            showDate = firstInSection && !Pair(time, event).isReturn(pairs),
                             backgroundStyle = backgroundStyle,
                             sectionId = place?.id ?: "",
                         )
