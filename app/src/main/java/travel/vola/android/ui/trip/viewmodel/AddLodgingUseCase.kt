@@ -8,7 +8,6 @@ import travel.vola.android.extensions.get
 import travel.vola.android.extensions.mergeMaps
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Lodging
-import travel.vola.android.model.data.Time
 import travel.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandlerBase
 import travel.vola.android.ui.trip.state.AddLodgingItemState
@@ -84,7 +83,7 @@ class AddLodgingUseCase(
 
     override fun addItem(
         id: String,
-        time: Time,
+        time: ZonedDateTime,
         params: AddPlanUseCase.StateParams,
     ) = lodgingSearchParamsUseCase.addItem(id, time, params)
 

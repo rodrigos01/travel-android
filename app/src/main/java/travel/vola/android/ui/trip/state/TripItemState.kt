@@ -1,13 +1,12 @@
 package travel.vola.android.ui.trip.state
 
 import travel.vola.android.model.data.Identifiable
-import travel.vola.android.model.data.Time
 import java.time.ZonedDateTime
 
 sealed interface TripItemState {
 
     interface Timeable {
-        val timestamp: Time
+        val timestamp: ZonedDateTime
     }
 
     interface SectionItemState {
@@ -15,14 +14,14 @@ sealed interface TripItemState {
     }
 
     data class MonthItemState(
-        override val timestamp: Time,
+        override val timestamp: ZonedDateTime,
         override val sectionId: String? = null, val month: String, val year: String,
     ) :
         TripItemState, Timeable, SectionItemState
 
     data class PlaceItemState(
         override val id: String,
-        override val timestamp: Time,
+        override val timestamp: ZonedDateTime,
         override val sectionId: String? = null,
         val placeName: String,
         val imageUrl: String,
@@ -32,7 +31,7 @@ sealed interface TripItemState {
 
     data class DateRangeItemState(
         override val id: String,
-        override val timestamp: Time,
+        override val timestamp: ZonedDateTime,
         override val sectionId: String? = null,
         val dayOfMonthStart: String,
         val dayOfWeekStart: String,
@@ -52,7 +51,7 @@ sealed interface TripItemState {
 
     data class EmptyDateItemState(
         override val id: String,
-        override val timestamp: Time,
+        override val timestamp: ZonedDateTime,
         override val sectionId: String? = null,
         val dayOfMonth: String,
         val dayOfWeek: String,
@@ -77,7 +76,7 @@ sealed interface TripItemState {
 
     data class FlightDepartureItemState(
         override val id: String,
-        override val timestamp: Time,
+        override val timestamp: ZonedDateTime,
         override val showDate: Boolean,
         override val dayOfMonth: String,
         override val dayOfWeek: String,
@@ -93,7 +92,7 @@ sealed interface TripItemState {
 
     data class FlightArrivalItemState(
         override val id: String,
-        override val timestamp: Time,
+        override val timestamp: ZonedDateTime,
         override val showDate: Boolean,
         override val dayOfMonth: String,
         override val dayOfWeek: String,
@@ -108,7 +107,7 @@ sealed interface TripItemState {
 
     data class HotelCheckInItemState(
         override val id: String,
-        override val timestamp: Time,
+        override val timestamp: ZonedDateTime,
         override val showDate: Boolean,
         override val dayOfMonth: String,
         override val dayOfWeek: String,
@@ -124,7 +123,7 @@ sealed interface TripItemState {
 
     data class HotelCheckOutItemState(
         override val id: String,
-        override val timestamp: Time,
+        override val timestamp: ZonedDateTime,
         override val showDate: Boolean,
         override val dayOfMonth: String,
         override val dayOfWeek: String,
@@ -139,7 +138,7 @@ sealed interface TripItemState {
 
     data class TimedPlaceItemState(
         override val id: String,
-        override val timestamp: Time,
+        override val timestamp: ZonedDateTime,
         override val showDate: Boolean,
         override val dayOfMonth: String,
         override val dayOfWeek: String,
@@ -157,7 +156,7 @@ sealed interface TripItemState {
 
     data class RestaurantReservationItemState(
         override val id: String,
-        override val timestamp: Time,
+        override val timestamp: ZonedDateTime,
         override val showDate: Boolean,
         override val dayOfMonth: String,
         override val dayOfWeek: String,
@@ -176,7 +175,7 @@ sealed interface TripItemState {
 
     data class InitialAddPlanItemState(
         override val id: String,
-        override val timestamp: Time,
+        override val timestamp: ZonedDateTime,
     ) : Replaceable, Timeable, TripItemState
 }
 
@@ -227,7 +226,7 @@ data class AutoCompleteResultState(val title: String, val subtitle: String?)
 
 data class ManualAddLodgingItemState(
     override val id: String,
-    override val timestamp: Time,
+    override val timestamp: ZonedDateTime,
     override val typeSelectionEnabled: Boolean,
     override val startState: ManualAddPlanState,
     override val endState: ManualAddPlanState,
@@ -240,7 +239,7 @@ data class ManualAddLodgingItemState(
 
 data class AddFlightItemState(
     override val id: String,
-    override val timestamp: Time,
+    override val timestamp: ZonedDateTime,
     override val typeSelectionEnabled: Boolean,
     override val startState: ManualAddPlanState,
     override val endState: ManualAddPlanState,
@@ -250,7 +249,7 @@ data class AddFlightItemState(
 
 data class LodgingSearchItemState(
     override val id: String,
-    override val timestamp: Time,
+    override val timestamp: ZonedDateTime,
     override val typeSelectionEnabled: Boolean,
     override val saveButtonEnabled: Boolean,
     override val deleteButtonEnabled: Boolean,
@@ -258,7 +257,7 @@ data class LodgingSearchItemState(
     val locationText: String?,
     val searchResults: List<SearchResultItemState>,
     override val checkIn: ZonedDateTime,
-    val minCheckOutTime: Time?,
+    val minCheckOutTime: ZonedDateTime?,
     override val checkOut: ZonedDateTime?,
 ) : AddLodgingItemState {
     override val buttonConfiguration: AddPlanItemState.ButtonConfiguration =
@@ -271,7 +270,7 @@ data class AddPlaceItemState(
     override val dateSelectionEnabled: Boolean,
     override val saveButtonEnabled: Boolean,
     override val deleteButtonEnabled: Boolean,
-    override val timestamp: Time,
+    override val timestamp: ZonedDateTime,
     val startTimeSelected: Boolean,
     val endDateTime: ZonedDateTime?,
     val endTimeSelected: Boolean,
@@ -303,7 +302,7 @@ data class AddRestaurantItemState(
     override val dateSelectionEnabled: Boolean,
     override val saveButtonEnabled: Boolean,
     override val deleteButtonEnabled: Boolean,
-    override val timestamp: Time,
+    override val timestamp: ZonedDateTime,
     val timeSelected: Boolean,
     val restaurantName: String?,
     val searchResults: List<AutoCompleteResultState>,

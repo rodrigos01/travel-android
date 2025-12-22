@@ -32,7 +32,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import travel.vola.android.common.ui.preview.loremIpsum
-import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.monthAndYearString
 import travel.vola.android.ui.lodgingsearch.state.LodgingReviewState
@@ -131,8 +131,8 @@ fun LodgingReviewItemPreview() {
                 state = LodgingReviewState(
                     rating = 4.5,
                     ratingImageUrl = "https://www.tripadvisor.com/img/cdsi/img2/ratings/traveler/s5.0-66827-5.svg",
-                    tripDate = Time("2023-08-15T00:00 GMT"),
-                    reviewTime = Time("2023-08-31T10:52 GMT"),
+                    tripDate = zonedDateTime("2023-08-15T00:00 GMT"),
+                    reviewTime = zonedDateTime("2023-08-31T10:52 GMT"),
                     authorAvatarUrl = "https://media-cdn.tripadvisor.com/media/photo-l/1a/f6/e4/2d/default-avatar-2020-48.jpg",
                     authorName = "Author",
                     authorLocation = "Author Location",

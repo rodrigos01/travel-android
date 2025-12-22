@@ -1,6 +1,6 @@
 package travel.vola.android.model.firebase
 
-import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.asISO8601String
 import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.AnsweredQuestion
@@ -11,11 +11,11 @@ import travel.vola.android.model.data.GroupType
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.RestaurantReservation
-import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.data.TripParameters
 import travel.vola.android.model.data.TripPreferences
+import java.time.ZonedDateTime
 import java.util.TimeZone
 
 fun FirebaseData.Trip.toAppDataModel(): Trip {
@@ -195,6 +195,6 @@ fun FirebaseData.GroupType.toAppDataModel() = when (this) {
     FirebaseData.GroupType.COUPLE -> GroupType.COUPLE
 }
 
-fun String.toTime(): Time = Time(this)
+fun String.toTime(): ZonedDateTime = zonedDateTime(this)
 
-fun Time.toFirebaseDataModel() = this.asISO8601String()
+fun ZonedDateTime.toFirebaseDataModel() = this.asISO8601String()

@@ -11,7 +11,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
-import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.get
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
@@ -43,17 +43,17 @@ class ManualAddLodgingUseCaseTest {
     fun `itemStore data added should update items`() {
         itemStore.addItem(mock {
             on { id } doReturn "lodging_id"
-            on { checkIn } doReturn Time("2025-10-16T15:23:00+01:00")
-            on { checkOut } doReturn Time("2025-10-17T10:52:00+01:00")
+            on { checkIn } doReturn zonedDateTime("2025-10-16T15:23:00+01:00")
+            on { checkOut } doReturn zonedDateTime("2025-10-17T10:52:00+01:00")
         }, mock())
         assertThat(items["lodging_id"]?.id).isEqualTo("lodging_id")
-        assertThat(items["lodging_id"]?.startState?.dateTime).isEqualTo(Time("2025-10-16T15:23:00+01:00"))
-        assertThat(items["lodging_id"]?.endState?.dateTime).isEqualTo(Time("2025-10-17T10:52:00+01:00"))
+        assertThat(items["lodging_id"]?.startState?.dateTime).isEqualTo(zonedDateTime("2025-10-16T15:23:00+01:00"))
+        assertThat(items["lodging_id"]?.endState?.dateTime).isEqualTo(zonedDateTime("2025-10-17T10:52:00+01:00"))
     }
 
     @Test
     fun `added item should be initialized empty`() {
-        subject.addItem("lodging_id", Time("2025-10-16T15:23:00+01:00"), mock())
+        subject.addItem("lodging_id", zonedDateTime("2025-10-16T15:23:00+01:00"), mock())
         val item = items.value["lodging_id"] ?: fail()
 
         assertThat(item.startState.locationText).isNull()
@@ -67,7 +67,7 @@ class ManualAddLodgingUseCaseTest {
             deleteEnabled = false,
             typeSelectionEnabled = true,
         )
-        subject.addItem("lodging_id", Time("2025-10-16T15:23:00+01:00"), params)
+        subject.addItem("lodging_id", zonedDateTime("2025-10-16T15:23:00+01:00"), params)
         val item = items.value["lodging_id"] ?: fail()
         assertThat(item.dateSelectionEnabled).isTrue()
         assertThat(item.deleteButtonEnabled).isFalse()
@@ -81,8 +81,8 @@ class ManualAddLodgingUseCaseTest {
             on { name } doReturn "Hotel Novotel Paris Les Halles"
             on { address } doReturn "Blvd Les Halles, 45"
             on { city } doReturn mock()
-            on { checkIn } doReturn Time("2025-10-16T15:00:00+01:00")
-            on { checkout } doReturn Time("2025-10-17T11:00:00+01:00")
+            on { checkIn } doReturn zonedDateTime("2025-10-16T15:00:00+01:00")
+            on { checkout } doReturn zonedDateTime("2025-10-17T11:00:00+01:00")
         }
         subject.addItem("lodging_id", entity, mock())
         val item = items.value["lodging_id"] ?: fail()
@@ -93,8 +93,8 @@ class ManualAddLodgingUseCaseTest {
 
     @Test
     fun `added item should be initialized with initial time at full hour as check-in`() {
-        val expected = Time("2025-10-16T15:00:00+01:00")
-        val initialTime = Time("2025-10-16T15:23:00+01:00")
+        val expected = zonedDateTime("2025-10-16T15:00:00+01:00")
+        val initialTime = zonedDateTime("2025-10-16T15:23:00+01:00")
         subject.addItem("lodging_id", initialTime, mock())
         val item = items.value["lodging_id"] ?: fail()
         assertThat(item.startState.dateTime).isEqualTo(expected)
@@ -102,8 +102,8 @@ class ManualAddLodgingUseCaseTest {
 
     @Test
     fun `added item should be initialized with day after initial time at 11am as check-out`() {
-        val expected = Time("2025-10-17T11:00:00+01:00")
-        val initialTime = Time("2025-10-16T15:43:00+01:00")
+        val expected = zonedDateTime("2025-10-17T11:00:00+01:00")
+        val initialTime = zonedDateTime("2025-10-16T15:43:00+01:00")
         subject.addItem("lodging_id", initialTime, mock())
         val item = items.value["lodging_id"] ?: fail()
         assertThat(item.endState.dateTime).isEqualTo(expected)
@@ -118,8 +118,8 @@ class ManualAddLodgingUseCaseTest {
 
     @Test
     fun `set check-in time should update check-in time`() {
-        val newTime = Time("2025-10-17T10:52:00+01:00")
-        val originalTime = Time("2025-10-17T15:23:00+01:00")
+        val newTime = zonedDateTime("2025-10-17T10:52:00+01:00")
+        val originalTime = zonedDateTime("2025-10-17T15:23:00+01:00")
         subject.addItem("lodging_id", originalTime, mock())
         subject.onLodgingUpdated(
             itemId = "lodging_id",
@@ -135,8 +135,8 @@ class ManualAddLodgingUseCaseTest {
 
     @Test
     fun `set check-out time should update check-out time`() {
-        val newTime = Time("2025-10-17T10:52:00+01:00")
-        val checkInTime = Time("2025-10-16T15:23:00+01:00")
+        val newTime = zonedDateTime("2025-10-17T10:52:00+01:00")
+        val checkInTime = zonedDateTime("2025-10-16T15:23:00+01:00")
         subject.addItem("lodging_id", checkInTime, mock())
         subject.onLodgingUpdated(
             itemId = "lodging_id",
@@ -162,7 +162,7 @@ class ManualAddLodgingUseCaseTest {
         repository.stub {
             onBlocking { autocomplete("hotel", autocompleteKey = "lodging_id") } doReturn results
         }
-        subject.addItem("lodging_id", Time("2025-10-16T15:23:00+01:00"), mock())
+        subject.addItem("lodging_id", zonedDateTime("2025-10-16T15:23:00+01:00"), mock())
         subject.lodgingTextChanged("lodging_id", "hotel")
         val item = items.value["lodging_id"] ?: fail()
         assertThat(item.startState.searchResults).isEqualTo(List(3) { index ->
@@ -188,7 +188,7 @@ class ManualAddLodgingUseCaseTest {
         itemStore.stub {
             on { getData("lodging_id") } doReturn originalData
         }
-        val checkInTime = Time("2025-10-16T15:23:00+01:00")
+        val checkInTime = zonedDateTime("2025-10-16T15:23:00+01:00")
         subject.addItem("lodging_id", checkInTime, mock())
         subject.onLodgingUpdated(
             itemId = "lodging_id",
@@ -311,8 +311,8 @@ class ManualAddLodgingUseCaseTest {
                 address = "Blvd Les Halles, 45",
                 latitude = 48.866667,
                 longitude = 2.333333,
-                checkIn = Time("2025-10-16T15:23:00+01:00"),
-                checkOut = Time("2025-10-17T10:52:00+01:00"),
+                checkIn = zonedDateTime("2025-10-16T15:23:00+01:00"),
+                checkOut = zonedDateTime("2025-10-17T10:52:00+01:00"),
                 city = paris,
             )
         }
@@ -325,8 +325,8 @@ class ManualAddLodgingUseCaseTest {
         assertThat(entity.address).isEqualTo("Blvd Les Halles, 45")
         assertThat(entity.latitude).isEqualTo(48.866667)
         assertThat(entity.longitude).isEqualTo(2.333333)
-        assertThat(entity.checkIn).isEqualTo(Time("2025-10-16T15:23:00+01:00"))
-        assertThat(entity.checkout).isEqualTo(Time("2025-10-17T10:52:00+01:00"))
+        assertThat(entity.checkIn).isEqualTo(zonedDateTime("2025-10-16T15:23:00+01:00"))
+        assertThat(entity.checkout).isEqualTo(zonedDateTime("2025-10-17T10:52:00+01:00"))
         assertThat(entity.city).isEqualTo(paris)
     }
 }

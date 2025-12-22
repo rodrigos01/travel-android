@@ -12,8 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
-import travel.vola.android.extensions.Time
-import travel.vola.android.model.data.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
@@ -142,11 +141,11 @@ fun StartEndAddPlanListItemPreview() {
             StartEndAddPlanListItem(
                 uiState = AddFlightItemState(
                     id = "",
-                    timestamp = Time.now(),
+                    timestamp = ZonedDateTime.now(),
                     typeSelectionEnabled = false,
                     startState = ManualAddPlanState(
-                        dateTime = Time("2025-09-21T14:49 +0100"),
-                        minDateTime = Time.now(),
+                        dateTime = zonedDateTime("2025-09-21T14:49 +0100"),
+                        minDateTime = ZonedDateTime.now(),
                         dateSelectionEnabled = false,
                         locationText = null,
                         searchResults = emptyList(),
@@ -154,7 +153,7 @@ fun StartEndAddPlanListItemPreview() {
                     ),
                     endState = ManualAddPlanState(
                         dateTime = null,
-                        minDateTime = Time.now(),
+                        minDateTime = ZonedDateTime.now(),
                         dateSelectionEnabled = true,
                         locationText = "Somewhere",
                         searchResults = emptyList(),
