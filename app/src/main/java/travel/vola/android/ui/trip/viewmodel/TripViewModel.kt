@@ -21,6 +21,7 @@ import travel.vola.android.common.coroutines.createUseCaseScope
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.common.ui.state.MarkerViewState
 import travel.vola.android.di.factoryDependencies
+import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.dayAndMonthString
 import travel.vola.android.extensions.dayOfMonthString
 import travel.vola.android.extensions.dayOfWeekString
@@ -37,7 +38,6 @@ import travel.vola.android.model.data.Identifiable
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.RestaurantReservation
-import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.data.TripEntity
@@ -434,14 +434,14 @@ class TripViewModel(
             listOf(
                 TripItemState.InitialAddPlanItemState(
                     UUID.randomUUID().toString(),
-                    Time.now(),
+                    ZonedDateTime.now(),
                 )
             )
         }
     }
 
     private fun genPlaceItem(
-        index: Int, pairs: List<Pair<Time, TripEvent>>,
+        index: Int, pairs: List<Pair<ZonedDateTime, TripEvent>>,
     ): TripItemState.PlaceItemState? {
         val item = pairs[index]
 
@@ -484,30 +484,30 @@ class TripViewModel(
         )
     }
 
-    private val List<Pair<Time, TripEvent>>.originPlace: Place?
+    private val List<Pair<ZonedDateTime, TripEvent>>.originPlace: Place?
         get() {
             return first().takeIf { it.isDeparture }?.place
         }
 
-    private fun List<Pair<Time, TripEvent>>.nextItems(index: Int) = subList(
+    private fun List<Pair<ZonedDateTime, TripEvent>>.nextItems(index: Int) = subList(
         (index + 1).coerceAtMost(lastIndex),
         size,
     ).filterNot { (nextTime, nextEvent) -> nextEvent.isTimedPlaceEnd(nextTime) }
 
     private fun TripEvent.isTimedPlaceEnd(
-        referenceTime: Time,
+        referenceTime: ZonedDateTime,
     ) = this is TimedPlace && referenceTime == endDateTime && referenceTime != startDateTime
 
-    private val Pair<Time, TripEvent>.place: Place
+    private val Pair<ZonedDateTime, TripEvent>.place: Place
         get() = second.getPlace(first)
 
-    private val Pair<Time, TripEvent>.isDeparture: Boolean
+    private val Pair<ZonedDateTime, TripEvent>.isDeparture: Boolean
         get() = (second as? FlightSegment)?.departure == first
 
     private val TimedPlace.isDayTrip: Boolean
         get() = this.endDateTime == null || this.endDateTime.toMidnight() == this.startDateTime.toMidnight()
 
-    private fun Pair<Time, TripEvent>.isReturn(pairs: List<Pair<Time, TripEvent>>): Boolean {
+    private fun Pair<ZonedDateTime, TripEvent>.isReturn(pairs: List<Pair<ZonedDateTime, TripEvent>>): Boolean {
         val (time, event) = this
         return (this == pairs.last() && event is FlightSegment && event.arrival == time && event.getPlace(
             time
@@ -515,7 +515,7 @@ class TripViewModel(
     }
 
     private fun genDateRangeItem(
-        from: Time, to: Time, sectionId: String,
+        from: ZonedDateTime, to: ZonedDateTime, sectionId: String,
     ): TripItemState? {
         val start = from + 1.days
         val end = to.toMidnight() - 1.minutes
@@ -543,7 +543,7 @@ class TripViewModel(
     }
 
     private fun genItem(
-        timestamp: Time,
+        timestamp: ZonedDateTime,
         event: TripEvent,
         showDate: Boolean,
         backgroundStyle: TripItemState.EventItemState.BackgroundStyle,
@@ -660,7 +660,7 @@ class TripViewModel(
 
 }
 
-private fun TripEvent.getPlace(referenceTime: Time) = when (this) {
+private fun TripEvent.getPlace(referenceTime: ZonedDateTime) = when (this) {
     is FlightSegment -> if (referenceTime == departure) {
         airportFrom.city
     } else {
@@ -670,11 +670,8 @@ private fun TripEvent.getPlace(referenceTime: Time) = when (this) {
     is WithCity -> city
 }
 
-private val Time.dateString
-    get() = "$year=$month-$dayOfMonth"
-
 private class EventComparable(
-    private val time: Time, private val event: TripEvent,
+    private val time: ZonedDateTime, private val event: TripEvent,
 ) : Comparable<EventComparable> {
     override fun compareTo(other: EventComparable): Int {
         if (time.dateString != other.time.dateString || type == EventType.UNKNOWN) {

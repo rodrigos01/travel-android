@@ -15,26 +15,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import travel.vola.android.extensions.Time
-import travel.vola.android.model.data.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.lodgingsearch.composable.LodgingSearchParams
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.AddPlanType
 import travel.vola.android.ui.trip.state.SearchResultItemState
+import java.time.ZonedDateTime
 
 @Composable
 fun LodgingSearchListItem(
-    checkIn: Time,
-    checkOut: Time? = null,
-    minCheckIn: Time? = null,
-    minCheckOut: Time? = null,
+    checkIn: ZonedDateTime,
+    checkOut: ZonedDateTime? = null,
+    minCheckIn: ZonedDateTime? = null,
+    minCheckOut: ZonedDateTime? = null,
     locationText: String? = null,
     searchResults: List<SearchResultItemState> = emptyList(),
     onSwitchToManualButtonTapped: () -> Unit,
     onLocationSearchTextChanged: (CharSequence) -> Unit,
     onUpdated: (
-        checkIn: Time,
-        checkOut: Time?,
+        checkIn: ZonedDateTime,
+        checkOut: ZonedDateTime?,
         selectedSearchResultIndex: Int,
     ) -> Unit,
 ) {
@@ -83,7 +83,7 @@ fun LodgingSearchListItem(
 fun LodgingSearchListItemPreview() {
     AppTheme {
         AddPlanScaffold(AddPlanType.Lodging, {}, true, false, {}, true, "Save", {}, "Cancel", {}) {
-            LodgingSearchListItem(checkIn = Time("2025-12-05T12:00 +0100"),
+            LodgingSearchListItem(checkIn = zonedDateTime("2025-12-05T12:00 +0100"),
                 checkOut = null,
                 searchResults = List(5) { SearchResultItemState("City$it", "Address$it") },
                 locationText = null,

@@ -11,7 +11,6 @@ import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.RestaurantReservation
-import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.TripEntity
 import travel.vola.android.ui.trip.creation.usecase.AddFlightItemActionHandler
@@ -26,6 +25,7 @@ import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.AddRestaurantItemState
 import travel.vola.android.ui.trip.state.LodgingSearchItemState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
+import java.time.ZonedDateTime
 import java.util.UUID
 
 class AddPlanUseCase(
@@ -52,7 +52,7 @@ class AddPlanUseCase(
     interface AddItemUseCase<E : TripEntity, T : AddPlanItemState> {
         val items: MapFlow<String, T>
 
-        fun addItem(id: String, time: Time, params: StateParams)
+        fun addItem(id: String, time: ZonedDateTime, params: StateParams)
         fun addItem(id: String, entity: E, params: StateParams)
 
         fun removeItem(item: T)
@@ -71,7 +71,7 @@ class AddPlanUseCase(
 
     fun createAddPlanItem(
         id: String?,
-        time: Time,
+        time: ZonedDateTime,
         dateSelectionEnabled: Boolean = true,
         type: AddPlanItemState.Type = AddPlanItemState.Type.Flight,
     ) {

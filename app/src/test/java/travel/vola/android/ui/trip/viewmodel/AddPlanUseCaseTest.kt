@@ -16,11 +16,11 @@ import travel.vola.android.extensions.get
 import travel.vola.android.extensions.set
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
-import travel.vola.android.model.data.Time
 import travel.vola.android.test.UnconfinedDispatcherTestRule
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
+import java.time.ZonedDateTime
 
 class AddPlanUseCaseTest {
 
@@ -43,7 +43,7 @@ class AddPlanUseCaseTest {
 
     @Test
     fun `added plan item should be initialized as Flight`() {
-        val initialTime: Time = mock()
+        val initialTime: ZonedDateTime = mock()
         subject.createAddPlanItem("item_id", initialTime)
         verify(addFlightUseCase).addItem(eq("item_id"), eq(initialTime), any())
     }
@@ -60,7 +60,7 @@ class AddPlanUseCaseTest {
 
     @Test
     fun `type selected should change item`() {
-        val initialTime: Time = mock()
+        val initialTime: ZonedDateTime = mock()
         val original = mock<AddFlightItemState> {
             on { id } doReturn "originalId"
             on { timestamp } doReturn initialTime
@@ -79,7 +79,7 @@ class AddPlanUseCaseTest {
         addFlightItems["originalId"] = original
         subject.addPlanTypeChanged("originalId", AddPlanItemState.Type.Flight)
         verify(addFlightUseCase, times(0)).removeItem(any())
-        verify(addLodgingUseCase, times(0)).addItem(any(), any<Time>(), any())
+        verify(addLodgingUseCase, times(0)).addItem(any(), any<ZonedDateTime>(), any())
     }
 
     @Test

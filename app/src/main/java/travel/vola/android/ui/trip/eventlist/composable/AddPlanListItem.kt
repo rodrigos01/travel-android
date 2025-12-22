@@ -3,8 +3,7 @@ package travel.vola.android.ui.trip.eventlist.composable
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import travel.vola.android.extensions.Time
-import travel.vola.android.model.data.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.AddPlanType
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
@@ -211,18 +210,18 @@ fun AddPlanListItemPreview() {
             AddPlanListItem(
                 state = AddFlightItemState(
                     id = "",
-                    timestamp = Time("2025-10-17T18:25 +0200"),
+                    timestamp = zonedDateTime("2025-10-17T18:25 +0200"),
                     startState = ManualAddPlanState(
-                        Time("2025-10-17T18:25 +0200"),
-                        Time.now(),
+                        zonedDateTime("2025-10-17T18:25 +0200"),
+                        ZonedDateTime.now(),
                         dateSelectionEnabled = false,
                         locationText = "Charles de Gaule",
                         searchResults = emptyList(),
                         isTimeSet = true
                     ),
                     endState = ManualAddPlanState(
-                        Time("2025-10-18T06:00 -0300"),
-                        Time.now(),
+                        zonedDateTime("2025-10-18T06:00 -0300"),
+                        ZonedDateTime.now(),
                         dateSelectionEnabled = true,
                         locationText = "John F. Kennedy",
                         searchResults = emptyList(),

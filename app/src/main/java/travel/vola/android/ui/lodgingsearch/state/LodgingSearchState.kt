@@ -1,6 +1,6 @@
 package travel.vola.android.ui.lodgingsearch.state
 
-import travel.vola.android.model.data.Time
+import java.time.ZonedDateTime
 
 data class LodgingSearchResultState(
     val id: String,
@@ -22,8 +22,8 @@ data class LodgingDetailsState(
     val reviewCount: Int,
     val lodgingType: String,
     val photos: List<String>,
-    val checkIn: Time,
-    val checkOut: Time,
+    val checkIn: ZonedDateTime,
+    val checkOut: ZonedDateTime,
     val price: Double,
     val rooms: List<LodgingRoomOfferState>,
     val description: String?,
@@ -49,8 +49,8 @@ data class LodgingRoomOfferState(
 )
 
 data class LodgingReviewState(
-    val reviewTime: Time,
-    val tripDate: Time,
+    val reviewTime: ZonedDateTime,
+    val tripDate: ZonedDateTime,
     val rating: Double,
     val ratingImageUrl: String,
     val authorAvatarUrl: String?,

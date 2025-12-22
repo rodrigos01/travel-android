@@ -4,7 +4,6 @@ import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.AirportSearchResult
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.SimplePlace
-import travel.vola.android.model.data.Time
 import java.time.ZonedDateTime
 
 sealed interface PendingData {
@@ -13,11 +12,11 @@ sealed interface PendingData {
     data class PendingFlight(
         override val id: String,
         val entityId: String? = null,
-        val departure: Time,
+        val departure: ZonedDateTime,
         val departureTimeSet: Boolean = false,
         val airportFrom: Airport? = null,
         val airportTo: Airport? = null,
-        val arrival: Time? = null,
+        val arrival: ZonedDateTime? = null,
         val arrivalTimeSet: Boolean = false,
         val airportFromSearchResults: List<AirportSearchResult> = emptyList(),
         val airportToSearchResults: List<AirportSearchResult> = emptyList(),
@@ -26,9 +25,9 @@ sealed interface PendingData {
     data class PendingLodging(
         override val id: String,
         val entityId: String? = null,
-        val checkIn: Time,
+        val checkIn: ZonedDateTime,
         val isCheckInTimeSet: Boolean = false,
-        val checkOut: Time? = null,
+        val checkOut: ZonedDateTime? = null,
         val isCheckOutTimeSet: Boolean = false,
         val name: String? = null,
         val address: String? = null,
@@ -40,8 +39,8 @@ sealed interface PendingData {
 
     data class LodgingSearchParams(
         override val id: String,
-        val checkIn: Time,
-        val checkOut: Time? = null,
+        val checkIn: ZonedDateTime,
+        val checkOut: ZonedDateTime? = null,
         val city: Place? = null,
         val searchResults: List<Place> = emptyList(),
     ) : PendingData

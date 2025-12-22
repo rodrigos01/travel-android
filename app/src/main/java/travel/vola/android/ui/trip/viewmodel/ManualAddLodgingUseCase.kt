@@ -9,7 +9,6 @@ import travel.vola.android.extensions.plus
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.update
 import travel.vola.android.model.data.Lodging
-import travel.vola.android.model.data.Time
 import travel.vola.android.model.repository.LodgingSearchRepository
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
 import travel.vola.android.ui.trip.creation.usecase.ManualAddPlanItemActionHandler
@@ -46,7 +45,7 @@ class ManualAddLodgingUseCase(
 
     override fun addItem(
         id: String,
-        time: Time,
+        time: ZonedDateTime,
         params: AddPlanUseCase.StateParams,
     ) {
         val data = PendingLodging(

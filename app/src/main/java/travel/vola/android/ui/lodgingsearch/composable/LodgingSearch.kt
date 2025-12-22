@@ -85,7 +85,7 @@ import travel.vola.android.common.ui.modifier.skeletonLoader
 import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.common.ui.state.MarkerViewState
-import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.viewModel
 import travel.vola.android.ui.lodgingsearch.state.LodgingDetailsState
 import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
@@ -710,8 +710,8 @@ fun LodgingSearchPreview(showMap: Boolean = false, initialSelectedResult: String
             derivedStateOf {
                 LodgingSearchViewModel.UiState.Loaded(
                     LodgingSearchViewModel.SearchParamsState(
-                        checkIn = Time("2025-08-10T00:00 -0500"),
-                        checkOut = Time("2025-08-15T00:00 -0500"),
+                        checkIn = zonedDateTime("2025-08-10T00:00 -0500"),
+                        checkOut = zonedDateTime("2025-08-15T00:00 -0500"),
                         locationText = "New York, United States",
                     ),
                     sortAndFilterState = LodgingSearchViewModel.SortAndFilterState(),
@@ -738,8 +738,8 @@ fun LodgingSearchPreview(showMap: Boolean = false, initialSelectedResult: String
                         photos = listOf(lodging.coverImage) + List(44, { index ->
                             "https://photo.hotellook.com/image_v2/limit/h374703_${(index + 1) % 23}/1024/768.auto"
                         }),
-                        checkIn = Time("2025-08-10T00:00 -0500"),
-                        checkOut = Time("2025-08-15T00:00 -0500"),
+                        checkIn = zonedDateTime("2025-08-10T00:00 -0500"),
+                        checkOut = zonedDateTime("2025-08-15T00:00 -0500"),
                         price = lodging.price,
                         rooms = List(2) {
                             LodgingRoomOfferState(

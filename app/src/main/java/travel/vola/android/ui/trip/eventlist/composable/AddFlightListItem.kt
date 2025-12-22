@@ -4,8 +4,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import travel.vola.android.extensions.Time
-import travel.vola.android.model.data.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
@@ -49,19 +48,19 @@ fun AddFlightListItemPreview() {
         Surface {
             AddFlightListItem(
                 uiState = AddFlightItemState(
-                    "", Time.now(),
+                    "", ZonedDateTime.now(),
                     typeSelectionEnabled = false,
                     startState = ManualAddPlanState(
-                        dateTime = Time("2025-06-12T05:00 -0300"),
-                        minDateTime = Time.now(),
+                        dateTime = zonedDateTime("2025-06-12T05:00 -0300"),
+                        minDateTime = ZonedDateTime.now(),
                         dateSelectionEnabled = false,
                         locationText = null,
                         searchResults = emptyList(),
                         isTimeSet = false,
                     ),
                     endState = ManualAddPlanState(
-                        dateTime = Time("2025-06-12T05:00 -0300"),
-                        minDateTime = Time.now(),
+                        dateTime = zonedDateTime("2025-06-12T05:00 -0300"),
+                        minDateTime = ZonedDateTime.now(),
                         dateSelectionEnabled = true,
                         locationText = "Somewhere",
                         searchResults = emptyList(),
