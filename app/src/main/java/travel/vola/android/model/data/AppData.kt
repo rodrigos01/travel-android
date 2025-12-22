@@ -43,9 +43,9 @@ data class Flight(
 
 data class FlightSegment(
     val airportFrom: Airport,
-    val departure: Time,
+    val departure: ZonedDateTime,
     val airportTo: Airport,
-    val arrival: Time,
+    val arrival: ZonedDateTime,
 ) : TripEvent
 
 data class Airport(
@@ -62,8 +62,8 @@ data class Lodging(
     val latitude: Double,
     val longitude: Double,
     override val city: Place,
-    val checkIn: Time,
-    val checkout: Time,
+    val checkIn: ZonedDateTime,
+    val checkout: ZonedDateTime,
 ) : TripEntity, TripEvent, WithCity
 
 data class Place(

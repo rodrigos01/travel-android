@@ -7,7 +7,6 @@ import travel.vola.android.extensions.MapFlow
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.update
 import travel.vola.android.model.data.RestaurantReservation
-import travel.vola.android.model.data.Time
 import travel.vola.android.model.repository.PlaceAutoCompleteRepository
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
 import travel.vola.android.ui.trip.creation.usecase.AddRestaurantItemActionHandler
@@ -30,7 +29,7 @@ class AddRestaurantUseCase(
 
     override val items: MapFlow<String, AddRestaurantItemState> = itemStore.items(::createItem)
 
-    override fun addItem(id: String, time: Time, params: AddPlanUseCase.StateParams) {
+    override fun addItem(id: String, time: ZonedDateTime, params: AddPlanUseCase.StateParams) {
         itemStore.addItem(
             PendingData.PendingRestaurant(id, entityId = null, dateTime = time.toMidnight()),
             params,

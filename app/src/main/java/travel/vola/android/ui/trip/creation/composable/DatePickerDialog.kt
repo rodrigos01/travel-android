@@ -17,11 +17,10 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import travel.vola.android.R
 import travel.vola.android.common.ui.components.IconTextButton
-import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.timeInMillis
 import travel.vola.android.extensions.update
-import travel.vola.android.model.data.Time
 import travel.vola.android.ui.theme.AppTheme
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -57,9 +56,9 @@ fun DatePickerButton(
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun DatePickerDialog(
-    minimumSelectableTime: Time? = null,
-    selectedTime: Time? = null,
-    onDateSelected: (Time) -> Unit,
+    minimumSelectableTime: ZonedDateTime? = null,
+    selectedTime: ZonedDateTime? = null,
+    onDateSelected: (ZonedDateTime) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val minTimeInDeviceTimeZone = minimumSelectableTime?.update(timeZone = ZoneId.of("UTC"))
@@ -68,7 +67,7 @@ fun DatePickerDialog(
         rememberDatePickerState(
             initialSelectedDateMillis = selectedTimeInDeviceTimeZone?.timeInMillis,
             initialDisplayedMonthMillis = selectedTimeInDeviceTimeZone?.timeInMillis
-                ?: minTimeInDeviceTimeZone?.timeInMillis ?: Time.now().timeInMillis,
+                ?: minTimeInDeviceTimeZone?.timeInMillis ?: ZonedDateTime.now().timeInMillis,
             selectableDates = object : SelectableDates {
                 override fun isSelectableDate(utcTimeMillis: Long): Boolean {
                     return minTimeInDeviceTimeZone == null || utcTimeMillis >= minTimeInDeviceTimeZone.timeInMillis
@@ -99,7 +98,7 @@ fun DatePickerDialog(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 val DatePickerState.selectedTime: ZonedDateTime?
-    get() = selectedDateMillis?.let { Time(it, TimeZone.getTimeZone("UTC")) }
+    get() = selectedDateMillis?.let { zonedDateTime(it, TimeZone.getTimeZone("UTC")) }
 
 @Composable
 @Preview
@@ -107,8 +106,8 @@ fun DatePickerButtonPreview() {
     AppTheme {
         Surface {
             DatePickerDialog(
-                selectedTime = Time("2025-11-28T00:00 -0300"),
-                minimumSelectableTime = Time("2025-11-29T00:00 -0300"),
+                selectedTime = zonedDateTime("2025-11-28T00:00 -0300"),
+                minimumSelectableTime = zonedDateTime("2025-11-29T00:00 -0300"),
                 onDateSelected = {},
                 onDismiss = {},
             )

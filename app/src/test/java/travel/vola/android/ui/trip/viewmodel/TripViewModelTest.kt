@@ -11,19 +11,17 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
-import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
-import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.test.UnconfinedDispatcherTestRule
 import travel.vola.android.ui.trip.state.AddFlightItemState
-import travel.vola.android.ui.trip.state.AddLodgingItemState
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.TripItemState
 import travel.vola.android.ui.trip.state.TripItemState.DateRangeItemState
@@ -34,6 +32,7 @@ import travel.vola.android.ui.trip.state.TripItemState.HotelCheckInItemState
 import travel.vola.android.ui.trip.state.TripItemState.HotelCheckOutItemState
 import travel.vola.android.ui.trip.state.TripItemState.MonthItemState
 import travel.vola.android.ui.trip.state.TripItemState.PlaceItemState
+import java.time.ZonedDateTime
 import java.util.TimeZone
 
 class TripViewModelTest {
@@ -59,7 +58,7 @@ class TripViewModelTest {
         addPlanUseCase,
     )
 
-    private fun String?.asTime(): Time = this?.let { Time(this) } ?: Time(0L, TimeZone.getDefault())
+    private fun String?.asTime(): ZonedDateTime = this?.let { zonedDateTime(this) } ?: zonedDateTime(0L, TimeZone.getDefault())
 
     @Test
     fun `events should have one departure event per flight`() {
@@ -555,7 +554,7 @@ class TripViewModelTest {
         subject.addButtonTapped(checkOutItem.id)
         verify(addPlanUseCase).createAddPlanItem(
             any(),
-            eq(Time("2024-05-30T11:00:00+02:00")),
+            eq(zonedDateTime("2024-05-30T11:00:00+02:00")),
             dateSelectionEnabled = eq(false),
             type = any(),
         )

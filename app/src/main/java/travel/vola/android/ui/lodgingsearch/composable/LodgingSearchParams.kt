@@ -29,21 +29,21 @@ import travel.vola.android.common.ui.components.IconTextButton
 import travel.vola.android.common.ui.components.SearchBox
 import travel.vola.android.common.ui.components.SearchResult
 import travel.vola.android.extensions.dateString
-import travel.vola.android.model.data.Time
 import travel.vola.android.ui.trip.creation.composable.DatePickerDialog
 import travel.vola.android.ui.trip.state.SearchResultItemState
+import java.time.ZonedDateTime
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun LodgingSearchParams(
-    checkIn: Time? = null,
-    minCheckIn: Time? = null,
-    checkOut: Time? = null,
-    minCheckOut: Time? = null,
+    checkIn: ZonedDateTime? = null,
+    minCheckIn: ZonedDateTime? = null,
+    checkOut: ZonedDateTime? = null,
+    minCheckOut: ZonedDateTime? = null,
     locationText: String? = null,
     searchResults: List<SearchResultItemState> = emptyList(),
-    onCheckInDateSelected: (Time) -> Unit,
-    onCheckOutDateSelected: (Time) -> Unit,
+    onCheckInDateSelected: (ZonedDateTime) -> Unit,
+    onCheckOutDateSelected: (ZonedDateTime) -> Unit,
     onLocationSearchTextChanged: (CharSequence) -> Unit,
     onLocationSearchResultSelected: (Int) -> Unit,
 ) {
@@ -98,10 +98,10 @@ fun LodgingSearchParams(
 
 @Composable
 private fun DatePickerTextButton(
-    time: Time?,
-    minTime: Time?,
+    time: ZonedDateTime?,
+    minTime: ZonedDateTime?,
     label: String,
-    onTimeSelected: (Time) -> Unit,
+    onTimeSelected: (ZonedDateTime) -> Unit,
 ) {
     var selectedTime by remember { mutableStateOf(time) }
     var showDatePickerState by remember { mutableStateOf(false) }

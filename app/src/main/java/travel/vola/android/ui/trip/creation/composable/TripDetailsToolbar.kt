@@ -23,14 +23,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -50,7 +48,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import travel.vola.android.common.ui.components.toPx
-import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.eventlist.composable.AddPlanContent
@@ -201,7 +199,7 @@ fun ToolbarItem(
 @Composable
 fun TripDetailsToolbarPreview() {
     var selectedType by remember { mutableStateOf<AddPlanType?>(null) }
-    val timestamp = Time("2025-10-17T18:25 +0200")
+    val timestamp = zonedDateTime("2025-10-17T18:25 +0200")
     val state = AddFlightItemState(
         id = "flight",
         timestamp = timestamp,

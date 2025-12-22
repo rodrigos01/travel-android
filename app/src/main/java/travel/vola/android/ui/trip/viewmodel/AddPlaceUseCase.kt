@@ -6,7 +6,6 @@ import travel.vola.android.common.coroutines.MutexScope
 import travel.vola.android.extensions.MapFlow
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.update
-import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.repository.PlaceAutoCompleteRepository
 import travel.vola.android.ui.trip.creation.usecase.AddPlaceItemActionHandler
@@ -29,7 +28,7 @@ class AddPlaceUseCase(
 
     override val items: MapFlow<String, AddPlaceItemState> = itemStore.items(::createItem)
 
-    override fun addItem(id: String, time: Time, params: AddPlanUseCase.StateParams) {
+    override fun addItem(id: String, time: ZonedDateTime, params: AddPlanUseCase.StateParams) {
         itemStore.addItem(
             PendingData.PendingTimedPlace(id, entityId = null, startDateTime = time.toMidnight()),
             params,
