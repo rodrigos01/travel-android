@@ -707,6 +707,7 @@ class TripViewModelTest {
         id = id,
         name = null,
         coverImage = null,
+        preferences = null,
         flights = flights,
         lodgings = lodgings,
         places = places,
