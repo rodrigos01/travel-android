@@ -73,34 +73,9 @@ class TripCreationAssistantViewModel(
                 startDate = startDate?.let { zonedDateTime(it) },
                 endDate = endDate?.let { zonedDateTime(it) },
                 fixedDates = startDate != null && endDate != null,
+                nextButtonEnabled = destinations.isNotEmpty() && startDate != null && endDate != null,
             ),
-            initialParameters = parameters?.let { params ->
-                UiState.InitialParameters(
-                    listOf(
-                        UiState.OptionGroup(
-                            UiState.OptionGroupType.OCCASIONS,
-                            params.occasions.map { UiState.Option(it) },
-                        ),
-                        UiState.OptionGroup(
-                            UiState.OptionGroupType.INTERESTS,
-                            params.interests.map { UiState.Option(it) },
-                        ),
-                        UiState.OptionGroup(
-                            UiState.OptionGroupType.VIBE,
-                            params.vibe.map { UiState.Option(it) },
-                        ),
-                        UiState.OptionGroup(
-                            UiState.OptionGroupType.FOCUS,
-                            params.focus.map { UiState.Option(it) },
-                        ),
-                        UiState.OptionGroup(
-                            UiState.OptionGroupType.MUST_HAVE,
-                            params.mustHave.map { UiState.Option(it) },
-                        ),
-                    ),
-                    anythingElse = params.anythingElse,
-                )
-            },
+            initialParameters = null,
             initialParametersFollowUp = null,
             highLevelItineraryOptions = null,
         )
@@ -110,7 +85,8 @@ class TripCreationAssistantViewModel(
         when (step) {
             is Step.BasicInformation -> state.basicInformation
             is Step.InitialParameters -> state.initialParameters ?: generateInitialParametersState(
-                state.basicInformation
+                state.basicInformation,
+                parameters,
             )
 
             is Step.InitialParametersFollowUp -> state.initialParametersFollowUp
@@ -135,7 +111,10 @@ class TripCreationAssistantViewModel(
         viewModelScope, started = SharingStarted.Lazily, internalState.value
     )
 
-    private suspend fun generateInitialParametersState(basicInformation: UiState.BasicInformation): UiState.InitialParameters? {
+    private suspend fun generateInitialParametersState(
+        basicInformation: UiState.BasicInformation,
+        existingParameters: TripParameters?,
+    ): UiState.InitialParameters? {
         val startDateString = basicInformation.startDate?.dateString
         val endDateString = basicInformation.endDate?.dateString
         val info = GenAIData.BasicInformation(
@@ -160,19 +139,36 @@ class TripCreationAssistantViewModel(
             optionGroups = listOf(
                 UiState.OptionGroup(
                     UiState.OptionGroupType.OCCASIONS,
-                    options.occasions.map { UiState.Option(it) }),
+                    existingParameters?.occasions?.map { UiState.Option(it, isSelected = true) }
+                        .orEmpty() +
+                            options.occasions.map { UiState.Option(it) }),
                 UiState.OptionGroup(
                     UiState.OptionGroupType.INTERESTS,
-                    options.interests.map { UiState.Option(it) }),
+                    existingParameters?.interests?.map { UiState.Option(it, isSelected = true) }
+                        .orEmpty() +
+                            options.interests.map { UiState.Option(it) }),
                 UiState.OptionGroup(
-                    UiState.OptionGroupType.VIBE, options.vibe.map { UiState.Option(it) }),
+                    UiState.OptionGroupType.VIBE,
+                    existingParameters?.vibe?.map { UiState.Option(it, isSelected = true) }
+                        .orEmpty() +
+                            options.vibe.map { UiState.Option(it) }),
                 UiState.OptionGroup(
-                    UiState.OptionGroupType.FOCUS, options.focus.map { UiState.Option(it) }),
+                    UiState.OptionGroupType.FOCUS,
+                    existingParameters?.focus?.map { UiState.Option(it, isSelected = true) }
+                        .orEmpty() +
+                            options.focus.map { UiState.Option(it) }),
                 UiState.OptionGroup(
-                    UiState.OptionGroupType.DURATION, options.duration.map { UiState.Option(it) }),
+                    UiState.OptionGroupType.DURATION,
+                    existingParameters?.duration?.map { UiState.Option(it, isSelected = true) }
+                        .orEmpty() +
+                            options.duration.map { UiState.Option(it) }),
                 UiState.OptionGroup(
-                    UiState.OptionGroupType.MUST_HAVE, options.mustHave.map { UiState.Option(it) }),
+                    UiState.OptionGroupType.MUST_HAVE,
+                    existingParameters?.mustHave?.map { UiState.Option(it, isSelected = true) }
+                        .orEmpty() +
+                            options.mustHave.map { UiState.Option(it) }),
             ),
+            ctaType = if (tripId == null) UiState.CTAType.NEXT else UiState.CTAType.UPDATE,
         )
     }
 
@@ -189,18 +185,22 @@ class TripCreationAssistantViewModel(
 
         val followUpQuestions =
             repository.genInitialParametersFollowUpQuestions(parameters) ?: return null
-        if (followUpQuestions.questions.isNotEmpty()) {
-            return UiState.InitialParametersFollowUp(
+        return if (followUpQuestions.questions.isNotEmpty()) {
+            UiState.InitialParametersFollowUp(
                 questions = followUpQuestions.questions.map { question ->
                     UiState.FollowUpQuestion(
                         choices = question.parameterSelections,
                         question = question.question,
                         answers = question.answers.map { UiState.Option(it) },
                     )
-                })
+                },
+                ctaType = if (tripId == null) UiState.CTAType.NEXT else UiState.CTAType.UPDATE,
+            )
+        } else if (tripId != null) {
+            updateTrip()
+            UiState.Generating
         } else {
-            step.value = Step.HighLevelItineraryOptions(state)
-            return UiState.Generating
+            getHighLevelItineraryOptionsState(state)
         }
     }
 
@@ -453,7 +453,7 @@ class TripCreationAssistantViewModel(
             group.options.any { it.isSelected }
         }
         compositeState.update {
-            initialParameters = state.copy(nextButtonEnabled = nextButtonEnabled)
+            initialParameters = state.copy(ctaEnabled = nextButtonEnabled)
         }
     }
 
@@ -476,7 +476,7 @@ class TripCreationAssistantViewModel(
         }
         compositeState.update {
             initialParametersFollowUp = state.copy(
-                questions = newQuestions, nextButtonEnabled = newQuestions.all { question ->
+                questions = newQuestions, ctaEnabled = newQuestions.all { question ->
                     question.answers.any { it.isSelected }
                 })
         }
@@ -495,16 +495,20 @@ class TripCreationAssistantViewModel(
         }
         compositeState.update {
             initialParametersFollowUp = state.copy(
-                questions = newQuestions, nextButtonEnabled = newQuestions.all { question ->
+                questions = newQuestions, ctaEnabled = newQuestions.all { question ->
                     question.answers.any { it.isSelected }
                 })
         }
     }
 
     fun onFollowUpQuestionsNextTapped() {
-        val state = uiState.value as? UiState.InitialParametersFollowUp ?: return
-        internalState.value = UiState.Generating
-        step.value = Step.HighLevelItineraryOptions(state)
+        if (tripId != null) {
+            updateTrip()
+        } else {
+            val state = uiState.value as? UiState.InitialParametersFollowUp ?: return
+            internalState.value = UiState.Generating
+            step.value = Step.HighLevelItineraryOptions(state)
+        }
     }
 
     fun onRetryTapped() {
@@ -516,8 +520,8 @@ class TripCreationAssistantViewModel(
 
     fun onSkipTapped() {
         viewModelScope.launch {
-            val tripId = tripRepository.addTrip()
-            navController.navigate(TripDetailsDestination.getRoute(tripId))
+            val id = tripId ?: tripRepository.addTrip()
+            navController.navigate(TripDetailsDestination.getRoute(id))
         }
     }
 
@@ -532,6 +536,19 @@ class TripCreationAssistantViewModel(
         val state = uiState.value as? UiState.HighLevelItineraryOptions ?: return
         internalState.value = UiState.Generating
         step.value = Step.ItineraryRefinement(option, state)
+    }
+
+    fun updateTrip() {
+        val id = tripId ?: return
+        val state = compositeState.value
+        viewModelScope.launch {
+            tripRepository.updateTripPreferences(id, createTripPreferences(state))
+            navController.navigate(
+                TripDetailsDestination.getRoute(id)
+            ) {
+                popUpTo(HomeScreenDestination.ROUTE)
+            }
+        }
     }
 
     fun onCreateTripTapped(itinerary: UiState.Itinerary) {
@@ -552,35 +569,7 @@ class TripCreationAssistantViewModel(
                         )
                     }
                 },
-                preferences = TripPreferences(
-                    basicInformation = BasicInformation(
-                        groupType = when (state.basicInformation.groupType) {
-                            UiState.TravelGroupType.SOLO -> GroupType.SOLO
-                            UiState.TravelGroupType.COUPLE -> GroupType.COUPLE
-                            UiState.TravelGroupType.FAMILY -> GroupType.FAMILY
-                            UiState.TravelGroupType.FRIENDS -> GroupType.FRIENDS
-                            UiState.TravelGroupType.COWORKERS -> GroupType.COWORKERS
-                        },
-                        travelers = state.basicInformation.travelers ?: 1,
-                    ),
-                    initialParameters = TripParameters(
-                        occasions = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.OCCASIONS),
-                        interests = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.INTERESTS),
-                        vibe = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.VIBE),
-                        focus = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.FOCUS),
-                        duration = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.DURATION),
-                        mustHave = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.MUST_HAVE),
-                        anythingElse = state.initialParameters?.anythingElse ?: "",
-                    ),
-                    questionsAnswers = state.initialParametersFollowUp?.questions?.mapNotNull { question ->
-                        question.answers.firstOrNull { it.isSelected }?.option?.let { answer ->
-                            AnsweredQuestion(
-                                question.question,
-                                answer
-                            )
-                        }
-                    } ?: emptyList(),
-                ),
+                preferences = createTripPreferences(state),
             )
             navController.navigate(
                 TripDetailsDestination.getRoute(tripId)
@@ -589,6 +578,36 @@ class TripCreationAssistantViewModel(
             }
         }
     }
+
+    private fun createTripPreferences(state: CompositeState): TripPreferences = TripPreferences(
+        basicInformation = BasicInformation(
+            groupType = when (state.basicInformation.groupType) {
+                UiState.TravelGroupType.SOLO -> GroupType.SOLO
+                UiState.TravelGroupType.COUPLE -> GroupType.COUPLE
+                UiState.TravelGroupType.FAMILY -> GroupType.FAMILY
+                UiState.TravelGroupType.FRIENDS -> GroupType.FRIENDS
+                UiState.TravelGroupType.COWORKERS -> GroupType.COWORKERS
+            },
+            travelers = state.basicInformation.travelers ?: 1,
+        ),
+        initialParameters = TripParameters(
+            occasions = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.OCCASIONS),
+            interests = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.INTERESTS),
+            vibe = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.VIBE),
+            focus = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.FOCUS),
+            duration = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.DURATION),
+            mustHave = state.initialParameters?.optionGroups.valuesByType(UiState.OptionGroupType.MUST_HAVE),
+            anythingElse = state.initialParameters?.anythingElse ?: "",
+        ),
+        questionsAnswers = state.initialParametersFollowUp?.questions?.mapNotNull { question ->
+            question.answers.firstOrNull { it.isSelected }?.option?.let { answer ->
+                AnsweredQuestion(
+                    question.question,
+                    answer
+                )
+            }
+        } ?: emptyList(),
+    )
 
     fun List<UiState.OptionGroup>?.valuesByType(type: UiState.OptionGroupType) =
         this?.first { it.type == type }?.options?.filter { it.isSelected }

@@ -48,27 +48,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
         dao.addTrip(
             RoomData.Schema.Trip(
                 id, name, coverImage = null,
-                preferences = RoomData.TripPreferences(
-                    RoomData.BasicInformation(
-                        preferences.basicInformation.groupType.toRoomDataModel(),
-                        preferences.basicInformation.travelers,
-                    ),
-                    RoomData.TripParameters(
-                        preferences.initialParameters.occasions,
-                        preferences.initialParameters.interests,
-                        preferences.initialParameters.vibe,
-                        preferences.initialParameters.focus,
-                        preferences.initialParameters.mustHave,
-                        preferences.initialParameters.duration,
-                        preferences.initialParameters.anythingElse,
-                    ),
-                    preferences.questionsAnswers.map {
-                        RoomData.AnsweredQuestion(
-                            it.question,
-                            it.answer
-                        )
-                    }
-                ),
+                preferences = preferences.toRoomDataModel(),
             )
         )
         places.forEach {
@@ -86,6 +66,15 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
     override suspend fun updateName(tripId: String, newName: String) {
         withTrip(tripId) { trip ->
             dao.updateTrip(trip.copy(name = newName))
+        }
+    }
+
+    override suspend fun updateTripPreferences(
+        tripId: String,
+        preferences: TripPreferences
+    ) {
+        withTrip(tripId) { trip ->
+            dao.updateTrip(trip.copy(preferences = preferences.toRoomDataModel()))
         }
     }
 
