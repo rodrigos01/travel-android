@@ -125,6 +125,28 @@ fun RoomData.Place.toAppDataModel(): Place = Place(
     source = source,
 )
 
+fun TripPreferences.toRoomDataModel() = RoomData.TripPreferences(
+    RoomData.BasicInformation(
+        basicInformation.groupType.toRoomDataModel(),
+        basicInformation.travelers,
+    ),
+    RoomData.TripParameters(
+        initialParameters.occasions,
+        initialParameters.interests,
+        initialParameters.vibe,
+        initialParameters.focus,
+        initialParameters.mustHave,
+        initialParameters.duration,
+        initialParameters.anythingElse,
+    ),
+    questionsAnswers.map {
+        RoomData.AnsweredQuestion(
+            it.question,
+            it.answer
+        )
+    }
+)
+
 fun GroupType.toRoomDataModel(): RoomData.GroupType = when (this) {
     GroupType.SOLO -> RoomData.GroupType.SOLO
     GroupType.FAMILY -> RoomData.GroupType.FAMILY

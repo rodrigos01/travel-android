@@ -23,9 +23,10 @@ interface TripDataSource {
         name: String,
         places: List<TimedPlace>,
         preferences: TripPreferences,
-    ) : String
+    ): String
 
     suspend fun updateName(tripId: String, newName: String)
+    suspend fun updateTripPreferences(tripId: String, preferences: TripPreferences)
     suspend fun deleteTrip(tripId: String)
     suspend fun saveFlight(tripId: String, flight: Flight)
     suspend fun saveLodging(tripId: String, lodging: Lodging)

@@ -65,6 +65,14 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
         firestore.document("/trips/$tripId").update("name", newName)
     }
 
+    override suspend fun updateTripPreferences(
+        tripId: String,
+        preferences: TripPreferences
+    ) {
+        firestore.document("/trips/$tripId")
+            .update("preferences", preferences.toFirebaseDataModel())
+    }
+
     override suspend fun deleteTrip(tripId: String) {
         firestore.document("/trips/$tripId").delete()
     }

@@ -60,6 +60,11 @@ class MultiSourceTripRepository(
     override suspend fun updateName(tripId: String, newName: String) =
         currentDataSource.updateName(tripId, newName)
 
+    override suspend fun updateTripPreferences(
+        tripId: String,
+        preferences: TripPreferences,
+    ) = currentDataSource.updateTripPreferences(tripId, preferences)
+
     override suspend fun deleteTrip(tripId: String) = currentDataSource.deleteTrip(tripId)
 
     override suspend fun saveFlight(
