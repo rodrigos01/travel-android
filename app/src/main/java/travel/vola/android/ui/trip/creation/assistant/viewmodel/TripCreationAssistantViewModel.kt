@@ -7,6 +7,7 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -41,7 +42,6 @@ class TripCreationAssistantViewModel(
     destinations: List<String>,
     startDate: String?,
     endDate: String?,
-    parameters: TripParameters? = null,
 ) : ViewModel() {
 
     private sealed interface Step {
@@ -85,8 +85,7 @@ class TripCreationAssistantViewModel(
         when (step) {
             is Step.BasicInformation -> state.basicInformation
             is Step.InitialParameters -> state.initialParameters ?: generateInitialParametersState(
-                state.basicInformation,
-                parameters,
+                state.basicInformation
             )
 
             is Step.InitialParametersFollowUp -> state.initialParametersFollowUp
@@ -113,8 +112,10 @@ class TripCreationAssistantViewModel(
 
     private suspend fun generateInitialParametersState(
         basicInformation: UiState.BasicInformation,
-        existingParameters: TripParameters?,
     ): UiState.InitialParameters? {
+        val existingParameters = tripId?.let {
+            tripRepository.findTripById(it).firstOrNull()
+        }?.preferences?.initialParameters
         val startDateString = basicInformation.startDate?.dateString
         val endDateString = basicInformation.endDate?.dateString
         val info = GenAIData.BasicInformation(
@@ -137,38 +138,48 @@ class TripCreationAssistantViewModel(
         val options = repository.genInitialParametersOptions(info) ?: return null
         return UiState.InitialParameters(
             optionGroups = listOf(
-                UiState.OptionGroup(
+                options.occasions.asOptionGroup(
                     UiState.OptionGroupType.OCCASIONS,
-                    existingParameters?.occasions?.map { UiState.Option(it, isSelected = true) }
-                        .orEmpty() +
-                            options.occasions.map { UiState.Option(it) }),
-                UiState.OptionGroup(
+                    existingParameters?.occasions,
+                ),
+                options.interests.asOptionGroup(
                     UiState.OptionGroupType.INTERESTS,
-                    existingParameters?.interests?.map { UiState.Option(it, isSelected = true) }
-                        .orEmpty() +
-                            options.interests.map { UiState.Option(it) }),
-                UiState.OptionGroup(
+                    existingParameters?.interests,
+                ),
+                options.vibe.asOptionGroup(
                     UiState.OptionGroupType.VIBE,
-                    existingParameters?.vibe?.map { UiState.Option(it, isSelected = true) }
-                        .orEmpty() +
-                            options.vibe.map { UiState.Option(it) }),
-                UiState.OptionGroup(
+                    existingParameters?.vibe,
+                ),
+                options.focus.asOptionGroup(
                     UiState.OptionGroupType.FOCUS,
-                    existingParameters?.focus?.map { UiState.Option(it, isSelected = true) }
-                        .orEmpty() +
-                            options.focus.map { UiState.Option(it) }),
-                UiState.OptionGroup(
+                    existingParameters?.focus,
+                ),
+                options.duration.asOptionGroup(
                     UiState.OptionGroupType.DURATION,
-                    existingParameters?.duration?.map { UiState.Option(it, isSelected = true) }
-                        .orEmpty() +
-                            options.duration.map { UiState.Option(it) }),
-                UiState.OptionGroup(
+                    existingParameters?.duration,
+                ),
+                options.mustHave.asOptionGroup(
                     UiState.OptionGroupType.MUST_HAVE,
-                    existingParameters?.mustHave?.map { UiState.Option(it, isSelected = true) }
-                        .orEmpty() +
-                            options.mustHave.map { UiState.Option(it) }),
+                    existingParameters?.mustHave,
+                ),
             ),
             ctaType = if (tripId == null) UiState.CTAType.NEXT else UiState.CTAType.UPDATE,
+        )
+    }
+
+    private fun List<String>.asOptionGroup(
+        type: UiState.OptionGroupType,
+        selectedOptions: List<String>?
+    ): UiState.OptionGroup {
+        val selected = selectedOptions.orEmpty()
+        return UiState.OptionGroup(
+            type,
+            selected.map {
+                UiState.Option(
+                    it,
+                    isSelected = true
+                )
+            } + (this - selected).map { UiState.Option(it) }
         )
     }
 
