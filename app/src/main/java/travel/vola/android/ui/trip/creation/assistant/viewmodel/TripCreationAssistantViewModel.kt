@@ -41,6 +41,7 @@ class TripCreationAssistantViewModel(
     destinations: List<String>,
     startDate: String?,
     endDate: String?,
+    parameters: TripParameters? = null,
 ) : ViewModel() {
 
     private sealed interface Step {
@@ -73,7 +74,33 @@ class TripCreationAssistantViewModel(
                 endDate = endDate?.let { zonedDateTime(it) },
                 fixedDates = startDate != null && endDate != null,
             ),
-            initialParameters = null,
+            initialParameters = parameters?.let { params ->
+                UiState.InitialParameters(
+                    listOf(
+                        UiState.OptionGroup(
+                            UiState.OptionGroupType.OCCASIONS,
+                            params.occasions.map { UiState.Option(it) },
+                        ),
+                        UiState.OptionGroup(
+                            UiState.OptionGroupType.INTERESTS,
+                            params.interests.map { UiState.Option(it) },
+                        ),
+                        UiState.OptionGroup(
+                            UiState.OptionGroupType.VIBE,
+                            params.vibe.map { UiState.Option(it) },
+                        ),
+                        UiState.OptionGroup(
+                            UiState.OptionGroupType.FOCUS,
+                            params.focus.map { UiState.Option(it) },
+                        ),
+                        UiState.OptionGroup(
+                            UiState.OptionGroupType.MUST_HAVE,
+                            params.mustHave.map { UiState.Option(it) },
+                        ),
+                    ),
+                    anythingElse = params.anythingElse,
+                )
+            },
             initialParametersFollowUp = null,
             highLevelItineraryOptions = null,
         )
