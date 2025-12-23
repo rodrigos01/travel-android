@@ -1,5 +1,6 @@
 package travel.vola.android.model.data
 
+import kotlinx.serialization.Serializable
 import java.time.ZonedDateTime
 import java.util.TimeZone
 
@@ -150,6 +151,7 @@ enum class GroupType {
     COUPLE
 }
 
+@Serializable
 data class TripParameters(
     val occasions: List<String>,
     val interests: List<String>,
