@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.serialization.Serializable
 import travel.vola.android.extensions.viewModel
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel
@@ -39,9 +40,16 @@ import travel.vola.android.ui.trip.creation.assistant.viewmodel.UiState
 import java.time.ZonedDateTime
 
 @Composable
-fun TripCreationAssistant() {
+fun TripCreationAssistant(params: TripCreationAssistantDestination.Params) {
     val viewModel: TripCreationAssistantViewModel =
-        viewModel(factory = TripCreationAssistantViewModel.Factory())
+        viewModel(
+            factory = TripCreationAssistantViewModel.Factory(
+                tripId = params.tripId,
+                destinations = params.destinations,
+                startDate = params.startDate,
+                endDate = params.endDate,
+            )
+        )
     val state by viewModel.uiState.collectAsState()
     TripCreationAssistant(
         state,
@@ -236,6 +244,14 @@ fun TripCreationAssistant(
 
 object TripCreationAssistantDestination {
     const val ROUTE = "trip_creation_assistant"
+
+    @Serializable
+    data class Params(
+        val tripId: String? = null,
+        val destinations: List<String> = emptyList(),
+        val startDate: String? = null,
+        val endDate: String? = null,
+    )
 }
 
 @Composable

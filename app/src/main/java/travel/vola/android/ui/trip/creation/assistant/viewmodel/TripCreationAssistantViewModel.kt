@@ -36,6 +36,10 @@ class TripCreationAssistantViewModel(
     private val repository: GenAIRepository,
     private val destinationAutoCompleteRepository: GeographyAutoCompleteRepository,
     private val tripRepository: TripRepository,
+    private val tripId: String?,
+    destinations: List<String>,
+    startDate: String?,
+    endDate: String?,
 ) : ViewModel() {
 
     private sealed interface Step {
@@ -606,12 +610,21 @@ class TripCreationAssistantViewModel(
         var highLevelItineraryOptions: UiState.HighLevelItineraryOptions?,
     )
 
-    class Factory : ViewModelProvider.Factory by viewModelFactory(initializer = {
+    class Factory(
+        private val tripId: String?,
+        private val destinations: List<String>,
+        private val startDate: String?,
+        private val endDate: String?,
+    ) : ViewModelProvider.Factory by viewModelFactory(initializer = {
         TripCreationAssistantViewModel(
             factoryDependencies.navController,
             factoryDependencies.genAIRepository,
             GeographyAutoCompleteRepository(),
             factoryDependencies.tripRepository,
+            tripId,
+            destinations,
+            startDate,
+            endDate,
         )
     })
 }
