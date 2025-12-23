@@ -21,6 +21,7 @@ import travel.vola.android.common.coroutines.createUseCaseScope
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.common.ui.state.MarkerViewState
 import travel.vola.android.di.factoryDependencies
+import travel.vola.android.extensions.asISO8601String
 import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.dayAndMonthString
 import travel.vola.android.extensions.dayOfMonthString
@@ -48,6 +49,7 @@ import travel.vola.android.model.data.TripEvent
 import travel.vola.android.model.data.WithCity
 import travel.vola.android.model.genai.GenAIRepository
 import travel.vola.android.model.repository.TripRepository
+import travel.vola.android.ui.trip.creation.assistant.composable.TripCreationAssistantDestination
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.TripItemState
@@ -394,6 +396,20 @@ class TripViewModel(
         is FlexibleDaySection -> date
     }
 
+    fun onUpdatePreferencesTapped() {
+        val destinations = viewState.value.items.filterIsInstance<TripItemState.PlaceItemState>()
+            .map { it.placeName }
+        val dates =
+            viewState.value.items.map { it.timestamp }
+        val params = TripCreationAssistantDestination.Params(
+            tripId = tripId,
+            destinations = destinations,
+            startDate = dates.firstOrNull()?.asISO8601String(),
+            endDate = dates.lastOrNull()?.asISO8601String(),
+        )
+        navController.navigate(route = params)
+    }
+
     private val TripItemState.Editable.entity: TripEntity?
         get() = when (this) {
             is TripItemState.FlightDepartureItemState -> trip.value?.flights?.first { flight ->
@@ -444,7 +460,7 @@ class TripViewModel(
         )
     }
 
-    private fun genItems(trip: Trip, suggestions: DailyItineraryState?): List<TripItemState> {
+    private fun genItems(trip: Trip, suggestions: SuggestionsUseCase.DailyItineraryState?): List<TripItemState> {
         val cities =
             trip.places.filter { it.city == it.place }.map { it.city }.associateBy { it.id }
         val suggestedPlaces = suggestions?.days?.flatMap { day ->
@@ -733,7 +749,7 @@ class TripViewModel(
                 time = event.startDateTime.timeString,
                 showTime = event.hasStartTime,
                 placeName = event.place.name,
-                cityName = event.place.address ?: event.city.name,
+                cityName = event.place.address,
                 imageUrl = event.place.coverImage ?: "",
                 backgroundStyle = backgroundStyle,
                 sectionId = sectionId,

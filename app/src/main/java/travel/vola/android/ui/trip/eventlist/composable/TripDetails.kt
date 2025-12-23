@@ -112,6 +112,7 @@ fun TripDetails(
         onEditTapped = viewModel::editTapped,
         onAddPlanTypeSelected = { viewModel.onAddPlanTypeSelected(it?.toState()) },
         onScrollStateChange = viewModel::setScrollState,
+        onUpdatePreferencesTapped = viewModel::onUpdatePreferencesTapped,
     )
 }
 
@@ -128,6 +129,7 @@ private fun TripDetails(
     onEditTapped: (String) -> Unit = {},
     onAddPlanTypeSelected: (AddPlanType?) -> Unit = {},
     onScrollStateChange: (Int, Int) -> Unit = { _, _ -> },
+    onUpdatePreferencesTapped: () -> Unit = {},
 ) {
     val listScrollState = rememberLazyListState()
     val currentPlaceIndex by remember {
@@ -259,6 +261,11 @@ private fun TripDetails(
                                 onDismissRequest = { showToolbarOverflowMenu = false },
                                 properties = PopupProperties(focusable = false)
                             ) {
+                                DropdownMenuItem(
+                                    text = { Text("Update Trip Preferences") },
+                                    onClick = onUpdatePreferencesTapped,
+                                    colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.onSecondaryContainer),
+                                )
                                 DropdownMenuItem(
                                     text = { Text("Delete Trip") },
                                     onClick = {

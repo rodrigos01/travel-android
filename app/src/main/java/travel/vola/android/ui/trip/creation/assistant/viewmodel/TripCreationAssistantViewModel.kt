@@ -15,6 +15,7 @@ import travel.vola.android.common.ui.components.SearchResult
 import travel.vola.android.di.factoryDependencies
 import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.viewModelFactory
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.AnsweredQuestion
 import travel.vola.android.model.data.BasicInformation
 import travel.vola.android.model.data.GroupType
@@ -66,7 +67,12 @@ class TripCreationAssistantViewModel(
     private val step = MutableStateFlow<Step>(Step.BasicInformation)
     private val compositeState = MutableStateFlow<CompositeState>(
         CompositeState(
-            basicInformation = UiState.BasicInformation(),
+            basicInformation = UiState.BasicInformation(
+                destinations = destinations,
+                startDate = startDate?.let { zonedDateTime(it) },
+                endDate = endDate?.let { zonedDateTime(it) },
+                fixedDates = startDate != null && endDate != null,
+            ),
             initialParameters = null,
             initialParametersFollowUp = null,
             highLevelItineraryOptions = null,
