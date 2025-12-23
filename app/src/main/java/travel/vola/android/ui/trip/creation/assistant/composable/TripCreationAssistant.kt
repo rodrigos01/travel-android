@@ -34,8 +34,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.Serializable
 import travel.vola.android.extensions.viewModel
-import travel.vola.android.model.data.TripParameters
-import travel.vola.android.model.data.TripPreferences
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.UiState
@@ -253,7 +251,6 @@ object TripCreationAssistantDestination {
         val destinations: List<String> = emptyList(),
         val startDate: String? = null,
         val endDate: String? = null,
-        val parameters: TripParameters? = null,
     )
 }
 

@@ -408,7 +408,6 @@ class TripViewModel(
             destinations = destinations,
             startDate = dates.firstOrNull()?.asISO8601String(),
             endDate = dates.lastOrNull()?.asISO8601String(),
-            parameters = preferences?.initialParameters
         )
         navController.navigate(route = params)
     }
