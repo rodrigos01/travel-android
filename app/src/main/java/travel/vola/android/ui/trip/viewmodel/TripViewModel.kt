@@ -450,6 +450,20 @@ class TripViewModel(
         is FlexibleDaySection -> date
     }
 
+    fun onUpdatePreferencesTapped() {
+        val destinations = viewState.value.items.filterIsInstance<TripItemState.PlaceItemState>()
+            .map { it.placeName }
+        val dates =
+            viewState.value.items.filterIsInstance<TripItemState.Timeable>().map { it.timestamp }
+        val params = TripCreationAssistantDestination.Params(
+            tripId = tripId,
+            destinations = destinations,
+            startDate = dates.firstOrNull()?.asISO8601String(),
+            endDate = dates.lastOrNull()?.asISO8601String(),
+        )
+        navController.navigate(route = params)
+    }
+
     private val TripItemState.Editable.entity: TripEntity?
         get() = when (this) {
             is TripItemState.FlightDepartureItemState -> trip.value?.flights?.first { flight ->
