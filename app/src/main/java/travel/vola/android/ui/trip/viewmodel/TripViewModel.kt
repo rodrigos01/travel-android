@@ -21,6 +21,7 @@ import travel.vola.android.common.coroutines.createUseCaseScope
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.common.ui.state.MarkerViewState
 import travel.vola.android.di.factoryDependencies
+import travel.vola.android.extensions.asISO8601String
 import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.dayAndMonthString
 import travel.vola.android.extensions.dayOfMonthString
@@ -46,6 +47,7 @@ import travel.vola.android.model.data.TripEvent
 import travel.vola.android.model.data.WithCity
 import travel.vola.android.model.genai.GenAIRepository
 import travel.vola.android.model.repository.TripRepository
+import travel.vola.android.ui.trip.creation.assistant.composable.TripCreationAssistantDestination
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.TripItemState
@@ -326,6 +328,20 @@ class TripViewModel(
                 )
             }
         }
+    }
+
+    fun onUpdatePreferencesTapped() {
+        val destinations = viewState.value.items.filterIsInstance<TripItemState.PlaceItemState>()
+            .map { it.placeName }
+        val dates =
+            viewState.value.items.filterIsInstance<TripItemState.Timeable>().map { it.timestamp }
+        val params = TripCreationAssistantDestination.Params(
+            tripId = tripId,
+            destinations = destinations,
+            startDate = dates.firstOrNull()?.asISO8601String(),
+            endDate = dates.lastOrNull()?.asISO8601String(),
+        )
+        navController.navigate(route = params)
     }
 
     private val TripItemState.Editable.entity: TripEntity?
@@ -664,7 +680,7 @@ class TripViewModel(
                 time = event.startDateTime.timeString,
                 showTime = event.hasStartTime,
                 placeName = event.place.name,
-                cityName = event.place.address ?: event.city.name,
+                cityName = event.place.address,
                 imageUrl = event.place.coverImage ?: "",
                 backgroundStyle = backgroundStyle,
                 sectionId = sectionId,

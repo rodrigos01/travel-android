@@ -1,6 +1,6 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.GroupType
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.genai.GenAIData
@@ -136,8 +136,8 @@ class SuggestionsUseCase(
                                 name = place.name,
                                 coverImage = "",
                                 reason = place.reason,
-                                startTime = place.startTime?.let { Time(it) },
-                                endTime = place.endTime?.let { Time(it) },
+                                startTime = place.startTime?.let { zonedDateTime(it) },
+                                endTime = place.endTime?.let { zonedDateTime(it) },
                             )
                         },
                         sections = day.sections.map { section ->
@@ -151,8 +151,8 @@ class SuggestionsUseCase(
                                         name = place.name,
                                         coverImage = "",
                                         reason = place.reason,
-                                        startTime = place.startTime?.let { Time(it) },
-                                        endTime = place.endTime?.let { Time(it) },
+                                        startTime = place.startTime?.let { zonedDateTime(it) },
+                                        endTime = place.endTime?.let { zonedDateTime(it) },
                                     )
                                 }
                             )
