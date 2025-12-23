@@ -151,7 +151,6 @@ enum class GroupType {
     COUPLE
 }
 
-@Serializable
 data class TripParameters(
     val occasions: List<String>,
     val interests: List<String>,
