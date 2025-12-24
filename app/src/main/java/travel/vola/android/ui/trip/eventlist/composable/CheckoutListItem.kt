@@ -14,7 +14,7 @@ fun CheckoutListItem(
     dayOfWeekString: String?,
     timeString: String,
     hotelName: String,
-    position: EventListItemPosition = EventListItemPosition.MIDDLE,
+    position: EventItemPosition = EventItemPosition.MIDDLE,
 ) {
     EventListItem(
         showDate,
