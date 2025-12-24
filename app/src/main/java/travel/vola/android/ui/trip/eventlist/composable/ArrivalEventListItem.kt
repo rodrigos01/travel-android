@@ -14,7 +14,7 @@ fun ArrivalEventListItem(
     dayOfWeekString: String?,
     timeString: String,
     airportName: String,
-    position: EventListItemPosition = EventListItemPosition.MIDDLE,
+    position: EventItemPosition = EventItemPosition.MIDDLE,
 ) {
     EventListItem(
         showDate,
