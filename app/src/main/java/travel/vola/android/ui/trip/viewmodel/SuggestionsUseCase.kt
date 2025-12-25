@@ -1,7 +1,11 @@
 package travel.vola.android.ui.trip.viewmodel
 
 import travel.vola.android.extensions.zonedDateTime
+import travel.vola.android.model.data.FlexibleDayCategory
+import travel.vola.android.model.data.FlexibleDayItem
+import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.GroupType
+import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.genai.GenAIData
 import travel.vola.android.model.genai.GenAIRepository
@@ -9,6 +13,7 @@ import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.Locale
+import java.util.TimeZone
 
 class SuggestionsUseCase(
     private val repository: GenAIRepository,
@@ -22,13 +27,7 @@ class SuggestionsUseCase(
     data class SuggestedDay(
         val date: ZonedDateTime,
         val timedPlaces: List<TimedPlaceSuggestion>,
-        val sections: List<DaySectionSuggestion>,
-    )
-
-    data class DaySectionSuggestion(
-        val type: String,
-        val name: String,
-        val suggestions: List<TimedPlaceSuggestion>,
+        val sections: List<FlexibleDaySection>,
     )
 
     data class TimedPlaceSuggestion(
@@ -74,7 +73,7 @@ class SuggestionsUseCase(
                     answers = listOf(it.answer)
                 )
             },
-            itineraryType = GenAIData.ItineraryType.DETAILED,
+            itineraryType = GenAIData.ItineraryType.OPEN_ENDED,
             itinerary = GenAIData.Itinerary(
                 name = trip.name.orEmpty(),
                 startDate = trip.places.first().startDateTime.let {
@@ -119,16 +118,17 @@ class SuggestionsUseCase(
         return result?.let { result ->
             DailyItineraryState(
                 days = result.days.map { day ->
+                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(
+                        day.date
+                    )
+                        ?.let {
+                            ZonedDateTime.ofInstant(
+                                it.toInstant(),
+                                ZoneId.systemDefault()
+                            )
+                        } ?: ZonedDateTime.now()
                     SuggestedDay(
-                        date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(
-                            day.date
-                        )
-                            ?.let {
-                                ZonedDateTime.ofInstant(
-                                    it.toInstant(),
-                                    ZoneId.systemDefault()
-                                )
-                            } ?: ZonedDateTime.now(),
+                        date = date,
                         timedPlaces = day.timedPlaces.map { place ->
                             TimedPlaceSuggestion(
                                 id = place.id,
@@ -141,18 +141,40 @@ class SuggestionsUseCase(
                             )
                         },
                         sections = day.sections.map { section ->
-                            DaySectionSuggestion(
-                                type = section.type,
+                            FlexibleDaySection(
                                 name = section.name,
-                                suggestions = section.suggestions.places.map { place ->
-                                    TimedPlaceSuggestion(
-                                        id = place.id,
-                                        cityId = place.cityId,
-                                        name = place.name,
-                                        coverImage = "",
-                                        reason = place.reason,
-                                        startTime = place.startTime?.let { zonedDateTime(it) },
-                                        endTime = place.endTime?.let { zonedDateTime(it) },
+                                date = date,
+                                city = Place(
+                                    id = section.cityId,
+                                    name = "",
+                                    coverImage = "",
+                                    latitude = 0.0,
+                                    longitude = 0.0,
+                                    address = "",
+                                    externalId = "",
+                                    timeZone = TimeZone.getDefault(),
+                                    source = "",
+                                ),
+                                categories = section.suggestions.map { suggestion ->
+                                    FlexibleDayCategory(
+                                        name = suggestion.category,
+                                        items = suggestion.places.map { place ->
+                                            FlexibleDayItem(
+                                                id = place.id,
+                                                place = Place(
+                                                    id = place.id,
+                                                    name = place.name,
+                                                    coverImage = "",
+                                                    latitude = 0.0,
+                                                    longitude = 0.0,
+                                                    address = place.reason,
+                                                    externalId = "",
+                                                    timeZone = TimeZone.getDefault(),
+                                                    source = "",
+                                                ),
+                                                note = place.reason
+                                            )
+                                        }
                                     )
                                 }
                             )

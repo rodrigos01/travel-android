@@ -130,11 +130,14 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                                             ),
                                             description = "type of section in the day",
                                         ),
+                                        "cityId" to Schema.string("id of the city as provided in the original itinerary"),
                                         "name" to Schema.string("A name for the section"),
-                                        "suggestions" to Schema.obj(
-                                            mapOf(
-                                                "category" to Schema.string("the category of the places being suggested"),
-                                                "places" to Schema.array(placeSchema)
+                                        "suggestions" to Schema.array(
+                                            Schema.obj(
+                                                mapOf(
+                                                    "category" to Schema.string("the category of the places being suggested"),
+                                                    "places" to Schema.array(placeSchema)
+                                                )
                                             )
                                         )
                                     )

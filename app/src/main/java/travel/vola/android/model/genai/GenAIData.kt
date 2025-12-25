@@ -116,7 +116,8 @@ object GenAIData {
     data class Section(
         val type: String,
         val name: String,
-        val suggestions: SectionSuggestions,
+        val cityId: String,
+        val suggestions: List<SectionSuggestions>,
     )
 
     @Serializable
