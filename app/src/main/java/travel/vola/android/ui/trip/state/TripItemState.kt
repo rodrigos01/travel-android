@@ -231,7 +231,7 @@ sealed interface AddPlanItemState : TripItemState, Identifiable, TripItemState.T
         get() = Type.entries
 
     enum class Type {
-        Flight, Lodging, Place, Restaurant
+        Flight, Lodging, Place, Restaurant, FlexibleSection,
     }
 
     enum class ButtonConfiguration {
@@ -355,6 +355,19 @@ data class AddRestaurantItemState(
     )
 }
 
+data class AddFlexibleSectionItemState(
+    override val id: String,
+    override val typeSelectionEnabled: Boolean,
+    override val dateSelectionEnabled: Boolean,
+    override val saveButtonEnabled: Boolean,
+    override val deleteButtonEnabled: Boolean,
+    val startDateTime: ZonedDateTime,
+    val hasStartTime: Boolean,
+    val sectionName: String?,
+) : AddPlanItemState {
+    override val timestamp: ZonedDateTime = startDateTime
+}
+
 data class SearchResultItemState(val title: String, val subtitle: String)
 
 val AddPlanItemState.type
@@ -364,4 +377,5 @@ val AddPlanItemState.type
 
         is AddPlaceItemState -> AddPlanItemState.Type.Place
         is AddRestaurantItemState -> AddPlanItemState.Type.Restaurant
+        is AddFlexibleSectionItemState -> AddPlanItemState.Type.FlexibleSection
     }

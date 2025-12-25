@@ -66,4 +66,11 @@ sealed interface PendingData {
         val city: Place? = null,
         val searchResults: List<SimplePlace> = emptyList(),
     ) : PendingData
+
+    data class PendingFlexibleSection(
+        override val id: String,
+        val startDateTime: ZonedDateTime,
+        val hasStartTime: Boolean = false,
+        val sectionName: String,
+    ) : PendingData
 }

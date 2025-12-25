@@ -108,11 +108,11 @@ data class RestaurantReservation(
 ) : TripEntity, TripEvent, Mapeable
 
 data class FlexibleDaySection(
+    override val id: String,
     val name: String,
     val date: ZonedDateTime,
-    override val city: Place,
     val categories: List<FlexibleDayCategory>,
-) : TripEvent, WithCity
+) : TripEntity, TripEvent
 
 data class FlexibleDayCategory(
     val name: String,

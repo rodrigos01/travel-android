@@ -290,6 +290,7 @@ class TripViewModel(
                 is Lodging -> repository.saveLodging(tripId, entity)
                 is TimedPlace -> repository.saveTimedPlace(tripId, entity)
                 is RestaurantReservation -> repository.saveRestaurantReservation(tripId, entity)
+                is FlexibleDaySection -> {} // TODO: Implement saving flexible section
             }
         }
     }
@@ -299,6 +300,7 @@ class TripViewModel(
         is Lodging -> copy(id = id)
         is TimedPlace -> copy(id = id)
         is RestaurantReservation -> copy(id = id)
+        is FlexibleDaySection -> copy(id = id)
     }
 
     override fun cancelEdit(itemId: String) {
@@ -317,6 +319,8 @@ class TripViewModel(
                     tripId,
                     entity.id
                 )
+
+                is FlexibleDaySection -> {} // TODO: Implement deleting flexible section
             }
         }
     }
@@ -454,7 +458,7 @@ class TripViewModel(
 
         val (time, event) = item
 
-        val place = event.getPlace(time)
+        val place = event.getPlace(time) ?: return null
 
 
         // Exclude if previous adjacent events had same place or were day trips
@@ -502,7 +506,7 @@ class TripViewModel(
         referenceTime: ZonedDateTime,
     ) = this is TimedPlace && referenceTime == endDateTime && referenceTime != startDateTime
 
-    private val Pair<ZonedDateTime, TripEvent>.place: Place
+    private val Pair<ZonedDateTime, TripEvent>.place: Place?
         get() = second.getPlace(first)
 
     private val Pair<ZonedDateTime, TripEvent>.isDeparture: Boolean
@@ -694,6 +698,7 @@ private fun TripEvent.getPlace(referenceTime: ZonedDateTime) = when (this) {
     }
 
     is WithCity -> city
+    is FlexibleDaySection -> null
 }
 
 private class EventComparable(
