@@ -59,11 +59,13 @@ sealed interface TripItemState {
         override val showDate: Boolean = true
     }
 
-    sealed interface EventItemState : TripItemState, Timeable, Editable, SectionItemState,
-        Focusable {
-        override val showDate: Boolean
+    interface EventWithDateState {
         val dayOfMonth: String?
         val dayOfWeek: String?
+    }
+
+    sealed interface EventItemState : TripItemState, Timeable, Editable, SectionItemState,
+        Focusable, EventWithDateState {
         val time: String
         val title: String?
         val subtitle: String?
@@ -177,6 +179,28 @@ sealed interface TripItemState {
         override val id: String,
         override val timestamp: ZonedDateTime,
     ) : Replaceable, Timeable, TripItemState
+
+    data class FlexibleDaySectionState(
+        override val id: String,
+        override val timestamp: ZonedDateTime,
+        override val dayOfMonth: String?,
+        override val dayOfWeek: String?,
+        override val showDate: Boolean,
+        val name: String,
+        val categories: List<DaySectionCategory>,
+    ) : TripItemState, EventWithDateState, Focusable
+
+    data class DaySectionCategory(
+        val name: String,
+        val items: List<SectionOption>,
+    )
+
+    data class SectionOption(
+        val id: String,
+        val title: String,
+        val subtitle: String,
+        val imageUrl: String,
+    )
 }
 
 data class ManualAddPlanState(
