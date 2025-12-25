@@ -26,6 +26,11 @@ sealed interface RoomData {
             parentColumn = "id",
             entityColumn = "tripId"
         ) val restaurants: List<RestaurantReservation>,
+        @Relation(
+            entity = Schema.FlexibleSection::class,
+            parentColumn = "id",
+            entityColumn = "tripId",
+        ) val flexibleSections: List<FlexibleSection>,
     )
 
     data class Flight(
@@ -78,6 +83,32 @@ sealed interface RoomData {
             parentColumn = "city", entityColumn = "id"
         ) val city: Place,
     )
+
+    data class FlexibleSection(
+        @Embedded val entity: Schema.FlexibleSection,
+        @Relation(
+            entity = Schema.FlexibleSectionCategory::class,
+            parentColumn = "id",
+            entityColumn = "sectionId",
+        ) val categories: List<FlexibleSectionCategory>,
+    )
+
+    data class FlexibleSectionCategory(
+        @Embedded val entity: Schema.FlexibleSectionCategory,
+        @Relation(
+            entity = Schema.FlexibleSectionItem::class,
+            parentColumn = "id",
+            entityColumn = "categoryId",
+        ) val items: List<FlexibleSectionItem>,
+    )
+
+    data class FlexibleSectionItem(
+        @Embedded val entity: Schema.FlexibleSectionItem,
+        @Relation(
+            parentColumn = "place", entityColumn = "id"
+        ) val place: Place,
+    )
+
 
     @Entity
     data class Place(
@@ -199,5 +230,29 @@ sealed interface RoomData {
             val place: String,
             val city: String,
         )
+
+        @Entity
+        data class FlexibleSection(
+            @PrimaryKey val id: String,
+            val tripId: String,
+            val name: String,
+            val date: ZonedDateTime,
+        )
+
+        @Entity
+        data class FlexibleSectionCategory(
+            @PrimaryKey val id: String,
+            val sectionId: String,
+            val name: String,
+        )
+
+        @Entity
+        data class FlexibleSectionItem(
+            @PrimaryKey val id: String,
+            val categoryId: String,
+            val place: String,
+            val note: String,
+        )
+
     }
 }
