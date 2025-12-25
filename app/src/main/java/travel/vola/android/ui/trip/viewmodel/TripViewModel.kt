@@ -32,10 +32,12 @@ import travel.vola.android.extensions.timeString
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.viewModelFactory
 import travel.vola.android.model.PlaceRepository
+import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.data.Identifiable
 import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.Mapeable
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
@@ -97,7 +99,7 @@ class TripViewModel(
         trip.filterNotNull().map { currentTrip ->
             val items = genItems(currentTrip)
             val places =
-                (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).fold(mapOf<Place, PlaceState>()) { map, entity: WithCity ->
+                (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).fold(mapOf<Place, PlaceState>()) { map, entity: Mapeable ->
                     val current = map.getOrDefault(
                         entity.city, PlaceState(
                             place = entity.city,
@@ -343,6 +345,7 @@ class TripViewModel(
 
             is TripItemState.PlaceItemState -> trip.value?.places?.firstOrNull { it.id == id }
             is TripItemState.RestaurantReservationItemState -> trip.value?.restaurants?.firstOrNull { it.id == id }
+            is TripItemState.FlexibleDaySectionState -> null // TODO: find id from trip once its integrated
         }
 
     private fun genItems(trip: Trip): List<TripItemState> {
@@ -358,6 +361,7 @@ class TripViewModel(
                 )
 
                 is RestaurantReservation -> listOf(event.dateTime to event)
+                is FlexibleDaySection -> listOf(event.date to event)
             }
         }.sortedBy { (time, event) ->
             EventComparable(
@@ -635,6 +639,28 @@ class TripViewModel(
                 restaurantAddress = event.place.address,
                 backgroundStyle = backgroundStyle,
                 sectionId = sectionId,
+            )
+
+            is FlexibleDaySection -> TripItemState.FlexibleDaySectionState(
+                id = event.name,
+                timestamp = event.date,
+                showDate = showDate,
+                dayOfMonth = event.date.dayOfMonthString,
+                dayOfWeek = event.date.dayOfWeekString,
+                name = event.name,
+                categories = event.categories.map { category ->
+                    TripItemState.DaySectionCategory(
+                        name = category.name,
+                        items = category.items.map {
+                            TripItemState.SectionOption(
+                                id = it.id,
+                                title = it.place.name,
+                                subtitle = it.place.address,
+                                imageUrl = it.place.coverImage ?: "",
+                            )
+                        },
+                    )
+                }
             )
         }
     }
