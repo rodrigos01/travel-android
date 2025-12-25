@@ -1,53 +1,33 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import travel.vola.android.ui.theme.AppTheme
-import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
-import travel.vola.android.ui.trip.state.ManualAddPlanState
-import travel.vola.android.ui.trip.state.ManualStartEndAddPlanState
+import travel.vola.android.ui.trip.state.AddFlexibleSectionItemState
 import java.time.ZonedDateTime
 
 @Composable
 fun AddFlexibleSectionListItem(
-    uiState: ManualStartEndAddPlanState,
+    state: AddFlexibleSectionItemState,
     onTextChanged: (CharSequence) -> Unit,
     onUpdated: (
-        startDateTime: ZonedDateTime?,
-        startTimeSelected: Boolean,
-        endDateTime: ZonedDateTime?,
-        endTimeSelected: Boolean,
+        dateTime: ZonedDateTime?,
+        timeSelected: Boolean,
     ) -> Unit,
 ) {
-    StartEndAddPlanListItem(
-        uiState = uiState,
-        startTitle = { Text("Start") },
-        startTimeSelectorLabel = "Pick Start Time",
-        startLabelText = "Section Name",
-        startPlaceHolder = "Enter Section Name",
-        onStartTextChanged = onTextChanged,
-        endTitle = { Text("End") },
-        endTimeSelectorLabel = "Pick End Time",
-        showEndTimePickerButton = false,
-        endLabelText = "Pick End Time",
-        requiresEnd = false,
-        onUpdated = {
-                startDateTime,
-                startTimeSelected,
-                selectedStartSearchResultIndex,
-                endDateTime,
-                endTimeSelected,
-                _,
-            ->
-            onUpdated(
-                startDateTime,
-                startTimeSelected,
-                endDateTime,
-                endTimeSelected,
-            )
-        })
+    AddPlanRow(
+        initialDateTime = state.startDateTime,
+        timeSelectedInitially = state.hasStartTime,
+        searchResults = emptyList(),
+        title = {},
+        timeSelectorLabel = "Pick Time",
+        labelText = "Section Name",
+        text = state.sectionName,
+        placeHolder = "Section Name",
+        onTextChanged = onTextChanged,
+        onUpdated = { dateTime, timeSelected, _ -> onUpdated(dateTime, timeSelected) }
+    )
 }
 
 @PreviewLightDark
@@ -56,30 +36,18 @@ fun AddFlexibleSectionListItemPreview() {
     AppTheme {
         Surface {
             AddFlexibleSectionListItem(
-                uiState = ManualAddLodgingItemState(
-                    "", ZonedDateTime.now(),
-                    typeSelectionEnabled = false,
-                    startState = ManualAddPlanState(
-                        dateTime = null,
-                        minDateTime = ZonedDateTime.now(),
-                        isTimeSet = false,
-                        dateSelectionEnabled = false,
-                        locationText = null,
-                        searchResults = emptyList()
-                    ),
-                    endState = ManualAddPlanState(
-                        dateTime = null,
-                        minDateTime = ZonedDateTime.now(),
-                        isTimeSet = false,
-                        dateSelectionEnabled = true,
-                        locationText = null,
-                        searchResults = emptyList()
-                    ),
-                    deleteButtonEnabled = true,
+                state = AddFlexibleSectionItemState(
+                    id = "id",
+                    typeSelectionEnabled = true,
+                    dateSelectionEnabled = true,
                     saveButtonEnabled = true,
+                    deleteButtonEnabled = true,
+                    startDateTime = ZonedDateTime.now(),
+                    hasStartTime = true,
+                    sectionName = "My New Section"
                 ),
                 onTextChanged = {},
-                onUpdated = { _, _, _, _ -> },
+                onUpdated = { _, _ -> },
             )
         }
     }

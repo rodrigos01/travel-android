@@ -4,7 +4,7 @@ import travel.vola.android.ui.trip.state.AddPlanItemState
 import java.time.ZonedDateTime
 
 interface AddPlanItemActionHandler : AddLodgingItemActionHandler, AddFlightItemActionHandler,
-    AddPlaceItemActionHandler, AddRestaurantItemActionHandler {
+    AddPlaceItemActionHandler, AddRestaurantItemActionHandler, AddFlexibleSectionItemActionHandler {
     fun addPlanTypeChanged(itemId: String, newType: AddPlanItemState.Type)
     fun save(itemId: String)
     fun cancelEdit(itemId: String)
@@ -72,4 +72,8 @@ interface AddFlightItemActionHandler {
         arrivalTimeSelected: Boolean,
         selectedArrivalSearchResultIndex: Int,
     )
+}
+
+interface AddFlexibleSectionItemActionHandler {
+    fun sectionNameChanged(itemId: String, content: CharSequence)
 }

@@ -7,6 +7,7 @@ import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.AddPlanType
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
+import travel.vola.android.ui.trip.state.AddFlexibleSectionItemState
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.AddPlaceItemState
 import travel.vola.android.ui.trip.state.AddPlanItemState
@@ -184,6 +185,14 @@ fun AddPlanContent(
                 },
             )
         }
+
+        is AddFlexibleSectionItemState -> {
+            AddFlexibleSectionListItem(
+                state = state,
+                onTextChanged = { actionHandler.sectionNameChanged(state.id, it) },
+                onUpdated = { _, _ -> }
+            )
+        }
     }
 }
 
@@ -192,6 +201,7 @@ fun AddPlanType.toState() = when (this) {
     AddPlanType.Lodging -> AddPlanItemState.Type.Lodging
     AddPlanType.Place -> AddPlanItemState.Type.Place
     AddPlanType.Restaurant -> AddPlanItemState.Type.Restaurant
+    AddPlanType.FlexibleSection -> AddPlanItemState.Type.FlexibleSection
 }
 
 val AddPlanItemState.uiType
@@ -200,6 +210,7 @@ val AddPlanItemState.uiType
         is ManualAddLodgingItemState, is LodgingSearchItemState -> AddPlanType.Lodging
         is AddPlaceItemState -> AddPlanType.Place
         is AddRestaurantItemState -> AddPlanType.Restaurant
+        is AddFlexibleSectionItemState -> AddPlanType.FlexibleSection
     }
 
 @Preview
@@ -291,4 +302,5 @@ object NoOpActionHandler : AddPlanItemActionHandler {
     ) = Unit
 
     override fun restaurantTextChanged(itemId: String, content: CharSequence) = Unit
+    override fun sectionNameChanged(itemId: String, content: CharSequence) = Unit
 }

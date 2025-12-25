@@ -8,16 +8,19 @@ import travel.vola.android.extensions.MapStateFlow
 import travel.vola.android.extensions.get
 import travel.vola.android.extensions.mergeMaps
 import travel.vola.android.model.PlaceRepository
+import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.TripEntity
+import travel.vola.android.ui.trip.creation.usecase.AddFlexibleSectionItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddFlightItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddPlaceItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddRestaurantItemActionHandler
+import travel.vola.android.ui.trip.state.AddFlexibleSectionItemState
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.AddLodgingItemState
 import travel.vola.android.ui.trip.state.AddPlaceItemState
@@ -38,10 +41,12 @@ class AddPlanUseCase(
     ),
     private val addPlaceUseCase: AddPlaceUseCase = AddPlaceUseCase(coroutineScope = coroutineScope),
     private val addRestaurantUseCase: AddRestaurantUseCase = AddRestaurantUseCase(coroutineScope = coroutineScope),
+    private val addFlexibleSectionUseCase: AddFlexibleSectionUseCase = AddFlexibleSectionUseCase(),
 ) : AddPlanItemActionHandler, AddFlightItemActionHandler by addFlightUseCase,
     AddLodgingItemActionHandler by addLodgingUseCase, AddPlaceItemActionHandler by addPlaceUseCase,
     AddRestaurantItemActionHandler by addRestaurantUseCase,
-    LodgingSearchParamsFactory by addLodgingUseCase {
+    LodgingSearchParamsFactory by addLodgingUseCase,
+    AddFlexibleSectionItemActionHandler by addFlexibleSectionUseCase {
 
     data class StateParams(
         val dateSelectionEnabled: Boolean = true,
@@ -67,6 +72,7 @@ class AddPlanUseCase(
         addPlaceUseCase.items,
         addLodgingUseCase.items,
         addRestaurantUseCase.items,
+        addFlexibleSectionUseCase.items,
     ).stateIn(coroutineScope, SharingStarted.Eagerly, initialValue = emptyMap())
 
     fun createAddPlanItem(
@@ -127,6 +133,7 @@ class AddPlanUseCase(
             is AddLodgingItemState -> addLodgingUseCase.removeItem(item)
             is AddPlaceItemState -> addPlaceUseCase.removeItem(item)
             is AddRestaurantItemState -> addRestaurantUseCase.removeItem(item)
+            is AddFlexibleSectionItemState -> addFlexibleSectionUseCase.removeItem(item)
         }
     }
 
@@ -136,6 +143,7 @@ class AddPlanUseCase(
             is ManualAddLodgingItemState, is LodgingSearchItemState -> AddPlanItemState.Type.Lodging
             is AddPlaceItemState -> AddPlanItemState.Type.Place
             is AddRestaurantItemState -> AddPlanItemState.Type.Restaurant
+            is AddFlexibleSectionItemState -> AddPlanItemState.Type.FlexibleSection
         }
 
     private fun AddPlanItemState.Type.useCase(): AddItemUseCase<out TripEntity, out AddPlanItemState> =
@@ -144,6 +152,7 @@ class AddPlanUseCase(
             AddPlanItemState.Type.Lodging -> addLodgingUseCase
             AddPlanItemState.Type.Place -> addPlaceUseCase
             AddPlanItemState.Type.Restaurant -> addRestaurantUseCase
+            AddPlanItemState.Type.FlexibleSection -> addFlexibleSectionUseCase
         }
 
 
@@ -155,6 +164,7 @@ class AddPlanUseCase(
             is Lodging -> addLodgingUseCase.addItem(id, this, params)
             is TimedPlace -> addPlaceUseCase.addItem(id, this, params)
             is RestaurantReservation -> addRestaurantUseCase.addItem(id, this, params)
+            is FlexibleDaySection -> addFlexibleSectionUseCase.addItem(id, this, params)
         }
     }
 
@@ -165,6 +175,7 @@ class AddPlanUseCase(
             is LodgingSearchItemState -> error("LodgingSearchItemState entity creation not implemented")
             is AddPlaceItemState -> addPlaceUseCase.createEntity(this)
             is AddRestaurantItemState -> addRestaurantUseCase.createEntity(this)
+            is AddFlexibleSectionItemState -> addFlexibleSectionUseCase.createEntity(this)
         }
     }
 }
