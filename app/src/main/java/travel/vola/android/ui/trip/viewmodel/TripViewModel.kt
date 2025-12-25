@@ -349,7 +349,7 @@ class TripViewModel(
 
             is TripItemState.PlaceItemState -> trip.value?.places?.firstOrNull { it.id == id }
             is TripItemState.RestaurantReservationItemState -> trip.value?.restaurants?.firstOrNull { it.id == id }
-            is TripItemState.FlexibleDaySectionState -> null // TODO: find id from trip once its integrated
+            is TripItemState.FlexibleDaySectionState -> trip.value?.flexibleSections?.firstOrNull { it.id == id }
         }
 
     private fun genItems(trip: Trip): List<TripItemState> {
