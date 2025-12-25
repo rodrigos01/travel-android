@@ -1,10 +1,14 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,32 +17,37 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.rounded.Explore
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import travel.vola.android.ui.theme.AppTheme
-import travel.vola.android.ui.trip.creation.assistant.viewmodel.UiState
 import travel.vola.android.ui.trip.state.TripItemState
 import java.time.ZonedDateTime
 
@@ -46,6 +55,7 @@ import java.time.ZonedDateTime
 @Composable
 fun FlexibleDaySectionListItem(
     state: TripItemState.FlexibleDaySectionState,
+    modifier: Modifier = Modifier,
     highlightDate: Boolean = false,
     position: EventItemPosition = EventItemPosition.SINGLE
 ) {
@@ -56,107 +66,154 @@ fun FlexibleDaySectionListItem(
         dayOfWeekString = state.dayOfWeek,
         position = position
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    top = 8.dp,
-                    bottom = 8.dp
-                )
-        ) {
-            Text(
-                state.name,
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-            var selectedCategoryIndex by remember { mutableIntStateOf(0) }
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-            ) {
-                itemsIndexed(state.categories) { index, category ->
-                    ToggleButton(
-                        checked = index == selectedCategoryIndex,
-                        onCheckedChange = { selectedCategoryIndex = index },
-                        shapes = when (index) {
-                            0 -> {
-                                ButtonGroupDefaults.connectedLeadingButtonShapes()
-                            }
-
-                            state.categories.lastIndex -> {
-                                ButtonGroupDefaults.connectedTrailingButtonShapes()
-                            }
-
-                            else -> {
-                                ButtonGroupDefaults.connectedMiddleButtonShapes()
-                            }
-                        },
-                    ) {
-                        Text(category.name)
-                    }
-                }
-                item {
-                    TextButton(onClick = {}) {
-                        Text("Add")
-                    }
-                }
-            }
-            val options = state.categories.getOrNull(selectedCategoryIndex)?.items ?: emptyList()
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                items(options) { option ->
-                    CategoryItem {
-                        Image(
-                            painter = rememberAsyncImagePainter(
-                                model = option.imageUrl,
-                            ),
-                            contentDescription = option.title,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(1F)
-                                .padding(4.dp)
-                                .clip(MaterialTheme.shapes.large)
-                                .background(MaterialTheme.colorScheme.tertiary),
+        var expanded by remember { mutableStateOf(false) }
+        AnimatedContent(expanded) {
+            if (it) {
+                Column(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .padding(
+                            top = 8.dp,
+                            bottom = 8.dp
                         )
-                        Column(
-                            modifier = Modifier.padding(
-                                top = 0.dp,
-                                start = 8.dp,
-                                end = 8.dp,
-                                bottom = 8.dp
-                            )
-                        ) {
-                            Text(option.title, style = MaterialTheme.typography.titleSmall)
-                            Text(
-                                option.subtitle,
-                                maxLines = 1,
-                                style = MaterialTheme.typography.bodySmall,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .clickable(onClick = { expanded = false })
+                    ) {
+                        Text(
+                            state.name,
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Icon(
+                            Icons.Rounded.KeyboardArrowDown,
+                            tint = LocalContentColor.current,
+                            contentDescription = "collapse",
+                        )
+                    }
+                    var selectedCategoryIndex by remember { mutableIntStateOf(0) }
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                    ) {
+                        itemsIndexed(state.categories) { index, category ->
+                            ToggleButton(
+                                checked = index == selectedCategoryIndex,
+                                onCheckedChange = { selectedCategoryIndex = index },
+                                shapes = when (index) {
+                                    0 -> {
+                                        ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                    }
+
+                                    state.categories.lastIndex -> {
+                                        ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                    }
+
+                                    else -> {
+                                        ButtonGroupDefaults.connectedMiddleButtonShapes()
+                                    }
+                                },
+                            ) {
+                                Text(category.name)
+                            }
+                        }
+                        item {
+                            TextButton(onClick = {}) {
+                                Text("Add")
+                            }
                         }
                     }
-                }
-                item {
-                    CategoryItem(containerColor = MaterialTheme.colorScheme.inversePrimary) {
-                        Icon(
-                            Icons.Rounded.Add,
-                            contentDescription = "add option",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(1F)
-                        )
-                        Text(
-                            "Add",
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .align(Alignment.CenterHorizontally)
-                        )
+                    val options =
+                        state.categories.getOrNull(selectedCategoryIndex)?.items ?: emptyList()
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        modifier = Modifier.padding(top = 8.dp)
+                    ) {
+                        items(options) { option ->
+                            CategoryItem {
+                                Image(
+                                    painter = rememberAsyncImagePainter(
+                                        model = option.imageUrl,
+                                    ),
+                                    contentScale = ContentScale.Crop,
+                                    contentDescription = option.title,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .aspectRatio(1F)
+                                        .padding(4.dp)
+                                        .clip(MaterialTheme.shapes.large)
+                                        .background(MaterialTheme.colorScheme.tertiary),
+                                )
+                                Column(
+                                    modifier = Modifier.padding(
+                                        top = 0.dp,
+                                        start = 8.dp,
+                                        end = 8.dp,
+                                        bottom = 8.dp
+                                    )
+                                ) {
+                                    Text(option.title, style = MaterialTheme.typography.titleSmall)
+                                    Text(
+                                        option.subtitle,
+                                        maxLines = 1,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
+                        }
+                        item {
+                            CategoryItem(containerColor = MaterialTheme.colorScheme.inversePrimary) {
+                                Icon(
+                                    Icons.Rounded.Add,
+                                    contentDescription = "add option",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .aspectRatio(1F)
+                                )
+                                Text(
+                                    "Add",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
+                        }
                     }
+
                 }
+            } else {
+                ListItem(
+                    colors = ListItemDefaults.colors(
+                        containerColor = Color.Transparent,
+                        headlineColor = LocalContentColor.current,
+                        supportingColor = LocalContentColor.current,
+                        leadingIconColor = LocalContentColor.current,
+                        overlineColor = LocalContentColor.current,
+                    ),
+                    leadingContent = {
+                        Icon(
+                            Icons.Rounded.Explore,
+                            tint = LocalContentColor.current,
+                            contentDescription = state.name,
+                        )
+                    },
+                    headlineContent = { Text(state.name) },
+                    trailingContent = {
+                        Icon(
+                            Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                            tint = LocalContentColor.current,
+                            contentDescription = "expand",
+                        )
+                    },
+                    modifier = modifier.clickable(onClick = { expanded = true })
+                )
             }
         }
     }
@@ -180,59 +237,63 @@ private fun CategoryItem(
 }
 
 @Composable
-@PreviewLightDark
+@Preview
 fun FlexibleDaySectionListItemPreview() {
     AppTheme {
-        FlexibleDaySectionListItem(
-            state = TripItemState.FlexibleDaySectionState(
-                id = "1",
-                timestamp = ZonedDateTime.now(),
-                dayOfMonth = "21",
-                dayOfWeek = "Wed",
-                showDate = true,
-                name = "Södermalm (SoFo) exploration",
-                categories = listOf(
-                    TripItemState.DaySectionCategory(
-                        name = "☕ Work-base coffee shops",
-                        items = listOf(
-                            TripItemState.SectionOption(
-                                id = "1",
-                                title = "Drop Coffee",
-                                subtitle = "Wollmar Yxkullsgatan 10, 118 50 Stockholm, Sweden",
-                                imageUrl = "https://picsum.photos/200/300",
+        Scaffold {
+            Box(modifier = Modifier.padding(it)) {
+                FlexibleDaySectionListItem(
+                    state = TripItemState.FlexibleDaySectionState(
+                        id = "1",
+                        timestamp = ZonedDateTime.now(),
+                        dayOfMonth = "21",
+                        dayOfWeek = "Wed",
+                        showDate = true,
+                        name = "Södermalm (SoFo) exploration",
+                        categories = listOf(
+                            TripItemState.DaySectionCategory(
+                                name = "☕ Work-base coffee shops",
+                                items = listOf(
+                                    TripItemState.SectionOption(
+                                        id = "1",
+                                        title = "Drop Coffee",
+                                        subtitle = "Wollmar Yxkullsgatan 10, 118 50 Stockholm, Sweden",
+                                        imageUrl = "https://picsum.photos/200/300",
+                                    ),
+                                    TripItemState.SectionOption(
+                                        id = "2",
+                                        title = "Il Cafe",
+                                        subtitle = "Södermannagatan 23, 116 40 Stockholm, Sweden",
+                                        imageUrl = "https://picsum.photos/200/300",
+                                    )
+                                ),
                             ),
-                            TripItemState.SectionOption(
-                                id = "2",
-                                title = "Il Cafe",
-                                subtitle = "Södermannagatan 23, 116 40 Stockholm, Sweden",
-                                imageUrl = "https://picsum.photos/200/300",
-                            )
+                            TripItemState.DaySectionCategory(
+                                name = "\uD83D\uDECD\uFE0F Shopping",
+                                items = listOf(
+                                    TripItemState.SectionOption(
+                                        id = "1",
+                                        title = "Herr Judit",
+                                        subtitle = "Hornsgatan 65, 118 49 Stockholm, Sweden",
+                                        imageUrl = "https://picsum.photos/200/300",
+                                    ),
+                                    TripItemState.SectionOption(
+                                        id = "2",
+                                        title = "RAINS",
+                                        subtitle = "Götgatan 42, 118 26 Stockholm, Sweden",
+                                        imageUrl = "https://picsum.photos/200/300",
+                                    ),
+                                )
+                            ),
+                            TripItemState.DaySectionCategory(
+                                name = "Other",
+                                items = emptyList()
+                            ),
                         ),
                     ),
-                    TripItemState.DaySectionCategory(
-                        name = "\uD83D\uDECD\uFE0F Shopping",
-                        items = listOf(
-                            TripItemState.SectionOption(
-                                id = "1",
-                                title = "Herr Judit",
-                                subtitle = "Hornsgatan 65, 118 49 Stockholm, Sweden",
-                                imageUrl = "https://picsum.photos/200/300",
-                            ),
-                            TripItemState.SectionOption(
-                                id = "2",
-                                title = "RAINS",
-                                subtitle = "Götgatan 42, 118 26 Stockholm, Sweden",
-                                imageUrl = "https://picsum.photos/200/300",
-                            ),
-                        )
-                    ),
-                    TripItemState.DaySectionCategory(
-                        name = "Other",
-                        items = emptyList()
-                    ),
-                ),
-            ),
-            highlightDate = true,
-        )
+                    highlightDate = true,
+                )
+            }
+        }
     }
 }
