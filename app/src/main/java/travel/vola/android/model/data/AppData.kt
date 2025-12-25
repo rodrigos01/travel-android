@@ -1,6 +1,5 @@
 package travel.vola.android.model.data
 
-import kotlinx.serialization.Serializable
 import java.time.ZonedDateTime
 import java.util.TimeZone
 
@@ -115,7 +114,7 @@ data class FlexibleDaySection(
     val date: ZonedDateTime,
     val categories: List<FlexibleDayCategory>,
     override val city: Place,
-) : TripEntity, TripEvent, WithCity
+) : TripEntity, TripEvent, Mapeable
 
 data class FlexibleDayCategory(
     val name: String,
