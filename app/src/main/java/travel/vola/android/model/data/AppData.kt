@@ -35,6 +35,8 @@ sealed interface WithCity {
     val city: Place
 }
 
+sealed interface Mapeable : WithCity
+
 data class Flight(
     override val id: String,
     val segments: List<FlightSegment>,
@@ -64,7 +66,7 @@ data class Lodging(
     override val city: Place,
     val checkIn: ZonedDateTime,
     val checkout: ZonedDateTime,
-) : TripEntity, TripEvent, WithCity
+) : TripEntity, TripEvent, Mapeable
 
 data class Place(
     val id: String,
@@ -96,14 +98,32 @@ data class TimedPlace(
     val hasEndTime: Boolean,
     val place: Place,
     override val city: Place,
-) : TripEntity, TripEvent, WithCity
+) : TripEntity, TripEvent, Mapeable
 
 data class RestaurantReservation(
     override val id: String,
     val dateTime: ZonedDateTime,
     val place: Place,
     override val city: Place,
-) : TripEntity, TripEvent, WithCity
+) : TripEntity, TripEvent, Mapeable
+
+data class FlexibleDaySection(
+    val name: String,
+    val date: ZonedDateTime,
+    override val city: Place,
+    val categories: List<FlexibleDayCategory>,
+) : TripEvent, WithCity
+
+data class FlexibleDayCategory(
+    val name: String,
+    val items: List<FlexibleDayItem>,
+)
+
+data class FlexibleDayItem(
+    val id: String,
+    val place: Place,
+    val note: String,
+)
 
 data class AirportSearchResult(
     val iata: String,
