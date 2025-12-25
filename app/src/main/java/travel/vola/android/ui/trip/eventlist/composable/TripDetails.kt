@@ -394,6 +394,8 @@ private fun TripDetailItem(
 
         is TripItemState.SuggestionsItemState -> SuggestionsListItem(event)
 
+        is TripItemState.FlexibleDaySectionState -> {}
+
         is TripItemState.EventItemState -> Surface(
             onClick = { onItemTapped(event.id) },
         ) {
@@ -406,7 +408,7 @@ private fun TripDetailItem(
                     event.time,
                     event.destination,
                     event.airport,
-                    event.backgroundStyle.asEvenListItemPosition(),
+                    event.backgroundStyle.asEventItemPosition(),
                 )
 
                 is FlightArrivalItemState -> ArrivalEventListItem(
@@ -416,7 +418,7 @@ private fun TripDetailItem(
                     event.dayOfWeek,
                     event.time,
                     event.airport,
-                    event.backgroundStyle.asEvenListItemPosition(),
+                    event.backgroundStyle.asEventItemPosition(),
                 )
 
                 is HotelCheckInItemState -> CheckinListItem(
@@ -426,7 +428,7 @@ private fun TripDetailItem(
                     event.dayOfWeek,
                     event.time,
                     event.hotelName,
-                    event.backgroundStyle.asEvenListItemPosition(),
+                    event.backgroundStyle.asEventItemPosition(),
                 )
 
                 is HotelCheckOutItemState -> CheckoutListItem(
@@ -436,7 +438,7 @@ private fun TripDetailItem(
                     event.dayOfWeek,
                     event.time,
                     event.hotelName,
-                    event.backgroundStyle.asEvenListItemPosition(),
+                    event.backgroundStyle.asEventItemPosition(),
                 )
 
                 is TripItemState.TimedPlaceItemState -> TimedPlaceListItem(event, highlightDate)
