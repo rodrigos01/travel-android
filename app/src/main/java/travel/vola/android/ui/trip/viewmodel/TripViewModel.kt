@@ -488,7 +488,7 @@ class TripViewModel(
 
             is TripItemState.PlaceItemState -> trip.value?.places?.firstOrNull { it.id == id }
             is TripItemState.RestaurantReservationItemState -> trip.value?.restaurants?.firstOrNull { it.id == id }
-            is TripItemState.FlexibleDaySectionState -> trip.value?.flexibleSections?.firstOrNull { it.id == id }
+            is TripItemState.FlexibleDaySectionState -> null
         }
 
     private fun SuggestionsUseCase.TimedPlaceSuggestion.asTimedPlace(city: Place): TimedPlace {
@@ -526,9 +526,16 @@ class TripViewModel(
                 cities[place.cityId]?.let { place.asTimedPlace(it) }
             }
         }
+        val sections = suggestions?.days?.flatMap { day ->
+            day.sections.mapNotNull { section ->
+                cities[section.city.id]?.let {
+                    section.copy(city = it)
+                }
+            }
+        } ?: emptyList()
         val events =
             trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants + trip.flexibleSections + (suggestedPlaces
-                ?: emptyList())
+                ?: emptyList()) + sections
         val pairs = events.flatMap { event ->
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
