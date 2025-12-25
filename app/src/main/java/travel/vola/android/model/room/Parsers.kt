@@ -62,6 +62,7 @@ fun RoomData.Trip.toAppDataModel(): Trip {
         lodgings = appLodgings,
         places = appPlaces,
         restaurants = appRestaurants,
+        flexibleSections = emptyList(),
     )
 }
 
