@@ -106,6 +106,7 @@ object GenAIData {
         val id: String,
         val name: String,
         val reason: String,
+        val category: String,
         val cityId: String,
         val searchQuery: String,
         val startTime: String?,
@@ -114,7 +115,6 @@ object GenAIData {
 
     @Serializable
     data class Section(
-        val type: String,
         val name: String,
         val cityId: String,
         val suggestions: List<SectionSuggestions>,

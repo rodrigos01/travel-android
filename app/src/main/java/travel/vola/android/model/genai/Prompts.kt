@@ -99,7 +99,7 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
         outputSchema = itinerarySchema
     ),
     DAILY_ITINERARY(
-        prompt = "Based on the trip itinerary below, generate a day-by-day itinerary considering the user parameters and the type of itinerary they've chosen. Consider travel time between cities for the itineraries on travel days but don't include travel details (hotel check-in or check-out, transportation) or lodging to it. Open-ended daily itineraries should have sections for each day with a list of suggested places in each and may have timed places for time-sensitive, must-have activities. Sections in Open-ended itineraries must be logically organized by areas so that the user is able to explore a given area or neighborhood using the suggestions. Detailed itineraries should only list timed places, so sections, and must consider realistic travel time between locations for their times and have specific stops for lunch and dinner. Both itinerary types must consider times of operation of places on the dates they're been suggested. For each city, suggest 3 predicted possible changes the user might want to make to the generated day-by-day itinerary for it.",
+        prompt = "Based on the trip itinerary below, generate a day-by-day itinerary considering the user parameters and the type of itinerary they've chosen. Consider travel time between cities for the itineraries on travel days but don't include travel details (hotel check-in or check-out, transportation) or lodging to it. Open-ended daily itineraries should have sections for each day with a list of suggested places in each separated by categories. The sections would be parts of the day dedicated to a common geographical area grouping all suggestions. Categories should be the single, primary function of places being suggested, do not use hybrid category names. If a place serves multiple purposes, choose the one most relevant to the user’s itinerary. Sections should have a mix of food options and places that match the user’s preferences. A single day would only have multiple sections if the user would be visiting two different areas on that day. Open-ended daily itineraries may also have timed places for time-sensitive, must-have activities. Detailed itineraries should only list timed places, no sections, and must consider realistic travel time between locations for their times and have specific stops for lunch and dinner. Both itinerary types must consider times of operation of places on the dates they're been suggested. For each city, suggest 3 predicted possible changes the user might want to make to the generated day-by-day itinerary for it.",
         outputSchema = Schema.obj(
             mapOf(
                 "predictedChanges" to Schema.array(
@@ -121,22 +121,13 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                             "sections" to Schema.array(
                                 Schema.obj(
                                     mapOf(
-                                        "type" to Schema.enumeration(
-                                            listOf(
-                                                "morning",
-                                                "afternoon",
-                                                "evening",
-                                                "late-night",
-                                            ),
-                                            description = "type of section in the day",
-                                        ),
                                         "cityId" to Schema.string("id of the city as provided in the original itinerary"),
                                         "name" to Schema.string("A name for the section"),
                                         "suggestions" to Schema.array(
                                             Schema.obj(
                                                 mapOf(
                                                     "category" to Schema.string("the category of the places being suggested"),
-                                                    "places" to Schema.array(placeSchema)
+                                                    "places" to Schema.array(placeSchema, minItems = 3)
                                                 )
                                             )
                                         )
@@ -210,6 +201,7 @@ private val placeSchema = Schema.obj(
     mapOf(
         "id" to Schema.string("A randomized unique string"),
         "name" to Schema.string("name of the place"),
+        "category" to Schema.string("category of the place so it can be grouped with other suggestions"),
         "cityId" to Schema.string("id of the city as provided in the original itinerary"),
         "reason" to Schema.string("brief reason for the userto visit this place"),
         "searchQuery" to Schema.string("query to search for the place in google maps"),
