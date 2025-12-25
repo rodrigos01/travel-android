@@ -72,8 +72,8 @@ import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.rememberMapScaffoldState
 import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.common.ui.state.MarkerType
-import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.viewModel
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.Identifiable
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.AddPlanType
@@ -394,8 +394,6 @@ private fun TripDetailItem(
 
         is TripItemState.SuggestionsItemState -> SuggestionsListItem(event)
 
-        is TripItemState.FlexibleDaySectionState -> {}
-
         is TripItemState.EventItemState -> Surface(
             onClick = { onItemTapped(event.id) },
         ) {
@@ -445,6 +443,12 @@ private fun TripDetailItem(
                 is TripItemState.RestaurantReservationItemState -> RestaurantListItem(
                     event,
                     highlightDate
+                )
+
+                is TripItemState.FlexibleDaySectionState -> FlexibleDaySectionListItem(
+                    event,
+                    highlightDate = highlightDate,
+                    position = event.backgroundStyle.asEventItemPosition(),
                 )
             }
         }
