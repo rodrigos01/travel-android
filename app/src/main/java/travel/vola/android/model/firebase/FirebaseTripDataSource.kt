@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import travel.vola.android.extensions.asFlow
 import travel.vola.android.model.data.DataSourceType
+import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.RestaurantReservation
@@ -110,6 +111,13 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
         )
     }
 
+    override suspend fun saveFlexibleSection(
+        tripId: String,
+        flexibleSection: FlexibleDaySection
+    ) {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun deleteTimedPlace(tripId: String, timedPlaceId: String) {
         val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
         firestore.document("/trips/$tripId").update(
@@ -136,6 +144,13 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
             "restaurants",
             trip.restaurants.filterNot { it.id == restaurantReservationId },
         )
+    }
+
+    override suspend fun deleteFlexibleSection(
+        tripId: String,
+        flexibleSectionId: String
+    ) {
+        TODO("Not yet implemented")
     }
 
     private suspend fun getTrip(tripId: String) = firestore.document("/trips/$tripId").get().await()

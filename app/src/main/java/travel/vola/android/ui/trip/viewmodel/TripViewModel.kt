@@ -290,7 +290,7 @@ class TripViewModel(
                 is Lodging -> repository.saveLodging(tripId, entity)
                 is TimedPlace -> repository.saveTimedPlace(tripId, entity)
                 is RestaurantReservation -> repository.saveRestaurantReservation(tripId, entity)
-                is FlexibleDaySection -> {} // TODO: Implement saving flexible section
+                is FlexibleDaySection -> repository.saveFlexibleSection(tripId, entity)
             }
         }
     }
@@ -320,7 +320,7 @@ class TripViewModel(
                     entity.id
                 )
 
-                is FlexibleDaySection -> {} // TODO: Implement deleting flexible section
+                is FlexibleDaySection -> repository.deleteFlexibleSection(tripId, entity.id)
             }
         }
     }
