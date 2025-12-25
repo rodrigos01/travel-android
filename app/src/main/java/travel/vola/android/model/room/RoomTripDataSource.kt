@@ -3,6 +3,7 @@ package travel.vola.android.model.room
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import travel.vola.android.model.data.DataSourceType
+import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
@@ -179,6 +180,13 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
         )
     }
 
+    override suspend fun saveFlexibleSection(
+        tripId: String,
+        flexibleSection: FlexibleDaySection
+    ) {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun deleteFlight(tripId: String, flightId: String) {
         dao.getFlight(tripId, flightId).let { flight ->
             dao.deleteFlight(flight)
@@ -204,6 +212,13 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
         dao.getRestaurantReservation(tripId, restaurantReservationId).let { restaurantReservation ->
             dao.deleteRestaurantReservation(restaurantReservation)
         }
+    }
+
+    override suspend fun deleteFlexibleSection(
+        tripId: String,
+        flexibleSectionId: String
+    ) {
+        TODO("Not yet implemented")
     }
 
     private suspend fun withTrip(tripId: String, block: suspend (RoomData.Schema.Trip) -> Unit) =
