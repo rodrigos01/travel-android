@@ -115,7 +115,11 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
         tripId: String,
         flexibleSection: FlexibleDaySection
     ) {
-        TODO("Not yet implemented")
+        val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
+        firestore.document("/trips/$tripId").update(
+            "flexibleSections",
+            trip.flexibleSections.addOrReplace(flexibleSection.toFirebaseDataModel()) { it.id == flexibleSection.id },
+        )
     }
 
     override suspend fun deleteTimedPlace(tripId: String, timedPlaceId: String) {
@@ -150,7 +154,11 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
         tripId: String,
         flexibleSectionId: String
     ) {
-        TODO("Not yet implemented")
+        val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
+        firestore.document("/trips/$tripId").update(
+            "flexibleSections",
+            trip.flexibleSections.filterNot { it.id == flexibleSectionId },
+        )
     }
 
     private suspend fun getTrip(tripId: String) = firestore.document("/trips/$tripId").get().await()
