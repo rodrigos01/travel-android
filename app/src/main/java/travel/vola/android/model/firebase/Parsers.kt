@@ -1,10 +1,13 @@
 package travel.vola.android.model.firebase
 
-import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.asISO8601String
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.AnsweredQuestion
 import travel.vola.android.model.data.BasicInformation
+import travel.vola.android.model.data.FlexibleDayCategory
+import travel.vola.android.model.data.FlexibleDayItem
+import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.data.GroupType
@@ -37,7 +40,7 @@ fun FirebaseData.Trip.toAppDataModel(): Trip {
         lodgings = appLodgings,
         places = appPlaces,
         restaurants = appRestaurants,
-        flexibleSections = emptyList(),
+        flexibleSections = flexibleSections.map { it.toAppDataModel() },
     )
 }
 
@@ -226,6 +229,44 @@ fun FirebaseData.GroupType.toAppDataModel() = when (this) {
     FirebaseData.GroupType.COWORKERS -> GroupType.COWORKERS
     FirebaseData.GroupType.COUPLE -> GroupType.COUPLE
 }
+
+fun FirebaseData.FlexibleDaySection.toAppDataModel(): FlexibleDaySection {
+    return FlexibleDaySection(
+        id = id,
+        name = name,
+        date = date.toTime(),
+        categories = categories.map { category ->
+            FlexibleDayCategory(
+                name = category.name,
+                items = category.items.map {
+                    FlexibleDayItem(
+                        id = it.id,
+                        place = it.place.toAppDataModel(),
+                        note = it.note
+                    )
+                }
+            )
+        }
+    )
+}
+
+fun FlexibleDaySection.toFirebaseDataModel() = FirebaseData.FlexibleDaySection(
+    id = id,
+    name = name,
+    date = date.toFirebaseDataModel(),
+    categories = categories.map { category ->
+        FirebaseData.FlexibleSectionCategory(
+            name = category.name,
+            items = category.items.map {
+                FirebaseData.FlexibleSectionItem(
+                    id = it.id,
+                    place = it.place.toFirebaseDataModel(),
+                    note = it.note
+                )
+            },
+        )
+    }
+)
 
 fun String.toTime(): ZonedDateTime = zonedDateTime(this)
 
