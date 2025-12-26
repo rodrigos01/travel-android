@@ -46,7 +46,6 @@ import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.data.TripEntity
 import travel.vola.android.model.data.TripEvent
-import travel.vola.android.model.data.TripPreferences
 import travel.vola.android.model.data.WithCity
 import travel.vola.android.model.genai.GenAIRepository
 import travel.vola.android.model.repository.TripRepository
@@ -477,7 +476,7 @@ class TripViewModel(
             }
         }
         val events =
-            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants + (suggestedPlaces
+            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants + trip.flexibleSections + (suggestedPlaces
                 ?: emptyList())
         val pairs = events.flatMap { event ->
             when (event) {
