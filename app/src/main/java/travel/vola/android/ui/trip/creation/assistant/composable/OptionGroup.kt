@@ -4,20 +4,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowScope
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import travel.vola.android.common.ui.components.InlinedTextField
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.UiState
 
 
@@ -46,31 +37,6 @@ fun OptionGroup(
             },
         )
     }
-}
-
-@Composable
-fun InlinedTextField(
-    initialValue: String = "",
-    onDone: (String) -> Unit,
-    label: @Composable (() -> Unit)? = null,
-) {
-    var textFieldContent by remember { mutableStateOf(initialValue) }
-    TextField(
-        value = textFieldContent,
-        onValueChange = { textFieldContent = it },
-        singleLine = true,
-        colors = TextFieldDefaults.colors(
-            unfocusedContainerColor = Color.Transparent,
-            focusedContainerColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-        ),
-        modifier = Modifier.widthIn(min = 120.dp),
-        label = label,
-        keyboardActions = KeyboardActions(onDone = {
-            onDone(textFieldContent)
-            textFieldContent = ""
-        })
-    )
 }
 
 fun listOfOptions(vararg options: String, selected: Int = -1): List<UiState.Option> =
