@@ -66,6 +66,8 @@ class TripViewModel(
     private val navController: NavController,
     private val useCaseScope: CoroutineScope = createUseCaseScope(),
     private val addPlanUseCase: AddPlanUseCase = AddPlanUseCase(
+        tripId = tripId,
+        tripRepository = repository,
         placeRepository = placeRepository,
         coroutineScope = useCaseScope,
     ),
@@ -308,7 +310,8 @@ class TripViewModel(
     }
 
     override fun delete(type: AddPlanItemState.Type, itemId: String) {
-        val entity = (reversibleItems[itemId] as? TripItemState.Editable)?.entity ?: return
+        val entity = (reversibleItems[itemId] as? TripItemState.Editable)?.entity
+            ?: trip.value?.flexibleSections?.firstOrNull { it.id == itemId } ?: return
         addPlanUseCase.removeItem(itemId)
         viewModelScope.launch {
             when (entity) {
@@ -646,13 +649,14 @@ class TripViewModel(
             )
 
             is FlexibleDaySection -> TripItemState.FlexibleDaySectionState(
-                id = event.name,
+                id = event.id,
                 timestamp = event.date,
                 showDate = showDate,
                 dayOfMonth = event.date.dayOfMonthString,
                 dayOfWeek = event.date.dayOfWeekString,
                 name = event.name,
-                subtitle = event.categories.flatMap { it.items.map { it.place.name } }.take(3).joinToString(", "),
+                subtitle = event.categories.flatMap { it.items.map { it.place.name } }.take(3)
+                    .joinToString(", "),
                 categories = event.categories.map { category ->
                     TripItemState.DaySectionCategory(
                         name = category.name,

@@ -69,7 +69,7 @@ fun FlexibleDaySectionListItem(
     onDeleteConfirmed: () -> Unit = {},
     onCategoryAdded: (String) -> Unit = {},
     onLocationSearchTextChanged: (CharSequence) -> Unit = {},
-    onLocationSearchResultSelected: (Int) -> Unit = {},
+    onLocationSearchResultSelected: (Int, Int) -> Unit = { _, _ -> },
 ) {
     EventItem(
         showDate = state.showDate,
@@ -209,7 +209,12 @@ fun FlexibleDaySectionListItem(
                                         onDismiss = { showAddPlaceDialog = false },
                                         searchResults = emptyList(),
                                         onLocationSearchTextChanged,
-                                        onLocationSearchResultSelected,
+                                        onLocationSearchResultSelected = {
+                                            onLocationSearchResultSelected(
+                                                it,
+                                                selectedCategoryIndex
+                                            )
+                                        },
                                     )
                                 }
                                 OutlinedCard(
