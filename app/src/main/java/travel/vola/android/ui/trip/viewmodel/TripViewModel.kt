@@ -354,7 +354,7 @@ class TripViewModel(
 
     private fun genItems(trip: Trip): List<TripItemState> {
         val events =
-            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants
+            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants + trip.flexibleSections
         val pairs = events.flatMap { event ->
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
