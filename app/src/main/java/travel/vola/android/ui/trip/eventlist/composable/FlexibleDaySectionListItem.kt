@@ -18,21 +18,27 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +54,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import travel.vola.android.ui.theme.AppTheme
+import travel.vola.android.ui.trip.creation.composable.ConfirmationDialog
 import travel.vola.android.ui.trip.state.TripItemState
 import java.time.ZonedDateTime
 
@@ -57,7 +64,8 @@ fun FlexibleDaySectionListItem(
     state: TripItemState.FlexibleDaySectionState,
     modifier: Modifier = Modifier,
     highlightDate: Boolean = false,
-    position: EventItemPosition = EventItemPosition.SINGLE
+    position: EventItemPosition = EventItemPosition.SINGLE,
+    onDeleteConfirmed: () -> Unit = {},
 ) {
     EventItem(
         showDate = state.showDate,
@@ -66,7 +74,19 @@ fun FlexibleDaySectionListItem(
         dayOfWeekString = state.dayOfWeek,
         position = position
     ) {
-        var expanded by remember { mutableStateOf(false) }
+        var showDeleteConfirmation by remember { mutableStateOf(false) }
+        if (showDeleteConfirmation) {
+            ConfirmationDialog(
+                onConfirm = onDeleteConfirmed,
+                onDismiss = { showDeleteConfirmation = false },
+                confirmButtonLabel = "Delete",
+                confirmButtonColors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                dismissButtonLabel = "Cancel"
+            ) {
+                Text("Delete ${state.name}?")
+            }
+        }
+        var expanded by remember { mutableStateOf(true) }
         AnimatedContent(expanded) {
             if (it) {
                 Column(
@@ -78,22 +98,32 @@ fun FlexibleDaySectionListItem(
                         )
                 ) {
                     Row(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .clickable(onClick = { expanded = false })
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(
-                            state.name,
-                            style = MaterialTheme.typography.labelLarge,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Icon(
-                            Icons.Rounded.KeyboardArrowDown,
-                            tint = LocalContentColor.current,
-                            contentDescription = "collapse",
-                        )
+                        Row(
+                            modifier = Modifier
+                                .padding(start = 16.dp)
+                                .clickable(onClick = { expanded = false })
+                                .weight(1f),
+                        ) {
+                            Text(
+                                state.name,
+                                style = MaterialTheme.typography.labelLarge,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Icon(
+                                Icons.Rounded.KeyboardArrowDown,
+                                tint = LocalContentColor.current,
+                                contentDescription = "collapse",
+                            )
+                        }
+                        IconButton(
+                            onClick = { showDeleteConfirmation = true },
+                        ) {
+                            Icon(Icons.Filled.Delete, contentDescription = null)
+                        }
                     }
                     var selectedCategoryIndex by remember { mutableIntStateOf(0) }
                     LazyRow(
@@ -122,8 +152,8 @@ fun FlexibleDaySectionListItem(
                             }
                         }
                         item {
-                            TextButton(onClick = {}) {
-                                Text("Add")
+                            OutlinedButton(onClick = {}) {
+                                Text("Add Category")
                             }
                         }
                     }
@@ -167,22 +197,28 @@ fun FlexibleDaySectionListItem(
                                 }
                             }
                         }
-                        item {
-                            CategoryItem(containerColor = MaterialTheme.colorScheme.inversePrimary) {
-                                Icon(
-                                    Icons.Rounded.Add,
-                                    contentDescription = "add option",
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .aspectRatio(1F)
-                                )
-                                Text(
-                                    "Add",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    modifier = Modifier
-                                        .padding(8.dp)
-                                        .align(Alignment.CenterHorizontally)
-                                )
+                        if (state.categories.isNotEmpty()) {
+                            item {
+                                OutlinedCard(onClick = {}, modifier = Modifier.width(96.dp)) {
+                                    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSecondaryContainer) {
+                                        Column {
+                                            Icon(
+                                                Icons.Rounded.Add,
+                                                contentDescription = "add option",
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .aspectRatio(1F)
+                                            )
+                                            Text(
+                                                "Add Place",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                modifier = Modifier
+                                                    .padding(8.dp)
+                                                    .align(Alignment.CenterHorizontally)
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
