@@ -1,6 +1,7 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,9 +32,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
@@ -53,6 +52,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import travel.vola.android.common.ui.components.OutlinedInlinedTextField
+import travel.vola.android.common.ui.components.SearchBoxDialog
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.ConfirmationDialog
 import travel.vola.android.ui.trip.state.TripItemState
@@ -66,6 +67,9 @@ fun FlexibleDaySectionListItem(
     highlightDate: Boolean = false,
     position: EventItemPosition = EventItemPosition.SINGLE,
     onDeleteConfirmed: () -> Unit = {},
+    onCategoryAdded: (String) -> Unit = {},
+    onLocationSearchTextChanged: (CharSequence) -> Unit = {},
+    onLocationSearchResultSelected: (Int) -> Unit = {},
 ) {
     EventItem(
         showDate = state.showDate,
@@ -152,7 +156,7 @@ fun FlexibleDaySectionListItem(
                             }
                         }
                         item {
-                            OutlinedButton(onClick = {}) {
+                            OutlinedInlinedTextField(onDone = onCategoryAdded) {
                                 Text("Add Category")
                             }
                         }
@@ -199,7 +203,19 @@ fun FlexibleDaySectionListItem(
                         }
                         if (state.categories.isNotEmpty()) {
                             item {
-                                OutlinedCard(onClick = {}, modifier = Modifier.width(96.dp)) {
+                                var showAddPlaceDialog by remember { mutableStateOf(false) }
+                                AnimatedVisibility(visible = showAddPlaceDialog) {
+                                    SearchBoxDialog(
+                                        onDismiss = { showAddPlaceDialog = false },
+                                        searchResults = emptyList(),
+                                        onLocationSearchTextChanged,
+                                        onLocationSearchResultSelected,
+                                    )
+                                }
+                                OutlinedCard(
+                                    onClick = { showAddPlaceDialog = true },
+                                    modifier = Modifier.width(96.dp)
+                                ) {
                                     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSecondaryContainer) {
                                         Column {
                                             Icon(
