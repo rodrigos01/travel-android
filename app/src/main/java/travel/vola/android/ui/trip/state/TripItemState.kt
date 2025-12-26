@@ -189,11 +189,11 @@ sealed interface TripItemState {
         override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
         override val sectionId: String? = null,
         val name: String,
+        override val subtitle: String,
         val categories: List<DaySectionCategory>,
     ) : EventItemState, EventWithDateState, Focusable {
         override val time: String = ""
         override val title: String = name
-        override val subtitle: String? = null
     }
 
     data class DaySectionCategory(

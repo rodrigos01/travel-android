@@ -90,7 +90,7 @@ fun FlexibleDaySectionListItem(
                 Text("Delete ${state.name}?")
             }
         }
-        var expanded by remember { mutableStateOf(true) }
+        var expanded by remember { mutableStateOf(false) }
         AnimatedContent(expanded) {
             if (it) {
                 Column(
@@ -257,6 +257,7 @@ fun FlexibleDaySectionListItem(
                         )
                     },
                     headlineContent = { Text(state.name) },
+                    supportingContent = { Text(state.subtitle) },
                     trailingContent = {
                         Icon(
                             Icons.AutoMirrored.Rounded.KeyboardArrowRight,
@@ -302,6 +303,7 @@ fun FlexibleDaySectionListItemPreview() {
                         dayOfWeek = "Wed",
                         showDate = true,
                         name = "Södermalm (SoFo) exploration",
+                        subtitle = "Drop Cofee, Herr Judit, RAINS",
                         categories = listOf(
                             TripItemState.DaySectionCategory(
                                 name = "☕ Work-base coffee shops",
