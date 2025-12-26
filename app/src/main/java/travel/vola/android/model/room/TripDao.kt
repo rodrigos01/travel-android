@@ -39,6 +39,12 @@ interface TripDao {
         restaurantReservationId: String,
     ): Schema.RestaurantReservation
 
+    @Query("SELECT * FROM flexibleSection WHERE tripId = :tripId AND id = :flexibleSectionId")
+    suspend fun getFlexibleSection(
+        tripId: String,
+        flexibleSectionId: String,
+    ): Schema.FlexibleSection
+
     @Insert
     suspend fun addTrip(trip: Schema.Trip)
 
@@ -66,6 +72,15 @@ interface TripDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun savePlace(place: RoomData.Place)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveFlexibleSection(flexibleSection: Schema.FlexibleSection)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveFlexibleSectionCategory(category: Schema.FlexibleSectionCategory)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveFlexibleSectionItem(item: Schema.FlexibleSectionItem)
+
     @Delete
     suspend fun deleteTrip(trip: Schema.Trip)
 
@@ -80,4 +95,7 @@ interface TripDao {
 
     @Delete
     suspend fun deleteRestaurantReservation(restaurantReservation: Schema.RestaurantReservation)
+
+    @Delete
+    suspend fun deleteFlexibleSection(flexibleSection: Schema.FlexibleSection)
 }

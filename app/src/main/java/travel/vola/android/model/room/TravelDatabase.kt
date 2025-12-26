@@ -9,10 +9,11 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 
 @Database(
-    entities = [RoomData.Schema.Trip::class, RoomData.Schema.Flight::class, RoomData.Schema.FlightSegment::class, RoomData.Schema.Airport::class, RoomData.Schema.Lodging::class, RoomData.Schema.TimedPlace::class, RoomData.Place::class, RoomData.Schema.RestaurantReservation::class],
-    version = 4,
+    entities = [RoomData.Schema.Trip::class, RoomData.Schema.Flight::class, RoomData.Schema.FlightSegment::class, RoomData.Schema.Airport::class, RoomData.Schema.Lodging::class, RoomData.Schema.TimedPlace::class, RoomData.Place::class, RoomData.Schema.RestaurantReservation::class, RoomData.Schema.FlexibleSection::class, RoomData.Schema.FlexibleSectionCategory::class, RoomData.Schema.FlexibleSectionItem::class],
+    version = 5,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
+        AutoMigration(from = 4, to = 5),
     ]
 )
 @TypeConverters(Converters::class)

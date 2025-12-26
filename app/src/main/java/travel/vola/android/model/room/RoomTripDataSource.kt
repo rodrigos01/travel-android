@@ -184,7 +184,35 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
         tripId: String,
         flexibleSection: FlexibleDaySection
     ) {
-        TODO("Not yet implemented")
+        flexibleSection.categories.forEach { category ->
+            val categoryId = UUID.randomUUID().toString()
+            category.items.forEach {
+                savePlace(it.place)
+                dao.saveFlexibleSectionItem(
+                    RoomData.Schema.FlexibleSectionItem(
+                        id = it.id,
+                        categoryId = categoryId,
+                        place = it.place.id,
+                        note = it.note,
+                    )
+                )
+            }
+            dao.saveFlexibleSectionCategory(
+                RoomData.Schema.FlexibleSectionCategory(
+                    id = categoryId,
+                    sectionId = flexibleSection.id,
+                    name = category.name,
+                )
+            )
+        }
+        dao.saveFlexibleSection(
+            RoomData.Schema.FlexibleSection(
+                id = flexibleSection.id,
+                tripId = tripId,
+                name = flexibleSection.name,
+                date = flexibleSection.date,
+            )
+        )
     }
 
     override suspend fun deleteFlight(tripId: String, flightId: String) {
@@ -218,7 +246,8 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
         tripId: String,
         flexibleSectionId: String
     ) {
-        TODO("Not yet implemented")
+        val section = dao.getFlexibleSection(tripId, flexibleSectionId)
+        dao.deleteFlexibleSection(section)
     }
 
     private suspend fun withTrip(tripId: String, block: suspend (RoomData.Schema.Trip) -> Unit) =
