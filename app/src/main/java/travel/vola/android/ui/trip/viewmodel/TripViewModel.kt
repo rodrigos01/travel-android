@@ -652,6 +652,7 @@ class TripViewModel(
                 dayOfMonth = event.date.dayOfMonthString,
                 dayOfWeek = event.date.dayOfWeekString,
                 name = event.name,
+                subtitle = event.categories.flatMap { it.items.map { it.place.name } }.take(3).joinToString(", "),
                 categories = event.categories.map { category ->
                     TripItemState.DaySectionCategory(
                         name = category.name,
