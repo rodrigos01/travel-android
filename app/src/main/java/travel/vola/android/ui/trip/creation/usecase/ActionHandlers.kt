@@ -76,4 +76,7 @@ interface AddFlightItemActionHandler {
 
 interface AddFlexibleSectionItemActionHandler {
     fun sectionNameChanged(itemId: String, content: CharSequence)
+    fun onFlexibleCategoryAdded(itemId: String, category: String)
+    fun onFlexibleItemSearchTextChanged(itemId: String, content: CharSequence)
+    fun onFlexibleItemSearchResultSelected(itemId: String, index: Int, categoryIndex: Int)
 }

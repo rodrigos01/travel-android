@@ -449,6 +449,31 @@ private fun TripDetailItem(
                     event,
                     highlightDate = highlightDate,
                     position = event.backgroundStyle.asEventItemPosition(),
+                    onDeleteConfirmed = {
+                        addPlanItemActionHandler.delete(
+                            AddPlanItemState.Type.FlexibleSection,
+                            event.id
+                        )
+                    },
+                    onCategoryAdded = {
+                        addPlanItemActionHandler.onFlexibleCategoryAdded(
+                            event.id,
+                            it
+                        )
+                    },
+                    onLocationSearchTextChanged = {
+                        addPlanItemActionHandler.onFlexibleItemSearchTextChanged(
+                            event.id,
+                            it
+                        )
+                    },
+                    onLocationSearchResultSelected = { index, categoryIndex ->
+                        addPlanItemActionHandler.onFlexibleItemSearchResultSelected(
+                            event.id,
+                            index,
+                            categoryIndex,
+                        )
+                    }
                 )
             }
         }

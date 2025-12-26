@@ -14,6 +14,7 @@ import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.TripEntity
+import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.trip.creation.usecase.AddFlexibleSectionItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddFlightItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandler
@@ -32,6 +33,8 @@ import java.time.ZonedDateTime
 import java.util.UUID
 
 class AddPlanUseCase(
+    tripId: String,
+    tripRepository: TripRepository,
     placeRepository: PlaceRepository,
     coroutineScope: CoroutineScope,
     private val addFlightUseCase: AddFlightUseCase = AddFlightUseCase(coroutineScope = coroutineScope),
@@ -41,7 +44,11 @@ class AddPlanUseCase(
     ),
     private val addPlaceUseCase: AddPlaceUseCase = AddPlaceUseCase(coroutineScope = coroutineScope),
     private val addRestaurantUseCase: AddRestaurantUseCase = AddRestaurantUseCase(coroutineScope = coroutineScope),
-    private val addFlexibleSectionUseCase: AddFlexibleSectionUseCase = AddFlexibleSectionUseCase(),
+    private val addFlexibleSectionUseCase: AddFlexibleSectionUseCase = AddFlexibleSectionUseCase(
+        tripId,
+        tripRepository,
+        coroutineScope,
+    ),
 ) : AddPlanItemActionHandler, AddFlightItemActionHandler by addFlightUseCase,
     AddLodgingItemActionHandler by addLodgingUseCase, AddPlaceItemActionHandler by addPlaceUseCase,
     AddRestaurantItemActionHandler by addRestaurantUseCase,

@@ -303,4 +303,11 @@ object NoOpActionHandler : AddPlanItemActionHandler {
 
     override fun restaurantTextChanged(itemId: String, content: CharSequence) = Unit
     override fun sectionNameChanged(itemId: String, content: CharSequence) = Unit
+    override fun onFlexibleCategoryAdded(itemId: String, category: String) = Unit
+    override fun onFlexibleItemSearchTextChanged(itemId: String, content: CharSequence) = Unit
+    override fun onFlexibleItemSearchResultSelected(
+        itemId: String,
+        index: Int,
+        categoryIndex: Int
+    )= Unit
 }
