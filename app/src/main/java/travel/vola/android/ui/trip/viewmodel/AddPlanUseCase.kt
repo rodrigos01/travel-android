@@ -11,6 +11,7 @@ import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.TripEntity
@@ -59,6 +60,7 @@ class AddPlanUseCase(
         val dateSelectionEnabled: Boolean = true,
         val typeSelectionEnabled: Boolean = true,
         val deleteEnabled: Boolean = false,
+        val place: Place? = null,
     )
 
     interface AddItemUseCase<E : TripEntity, T : AddPlanItemState> {
@@ -87,11 +89,12 @@ class AddPlanUseCase(
         time: ZonedDateTime,
         dateSelectionEnabled: Boolean = true,
         type: AddPlanItemState.Type = AddPlanItemState.Type.Flight,
+        place: Place? = null,
     ) {
         type.useCase().addItem(
             id = id ?: UUID.randomUUID().toString(),
             time,
-            StateParams(dateSelectionEnabled),
+            StateParams(dateSelectionEnabled, place = place),
         )
     }
 

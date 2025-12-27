@@ -217,6 +217,7 @@ class TripViewModel(
             id = (tapped as? TripItemState.Replaceable)?.id,
             time = tapped.timestamp,
             dateSelectionEnabled = allowStartDateSelection,
+            place = findPlaceForTimestamp(tapped.timestamp),
         )
     }
 
@@ -226,6 +227,7 @@ class TripViewModel(
             id = (tapped as Identifiable).id,
             time = tapped.timestamp,
             dateSelectionEnabled = false,
+            place = findPlaceForTimestamp(tapped.timestamp),
         )
     }
 
@@ -268,13 +270,13 @@ class TripViewModel(
         } else {
             viewState.value.items.getOrNull(currentFocusedIndex)
         } ?: viewState.value.items.lastOrNull()
-        val focusedDate = focusedItem?.timestamp
+        val timestamp = focusedItem?.timestamp ?: ZonedDateTime.now()
         if (type != null) {
             addPlanUseCase.createAddPlanItem(
                 id = ADDING_PLAN_STATE_ID,
-                focusedDate
-                    ?: ZonedDateTime.now(),
-                type = type
+                time = timestamp,
+                type = type,
+                place = findPlaceForTimestamp(timestamp)
             )
         }
     }
@@ -332,6 +334,29 @@ class TripViewModel(
                 is FlexibleDaySection -> repository.deleteFlexibleSection(tripId, entity.id)
             }
         }
+    }
+
+    private fun findPlaceForTimestamp(timestamp: ZonedDateTime): Place? {
+        val currentTrip = trip.value ?: return null
+        val entities =
+            currentTrip.places + currentTrip.restaurants + currentTrip.lodgings + currentTrip.flights.flatMap { it.segments }
+        return entities.firstOrNull {
+            it.timestamp().toLocalDate() == timestamp.toLocalDate()
+        }?.let {
+            when (it) {
+                is WithCity -> it.city
+                is FlightSegment -> it.getPlace(it.arrival)
+                is FlexibleDaySection -> null
+            }
+        }
+    }
+
+    private fun TripEvent.timestamp(useFlightArrival: Boolean = true) = when (this) {
+        is FlightSegment -> if (useFlightArrival) arrival else departure
+        is TimedPlace -> startDateTime
+        is Lodging -> checkIn
+        is RestaurantReservation -> dateTime
+        is FlexibleDaySection -> date
     }
 
     private val TripItemState.Editable.entity: TripEntity?
