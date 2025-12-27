@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -67,6 +69,7 @@ fun FlexibleDaySectionListItem(
     modifier: Modifier = Modifier,
     highlightDate: Boolean = false,
     position: EventItemPosition = EventItemPosition.SINGLE,
+    startExpanded: Boolean = false,
     onDeleteConfirmed: () -> Unit = {},
     onCategoryAdded: (String) -> Unit = {},
     onLocationSearchTextChanged: (CharSequence) -> Unit = {},
@@ -91,7 +94,7 @@ fun FlexibleDaySectionListItem(
                 Text("Delete ${state.name}?")
             }
         }
-        var expanded by remember { mutableStateOf(false) }
+        var expanded by remember { mutableStateOf(startExpanded) }
         AnimatedContent(expanded) { isExpanded ->
             if (isExpanded) {
                 Column(
@@ -165,7 +168,7 @@ fun FlexibleDaySectionListItem(
                     val options =
                         state.categories.getOrNull(selectedCategoryIndex)?.items ?: emptyList()
                     LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         modifier = Modifier.padding(top = 8.dp)
                     ) {
@@ -192,7 +195,12 @@ fun FlexibleDaySectionListItem(
                                         bottom = 8.dp
                                     )
                                 ) {
-                                    Text(option.title, style = MaterialTheme.typography.titleSmall)
+                                    Text(
+                                        option.title,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
                                     Text(
                                         option.subtitle,
                                         maxLines = 1,
@@ -225,10 +233,10 @@ fun FlexibleDaySectionListItem(
                                 }
                                 OutlinedCard(
                                     onClick = { showAddPlaceDialog = true },
-                                    modifier = Modifier.width(96.dp)
+                                    modifier = Modifier.size(width = 96.dp, height = 144.dp)
                                 ) {
                                     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSecondaryContainer) {
-                                        Column {
+                                        Column(verticalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxHeight()) {
                                             Icon(
                                                 Icons.Rounded.Add,
                                                 contentDescription = "add option",
@@ -290,7 +298,7 @@ private fun CategoryItem(
 ) {
     Column(
         modifier = Modifier
-            .width(96.dp)
+            .size(width = 96.dp, height = 144.dp)
             .background(
                 containerColor,
                 shape = MaterialTheme.shapes.large
@@ -326,11 +334,11 @@ fun FlexibleDaySectionListItemPreview() {
                                         imageUrl = "https://picsum.photos/200/300",
                                     ),
                                     TripItemState.SectionOption(
-                                        id = "2",
-                                        title = "Il Cafe",
+                                        id = "3",
+                                        title = "Johan & Nyström - Swedenborgsgatan",
                                         subtitle = "Södermannagatan 23, 116 40 Stockholm, Sweden",
                                         imageUrl = "https://picsum.photos/200/300",
-                                    )
+                                    ),
                                 ),
                             ),
                             TripItemState.DaySectionCategory(
@@ -357,6 +365,7 @@ fun FlexibleDaySectionListItemPreview() {
                         ),
                         searchResults = emptyList(),
                     ),
+                    startExpanded = true,
                     highlightDate = true,
                 )
             }
