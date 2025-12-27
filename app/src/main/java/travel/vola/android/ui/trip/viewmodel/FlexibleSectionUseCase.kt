@@ -191,8 +191,13 @@ class FlexibleSectionUseCase(
         if (content.length < 3) {
             return
         }
+        val section = getSection(itemId) ?: return
+        val locationBias =
+            (section.city.latitude to section.city.longitude)
+                .takeIf { (latitude, longitude) -> latitude != 0.0 && longitude != 0.0 }
         mutexScope.launch {
-            val results = autoCompleteRepository.autocomplete(content.toString(), itemId)
+            val results =
+                autoCompleteRepository.autocomplete(content.toString(), itemId, locationBias)
             searchSessions[itemId] = results
         }
     }

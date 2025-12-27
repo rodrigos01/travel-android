@@ -15,7 +15,11 @@ import java.util.Locale
 
 class LodgingSearchRepository : AutoCompleteRepository<SimplePlace, Place> {
 
-    override suspend fun autocomplete(query: String, autocompleteKey: String): List<SimplePlace> {
+    override suspend fun autocomplete(
+        query: String,
+        autocompleteKey: String,
+        locationBias: Pair<Double, Double>?,
+    ): List<SimplePlace> {
         return request<ApiResponse.PlaceAutoComplete>("/places/autocomplete") {
             url {
                 parameters.append("query", query)
