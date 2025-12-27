@@ -12,12 +12,21 @@ class PlaceAutoCompleteRepository(
     private val resolveCity: Boolean = true,
 ) :
     AutoCompleteRepository<SimplePlace, PlaceDetailsResult> {
-    override suspend fun autocomplete(query: String, autocompleteKey: String): List<SimplePlace> {
+    override suspend fun autocomplete(
+        query: String,
+        autocompleteKey: String,
+        locationBias: Pair<Double, Double>?
+    ): List<SimplePlace> {
         return request<ApiResponse.PlaceAutoComplete>("/places/autocomplete") {
             url {
                 parameters.append("query", query)
                 parameters.append("types", types.joinToString(","))
                 parameters.append("sessionId", autocompleteKey)
+                if (locationBias != null) {
+                    val (latitude, longitude) = locationBias
+                    parameters.append("latitude", latitude.toString())
+                    parameters.append("longitude", longitude.toString())
+                }
             }
         }?.results?.map { it.toAppDataModel() } ?: emptyList()
     }
