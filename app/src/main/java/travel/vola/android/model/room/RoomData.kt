@@ -87,6 +87,9 @@ sealed interface RoomData {
     data class FlexibleSection(
         @Embedded val entity: Schema.FlexibleSection,
         @Relation(
+            parentColumn = "city", entityColumn = "id"
+        ) val city: Place,
+        @Relation(
             entity = Schema.FlexibleSectionCategory::class,
             parentColumn = "id",
             entityColumn = "sectionId",
@@ -237,6 +240,7 @@ sealed interface RoomData {
             val tripId: String,
             val name: String,
             val date: ZonedDateTime,
+            val city: String,
         )
 
         @Entity

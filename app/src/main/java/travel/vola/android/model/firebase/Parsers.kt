@@ -235,6 +235,7 @@ fun FirebaseData.FlexibleDaySection.toAppDataModel(): FlexibleDaySection {
         id = id,
         name = name,
         date = date.toTime(),
+        city = city.toAppDataModel(),
         categories = categories.map { category ->
             FlexibleDayCategory(
                 name = category.name,
@@ -254,6 +255,7 @@ fun FlexibleDaySection.toFirebaseDataModel() = FirebaseData.FlexibleDaySection(
     id = id,
     name = name,
     date = date.toFirebaseDataModel(),
+    city = city.toFirebaseDataModel(),
     categories = categories.map { category ->
         FirebaseData.FlexibleSectionCategory(
             name = category.name,

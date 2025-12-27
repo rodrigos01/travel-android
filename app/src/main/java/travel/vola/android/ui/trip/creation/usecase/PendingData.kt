@@ -72,5 +72,6 @@ sealed interface PendingData {
         val startDateTime: ZonedDateTime,
         val hasStartTime: Boolean = false,
         val sectionName: String,
+        val city: Place,
     ) : PendingData
 }
