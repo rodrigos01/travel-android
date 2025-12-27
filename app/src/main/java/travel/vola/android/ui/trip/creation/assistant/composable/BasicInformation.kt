@@ -26,20 +26,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import travel.vola.android.common.ui.components.SearchBox
-import travel.vola.android.common.ui.components.SearchResult
+import travel.vola.android.common.ui.components.SearchBoxDialog
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.UiState
 import travel.vola.android.ui.trip.creation.composable.DatePickerButton
@@ -181,37 +177,6 @@ private val UiState.TravelGroupType.label
         UiState.TravelGroupType.COWORKERS -> "Coworkers"
         UiState.TravelGroupType.COUPLE -> "Couple"
     }
-
-@Composable
-private fun SearchBoxDialog(
-    onDismiss: () -> Unit,
-    searchResults: List<SearchResult>,
-    onLocationSearchTextChanged: (CharSequence) -> Unit,
-    onLocationSearchResultSelected: (Int) -> Unit,
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        var query by remember { mutableStateOf("") }
-
-        val focusRequester = remember { FocusRequester() }
-        SearchBox(
-            query = query,
-            placeHolder = { Text("Enter location") },
-            searchResults = searchResults,
-            onQueryChange = {
-                query = it
-                onLocationSearchTextChanged(it)
-            },
-            onResultTapped = {
-                onLocationSearchResultSelected(it)
-                onDismiss()
-            },
-            focusRequester = focusRequester,
-        )
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
-        }
-    }
-}
 
 @Composable
 @Preview

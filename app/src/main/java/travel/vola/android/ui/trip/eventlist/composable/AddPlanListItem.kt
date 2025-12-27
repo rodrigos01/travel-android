@@ -3,11 +3,11 @@ package travel.vola.android.ui.trip.eventlist.composable
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import travel.vola.android.extensions.Time
-import travel.vola.android.model.data.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.AddPlanType
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
+import travel.vola.android.ui.trip.state.AddFlexibleSectionItemState
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.AddPlaceItemState
 import travel.vola.android.ui.trip.state.AddPlanItemState
@@ -185,6 +185,14 @@ fun AddPlanContent(
                 },
             )
         }
+
+        is AddFlexibleSectionItemState -> {
+            AddFlexibleSectionListItem(
+                state = state,
+                onTextChanged = { actionHandler.sectionNameChanged(state.id, it) },
+                onUpdated = { _, _ -> }
+            )
+        }
     }
 }
 
@@ -193,6 +201,7 @@ fun AddPlanType.toState() = when (this) {
     AddPlanType.Lodging -> AddPlanItemState.Type.Lodging
     AddPlanType.Place -> AddPlanItemState.Type.Place
     AddPlanType.Restaurant -> AddPlanItemState.Type.Restaurant
+    AddPlanType.FlexibleSection -> AddPlanItemState.Type.FlexibleSection
 }
 
 val AddPlanItemState.uiType
@@ -201,6 +210,7 @@ val AddPlanItemState.uiType
         is ManualAddLodgingItemState, is LodgingSearchItemState -> AddPlanType.Lodging
         is AddPlaceItemState -> AddPlanType.Place
         is AddRestaurantItemState -> AddPlanType.Restaurant
+        is AddFlexibleSectionItemState -> AddPlanType.FlexibleSection
     }
 
 @Preview
@@ -211,18 +221,18 @@ fun AddPlanListItemPreview() {
             AddPlanListItem(
                 state = AddFlightItemState(
                     id = "",
-                    timestamp = Time("2025-10-17T18:25 +0200"),
+                    timestamp = zonedDateTime("2025-10-17T18:25 +0200"),
                     startState = ManualAddPlanState(
-                        Time("2025-10-17T18:25 +0200"),
-                        Time.now(),
+                        zonedDateTime("2025-10-17T18:25 +0200"),
+                        ZonedDateTime.now(),
                         dateSelectionEnabled = false,
                         locationText = "Charles de Gaule",
                         searchResults = emptyList(),
                         isTimeSet = true
                     ),
                     endState = ManualAddPlanState(
-                        Time("2025-10-18T06:00 -0300"),
-                        Time.now(),
+                        zonedDateTime("2025-10-18T06:00 -0300"),
+                        ZonedDateTime.now(),
                         dateSelectionEnabled = true,
                         locationText = "John F. Kennedy",
                         searchResults = emptyList(),
@@ -292,4 +302,12 @@ object NoOpActionHandler : AddPlanItemActionHandler {
     ) = Unit
 
     override fun restaurantTextChanged(itemId: String, content: CharSequence) = Unit
+    override fun sectionNameChanged(itemId: String, content: CharSequence) = Unit
+    override fun onFlexibleCategoryAdded(itemId: String, category: String) = Unit
+    override fun onFlexibleItemSearchTextChanged(itemId: String, content: CharSequence) = Unit
+    override fun onFlexibleItemSearchResultSelected(
+        itemId: String,
+        index: Int,
+        categoryIndex: Int
+    )= Unit
 }

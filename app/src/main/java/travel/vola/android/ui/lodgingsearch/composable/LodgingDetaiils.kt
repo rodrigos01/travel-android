@@ -93,7 +93,7 @@ import travel.vola.android.common.ui.components.rememberSizedImageState
 import travel.vola.android.common.ui.modifier.skeletonLoader
 import travel.vola.android.common.ui.preview.PreviewLightDarkSystemUI
 import travel.vola.android.common.ui.preview.loremIpsum
-import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.lodgingsearch.state.LodgingDetailsState
 import travel.vola.android.ui.lodgingsearch.state.LodgingReviewState
 import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
@@ -594,8 +594,8 @@ fun LodgingDetailsPreview() {
         reviewCount = 13450,
         lodgingType = "5-Star Hotel",
         photos = List(1) { index -> "" },
-        checkIn = Time("2025-08-10T00:00 -0500"),
-        checkOut = Time("2025-08-15T00:00 -0500"),
+        checkIn = zonedDateTime("2025-08-10T00:00 -0500"),
+        checkOut = zonedDateTime("2025-08-15T00:00 -0500"),
         price = 123.4,
         rooms = emptyList(),
         description = loremIpsum(),
@@ -627,8 +627,8 @@ fun LodgingDetailsPreview() {
             LodgingReviewState(
                 rating = 4.5,
                 ratingImageUrl = "https://www.tripadvisor.com/img/cdsi/img2/ratings/traveler/s5.0-66827-5.svg",
-                tripDate = Time("2023-08-15T00:00 GMT"),
-                reviewTime = Time("2023-08-31T10:52 GMT"),
+                tripDate = zonedDateTime("2023-08-15T00:00 GMT"),
+                reviewTime = zonedDateTime("2023-08-31T10:52 GMT"),
                 authorAvatarUrl = "https://media-cdn.tripadvisor.com/media/photo-l/1a/f6/e4/2d/default-avatar-2020-48.jpg",
                 authorName = "Author",
                 authorLocation = "Author Location",

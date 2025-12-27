@@ -13,6 +13,7 @@ sealed interface FirebaseData {
         val lodgings: List<Lodging> = emptyList(),
         val places: List<TimedPlace> = emptyList(),
         val restaurants: List<RestaurantReservation> = emptyList(),
+        val flexibleSections: List<FlexibleDaySection> = emptyList(),
     ) : FirebaseData
 
     data class Flight(
@@ -109,6 +110,25 @@ sealed interface FirebaseData {
     data class AnsweredQuestion(
         val question: String = "",
         val answer: String = "",
+    )
+
+    data class FlexibleDaySection(
+        val id: String = "",
+        val name: String = "",
+        val date: String = "",
+        val city: Place = Place(),
+        val categories: List<FlexibleSectionCategory> = emptyList(),
+    )
+
+    data class FlexibleSectionCategory(
+        val name: String = "",
+        val items: List<FlexibleSectionItem> = emptyList(),
+    )
+
+    data class FlexibleSectionItem(
+        val id: String = "",
+        val place: Place = Place(),
+        val note: String = "",
     )
 
 }

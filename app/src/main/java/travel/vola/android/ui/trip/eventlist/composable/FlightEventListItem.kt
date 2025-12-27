@@ -15,7 +15,7 @@ fun FlightEventListItem(
     timeString: String,
     destination: String,
     airportName: String,
-    position: EventListItemPosition = EventListItemPosition.MIDDLE,
+    position: EventItemPosition = EventItemPosition.MIDDLE,
 ) {
     EventListItem(
         showDate,

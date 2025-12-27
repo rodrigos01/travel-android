@@ -1,6 +1,7 @@
 package travel.vola.android.model.repository
 
 import kotlinx.coroutines.flow.Flow
+import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.RestaurantReservation
@@ -32,8 +33,16 @@ interface TripRepository {
         restaurantReservation: RestaurantReservation
     )
 
+    suspend fun saveFlexibleSection(
+        tripId: String,
+        flexibleSection: FlexibleDaySection
+    )
+
+
     suspend fun deleteFlight(tripId: String, flightId: String)
     suspend fun deleteLodging(tripId: String, lodgingId: String)
     suspend fun deleteTimedPlace(tripId: String, timedPlaceId: String)
     suspend fun deleteRestaurantReservation(tripId: String, restaurantReservationId: String)
+
+    suspend fun deleteFlexibleSection(tripId: String, flexibleSectionId: String)
 }

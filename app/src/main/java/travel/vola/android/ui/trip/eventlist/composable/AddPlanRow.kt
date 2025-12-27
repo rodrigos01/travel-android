@@ -37,13 +37,12 @@ import androidx.compose.ui.unit.dp
 import travel.vola.android.R
 import travel.vola.android.common.ui.components.Clock
 import travel.vola.android.common.ui.components.IconTextButton
-import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.dayOfMonthString
 import travel.vola.android.extensions.dayOfWeekString
 import travel.vola.android.extensions.timeString
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.update
-import travel.vola.android.model.data.Time
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.AutoCompleteTextField
 import travel.vola.android.ui.trip.creation.composable.DatePickerDialog
@@ -54,11 +53,11 @@ import java.time.ZonedDateTime
 import java.util.TimeZone
 
 class AddPlanRowState(
-    selectedTimeState: MutableState<Time?>,
+    selectedTimeState: MutableState<ZonedDateTime?>,
     selectedSearchResultIndexState: MutableIntState,
     timeSelectedState: MutableState<Boolean>,
 ) {
-    var selectedDateTime: Time? by selectedTimeState
+    var selectedDateTime: ZonedDateTime? by selectedTimeState
     var selectedSearchResultIndex: Int by selectedSearchResultIndexState
     var timeSelected: Boolean by timeSelectedState
 }
@@ -66,7 +65,7 @@ class AddPlanRowState(
 @Composable
 fun rememberAddPlanRowState(
     key: Any? = null,
-    selectedDateTime: Time? = null,
+    selectedDateTime: ZonedDateTime? = null,
     selectedSearchResultIndex: Int = -1,
     timeSelected: Boolean = false,
 ) = remember(key, selectedDateTime) {
@@ -257,7 +256,7 @@ fun AddPlanRow(
 fun AddPlanRow(
     initialDateTime: ZonedDateTime? = null,
     timeSelectedInitially: Boolean = false,
-    minTime: Time? = null,
+    minTime: ZonedDateTime? = null,
     title: @Composable () -> Unit,
     timeSelectorLabel: String,
     dateSelectionEnabled: Boolean = true,
@@ -290,9 +289,9 @@ fun AddPlanRowPreview(hasTextField: Boolean = true) {
                 .fillMaxWidth()
         ) {
             AddPlanRow(
-                initialDateTime = Time("2025-06-12T03:45 -0300"),
+                initialDateTime = zonedDateTime("2025-06-12T03:45 -0300"),
                 timeSelectedInitially = true,
-                minTime = Time(0L, TimeZone.getDefault()),
+                minTime = zonedDateTime(0L, TimeZone.getDefault()),
                 searchResults = emptyList(),
                 title = { Text("Title") },
                 timeSelectorLabel = "Pick Time",

@@ -6,6 +6,9 @@ import travel.vola.android.extensions.asISO8601String
 import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.AnsweredQuestion
 import travel.vola.android.model.data.BasicInformation
+import travel.vola.android.model.data.FlexibleDayCategory
+import travel.vola.android.model.data.FlexibleDayItem
+import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.data.GroupType
@@ -62,6 +65,7 @@ fun RoomData.Trip.toAppDataModel(): Trip {
         lodgings = appLodgings,
         places = appPlaces,
         restaurants = appRestaurants,
+        flexibleSections = flexibleSections.map { it.toAppDataModel() },
     )
 }
 
@@ -140,6 +144,25 @@ fun RoomData.GroupType.toAppDataModel(): GroupType = when (this) {
     RoomData.GroupType.COWORKERS -> GroupType.COWORKERS
     RoomData.GroupType.COUPLE -> GroupType.COUPLE
 }
+
+fun RoomData.FlexibleSection.toAppDataModel(): FlexibleDaySection = FlexibleDaySection(
+    id = entity.id,
+    name = entity.name,
+    date = entity.date,
+    city = city.toAppDataModel(),
+    categories = categories.map { category ->
+        FlexibleDayCategory(
+            category.entity.name,
+            category.items.map {
+                FlexibleDayItem(
+                    id = it.entity.id,
+                    place = it.place.toAppDataModel(),
+                    note = it.entity.note,
+                )
+            }
+        )
+    }
+)
 
 class Converters {
     @TypeConverter

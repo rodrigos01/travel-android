@@ -3,6 +3,7 @@ package travel.vola.android.model.room
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import travel.vola.android.model.data.DataSourceType
+import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
@@ -179,6 +180,42 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
         )
     }
 
+    override suspend fun saveFlexibleSection(
+        tripId: String,
+        flexibleSection: FlexibleDaySection
+    ) {
+        flexibleSection.categories.forEach { category ->
+            val categoryId = UUID.randomUUID().toString()
+            category.items.forEach {
+                savePlace(it.place)
+                dao.saveFlexibleSectionItem(
+                    RoomData.Schema.FlexibleSectionItem(
+                        id = it.id,
+                        categoryId = categoryId,
+                        place = it.place.id,
+                        note = it.note,
+                    )
+                )
+            }
+            dao.saveFlexibleSectionCategory(
+                RoomData.Schema.FlexibleSectionCategory(
+                    id = categoryId,
+                    sectionId = flexibleSection.id,
+                    name = category.name,
+                )
+            )
+        }
+        dao.saveFlexibleSection(
+            RoomData.Schema.FlexibleSection(
+                id = flexibleSection.id,
+                tripId = tripId,
+                name = flexibleSection.name,
+                date = flexibleSection.date,
+                city = flexibleSection.city.id,
+            )
+        )
+    }
+
     override suspend fun deleteFlight(tripId: String, flightId: String) {
         dao.getFlight(tripId, flightId).let { flight ->
             dao.deleteFlight(flight)
@@ -204,6 +241,14 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
         dao.getRestaurantReservation(tripId, restaurantReservationId).let { restaurantReservation ->
             dao.deleteRestaurantReservation(restaurantReservation)
         }
+    }
+
+    override suspend fun deleteFlexibleSection(
+        tripId: String,
+        flexibleSectionId: String
+    ) {
+        val section = dao.getFlexibleSection(tripId, flexibleSectionId)
+        dao.deleteFlexibleSection(section)
     }
 
     private suspend fun withTrip(tripId: String, block: suspend (RoomData.Schema.Trip) -> Unit) =

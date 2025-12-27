@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import travel.vola.android.di.factoryDependencies
 import travel.vola.android.extensions.MutableMapStateFlow
-import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.get
 import travel.vola.android.extensions.remove
 import travel.vola.android.extensions.set
@@ -22,7 +22,6 @@ import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.LodgingSearchResult
 import travel.vola.android.model.data.Place
-import travel.vola.android.model.data.Time
 import travel.vola.android.model.network.toAppDataModel
 import travel.vola.android.model.repository.LodgingSearchRepository
 import travel.vola.android.model.repository.TripRepository
@@ -31,6 +30,7 @@ import travel.vola.android.ui.lodgingsearch.state.LodgingDetailsState
 import travel.vola.android.ui.lodgingsearch.state.LodgingReviewState
 import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
 import travel.vola.android.ui.lodgingsearch.state.LodgingSearchResultState
+import java.time.ZonedDateTime
 import java.util.TimeZone
 
 class LodgingSearchViewModel(
@@ -76,10 +76,10 @@ class LodgingSearchViewModel(
     )
 
     data class SearchParamsState(
-        val checkIn: Time,
-        val checkOut: Time,
+        val checkIn: ZonedDateTime,
+        val checkOut: ZonedDateTime,
         val locationText: String,
-        val minCheckOut: Time? = null,
+        val minCheckOut: ZonedDateTime? = null,
     )
 
     data class SortAndFilterState(
@@ -106,8 +106,8 @@ class LodgingSearchViewModel(
     private val loadingState = MutableStateFlow(false)
     private val searchParamsState = MutableStateFlow(
         SearchParamsState(
-            checkIn = Time(checkInMillis, TimeZone.getTimeZone(timeZoneId)),
-            checkOut = Time(checkOutMillis, TimeZone.getTimeZone(timeZoneId)),
+            checkIn = zonedDateTime(checkInMillis, TimeZone.getTimeZone(timeZoneId)),
+            checkOut = zonedDateTime(checkOutMillis, TimeZone.getTimeZone(timeZoneId)),
             locationText = location.name,
         )
     )
@@ -262,8 +262,8 @@ class LodgingSearchViewModel(
                     LodgingReviewState(
                         rating = it.rating,
                         ratingImageUrl = it.ratingImageUrl,
-                        reviewTime = Time(it.reviewTime),
-                        tripDate = Time(it.travelDate),
+                        reviewTime = zonedDateTime(it.reviewTime),
+                        tripDate = zonedDateTime(it.travelDate),
                         authorAvatarUrl = it.avatarUrl,
                         authorName = it.userName,
                         authorLocation = it.userLocation,

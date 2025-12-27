@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import travel.vola.android.model.data.DataSourceType
+import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.RestaurantReservation
@@ -91,11 +92,25 @@ class MultiSourceTripRepository(
         currentDataSource.saveRestaurantReservation(tripId, restaurantReservation)
     }
 
+    override suspend fun saveFlexibleSection(
+        tripId: String,
+        flexibleSection: FlexibleDaySection
+    ) {
+        currentDataSource.saveFlexibleSection(tripId, flexibleSection)
+    }
+
     override suspend fun deleteRestaurantReservation(
         tripId: String,
         restaurantReservationId: String
     ) {
         currentDataSource.deleteRestaurantReservation(tripId, restaurantReservationId)
+    }
+
+    override suspend fun deleteFlexibleSection(
+        tripId: String,
+        flexibleSectionId: String
+    ) {
+        currentDataSource.deleteFlexibleSection(tripId, flexibleSectionId)
     }
 
     private val DataSourceType.dataSource: TripDataSource
