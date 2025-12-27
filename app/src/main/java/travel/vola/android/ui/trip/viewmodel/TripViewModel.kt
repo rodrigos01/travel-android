@@ -682,9 +682,21 @@ class TripViewModel(
                 sectionId = sectionId,
             )
 
-            is FlexibleDaySection -> flexibleSectionItems.first { it.id == event.id }.copy(
+            is FlexibleDaySection -> flexibleSectionItems.firstOrNull { it.id == event.id }?.copy(
                 showDate = showDate,
                 backgroundStyle = backgroundStyle,
+            ) ?: TripItemState.FlexibleDaySectionState(
+                "",
+                timestamp,
+                "",
+                "",
+                showDate,
+                backgroundStyle,
+                "",
+                "",
+                "",
+                emptyList(),
+                emptyList(),
             )
         }
     }
