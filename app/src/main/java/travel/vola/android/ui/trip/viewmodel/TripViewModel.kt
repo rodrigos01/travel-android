@@ -417,6 +417,29 @@ class TripViewModel(
         navController.navigate(route = params)
     }
 
+    private fun findPlaceForTimestamp(timestamp: ZonedDateTime): Place? {
+        val currentTrip = trip.value ?: return null
+        val entities =
+            currentTrip.places + currentTrip.restaurants + currentTrip.lodgings + currentTrip.flights.flatMap { it.segments }
+        return entities.firstOrNull {
+            it.timestamp().toLocalDate() == timestamp.toLocalDate()
+        }?.let {
+            when (it) {
+                is WithCity -> it.city
+                is FlightSegment -> it.getPlace(it.arrival)
+                is FlexibleDaySection -> null
+            }
+        }
+    }
+
+    private fun TripEvent.timestamp(useFlightArrival: Boolean = true) = when (this) {
+        is FlightSegment -> if (useFlightArrival) arrival else departure
+        is TimedPlace -> startDateTime
+        is Lodging -> checkIn
+        is RestaurantReservation -> dateTime
+        is FlexibleDaySection -> date
+    }
+
     private val TripItemState.Editable.entity: TripEntity?
         get() = when (this) {
             is TripItemState.FlightDepartureItemState -> trip.value?.flights?.first { flight ->
