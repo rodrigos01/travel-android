@@ -110,14 +110,20 @@ class TripViewModel(
 
     private val trip = repository.findTripById(tripId)
         .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
+
+    private val flexibleSectionItems = flexibleSectionUseCase.flexibleSectionItems
     private val suggestions = trip.filterNotNull().map {
         suggestionsUseCase.getSuggestions(it)
     }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
 
     private val flexibleSectionItems = flexibleSectionUseCase.flexibleSectionItems
     private val eventsFromTrip =
-        trip.filterNotNull().combine(suggestions) { currentTrip, suggestions ->
-            val items = genItems(currentTrip, suggestions)
+        combine(
+            trip.filterNotNull(),
+            flexibleSectionItems,
+            suggestions
+        ) { currentTrip, sectionItems, suggestions ->
+            val items = genItems(currentTrip, flexibleSectionItems, suggestions)
             val places =
                 (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).fold(mapOf<Place, PlaceState>()) { map, entity: Mapeable ->
                     val current = map.getOrDefault(
@@ -461,18 +467,16 @@ class TripViewModel(
         )
     }
 
-    private fun genItems(trip: Trip, suggestions: SuggestionsUseCase.DailyItineraryState?): List<TripItemState> {
+    private fun genItems(
+        trip: Trip,
+        flexibleSectionItems: List<TripItemState.FlexibleDaySectionState>,
+        suggestions: SuggestionsUseCase.DailyItineraryState?,
+    ): List<TripItemState> {
         val cities =
             trip.places.filter { it.city == it.place }.map { it.city }.associateBy { it.id }
         val suggestedPlaces = suggestions?.days?.flatMap { day ->
             day.timedPlaces.mapNotNull { place ->
                 cities[place.cityId]?.let { place.asTimedPlace(it) }
-            } + day.sections.flatMap { section ->
-                section.suggestions.mapNotNull { place ->
-                    cities[place.cityId]?.let {
-                        place.asTimedPlace(it)
-                    }
-                }
             }
         }
         val events =
