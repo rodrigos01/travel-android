@@ -683,7 +683,8 @@ class TripViewModel(
             )
 
             is FlexibleDaySection -> flexibleSectionItems.first { it.id == event.id }.copy(
-                showDate = showDate
+                showDate = showDate,
+                backgroundStyle = backgroundStyle,
             )
         }
     }
