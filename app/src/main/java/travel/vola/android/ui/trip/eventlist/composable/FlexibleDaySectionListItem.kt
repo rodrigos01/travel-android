@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -50,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -236,7 +236,10 @@ fun FlexibleDaySectionListItem(
                                     modifier = Modifier.size(width = 96.dp, height = 144.dp)
                                 ) {
                                     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSecondaryContainer) {
-                                        Column(verticalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxHeight()) {
+                                        Column(
+                                            verticalArrangement = Arrangement.SpaceEvenly,
+                                            modifier = Modifier.fillMaxHeight()
+                                        ) {
                                             Icon(
                                                 Icons.Rounded.Add,
                                                 contentDescription = "add option",
@@ -275,8 +278,17 @@ fun FlexibleDaySectionListItem(
                             contentDescription = state.name,
                         )
                     },
-                    headlineContent = { Text(state.name) },
-                    supportingContent = { Text(state.subtitle) },
+                    headlineContent = {
+                        Text(
+                            state.name,
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                        )
+                    },
+                    supportingContent = {
+                        if (state.subtitle.isNotBlank()) {
+                            Text(state.subtitle)
+                        }
+                    },
                     trailingContent = {
                         Icon(
                             Icons.AutoMirrored.Rounded.KeyboardArrowRight,
@@ -365,7 +377,7 @@ fun FlexibleDaySectionListItemPreview() {
                         ),
                         searchResults = emptyList(),
                     ),
-                    startExpanded = true,
+                    startExpanded = false,
                     highlightDate = true,
                 )
             }
