@@ -72,8 +72,8 @@ import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.rememberMapScaffoldState
 import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.common.ui.state.MarkerType
-import travel.vola.android.extensions.Time
 import travel.vola.android.extensions.viewModel
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.Identifiable
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.AddPlanType
@@ -392,8 +392,6 @@ private fun TripDetailItem(
             onImageLoaded,
             modifier = Modifier.clickable { onItemTapped(event.id) })
 
-        is TripItemState.SuggestionsItemState -> SuggestionsListItem(event)
-
         is TripItemState.EventItemState -> Surface(
             onClick = { onItemTapped(event.id) },
         ) {
@@ -406,7 +404,7 @@ private fun TripDetailItem(
                     event.time,
                     event.destination,
                     event.airport,
-                    event.backgroundStyle.asEvenListItemPosition(),
+                    event.backgroundStyle.asEventItemPosition(),
                 )
 
                 is FlightArrivalItemState -> ArrivalEventListItem(
@@ -416,7 +414,7 @@ private fun TripDetailItem(
                     event.dayOfWeek,
                     event.time,
                     event.airport,
-                    event.backgroundStyle.asEvenListItemPosition(),
+                    event.backgroundStyle.asEventItemPosition(),
                 )
 
                 is HotelCheckInItemState -> CheckinListItem(
@@ -426,7 +424,7 @@ private fun TripDetailItem(
                     event.dayOfWeek,
                     event.time,
                     event.hotelName,
-                    event.backgroundStyle.asEvenListItemPosition(),
+                    event.backgroundStyle.asEventItemPosition(),
                 )
 
                 is HotelCheckOutItemState -> CheckoutListItem(
@@ -436,13 +434,44 @@ private fun TripDetailItem(
                     event.dayOfWeek,
                     event.time,
                     event.hotelName,
-                    event.backgroundStyle.asEvenListItemPosition(),
+                    event.backgroundStyle.asEventItemPosition(),
                 )
 
                 is TripItemState.TimedPlaceItemState -> TimedPlaceListItem(event, highlightDate)
                 is TripItemState.RestaurantReservationItemState -> RestaurantListItem(
                     event,
                     highlightDate
+                )
+
+                is TripItemState.FlexibleDaySectionState -> FlexibleDaySectionListItem(
+                    event,
+                    highlightDate = highlightDate,
+                    position = event.backgroundStyle.asEventItemPosition(),
+                    onDeleteConfirmed = {
+                        addPlanItemActionHandler.delete(
+                            AddPlanItemState.Type.FlexibleSection,
+                            event.id
+                        )
+                    },
+                    onCategoryAdded = {
+                        addPlanItemActionHandler.onFlexibleCategoryAdded(
+                            event.id,
+                            it
+                        )
+                    },
+                    onLocationSearchTextChanged = {
+                        addPlanItemActionHandler.onFlexibleItemSearchTextChanged(
+                            event.id,
+                            it
+                        )
+                    },
+                    onLocationSearchResultSelected = { index, categoryIndex ->
+                        addPlanItemActionHandler.onFlexibleItemSearchResultSelected(
+                            event.id,
+                            index,
+                            categoryIndex,
+                        )
+                    }
                 )
             }
         }
@@ -465,14 +494,14 @@ fun TripDetailsPreview() {
         title = "My Trip",
         items = listOf(
             MonthItemState(
-                timestamp = Time("2025-10-17T18:25 +0200"),
+                timestamp = zonedDateTime("2025-10-17T18:25 +0200"),
                 month = "October",
                 year = "2025",
             ),
             FlightDepartureItemState(
                 id = "1",
                 showDate = true,
-                timestamp = Time("2025-10-17T22:25 -0400"),
+                timestamp = zonedDateTime("2025-10-17T22:25 -0400"),
                 dayOfMonth = "17",
                 dayOfWeek = "Fri",
                 time = "18:25",
@@ -482,7 +511,7 @@ fun TripDetailsPreview() {
             ),
             PlaceItemState(
                 id = "2",
-                timestamp = Time("2025-10-18T18:25 +0200"),
+                timestamp = zonedDateTime("2025-10-18T18:25 +0200"),
                 imageUrl = "",
                 placeName = "Paris",
                 dateStart = "18 Oct",
@@ -491,7 +520,7 @@ fun TripDetailsPreview() {
             FlightArrivalItemState(
                 id = "3",
                 showDate = true,
-                timestamp = Time("2025-10-18T10:05 +0200"),
+                timestamp = zonedDateTime("2025-10-18T10:05 +0200"),
                 dayOfMonth = "18",
                 dayOfWeek = "Sat",
                 time = "10:05",
@@ -501,7 +530,7 @@ fun TripDetailsPreview() {
             HotelCheckInItemState(
                 id = "4",
                 showDate = false,
-                timestamp = Time("2025-10-18T15:00 +0200"),
+                timestamp = zonedDateTime("2025-10-18T15:00 +0200"),
                 dayOfMonth = "18",
                 dayOfWeek = "Sat",
                 time = "15:00",
@@ -512,7 +541,7 @@ fun TripDetailsPreview() {
             TripItemState.RestaurantReservationItemState(
                 id = "5",
                 showDate = false,
-                timestamp = Time("2025-10-18T19:00 +0200"),
+                timestamp = zonedDateTime("2025-10-18T19:00 +0200"),
                 dayOfWeek = "Sat",
                 dayOfMonth = "18",
                 time = "19:00",
@@ -522,14 +551,14 @@ fun TripDetailsPreview() {
             ),
             EmptyDateItemState(
                 id = "6",
-                timestamp = Time("2025-10-19T19:00 +0200"),
+                timestamp = zonedDateTime("2025-10-19T19:00 +0200"),
                 dayOfMonth = "19",
                 dayOfWeek = "Fri",
             ),
             HotelCheckOutItemState(
                 id = "7",
                 showDate = true,
-                timestamp = Time("2025-10-22T11:00 +0200"),
+                timestamp = zonedDateTime("2025-10-22T11:00 +0200"),
                 dayOfMonth = "22",
                 dayOfWeek = "Sun",
                 time = "11:00",
@@ -539,7 +568,7 @@ fun TripDetailsPreview() {
             FlightDepartureItemState(
                 id = "8",
                 showDate = false,
-                timestamp = Time("2025-10-22T16:25 +0200"),
+                timestamp = zonedDateTime("2025-10-22T16:25 +0200"),
                 dayOfMonth = "22",
                 dayOfWeek = "Sun",
                 time = "16:25",
@@ -549,7 +578,7 @@ fun TripDetailsPreview() {
             ),
             PlaceItemState(
                 id = "9",
-                timestamp = Time("2025-10-22T16:25 +0200"),
+                timestamp = zonedDateTime("2025-10-22T16:25 +0200"),
                 imageUrl = "",
                 placeName = "Rome",
                 dateStart = "22 Oct",
@@ -558,7 +587,7 @@ fun TripDetailsPreview() {
             FlightArrivalItemState(
                 id = "3",
                 showDate = true,
-                timestamp = Time("2025-10-22T19:05 +0200"),
+                timestamp = zonedDateTime("2025-10-22T19:05 +0200"),
                 dayOfMonth = "22",
                 dayOfWeek = "Sun",
                 time = "19:05",
@@ -568,7 +597,7 @@ fun TripDetailsPreview() {
             HotelCheckInItemState(
                 id = "4",
                 showDate = false,
-                timestamp = Time("2025-10-22T15:00 +0200"),
+                timestamp = zonedDateTime("2025-10-22T15:00 +0200"),
                 dayOfMonth = "22",
                 dayOfWeek = "Sun",
                 time = "15:00",

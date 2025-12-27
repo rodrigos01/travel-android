@@ -11,7 +11,6 @@ import travel.vola.android.extensions.plus
 import travel.vola.android.extensions.update
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
-import travel.vola.android.model.data.Time
 import travel.vola.android.model.repository.AddFlightRepository
 import travel.vola.android.ui.trip.creation.usecase.AddFlightItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
@@ -33,7 +32,7 @@ class AddFlightUseCase(
 
     override fun addItem(
         id: String,
-        time: Time,
+        time: ZonedDateTime,
         params: AddPlanUseCase.StateParams,
     ) {
         val data = PendingFlight(

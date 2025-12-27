@@ -5,7 +5,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.TripItemState
 
@@ -21,7 +21,7 @@ fun TimedPlaceListItem(state: TripItemState.TimedPlaceItemState, highlightDate: 
         iconPainter = rememberVectorPainter(Icons.Default.Place),
         headline = state.placeName,
         supporting = state.cityName,
-        position = state.backgroundStyle.asEvenListItemPosition()
+        position = state.backgroundStyle.asEventItemPosition()
     )
 }
 
@@ -32,7 +32,7 @@ fun TimedPlaceListItemPreview() {
         TimedPlaceListItem(
             TripItemState.TimedPlaceItemState(
                 id = "",
-                timestamp = Time("2025-10-17T15:30:00Z"),
+                timestamp = zonedDateTime("2025-10-17T15:30:00Z"),
                 showDate = true,
                 dayOfMonth = "17",
                 dayOfWeek = "Fri",

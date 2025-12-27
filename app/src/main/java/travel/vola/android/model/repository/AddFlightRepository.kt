@@ -11,7 +11,8 @@ import travel.vola.android.model.network.toAppDataModel
 class AddFlightRepository : AutoCompleteRepository<AirportSearchResult, Airport> {
     override suspend fun autocomplete(
         query: String,
-        autocompleteKey: String
+        autocompleteKey: String,
+        locationBias: Pair<Double, Double>?
     ): List<AirportSearchResult> {
         return request<ApiResponse.AirportAutoComplete>("flights/airport/autocomplete") {
             url {

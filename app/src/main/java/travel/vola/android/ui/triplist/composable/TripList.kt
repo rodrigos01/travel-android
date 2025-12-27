@@ -64,6 +64,7 @@ fun TripListPreview() {
                 lodgings = emptyList(),
                 places = emptyList(),
                 restaurants = emptyList(),
+                flexibleSections = emptyList(),
             )
         }
     )

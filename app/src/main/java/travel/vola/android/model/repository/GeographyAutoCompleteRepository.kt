@@ -16,7 +16,8 @@ class GeographyAutoCompleteRepository(
 ) : AutoCompleteRepository<SimplePlace, PlaceDetailsResult> {
     override suspend fun autocomplete(
         query: String,
-        autocompleteKey: String
+        autocompleteKey: String,
+        locationBias: Pair<Double, Double>?
     ): List<SimplePlace> {
         return coroutineScope {
             awaitAll(

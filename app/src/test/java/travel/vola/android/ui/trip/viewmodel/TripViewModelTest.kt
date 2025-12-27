@@ -11,13 +11,12 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
-import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
-import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.repository.TripRepository
@@ -33,6 +32,7 @@ import travel.vola.android.ui.trip.state.TripItemState.HotelCheckInItemState
 import travel.vola.android.ui.trip.state.TripItemState.HotelCheckOutItemState
 import travel.vola.android.ui.trip.state.TripItemState.MonthItemState
 import travel.vola.android.ui.trip.state.TripItemState.PlaceItemState
+import java.time.ZonedDateTime
 import java.util.TimeZone
 
 class TripViewModelTest {
@@ -58,7 +58,7 @@ class TripViewModelTest {
         addPlanUseCase,
     )
 
-    private fun String?.asTime(): Time = this?.let { Time(this) } ?: Time(0L, TimeZone.getDefault())
+    private fun String?.asTime(): ZonedDateTime = this?.let { zonedDateTime(this) } ?: zonedDateTime(0L, TimeZone.getDefault())
 
     @Test
     fun `events should have one departure event per flight`() {
@@ -398,15 +398,15 @@ class TripViewModelTest {
                     departure = "2024-05-10T22:05:00-04:00",
                     airportFromName = "John F. Kennedy Intl. Airport",
                     cityFromName = "New York",
-                    airportToName = "Humberto Delgado International Airport",
-                    cityToName = "Lisbon",
+                    airportToName = "Francisco Sá Carneiro Airport",
+                    cityToName = "Porto",
                     arrival = "2024-05-11T10:25:00+01:00",
                 ),
                 Flight(
                     id = "lis-jfk",
                     departure = "2024-06-14T17:05:00+01:00",
-                    airportFromName = "Humberto Delgado International Airport",
-                    cityFromName = "Lisbon",
+                    airportFromName = "Francisco Sá Carneiro Airport",
+                    cityFromName = "Porto",
                     airportToName = "John F. Kennedy Intl. Airport",
                     cityToName = "New York",
                     arrival = "2024-06-14T20:15:00-04:00",
@@ -430,7 +430,7 @@ class TripViewModelTest {
             },
             {
                 val item = it as FlightArrivalItemState
-                assertThat(item.airport).isEqualTo("Humberto Delgado International Airport")
+                assertThat(item.airport).isEqualTo("Francisco Sá Carneiro Airport")
                 assertThat(item.showDate).isTrue
             },
             {
@@ -445,7 +445,7 @@ class TripViewModelTest {
             },
             {
                 val item = it as FlightDepartureItemState
-                assertThat(item.airport).isEqualTo("Humberto Delgado International Airport")
+                assertThat(item.airport).isEqualTo("Francisco Sá Carneiro Airport")
                 assertThat(item.showDate).isFalse
             },
             {
@@ -554,7 +554,7 @@ class TripViewModelTest {
         subject.addButtonTapped(checkOutItem.id)
         verify(addPlanUseCase).createAddPlanItem(
             any(),
-            eq(Time("2024-05-30T11:00:00+02:00")),
+            eq(zonedDateTime("2024-05-30T11:00:00+02:00")),
             dateSelectionEnabled = eq(false),
             type = any(),
         )
@@ -572,7 +572,7 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val expected: AddPlanItemState = mock {
+        val expected: AddFlightItemState = mock {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)
@@ -616,7 +616,7 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val expected: AddPlanItemState = mock {
+        val expected: AddFlightItemState = mock {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)
@@ -659,7 +659,7 @@ class TripViewModelTest {
             )
         )
         val addPlanItemId = "originalItemId"
-        val expected: AddPlanItemState = mock {
+        val expected: AddFlightItemState = mock {
             on { id } doReturn addPlanItemId
         }
         mockAddPlanItem(expected)

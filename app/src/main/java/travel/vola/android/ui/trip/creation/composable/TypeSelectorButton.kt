@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -36,7 +37,8 @@ enum class AddPlanType(
     Place(Icons.Default.LocationOn, "Place"),
     Flight(R.drawable.flight_baseline_24, "Flight"),
     Lodging(R.drawable.hotel_baseline_24, "Lodging"),
-    Restaurant(R.drawable.restaurant_baseline_24, "Restaurant");
+    Restaurant(R.drawable.restaurant_baseline_24, "Restaurant"),
+    FlexibleSection(Icons.Rounded.Explore, "Section");
 
     constructor(@DrawableRes drawableId: Int, label: String) : this(
         icon = {

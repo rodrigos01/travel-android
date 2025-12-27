@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -21,6 +20,7 @@ import travel.vola.android.common.coroutines.createUseCaseScope
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.common.ui.state.MarkerViewState
 import travel.vola.android.di.factoryDependencies
+import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.dayAndMonthString
 import travel.vola.android.extensions.dayOfMonthString
 import travel.vola.android.extensions.dayOfWeekString
@@ -31,13 +31,14 @@ import travel.vola.android.extensions.timeString
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.viewModelFactory
 import travel.vola.android.model.PlaceRepository
+import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.data.Identifiable
 import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.Mapeable
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.RestaurantReservation
-import travel.vola.android.model.data.Time
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.data.TripEntity
@@ -50,7 +51,6 @@ import travel.vola.android.ui.trip.state.TripItemState
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
 
@@ -63,9 +63,17 @@ class TripViewModel(
     private val tripId: String,
     private val navController: NavController,
     private val useCaseScope: CoroutineScope = createUseCaseScope(),
+    private val flexibleSectionUseCase: FlexibleSectionUseCase = FlexibleSectionUseCase(
+        tripId = tripId,
+        repository = repository,
+        coroutineScope = useCaseScope,
+    ),
     private val addPlanUseCase: AddPlanUseCase = AddPlanUseCase(
+        tripId = tripId,
+        tripRepository = repository,
         placeRepository = placeRepository,
         coroutineScope = useCaseScope,
+        flexibleSectionUseCase = flexibleSectionUseCase,
     ),
 ) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
 
@@ -93,11 +101,13 @@ class TripViewModel(
 
     private val trip = repository.findTripById(tripId)
         .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
+
+    private val flexibleSectionItems = flexibleSectionUseCase.flexibleSectionItems
     private val eventsFromTrip =
-        trip.filterNotNull().map { currentTrip ->
-            val items = genItems(currentTrip)
+        trip.filterNotNull().combine(flexibleSectionItems) { currentTrip, sectionItems ->
+            val items = genItems(currentTrip, sectionItems)
             val places =
-                (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).fold(mapOf<Place, PlaceState>()) { map, entity: WithCity ->
+                (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).fold(mapOf<Place, PlaceState>()) { map, entity: Mapeable ->
                     val current = map.getOrDefault(
                         entity.city, PlaceState(
                             place = entity.city,
@@ -169,7 +179,7 @@ class TripViewModel(
             }
         }
         val focusedDate =
-            (state.items.getOrNull(currentScrollState.focusedIndex) as? TripItemState.Timeable)?.timestamp?.toLocalDate()
+            state.items.getOrNull(currentScrollState.focusedIndex)?.timestamp?.toLocalDate()
         val focusedDateItem = items.filterIsInstance<TripItemState.Focusable>().lastOrNull {
             items.indexOf(it)
                 .let { index -> index >= currentScrollState.firstVisibleIndex && index <= currentScrollState.focusedIndex }
@@ -200,13 +210,14 @@ class TripViewModel(
     }
 
     fun addButtonTapped(itemId: String) {
-        val tapped = viewState.value.items.find { it is Identifiable && it.id == itemId }
+        val tapped = viewState.value.items.find { it is Identifiable && it.id == itemId } ?: return
         val allowStartDateSelection =
             tapped is TripItemState.DateRangeItemState || tapped is TripItemState.InitialAddPlanItemState
         addPlanUseCase.createAddPlanItem(
             id = (tapped as? TripItemState.Replaceable)?.id,
-            time = (tapped as TripItemState.Timeable).timestamp,
+            time = tapped.timestamp,
             dateSelectionEnabled = allowStartDateSelection,
+            place = findPlaceForTimestamp(tapped.timestamp),
         )
     }
 
@@ -214,8 +225,9 @@ class TripViewModel(
         val tapped = viewState.value.items.find { it is Identifiable && it.id == itemId }
         addPlanUseCase.createAddPlanItem(
             id = (tapped as Identifiable).id,
-            time = (tapped as TripItemState.Timeable).timestamp,
+            time = tapped.timestamp,
             dateSelectionEnabled = false,
+            place = findPlaceForTimestamp(tapped.timestamp),
         )
     }
 
@@ -258,13 +270,13 @@ class TripViewModel(
         } else {
             viewState.value.items.getOrNull(currentFocusedIndex)
         } ?: viewState.value.items.lastOrNull()
-        val focusedDate = (focusedItem as? TripItemState.Timeable)?.timestamp
+        val timestamp = focusedItem?.timestamp ?: ZonedDateTime.now()
         if (type != null) {
             addPlanUseCase.createAddPlanItem(
                 id = ADDING_PLAN_STATE_ID,
-                focusedDate
-                    ?: ZonedDateTime.now(),
-                type = type
+                time = timestamp,
+                type = type,
+                place = findPlaceForTimestamp(timestamp)
             )
         }
     }
@@ -288,6 +300,7 @@ class TripViewModel(
                 is Lodging -> repository.saveLodging(tripId, entity)
                 is TimedPlace -> repository.saveTimedPlace(tripId, entity)
                 is RestaurantReservation -> repository.saveRestaurantReservation(tripId, entity)
+                is FlexibleDaySection -> repository.saveFlexibleSection(tripId, entity)
             }
         }
     }
@@ -297,6 +310,7 @@ class TripViewModel(
         is Lodging -> copy(id = id)
         is TimedPlace -> copy(id = id)
         is RestaurantReservation -> copy(id = id)
+        is FlexibleDaySection -> copy(id = id)
     }
 
     override fun cancelEdit(itemId: String) {
@@ -304,7 +318,8 @@ class TripViewModel(
     }
 
     override fun delete(type: AddPlanItemState.Type, itemId: String) {
-        val entity = (reversibleItems[itemId] as? TripItemState.Editable)?.entity ?: return
+        val entity = (reversibleItems[itemId] as? TripItemState.Editable)?.entity
+            ?: trip.value?.flexibleSections?.firstOrNull { it.id == itemId } ?: return
         addPlanUseCase.removeItem(itemId)
         viewModelScope.launch {
             when (entity) {
@@ -315,8 +330,32 @@ class TripViewModel(
                     tripId,
                     entity.id
                 )
+
+                is FlexibleDaySection -> repository.deleteFlexibleSection(tripId, entity.id)
             }
         }
+    }
+
+    private fun findPlaceForTimestamp(timestamp: ZonedDateTime): Place? {
+        val currentTrip = trip.value ?: return null
+        val entities =
+            currentTrip.places + currentTrip.restaurants + currentTrip.lodgings + currentTrip.flights.flatMap { it.segments }
+        return entities.firstOrNull {
+            it.timestamp().toLocalDate() == timestamp.toLocalDate()
+        }?.let {
+            when (it) {
+                is WithCity -> it.city
+                is FlightSegment -> it.getPlace(it.arrival)
+            }
+        }
+    }
+
+    private fun TripEvent.timestamp(useFlightArrival: Boolean = true) = when (this) {
+        is FlightSegment -> if (useFlightArrival) arrival else departure
+        is TimedPlace -> startDateTime
+        is Lodging -> checkIn
+        is RestaurantReservation -> dateTime
+        is FlexibleDaySection -> date
     }
 
     private val TripItemState.Editable.entity: TripEntity?
@@ -343,11 +382,15 @@ class TripViewModel(
 
             is TripItemState.PlaceItemState -> trip.value?.places?.firstOrNull { it.id == id }
             is TripItemState.RestaurantReservationItemState -> trip.value?.restaurants?.firstOrNull { it.id == id }
+            is TripItemState.FlexibleDaySectionState -> trip.value?.flexibleSections?.firstOrNull { it.id == id }
         }
 
-    private fun genItems(trip: Trip): List<TripItemState> {
+    private fun genItems(
+        trip: Trip,
+        flexibleSectionItems: List<TripItemState.FlexibleDaySectionState>
+    ): List<TripItemState> {
         val events =
-            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants
+            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants + trip.flexibleSections
         val pairs = events.flatMap { event ->
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
@@ -358,6 +401,7 @@ class TripViewModel(
                 )
 
                 is RestaurantReservation -> listOf(event.dateTime to event)
+                is FlexibleDaySection -> listOf(event.date to event)
             }
         }.sortedBy { (time, event) ->
             EventComparable(
@@ -419,9 +463,10 @@ class TripViewModel(
                         genItem(
                             time,
                             event,
-                            showDate = firstInSection,
+                            showDate = firstInSection && !Pair(time, event).isReturn(pairs),
                             backgroundStyle = backgroundStyle,
                             sectionId = place?.id ?: "",
+                            flexibleSectionItems = flexibleSectionItems,
                         )
                     )
                 }
@@ -434,14 +479,14 @@ class TripViewModel(
             listOf(
                 TripItemState.InitialAddPlanItemState(
                     UUID.randomUUID().toString(),
-                    Time.now(),
+                    ZonedDateTime.now(),
                 )
             )
         }
     }
 
     private fun genPlaceItem(
-        index: Int, pairs: List<Pair<Time, TripEvent>>,
+        index: Int, pairs: List<Pair<ZonedDateTime, TripEvent>>,
     ): TripItemState.PlaceItemState? {
         val item = pairs[index]
 
@@ -450,7 +495,7 @@ class TripViewModel(
 
         val (time, event) = item
 
-        val place = event.getPlace(time)
+        val place = event.getPlace(time) ?: return null
 
 
         // Exclude if previous adjacent events had same place or were day trips
@@ -484,30 +529,30 @@ class TripViewModel(
         )
     }
 
-    private val List<Pair<Time, TripEvent>>.originPlace: Place?
+    private val List<Pair<ZonedDateTime, TripEvent>>.originPlace: Place?
         get() {
             return first().takeIf { it.isDeparture }?.place
         }
 
-    private fun List<Pair<Time, TripEvent>>.nextItems(index: Int) = subList(
+    private fun List<Pair<ZonedDateTime, TripEvent>>.nextItems(index: Int) = subList(
         (index + 1).coerceAtMost(lastIndex),
         size,
     ).filterNot { (nextTime, nextEvent) -> nextEvent.isTimedPlaceEnd(nextTime) }
 
     private fun TripEvent.isTimedPlaceEnd(
-        referenceTime: Time,
+        referenceTime: ZonedDateTime,
     ) = this is TimedPlace && referenceTime == endDateTime && referenceTime != startDateTime
 
-    private val Pair<Time, TripEvent>.place: Place
+    private val Pair<ZonedDateTime, TripEvent>.place: Place?
         get() = second.getPlace(first)
 
-    private val Pair<Time, TripEvent>.isDeparture: Boolean
+    private val Pair<ZonedDateTime, TripEvent>.isDeparture: Boolean
         get() = (second as? FlightSegment)?.departure == first
 
     private val TimedPlace.isDayTrip: Boolean
         get() = this.endDateTime == null || this.endDateTime.toMidnight() == this.startDateTime.toMidnight()
 
-    private fun Pair<Time, TripEvent>.isReturn(pairs: List<Pair<Time, TripEvent>>): Boolean {
+    private fun Pair<ZonedDateTime, TripEvent>.isReturn(pairs: List<Pair<ZonedDateTime, TripEvent>>): Boolean {
         val (time, event) = this
         return (this == pairs.last() && event is FlightSegment && event.arrival == time && event.getPlace(
             time
@@ -515,7 +560,7 @@ class TripViewModel(
     }
 
     private fun genDateRangeItem(
-        from: Time, to: Time, sectionId: String,
+        from: ZonedDateTime, to: ZonedDateTime, sectionId: String,
     ): TripItemState? {
         val start = from + 1.days
         val end = to.toMidnight() - 1.minutes
@@ -543,13 +588,13 @@ class TripViewModel(
     }
 
     private fun genItem(
-        timestamp: Time,
+        timestamp: ZonedDateTime,
         event: TripEvent,
         showDate: Boolean,
         backgroundStyle: TripItemState.EventItemState.BackgroundStyle,
         sectionId: String,
+        flexibleSectionItems: List<TripItemState.FlexibleDaySectionState>,
     ): TripItemState.EventItemState {
-        contract { returns() implies (event is FlightSegment || event is Lodging) }
         return when (event) {
             is FlightSegment -> {
                 if (timestamp == event.departure) {
@@ -636,6 +681,23 @@ class TripViewModel(
                 backgroundStyle = backgroundStyle,
                 sectionId = sectionId,
             )
+
+            is FlexibleDaySection -> flexibleSectionItems.firstOrNull { it.id == event.id }?.copy(
+                showDate = showDate,
+                backgroundStyle = backgroundStyle,
+            ) ?: TripItemState.FlexibleDaySectionState(
+                "",
+                timestamp,
+                "",
+                "",
+                showDate,
+                backgroundStyle,
+                "",
+                "",
+                "",
+                emptyList(),
+                emptyList(),
+            )
         }
     }
 
@@ -660,7 +722,7 @@ class TripViewModel(
 
 }
 
-private fun TripEvent.getPlace(referenceTime: Time) = when (this) {
+private fun TripEvent.getPlace(referenceTime: ZonedDateTime) = when (this) {
     is FlightSegment -> if (referenceTime == departure) {
         airportFrom.city
     } else {
@@ -670,11 +732,8 @@ private fun TripEvent.getPlace(referenceTime: Time) = when (this) {
     is WithCity -> city
 }
 
-private val Time.dateString
-    get() = "$year=$month-$dayOfMonth"
-
 private class EventComparable(
-    private val time: Time, private val event: TripEvent,
+    private val time: ZonedDateTime, private val event: TripEvent,
 ) : Comparable<EventComparable> {
     override fun compareTo(other: EventComparable): Int {
         if (time.dateString != other.time.dateString || type == EventType.UNKNOWN) {

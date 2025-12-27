@@ -9,7 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import travel.vola.android.extensions.Time
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.hoursToMillis
 import travel.vola.android.extensions.minutesToMillis
 import travel.vola.android.extensions.update
@@ -162,7 +162,7 @@ fun DateTimePickerDialogPreview() {
         )
         dateTimePickerState.step = PickerStep.Time
         DateTimePickerDialog(
-            minimumSelectableTime = Time(1700076960000, ZoneId.systemDefault()),
+            minimumSelectableTime = zonedDateTime(1700076960000, ZoneId.systemDefault()),
             onDismiss = {},
             onDateTimeSelected = {},
         )

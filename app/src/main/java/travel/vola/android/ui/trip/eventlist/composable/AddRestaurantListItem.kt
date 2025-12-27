@@ -4,7 +4,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import travel.vola.android.model.data.Time
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
@@ -54,11 +53,11 @@ fun AddRestaurantListItemPreview() {
         Surface {
             AddRestaurantListItem(
                 uiState = ManualAddLodgingItemState(
-                    "", Time.now(),
+                    "", ZonedDateTime.now(),
                     typeSelectionEnabled = false,
                     startState = ManualAddPlanState(
                         dateTime = null,
-                        minDateTime = Time.now(),
+                        minDateTime = ZonedDateTime.now(),
                         isTimeSet = false,
                         dateSelectionEnabled = false,
                         locationText = null,
@@ -66,7 +65,7 @@ fun AddRestaurantListItemPreview() {
                     ),
                     endState = ManualAddPlanState(
                         dateTime = null,
-                        minDateTime = Time.now(),
+                        minDateTime = ZonedDateTime.now(),
                         isTimeSet = false,
                         dateSelectionEnabled = true,
                         locationText = null,

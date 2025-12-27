@@ -5,17 +5,21 @@ import travel.vola.android.extensions.asISO8601DateString
 import travel.vola.android.model.data.LodgingSearchResult
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.SimplePlace
-import travel.vola.android.model.data.Time
 import travel.vola.android.model.network.ApiData
 import travel.vola.android.model.network.ApiResponse
 import travel.vola.android.model.network.request
 import travel.vola.android.model.network.toAppDataModel
+import java.time.ZonedDateTime
 import java.util.Currency
 import java.util.Locale
 
 class LodgingSearchRepository : AutoCompleteRepository<SimplePlace, Place> {
 
-    override suspend fun autocomplete(query: String, autocompleteKey: String): List<SimplePlace> {
+    override suspend fun autocomplete(
+        query: String,
+        autocompleteKey: String,
+        locationBias: Pair<Double, Double>?,
+    ): List<SimplePlace> {
         return request<ApiResponse.PlaceAutoComplete>("/places/autocomplete") {
             url {
                 parameters.append("query", query)
@@ -52,7 +56,7 @@ class LodgingSearchRepository : AutoCompleteRepository<SimplePlace, Place> {
     }
 
     suspend fun search(
-        locationId: String, checkIn: Time, checkOut: Time
+        locationId: String, checkIn: ZonedDateTime, checkOut: ZonedDateTime
     ): List<LodgingSearchResult> {
         return request<ApiResponse.LodgingSearch>("/lodging/search") {
             url {
@@ -70,8 +74,8 @@ class LodgingSearchRepository : AutoCompleteRepository<SimplePlace, Place> {
 
     suspend fun details(
         lodgingId: String,
-        checkIn: Time,
-        checkOut: Time,
+        checkIn: ZonedDateTime,
+        checkOut: ZonedDateTime,
         latitude: Double? = null,
         longitude: Double? = null,
     ): ApiData.LodgingDetails? {

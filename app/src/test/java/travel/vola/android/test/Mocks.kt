@@ -9,7 +9,6 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import travel.vola.android.extensions.get
 import travel.vola.android.extensions.set
-import travel.vola.android.model.data.Time
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
 import travel.vola.android.ui.trip.creation.usecase.PendingData
 import travel.vola.android.ui.trip.state.AddPlanItemState
@@ -18,10 +17,11 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.ZonedDateTime
 
 object Mocks {
     @Deprecated("use the Time(String) constructor instead")
-    fun mockTime(stubbing: KStubbing<Time>.(Time) -> Unit = {}): Time {
+    fun mockTime(stubbing: KStubbing<ZonedDateTime>.(ZonedDateTime) -> Unit = {}): ZonedDateTime {
         val instant: Instant = mock {
             on { toEpochMilli() } doReturn 0L
         }
