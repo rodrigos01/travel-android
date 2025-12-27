@@ -44,7 +44,7 @@ class AddPlanUseCase(
     ),
     private val addPlaceUseCase: AddPlaceUseCase = AddPlaceUseCase(coroutineScope = coroutineScope),
     private val addRestaurantUseCase: AddRestaurantUseCase = AddRestaurantUseCase(coroutineScope = coroutineScope),
-    private val addFlexibleSectionUseCase: AddFlexibleSectionUseCase = AddFlexibleSectionUseCase(
+    private val flexibleSectionUseCase: FlexibleSectionUseCase = FlexibleSectionUseCase(
         tripId,
         tripRepository,
         coroutineScope,
@@ -53,7 +53,7 @@ class AddPlanUseCase(
     AddLodgingItemActionHandler by addLodgingUseCase, AddPlaceItemActionHandler by addPlaceUseCase,
     AddRestaurantItemActionHandler by addRestaurantUseCase,
     LodgingSearchParamsFactory by addLodgingUseCase,
-    AddFlexibleSectionItemActionHandler by addFlexibleSectionUseCase {
+    AddFlexibleSectionItemActionHandler by flexibleSectionUseCase {
 
     data class StateParams(
         val dateSelectionEnabled: Boolean = true,
@@ -79,7 +79,7 @@ class AddPlanUseCase(
         addPlaceUseCase.items,
         addLodgingUseCase.items,
         addRestaurantUseCase.items,
-        addFlexibleSectionUseCase.items,
+        flexibleSectionUseCase.items,
     ).stateIn(coroutineScope, SharingStarted.Eagerly, initialValue = emptyMap())
 
     fun createAddPlanItem(
@@ -140,7 +140,7 @@ class AddPlanUseCase(
             is AddLodgingItemState -> addLodgingUseCase.removeItem(item)
             is AddPlaceItemState -> addPlaceUseCase.removeItem(item)
             is AddRestaurantItemState -> addRestaurantUseCase.removeItem(item)
-            is AddFlexibleSectionItemState -> addFlexibleSectionUseCase.removeItem(item)
+            is AddFlexibleSectionItemState -> flexibleSectionUseCase.removeItem(item)
         }
     }
 
@@ -159,7 +159,7 @@ class AddPlanUseCase(
             AddPlanItemState.Type.Lodging -> addLodgingUseCase
             AddPlanItemState.Type.Place -> addPlaceUseCase
             AddPlanItemState.Type.Restaurant -> addRestaurantUseCase
-            AddPlanItemState.Type.FlexibleSection -> addFlexibleSectionUseCase
+            AddPlanItemState.Type.FlexibleSection -> flexibleSectionUseCase
         }
 
 
@@ -171,7 +171,7 @@ class AddPlanUseCase(
             is Lodging -> addLodgingUseCase.addItem(id, this, params)
             is TimedPlace -> addPlaceUseCase.addItem(id, this, params)
             is RestaurantReservation -> addRestaurantUseCase.addItem(id, this, params)
-            is FlexibleDaySection -> addFlexibleSectionUseCase.addItem(id, this, params)
+            is FlexibleDaySection -> flexibleSectionUseCase.addItem(id, this, params)
         }
     }
 
@@ -182,7 +182,7 @@ class AddPlanUseCase(
             is LodgingSearchItemState -> error("LodgingSearchItemState entity creation not implemented")
             is AddPlaceItemState -> addPlaceUseCase.createEntity(this)
             is AddRestaurantItemState -> addRestaurantUseCase.createEntity(this)
-            is AddFlexibleSectionItemState -> addFlexibleSectionUseCase.createEntity(this)
+            is AddFlexibleSectionItemState -> flexibleSectionUseCase.createEntity(this)
         }
     }
 }

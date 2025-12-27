@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import travel.vola.android.common.ui.components.OutlinedInlinedTextField
 import travel.vola.android.common.ui.components.SearchBoxDialog
+import travel.vola.android.common.ui.components.SearchResult
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.ConfirmationDialog
 import travel.vola.android.ui.trip.state.TripItemState
@@ -91,8 +92,8 @@ fun FlexibleDaySectionListItem(
             }
         }
         var expanded by remember { mutableStateOf(false) }
-        AnimatedContent(expanded) {
-            if (it) {
+        AnimatedContent(expanded) { isExpanded ->
+            if (isExpanded) {
                 Column(
                     modifier = modifier
                         .fillMaxWidth()
@@ -207,7 +208,12 @@ fun FlexibleDaySectionListItem(
                                 AnimatedVisibility(visible = showAddPlaceDialog) {
                                     SearchBoxDialog(
                                         onDismiss = { showAddPlaceDialog = false },
-                                        searchResults = emptyList(),
+                                        searchResults = state.searchResults.map {
+                                            SearchResult(
+                                                it.title,
+                                                it.subtitle
+                                            )
+                                        },
                                         onLocationSearchTextChanged,
                                         onLocationSearchResultSelected = {
                                             onLocationSearchResultSelected(
@@ -349,6 +355,7 @@ fun FlexibleDaySectionListItemPreview() {
                                 items = emptyList()
                             ),
                         ),
+                        searchResults = emptyList(),
                     ),
                     highlightDate = true,
                 )

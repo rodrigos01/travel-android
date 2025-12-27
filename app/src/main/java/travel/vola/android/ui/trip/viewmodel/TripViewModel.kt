@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -52,7 +51,6 @@ import travel.vola.android.ui.trip.state.TripItemState
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
 
@@ -65,11 +63,17 @@ class TripViewModel(
     private val tripId: String,
     private val navController: NavController,
     private val useCaseScope: CoroutineScope = createUseCaseScope(),
+    private val flexibleSectionUseCase: FlexibleSectionUseCase = FlexibleSectionUseCase(
+        tripId = tripId,
+        repository = repository,
+        coroutineScope = useCaseScope,
+    ),
     private val addPlanUseCase: AddPlanUseCase = AddPlanUseCase(
         tripId = tripId,
         tripRepository = repository,
         placeRepository = placeRepository,
         coroutineScope = useCaseScope,
+        flexibleSectionUseCase = flexibleSectionUseCase,
     ),
 ) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
 
@@ -97,9 +101,11 @@ class TripViewModel(
 
     private val trip = repository.findTripById(tripId)
         .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
+
+    private val flexibleSectionItems = flexibleSectionUseCase.flexibleSectionItems
     private val eventsFromTrip =
-        trip.filterNotNull().map { currentTrip ->
-            val items = genItems(currentTrip)
+        trip.filterNotNull().combine(flexibleSectionItems) { currentTrip, sectionItems ->
+            val items = genItems(currentTrip, sectionItems)
             val places =
                 (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).fold(mapOf<Place, PlaceState>()) { map, entity: Mapeable ->
                     val current = map.getOrDefault(
@@ -173,7 +179,7 @@ class TripViewModel(
             }
         }
         val focusedDate =
-            (state.items.getOrNull(currentScrollState.focusedIndex) as? TripItemState.Timeable)?.timestamp?.toLocalDate()
+            state.items.getOrNull(currentScrollState.focusedIndex)?.timestamp?.toLocalDate()
         val focusedDateItem = items.filterIsInstance<TripItemState.Focusable>().lastOrNull {
             items.indexOf(it)
                 .let { index -> index >= currentScrollState.firstVisibleIndex && index <= currentScrollState.focusedIndex }
@@ -204,12 +210,12 @@ class TripViewModel(
     }
 
     fun addButtonTapped(itemId: String) {
-        val tapped = viewState.value.items.find { it is Identifiable && it.id == itemId }
+        val tapped = viewState.value.items.find { it is Identifiable && it.id == itemId } ?: return
         val allowStartDateSelection =
             tapped is TripItemState.DateRangeItemState || tapped is TripItemState.InitialAddPlanItemState
         addPlanUseCase.createAddPlanItem(
             id = (tapped as? TripItemState.Replaceable)?.id,
-            time = (tapped as TripItemState.Timeable).timestamp,
+            time = tapped.timestamp,
             dateSelectionEnabled = allowStartDateSelection,
         )
     }
@@ -218,7 +224,7 @@ class TripViewModel(
         val tapped = viewState.value.items.find { it is Identifiable && it.id == itemId }
         addPlanUseCase.createAddPlanItem(
             id = (tapped as Identifiable).id,
-            time = (tapped as TripItemState.Timeable).timestamp,
+            time = tapped.timestamp,
             dateSelectionEnabled = false,
         )
     }
@@ -262,7 +268,7 @@ class TripViewModel(
         } else {
             viewState.value.items.getOrNull(currentFocusedIndex)
         } ?: viewState.value.items.lastOrNull()
-        val focusedDate = (focusedItem as? TripItemState.Timeable)?.timestamp
+        val focusedDate = focusedItem?.timestamp
         if (type != null) {
             addPlanUseCase.createAddPlanItem(
                 id = ADDING_PLAN_STATE_ID,
@@ -355,7 +361,10 @@ class TripViewModel(
             is TripItemState.FlexibleDaySectionState -> trip.value?.flexibleSections?.firstOrNull { it.id == id }
         }
 
-    private fun genItems(trip: Trip): List<TripItemState> {
+    private fun genItems(
+        trip: Trip,
+        flexibleSectionItems: List<TripItemState.FlexibleDaySectionState>
+    ): List<TripItemState> {
         val events =
             trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants + trip.flexibleSections
         val pairs = events.flatMap { event ->
@@ -433,6 +442,7 @@ class TripViewModel(
                             showDate = firstInSection && !Pair(time, event).isReturn(pairs),
                             backgroundStyle = backgroundStyle,
                             sectionId = place?.id ?: "",
+                            flexibleSectionItems = flexibleSectionItems,
                         )
                     )
                 }
@@ -559,8 +569,8 @@ class TripViewModel(
         showDate: Boolean,
         backgroundStyle: TripItemState.EventItemState.BackgroundStyle,
         sectionId: String,
+        flexibleSectionItems: List<TripItemState.FlexibleDaySectionState>,
     ): TripItemState.EventItemState {
-        contract { returns() implies (event is FlightSegment || event is Lodging) }
         return when (event) {
             is FlightSegment -> {
                 if (timestamp == event.departure) {
@@ -648,28 +658,8 @@ class TripViewModel(
                 sectionId = sectionId,
             )
 
-            is FlexibleDaySection -> TripItemState.FlexibleDaySectionState(
-                id = event.id,
-                timestamp = event.date,
-                showDate = showDate,
-                dayOfMonth = event.date.dayOfMonthString,
-                dayOfWeek = event.date.dayOfWeekString,
-                name = event.name,
-                subtitle = event.categories.flatMap { it.items.map { it.place.name } }.take(3)
-                    .joinToString(", "),
-                categories = event.categories.map { category ->
-                    TripItemState.DaySectionCategory(
-                        name = category.name,
-                        items = category.items.map {
-                            TripItemState.SectionOption(
-                                id = it.id,
-                                title = it.place.name,
-                                subtitle = it.place.address,
-                                imageUrl = it.place.coverImage ?: "",
-                            )
-                        },
-                    )
-                }
+            is FlexibleDaySection -> flexibleSectionItems.first { it.id == event.id }.copy(
+                showDate = showDate
             )
         }
     }
