@@ -211,6 +211,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
                 tripId = tripId,
                 name = flexibleSection.name,
                 date = flexibleSection.date,
+                city = flexibleSection.city.id,
             )
         )
     }

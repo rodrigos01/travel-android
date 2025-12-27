@@ -149,6 +149,7 @@ fun RoomData.FlexibleSection.toAppDataModel(): FlexibleDaySection = FlexibleDayS
     id = entity.id,
     name = entity.name,
     date = entity.date,
+    city = city.toAppDataModel(),
     categories = categories.map { category ->
         FlexibleDayCategory(
             category.entity.name,

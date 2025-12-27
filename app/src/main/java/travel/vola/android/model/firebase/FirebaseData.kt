@@ -116,6 +116,7 @@ sealed interface FirebaseData {
         val id: String = "",
         val name: String = "",
         val date: String = "",
+        val city: Place = Place(),
         val categories: List<FlexibleSectionCategory> = emptyList(),
     )
 

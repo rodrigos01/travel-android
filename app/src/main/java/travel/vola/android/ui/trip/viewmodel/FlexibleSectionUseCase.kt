@@ -20,6 +20,7 @@ import travel.vola.android.extensions.set
 import travel.vola.android.model.data.FlexibleDayCategory
 import travel.vola.android.model.data.FlexibleDayItem
 import travel.vola.android.model.data.FlexibleDaySection
+import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.SimplePlace
 import travel.vola.android.model.repository.PlaceAutoCompleteRepository
 import travel.vola.android.model.repository.TripRepository
@@ -30,6 +31,7 @@ import travel.vola.android.ui.trip.state.AddFlexibleSectionItemState
 import travel.vola.android.ui.trip.state.SearchResultItemState
 import travel.vola.android.ui.trip.state.TripItemState
 import java.time.ZonedDateTime
+import java.util.TimeZone
 
 class FlexibleSectionUseCase(
     private val tripId: String,
@@ -94,6 +96,17 @@ class FlexibleSectionUseCase(
                 startDateTime = time,
                 hasStartTime = false,
                 sectionName = "",
+                city = params.place ?: Place(
+                    id = "",
+                    name = "",
+                    address = "",
+                    latitude = 0.0,
+                    longitude = 0.0,
+                    coverImage = null,
+                    timeZone = TimeZone.getTimeZone(time.zone.id),
+                    externalId = "",
+                    source = "",
+                )
             ),
             params,
         )
@@ -110,6 +123,7 @@ class FlexibleSectionUseCase(
                 startDateTime = entity.date,
                 hasStartTime = false,
                 sectionName = entity.name,
+                city = entity.city
             ),
             params,
         )
@@ -142,12 +156,15 @@ class FlexibleSectionUseCase(
     }
 
     override fun createEntity(item: AddFlexibleSectionItemState): FlexibleDaySection {
+        val data: PendingData.PendingFlexibleSection = itemStore.getData(item.id)
+            ?: error("Pending Flexible section with id ${item.id} not found")
         val name = item.sectionName ?: error("Section name cannot be null")
         return FlexibleDaySection(
             id = item.id,
             name = name,
             date = item.startDateTime,
-            categories = emptyList()
+            categories = emptyList(),
+            data.city,
         )
     }
 
