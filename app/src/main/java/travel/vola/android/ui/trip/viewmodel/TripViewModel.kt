@@ -346,7 +346,6 @@ class TripViewModel(
             when (it) {
                 is WithCity -> it.city
                 is FlightSegment -> it.getPlace(it.arrival)
-                is FlexibleDaySection -> null
             }
         }
     }
@@ -718,7 +717,6 @@ private fun TripEvent.getPlace(referenceTime: ZonedDateTime) = when (this) {
     }
 
     is WithCity -> city
-    is FlexibleDaySection -> null
 }
 
 private class EventComparable(
