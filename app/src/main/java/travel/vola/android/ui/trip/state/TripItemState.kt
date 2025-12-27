@@ -5,8 +5,9 @@ import java.time.ZonedDateTime
 
 sealed interface TripItemState {
 
+    val timestamp: ZonedDateTime
+
     interface Timeable {
-        val timestamp: ZonedDateTime
     }
 
     interface SectionItemState {
@@ -172,9 +173,6 @@ sealed interface TripItemState {
         override val subtitle = restaurantAddress
     }
 
-    data class SuggestionsItemState(val text: String, val predictedChanges: List<String>) :
-        TripItemState
-
     data class InitialAddPlanItemState(
         override val id: String,
         override val timestamp: ZonedDateTime,
@@ -191,6 +189,7 @@ sealed interface TripItemState {
         val name: String,
         override val subtitle: String,
         val categories: List<DaySectionCategory>,
+        val searchResults: List<SearchResultItemState>,
     ) : EventItemState, EventWithDateState, Focusable {
         override val time: String = ""
         override val title: String = name
