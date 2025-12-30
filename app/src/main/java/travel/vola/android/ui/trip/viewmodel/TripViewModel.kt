@@ -48,6 +48,7 @@ import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.TripItemState
+import travel.vola.android.ui.trip.state.type
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.contracts.ExperimentalContracts
@@ -281,6 +282,23 @@ class TripViewModel(
         }
     }
 
+    override fun addPlanTypeChanged(
+        itemId: String,
+        newType: AddPlanItemState.Type
+    ) {
+        val item = addPlanUseCase.removeItem(itemId) ?: return
+        if (item.type == newType) {
+            return
+        }
+        addPlanUseCase.createAddPlanItem(
+            id = ADDING_PLAN_STATE_ID,
+            time = item.timestamp,
+            dateSelectionEnabled = item.dateSelectionEnabled,
+            type = newType,
+            place = findPlaceForTimestamp(item.timestamp)
+        )
+    }
+
     override fun save(itemId: String) {
         val lodgingSearchParams = addPlanUseCase.getLodgingSearchParams(tripId, itemId)
         if (lodgingSearchParams != null) {
@@ -339,10 +357,19 @@ class TripViewModel(
     private fun findPlaceForTimestamp(timestamp: ZonedDateTime): Place? {
         val currentTrip = trip.value ?: return null
         val entities =
-            currentTrip.places + currentTrip.restaurants + currentTrip.lodgings + currentTrip.flights.flatMap { it.segments }
-        return entities.firstOrNull {
+            (currentTrip.places + currentTrip.restaurants + currentTrip.lodgings + currentTrip.flights.flatMap { it.segments }).sortedBy { it.timestamp() }
+
+        val referenceEntity = entities.firstOrNull {
+            // Entity at the same day as timestamp
             it.timestamp().toLocalDate() == timestamp.toLocalDate()
-        }?.let {
+        } ?: entities.indexOfFirst {
+            // Entity immediately before the one after the timestamp
+            it.timestamp() >= timestamp
+        }.let { index ->
+            entities.getOrNull(index - 1)
+        }
+
+        return referenceEntity?.let {
             when (it) {
                 is WithCity -> it.city
                 is FlightSegment -> it.getPlace(it.arrival)
