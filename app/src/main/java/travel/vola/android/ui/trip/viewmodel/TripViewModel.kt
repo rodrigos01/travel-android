@@ -231,7 +231,7 @@ class TripViewModel(
         )
     }
 
-    fun itemTapped(itemId: String) {
+    fun editTapped(itemId: String) {
         if (reversibleItems.containsKey(itemId)) {
             return
         }

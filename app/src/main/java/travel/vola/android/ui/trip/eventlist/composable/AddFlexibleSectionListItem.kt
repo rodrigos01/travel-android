@@ -12,7 +12,7 @@ fun AddFlexibleSectionListItem(
     state: AddFlexibleSectionItemState,
     onTextChanged: (CharSequence) -> Unit,
     onUpdated: (
-        dateTime: ZonedDateTime?,
+        dateTime: ZonedDateTime,
         timeSelected: Boolean,
     ) -> Unit,
 ) {
@@ -26,7 +26,11 @@ fun AddFlexibleSectionListItem(
         text = state.sectionName,
         placeHolder = "Section Name",
         onTextChanged = onTextChanged,
-        onUpdated = { dateTime, timeSelected, _ -> onUpdated(dateTime, timeSelected) }
+        onUpdated = { dateTime, timeSelected, _ ->
+            if (dateTime != null) {
+                onUpdated(dateTime, timeSelected)
+            }
+        }
     )
 }
 
