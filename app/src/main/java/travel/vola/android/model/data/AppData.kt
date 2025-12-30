@@ -114,7 +114,7 @@ data class FlexibleDaySection(
     val date: ZonedDateTime,
     val categories: List<FlexibleDayCategory>,
     override val city: Place,
-) : TripEntity, TripEvent, Mapeable
+) : TripEntity, TripEvent, WithCity
 
 data class FlexibleDayCategory(
     val name: String,

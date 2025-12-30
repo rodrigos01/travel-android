@@ -99,17 +99,10 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
         outputSchema = itinerarySchema
     ),
     DAILY_ITINERARY(
-        prompt = "Based on the trip itinerary below, generate a day-by-day itinerary considering the user parameters and the type of itinerary they've chosen. Consider travel time between cities for the itineraries on travel days but don't include travel details (hotel check-in or check-out, transportation) or lodging to it. Open-ended daily itineraries should have sections for each day with a list of suggested places in each separated by categories. The sections would be parts of the day dedicated to a common geographical area grouping all suggestions. Categories should be the single, primary function of places being suggested, do not use hybrid category names. If a place serves multiple purposes, choose the one most relevant to the user’s itinerary. Sections should have a mix of food options and places that match the user’s preferences. A single day would only have multiple sections if the user would be visiting two different areas on that day. Open-ended daily itineraries may also have timed places for time-sensitive, must-have activities. Detailed itineraries should only list timed places, no sections, and must consider realistic travel time between locations for their times and have specific stops for lunch and dinner. Both itinerary types must consider times of operation of places on the dates they're been suggested. For each city, suggest 3 predicted possible changes the user might want to make to the generated day-by-day itinerary for it.",
+        prompt = "Based on the trip itinerary below, generate a reference guide for the dates requested. This reference guide should be organized by the days of the trip and for each day, have a diverse list of suggested places for the user to visit based on their preferences. The places should have categories so that they can be easily filtered in the UI and there should be at least 3 places in each category per day. Travel days should be divided in sections for each city the user will be on that date.",
         outputSchema = Schema.obj(
             mapOf(
-                "predictedChanges" to Schema.array(
-                    Schema.obj(
-                        mapOf(
-                            "cityId" to Schema.string("id of the city as provided in the original itinerary"),
-                            "changes" to Schema.array(Schema.string())
-                        )
-                    )
-                ),
+                "numDays" to Schema.integer(),
                 "days" to Schema.array(
                     Schema.obj(
                         mapOf(
@@ -117,20 +110,13 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                                 "date of the day in the format YYYY-MM-DD",
                                 format = StringFormat.Custom("date")
                             ),
-                            "timedPlaces" to Schema.array(placeSchema),
                             "sections" to Schema.array(
-                                Schema.obj(
+                                description = "Different sections of the day for when the user will be in different cities in the same day.",
+                                items = Schema.obj(
                                     mapOf(
                                         "cityId" to Schema.string("id of the city as provided in the original itinerary"),
-                                        "name" to Schema.string("A name for the section"),
-                                        "suggestions" to Schema.array(
-                                            Schema.obj(
-                                                mapOf(
-                                                    "category" to Schema.string("the category of the places being suggested"),
-                                                    "places" to Schema.array(placeSchema, minItems = 3)
-                                                )
-                                            )
-                                        )
+                                        "name" to Schema.string("A Short title describing the selection of places in this section"),
+                                        "places" to Schema.array(placeSchema),
                                     )
                                 )
                             )

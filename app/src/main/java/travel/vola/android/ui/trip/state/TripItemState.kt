@@ -7,8 +7,7 @@ sealed interface TripItemState {
 
     val timestamp: ZonedDateTime
 
-    interface Timeable {
-    }
+    interface Timeable
 
     interface SectionItemState {
         val sectionId: String?

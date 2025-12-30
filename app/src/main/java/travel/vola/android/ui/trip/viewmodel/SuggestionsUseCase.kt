@@ -1,6 +1,5 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.FlexibleDayCategory
 import travel.vola.android.model.data.FlexibleDayItem
 import travel.vola.android.model.data.FlexibleDaySection
@@ -14,6 +13,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.Locale
 import java.util.TimeZone
+import java.util.UUID
 
 class SuggestionsUseCase(
     private val repository: GenAIRepository,
@@ -129,19 +129,10 @@ class SuggestionsUseCase(
                         } ?: ZonedDateTime.now()
                     SuggestedDay(
                         date = date,
-                        timedPlaces = day.timedPlaces.map { place ->
-                            TimedPlaceSuggestion(
-                                id = place.id,
-                                cityId = place.cityId,
-                                name = place.name,
-                                coverImage = "",
-                                reason = place.reason,
-                                startTime = place.startTime?.let { zonedDateTime(it) },
-                                endTime = place.endTime?.let { zonedDateTime(it) },
-                            )
-                        },
+                        timedPlaces = emptyList(),
                         sections = day.sections.map { section ->
                             FlexibleDaySection(
+                                id = UUID.randomUUID().toString(),
                                 name = section.name,
                                 date = date,
                                 city = Place(
@@ -151,32 +142,33 @@ class SuggestionsUseCase(
                                     latitude = 0.0,
                                     longitude = 0.0,
                                     address = "",
-                                    externalId = "",
+                                    externalId = section.cityId,
                                     timeZone = TimeZone.getDefault(),
                                     source = "",
                                 ),
-                                categories = section.suggestions.map { suggestion ->
-                                    FlexibleDayCategory(
-                                        name = suggestion.category,
-                                        items = suggestion.places.map { place ->
-                                            FlexibleDayItem(
-                                                id = place.id,
-                                                place = Place(
+                                categories = section.places.groupBy { it.category }
+                                    .map { (categoryName, places) ->
+                                        FlexibleDayCategory(
+                                            name = categoryName,
+                                            items = places.map { place ->
+                                                FlexibleDayItem(
                                                     id = place.id,
-                                                    name = place.name,
-                                                    coverImage = "",
-                                                    latitude = 0.0,
-                                                    longitude = 0.0,
-                                                    address = place.reason,
-                                                    externalId = "",
-                                                    timeZone = TimeZone.getDefault(),
-                                                    source = "",
-                                                ),
-                                                note = place.reason
-                                            )
-                                        }
-                                    )
-                                }
+                                                    place = Place(
+                                                        id = place.id,
+                                                        name = place.name,
+                                                        coverImage = "",
+                                                        latitude = 0.0,
+                                                        longitude = 0.0,
+                                                        address = place.reason,
+                                                        externalId = place.id,
+                                                        timeZone = TimeZone.getDefault(),
+                                                        source = "Gemini",
+                                                    ),
+                                                    note = place.reason
+                                                )
+                                            }
+                                        )
+                                    },
                             )
                         },
                     )
