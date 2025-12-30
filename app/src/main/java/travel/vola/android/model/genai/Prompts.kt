@@ -99,7 +99,7 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
         outputSchema = itinerarySchema
     ),
     DAILY_ITINERARY(
-        prompt = "Based on the trip itinerary below, generate a reference guide for the dates requested. This reference guide should be organized by the days of the trip and for each day, have a diverse list of suggested places for the user to visit based on their preferences. The places should have categories so that they can be easily filtered in the UI and there should be at least 3 places in each category per day. Travel days should be divided in sections for each city the user will be on that date.",
+        prompt = "Based on the trip itinerary below, generate a reference guide for the dates requested. This reference guide should be organized by the days of the trip and for each day, have a diverse list of suggested places for the user to visit based on their preferences. The places should have categories so that they can be easily filtered in the UI and each day should have between 5 and 10 suggested places, with each category having at least 2 suggestions. Travel days should be divided in sections for each city the user will be on that date.",
         outputSchema = Schema.obj(
             mapOf(
                 "numDays" to Schema.integer(),
@@ -185,11 +185,9 @@ private val itinerarySchema = Schema.obj(
 
 private val placeSchema = Schema.obj(
     mapOf(
-        "id" to Schema.string("A randomized unique string"),
         "name" to Schema.string("name of the place"),
         "category" to Schema.string("category of the place so it can be grouped with other suggestions"),
-        "cityId" to Schema.string("id of the city as provided in the original itinerary"),
-        "reason" to Schema.string("brief reason for the userto visit this place"),
+        "note" to Schema.string("A short, 5-10 word note indicating why the user should visit this place"),
         "searchQuery" to Schema.string("query to search for the place in google maps"),
         "startTime" to Schema.string(
             "time the user needs to be at this place, including the date",

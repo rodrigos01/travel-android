@@ -102,11 +102,9 @@ object GenAIData {
 
     @Serializable
     data class TimedPlace(
-        val id: String,
         val name: String,
-        val reason: String,
+        val note: String,
         val category: String,
-        val cityId: String,
         val searchQuery: String,
         val startTime: String?,
         val endTime: String?,

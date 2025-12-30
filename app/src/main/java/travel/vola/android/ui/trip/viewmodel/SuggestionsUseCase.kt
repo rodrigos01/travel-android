@@ -151,20 +151,21 @@ class SuggestionsUseCase(
                                         FlexibleDayCategory(
                                             name = categoryName,
                                             items = places.map { place ->
+                                                val placeId = UUID.randomUUID().toString()
                                                 FlexibleDayItem(
-                                                    id = place.id,
+                                                    id = placeId,
                                                     place = Place(
-                                                        id = place.id,
+                                                        id = placeId,
                                                         name = place.name,
                                                         coverImage = "",
                                                         latitude = 0.0,
                                                         longitude = 0.0,
-                                                        address = place.reason,
-                                                        externalId = place.id,
+                                                        address = "",
+                                                        externalId = placeId,
                                                         timeZone = TimeZone.getDefault(),
                                                         source = "Gemini",
                                                     ),
-                                                    note = place.reason
+                                                    note = place.note
                                                 )
                                             }
                                         )
