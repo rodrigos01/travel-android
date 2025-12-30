@@ -784,9 +784,9 @@ private class EventComparable(
             EventType.UNKNOWN -> 0
             EventType.ARRIVAL -> 1
             EventType.CHECKIN -> 2
-            EventType.CHECKOUT -> 3
-            EventType.PLACE -> 4
-            EventType.DEPARTURE -> 5
+            EventType.CHECKOUT -> 2
+            EventType.PLACE -> 3
+            EventType.DEPARTURE -> 4
         }
 
     override fun toString(): String {
