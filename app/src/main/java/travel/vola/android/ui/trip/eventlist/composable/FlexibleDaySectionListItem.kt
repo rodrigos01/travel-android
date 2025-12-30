@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
@@ -70,6 +71,7 @@ fun FlexibleDaySectionListItem(
     highlightDate: Boolean = false,
     position: EventItemPosition = EventItemPosition.SINGLE,
     startExpanded: Boolean = false,
+    onEditTapped: () -> Unit = {},
     onDeleteConfirmed: () -> Unit = {},
     onCategoryAdded: (String) -> Unit = {},
     onLocationSearchTextChanged: (CharSequence) -> Unit = {},
@@ -126,6 +128,11 @@ fun FlexibleDaySectionListItem(
                                 tint = LocalContentColor.current,
                                 contentDescription = "collapse",
                             )
+                        }
+                        IconButton(
+                            onClick = onEditTapped,
+                        ) {
+                            Icon(Icons.Filled.Edit, contentDescription = null)
                         }
                         IconButton(
                             onClick = { showDeleteConfirmation = true },
@@ -377,7 +384,7 @@ fun FlexibleDaySectionListItemPreview() {
                         ),
                         searchResults = emptyList(),
                     ),
-                    startExpanded = false,
+                    startExpanded = true,
                     highlightDate = true,
                 )
             }

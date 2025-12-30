@@ -109,7 +109,7 @@ fun TripDetails(
         onTripNameChanged = viewModel::tripNameChanged,
         onAddButonTapped = viewModel::addButtonTapped,
         onEmptyAddRowTapped = viewModel::emptyDateRowTapped,
-        onItemTapped = viewModel::itemTapped,
+        onEditTapped = viewModel::editTapped,
         onAddPlanTypeSelected = { viewModel.onAddPlanTypeSelected(it?.toState()) },
         onScrollStateChange = viewModel::setScrollState,
     )
@@ -125,7 +125,7 @@ private fun TripDetails(
     onTripNameChanged: (String) -> Unit = {},
     onAddButonTapped: (String) -> Unit = {},
     onEmptyAddRowTapped: (String) -> Unit = {},
-    onItemTapped: (String) -> Unit = {},
+    onEditTapped: (String) -> Unit = {},
     onAddPlanTypeSelected: (AddPlanType?) -> Unit = {},
     onScrollStateChange: (Int, Int) -> Unit = { _, _ -> },
 ) {
@@ -285,7 +285,7 @@ private fun TripDetails(
                     addPlanItemActionHandler,
                     onAddButonTapped,
                     onEmptyAddRowTapped,
-                    onItemTapped,
+                    onEditTapped,
                     onPlaceImageLoaded = { placeId, result ->
                         colorSchemeBitmaps[placeId] =
                             result.drawable.toBitmapOrNull()
@@ -324,7 +324,7 @@ fun List(
     addPlanItemActionHandler: AddPlanItemActionHandler,
     onAddButonTapped: (String) -> Unit,
     onEmptyAddRowTapped: (String) -> Unit,
-    onItemTapped: (String) -> Unit,
+    onEditTapped: (String) -> Unit,
     onPlaceImageLoaded: (String, SuccessResult) -> Unit,
 ) {
     LazyColumn(contentPadding = contentPadding, state = scrollState) {
@@ -341,7 +341,7 @@ fun List(
                     addPlanItemActionHandler,
                     onAddButonTapped,
                     onEmptyAddRowTapped,
-                    onItemTapped,
+                    onEditTapped,
                     onImageLoaded = {
                         val sectionId =
                             (event as? TripItemState.SectionItemState)?.sectionId
@@ -362,7 +362,7 @@ private fun TripDetailItem(
     addPlanItemActionHandler: AddPlanItemActionHandler,
     onAddButonTapped: (String) -> Unit,
     onEmptyAddRowTapped: (String) -> Unit,
-    onItemTapped: (String) -> Unit,
+    onEditTapped: (String) -> Unit,
     onImageLoaded: (SuccessResult) -> Unit,
     highlightDate: Boolean = false,
 ) {
@@ -390,10 +390,44 @@ private fun TripDetailItem(
             event.dateStart,
             event.dateEnd,
             onImageLoaded,
-            modifier = Modifier.clickable { onItemTapped(event.id) })
+            modifier = Modifier.clickable { onEditTapped(event.id) })
+
+        is TripItemState.FlexibleDaySectionState -> FlexibleDaySectionListItem(
+            event,
+            highlightDate = highlightDate,
+            position = event.backgroundStyle.asEventItemPosition(),
+            onEditTapped = {
+                onEditTapped(event.id)
+            },
+            onDeleteConfirmed = {
+                addPlanItemActionHandler.delete(
+                    AddPlanItemState.Type.FlexibleSection,
+                    event.id
+                )
+            },
+            onCategoryAdded = {
+                addPlanItemActionHandler.onFlexibleCategoryAdded(
+                    event.id,
+                    it
+                )
+            },
+            onLocationSearchTextChanged = {
+                addPlanItemActionHandler.onFlexibleItemSearchTextChanged(
+                    event.id,
+                    it
+                )
+            },
+            onLocationSearchResultSelected = { index, categoryIndex ->
+                addPlanItemActionHandler.onFlexibleItemSearchResultSelected(
+                    event.id,
+                    index,
+                    categoryIndex,
+                )
+            }
+        )
 
         is TripItemState.EventItemState -> Surface(
-            onClick = { onItemTapped(event.id) },
+            onClick = { onEditTapped(event.id) },
         ) {
             when (event) {
                 is FlightDepartureItemState -> FlightEventListItem(
@@ -443,36 +477,7 @@ private fun TripDetailItem(
                     highlightDate
                 )
 
-                is TripItemState.FlexibleDaySectionState -> FlexibleDaySectionListItem(
-                    event,
-                    highlightDate = highlightDate,
-                    position = event.backgroundStyle.asEventItemPosition(),
-                    onDeleteConfirmed = {
-                        addPlanItemActionHandler.delete(
-                            AddPlanItemState.Type.FlexibleSection,
-                            event.id
-                        )
-                    },
-                    onCategoryAdded = {
-                        addPlanItemActionHandler.onFlexibleCategoryAdded(
-                            event.id,
-                            it
-                        )
-                    },
-                    onLocationSearchTextChanged = {
-                        addPlanItemActionHandler.onFlexibleItemSearchTextChanged(
-                            event.id,
-                            it
-                        )
-                    },
-                    onLocationSearchResultSelected = { index, categoryIndex ->
-                        addPlanItemActionHandler.onFlexibleItemSearchResultSelected(
-                            event.id,
-                            index,
-                            categoryIndex,
-                        )
-                    }
-                )
+                is TripItemState.FlexibleDaySectionState -> {}
             }
         }
 

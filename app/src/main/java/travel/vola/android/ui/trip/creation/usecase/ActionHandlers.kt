@@ -79,4 +79,9 @@ interface AddFlexibleSectionItemActionHandler {
     fun onFlexibleCategoryAdded(itemId: String, category: String)
     fun onFlexibleItemSearchTextChanged(itemId: String, content: CharSequence)
     fun onFlexibleItemSearchResultSelected(itemId: String, index: Int, categoryIndex: Int)
+    fun onFlexibleItemDateTimeUpdated(
+        itemId: String,
+        dateTime: ZonedDateTime,
+        timeSelected: Boolean,
+    )
 }
