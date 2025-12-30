@@ -454,7 +454,7 @@ class TripViewModel(
         val destinations = viewState.value.items.filterIsInstance<TripItemState.PlaceItemState>()
             .map { it.placeName }
         val dates =
-            viewState.value.items.filterIsInstance<TripItemState.Timeable>().map { it.timestamp }
+            viewState.value.items.map { it.timestamp }
         val params = TripCreationAssistantDestination.Params(
             tripId = tripId,
             destinations = destinations,
@@ -507,7 +507,7 @@ class TripViewModel(
                 latitude = 0.0,
                 longitude = 0.0,
                 address = reason,
-                externalId = "",
+                externalId = id,
                 timeZone = city.timeZone,
                 source = "",
             ),
@@ -640,7 +640,7 @@ class TripViewModel(
 
         val (time, event) = item
 
-        val place = event.getPlace(time) ?: return null
+        val place = event.getPlace(time)
 
 
         // Exclude if previous adjacent events had same place or were day trips
@@ -830,18 +830,10 @@ class TripViewModel(
             is FlexibleDaySection -> flexibleSectionItems.firstOrNull { it.id == event.id }?.copy(
                 showDate = showDate,
                 backgroundStyle = backgroundStyle,
-            ) ?: TripItemState.FlexibleDaySectionState(
-                "",
-                timestamp,
-                "",
-                "",
-                showDate,
-                backgroundStyle,
-                "",
-                "",
-                "",
-                emptyList(),
-                emptyList(),
+            ) ?: flexibleSectionUseCase.createState(
+                event,
+                showDate = showDate,
+                backgroundStyle = backgroundStyle,
             )
         }
     }

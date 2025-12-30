@@ -84,7 +84,7 @@ object GenAIData {
 
     @Serializable
     data class DailyItinerary(
-        val predictedChanges: List<DailyItineraryChange>,
+        val numDays: Int,
         val days: List<ItineraryDay>,
     )
 
@@ -97,7 +97,6 @@ object GenAIData {
     @Serializable
     data class ItineraryDay(
         val date: String,
-        val timedPlaces: List<TimedPlace>,
         val sections: List<Section>,
     )
 
@@ -117,12 +116,12 @@ object GenAIData {
     data class Section(
         val name: String,
         val cityId: String,
-        val suggestions: List<SectionSuggestions>,
+        val places: List<TimedPlace>,
     )
 
     @Serializable
-    data class SectionSuggestions(
-        val category: String,
+    data class SectionCategory(
+        val categoryName: String,
         val places: List<TimedPlace>,
     )
 
