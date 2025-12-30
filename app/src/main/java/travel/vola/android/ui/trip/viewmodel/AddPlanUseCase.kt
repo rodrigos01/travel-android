@@ -104,19 +104,7 @@ class AddPlanUseCase(
         )
     }
 
-    override fun addPlanTypeChanged(itemId: String, newType: AddPlanItemState.Type) {
-        val addPlanItem = items[itemId] ?: return
-        if (addPlanItem.type == newType) {
-            return
-        }
-        removeItem(addPlanItem)
-        createAddPlanItem(
-            itemId,
-            addPlanItem.timestamp,
-            addPlanItem.dateSelectionEnabled,
-            newType,
-        )
-    }
+    override fun addPlanTypeChanged(itemId: String, newType: AddPlanItemState.Type) = Unit
 
     override fun save(itemId: String) = Unit
 
