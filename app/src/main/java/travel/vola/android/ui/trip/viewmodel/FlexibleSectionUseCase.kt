@@ -106,7 +106,8 @@ class FlexibleSectionUseCase(
                     timeZone = TimeZone.getTimeZone(time.zone.id),
                     externalId = "",
                     source = "",
-                )
+                ),
+                categories = emptyList(),
             ),
             params,
         )
@@ -123,7 +124,8 @@ class FlexibleSectionUseCase(
                 startDateTime = entity.date,
                 hasStartTime = false,
                 sectionName = entity.name,
-                city = entity.city
+                city = entity.city,
+                categories = entity.categories,
             ),
             params,
         )
@@ -155,6 +157,16 @@ class FlexibleSectionUseCase(
         }
     }
 
+    override fun onFlexibleItemDateTimeUpdated(
+        itemId: String,
+        dateTime: ZonedDateTime,
+        timeSelected: Boolean
+    ) {
+        itemStore.update(itemId) {
+            it.copy(startDateTime = dateTime, hasStartTime = timeSelected)
+        }
+    }
+
     override fun createEntity(item: AddFlexibleSectionItemState): FlexibleDaySection {
         val data: PendingData.PendingFlexibleSection = itemStore.getData(item.id)
             ?: error("Pending Flexible section with id ${item.id} not found")
@@ -163,7 +175,7 @@ class FlexibleSectionUseCase(
             id = item.id,
             name = name,
             date = item.startDateTime,
-            categories = emptyList(),
+            categories = data.categories,
             data.city,
         )
     }

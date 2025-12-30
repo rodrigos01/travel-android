@@ -190,7 +190,13 @@ fun AddPlanContent(
             AddFlexibleSectionListItem(
                 state = state,
                 onTextChanged = { actionHandler.sectionNameChanged(state.id, it) },
-                onUpdated = { _, _ -> }
+                onUpdated = { dateTime, timeSelected ->
+                    actionHandler.onFlexibleItemDateTimeUpdated(
+                        state.id,
+                        dateTime,
+                        timeSelected
+                    )
+                }
             )
         }
     }
@@ -309,5 +315,11 @@ object NoOpActionHandler : AddPlanItemActionHandler {
         itemId: String,
         index: Int,
         categoryIndex: Int
-    )= Unit
+    ) = Unit
+
+    override fun onFlexibleItemDateTimeUpdated(
+        itemId: String,
+        dateTime: ZonedDateTime,
+        timeSelected: Boolean
+    ) = Unit
 }
