@@ -2,6 +2,7 @@ package travel.vola.android.ui.trip.creation.usecase
 
 import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.AirportSearchResult
+import travel.vola.android.model.data.FlexibleDayCategory
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.SimplePlace
 import java.time.ZonedDateTime
@@ -73,5 +74,6 @@ sealed interface PendingData {
         val hasStartTime: Boolean = false,
         val sectionName: String,
         val city: Place,
+        val categories: List<FlexibleDayCategory>
     ) : PendingData
 }
