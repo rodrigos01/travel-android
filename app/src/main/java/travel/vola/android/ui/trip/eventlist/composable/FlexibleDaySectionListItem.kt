@@ -81,32 +81,32 @@ fun FlexibleDaySectionListItem(
     onLocationSearchResultSelected: (Int, Int) -> Unit = { _, _ -> },
 ) {
     val colorScheme = if (state.isGenerated) {
-        GenAITheme.colorScheme.copy(
-            surface = MaterialTheme.colorScheme.surface // Keep the same background color
-        )
+        GenAITheme.colorScheme
     } else {
         MaterialTheme.colorScheme
     }
-    MaterialTheme(colorScheme) {
-        EventItem(
-            showDate = state.showDate,
-            highlightDate = highlightDate,
-            dayOfMonthString = state.dayOfMonth,
-            dayOfWeekString = state.dayOfWeek,
-            position = position
-        ) {
-            var showDeleteConfirmation by remember { mutableStateOf(false) }
-            if (showDeleteConfirmation) {
-                ConfirmationDialog(
-                    onConfirm = onDeleteConfirmed,
-                    onDismiss = { showDeleteConfirmation = false },
-                    confirmButtonLabel = "Delete",
-                    confirmButtonColors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                    dismissButtonLabel = "Cancel"
-                ) {
-                    Text("Delete ${state.name}?")
-                }
+    EventItem(
+        showDate = state.showDate,
+        highlightDate = highlightDate,
+        dayOfMonthString = state.dayOfMonth,
+        dayOfWeekString = state.dayOfWeek,
+        position = position,
+        containerColor = colorScheme.secondaryContainer,
+        contentColor = colorScheme.onSecondaryContainer,
+    ) {
+        var showDeleteConfirmation by remember { mutableStateOf(false) }
+        if (showDeleteConfirmation) {
+            ConfirmationDialog(
+                onConfirm = onDeleteConfirmed,
+                onDismiss = { showDeleteConfirmation = false },
+                confirmButtonLabel = "Delete",
+                confirmButtonColors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                dismissButtonLabel = "Cancel"
+            ) {
+                Text("Delete ${state.name}?")
             }
+        }
+        MaterialTheme(colorScheme) {
             var expanded by remember { mutableStateOf(startExpanded) }
             AnimatedContent(expanded) { isExpanded ->
                 if (isExpanded) {
