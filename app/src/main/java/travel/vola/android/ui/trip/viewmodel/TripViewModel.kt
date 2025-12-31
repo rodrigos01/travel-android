@@ -26,6 +26,8 @@ import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.dayAndMonthString
 import travel.vola.android.extensions.dayOfMonthString
 import travel.vola.android.extensions.dayOfWeekString
+import travel.vola.android.extensions.getDestinations
+import travel.vola.android.extensions.getPlace
 import travel.vola.android.extensions.minus
 import travel.vola.android.extensions.monthString
 import travel.vola.android.extensions.plus
@@ -402,14 +404,13 @@ class TripViewModel(
     }
 
     fun onUpdatePreferencesTapped() {
-        val preferences = trip.value?.preferences
-        val destinations = viewState.value.items.filterIsInstance<TripItemState.PlaceItemState>()
-            .map { it.placeName }
+        val destinations =
+            trip.value?.getDestinations()?.map { "${it.place.name}, ${it.place.address}" }
         val dates =
             viewState.value.items.map { it.timestamp }
         val params = TripCreationAssistantDestination.Params(
             tripId = tripId,
-            destinations = destinations,
+            destinations = destinations ?: emptyList(),
             startDate = dates.firstOrNull()?.asISO8601String(),
             endDate = dates.lastOrNull()?.asISO8601String(),
         )
@@ -471,8 +472,7 @@ class TripViewModel(
         flexibleSectionItems: List<TripItemState.FlexibleDaySectionState>,
         suggestions: SuggestionsUseCase.DailyItineraryState?,
     ): List<TripItemState> {
-        val cities =
-            trip.places.filter { it.city == it.place }.map { it.city }.associateBy { it.id }
+        val cities = trip.getDestinations().map { it.place }.associateBy { it.id }
         val suggestedPlaces = suggestions?.days?.flatMap { day ->
             day.timedPlaces.mapNotNull { place ->
                 cities[place.cityId]?.let { place.asTimedPlace(it) }
@@ -809,16 +809,6 @@ class TripViewModel(
             )
         })
 
-}
-
-private fun TripEvent.getPlace(referenceTime: ZonedDateTime) = when (this) {
-    is FlightSegment -> if (referenceTime == departure) {
-        airportFrom.city
-    } else {
-        airportTo.city
-    }
-
-    is WithCity -> city
 }
 
 private class EventComparable(

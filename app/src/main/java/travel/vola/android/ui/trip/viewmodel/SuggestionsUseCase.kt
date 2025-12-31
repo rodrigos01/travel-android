@@ -1,5 +1,6 @@
 package travel.vola.android.ui.trip.viewmodel
 
+import travel.vola.android.extensions.getDestinations
 import travel.vola.android.model.data.FlexibleDayCategory
 import travel.vola.android.model.data.FlexibleDayItem
 import travel.vola.android.model.data.FlexibleDaySection
@@ -43,6 +44,7 @@ class SuggestionsUseCase(
 
     suspend fun getSuggestions(trip: Trip): DailyItineraryState? {
         val preferences = trip.preferences ?: return null
+        val destinations = trip.getDestinations()
         val result = repository.genDailyItinerary(
             basicInformation = GenAIData.BasicInformation(
                 destination = "",
@@ -91,19 +93,19 @@ class SuggestionsUseCase(
                     )
                 },
                 description = "",
-                cities = trip.places.map { timedPlace ->
+                cities = destinations.map { destination ->
                     GenAIData.ItineraryCity(
-                        timedPlace.place.id,
-                        timedPlace.place.name,
+                        destination.place.id,
+                        destination.place.name,
                         searchQuery = "",
-                        startDate = timedPlace.startDateTime.let {
+                        startDate = destination.startDateTime.let {
                             GenAIData.DateResult(
                                 it.dayOfMonth,
                                 it.monthValue,
                                 it.year
                             )
                         },
-                        endDate = timedPlace.endDateTime?.let {
+                        endDate = destination.endDateTime?.let {
                             GenAIData.DateResult(
                                 it.dayOfMonth,
                                 it.monthValue,
