@@ -30,7 +30,6 @@ import travel.vola.android.ui.trip.creation.usecase.PendingData
 import travel.vola.android.ui.trip.state.AddFlexibleSectionItemState
 import travel.vola.android.ui.trip.state.SearchResultItemState
 import travel.vola.android.ui.trip.state.TripItemState
-import travel.vola.android.ui.trip.state.TripItemState.AddFlexibleSectionItemState
 import java.time.ZonedDateTime
 import java.util.TimeZone
 

@@ -85,8 +85,7 @@ class TripCreationAssistantViewModel(
         when (step) {
             is Step.BasicInformation -> state.basicInformation
             is Step.InitialParameters -> state.initialParameters ?: generateInitialParametersState(
-                state.basicInformation,
-                parameters,
+                state.basicInformation
             )
 
             is Step.InitialParametersFollowUp -> state.initialParametersFollowUp

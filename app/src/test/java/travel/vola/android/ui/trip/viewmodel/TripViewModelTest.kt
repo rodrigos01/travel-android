@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
@@ -22,7 +23,6 @@ import travel.vola.android.model.data.Trip
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.test.UnconfinedDispatcherTestRule
 import travel.vola.android.ui.trip.state.AddFlightItemState
-import travel.vola.android.ui.trip.state.AddLodgingItemState
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.TripItemState
 import travel.vola.android.ui.trip.state.TripItemState.DateRangeItemState
@@ -56,10 +56,12 @@ class TripViewModelTest {
         "tripId",
         mock(),
         mock(),
+        mock(),
         addPlanUseCase,
     )
 
-    private fun String?.asTime(): ZonedDateTime = this?.let { zonedDateTime(this) } ?: zonedDateTime(0L, TimeZone.getDefault())
+    private fun String?.asTime(): ZonedDateTime =
+        this?.let { zonedDateTime(this) } ?: zonedDateTime(0L, TimeZone.getDefault())
 
     @Test
     fun `events should have one departure event per flight`() {
@@ -557,7 +559,7 @@ class TripViewModelTest {
             any(),
             eq(zonedDateTime("2024-05-30T11:00:00+02:00")),
             dateSelectionEnabled = eq(false),
-            type = any(),
+            type = any<AddPlanItemState.Type>(),
         )
     }
 
@@ -601,7 +603,7 @@ class TripViewModelTest {
         subject.addButtonTapped(originalItem.id)
         verify(addPlanUseCase).createAddPlanItem(
             id = eq(originalItem.id),
-            time = any(), dateSelectionEnabled = eq(true), type = any(),
+            time = any(), dateSelectionEnabled = eq(true), type = any<AddPlanItemState.Type>(),
         )
     }
 
@@ -692,7 +694,15 @@ class TripViewModelTest {
 
     private fun mockAddPlanItem(addPlanItem: AddPlanItemState) {
         addPlanUseCase.stub {
-            on { createAddPlanItem(any(), any(), any(), any()) } doAnswer {
+            on {
+                createAddPlanItem(
+                    any(),
+                    any(),
+                    any(),
+                    any<AddPlanItemState.Type>(),
+                    anyOrNull(),
+                )
+            } doAnswer {
                 val id = it.getArgument<String>(0)
                 addPlanItems.value = mapOf(id to addPlanItem)
             }
@@ -713,6 +723,7 @@ class TripViewModelTest {
         lodgings = lodgings,
         places = places,
         restaurants = emptyList(),
+        flexibleSections = emptyList(),
     )
 
     private fun Flight(
