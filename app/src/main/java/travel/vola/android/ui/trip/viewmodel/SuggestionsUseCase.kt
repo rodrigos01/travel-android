@@ -1,6 +1,10 @@
 package travel.vola.android.ui.trip.viewmodel
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.getDestinations
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.FlexibleDayCategory
 import travel.vola.android.model.data.FlexibleDayItem
 import travel.vola.android.model.data.FlexibleDaySection
@@ -9,10 +13,7 @@ import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.genai.GenAIData
 import travel.vola.android.model.genai.GenAIRepository
-import java.text.SimpleDateFormat
-import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
 
@@ -41,9 +42,12 @@ class SuggestionsUseCase(
         val endTime: ZonedDateTime?,
     )
 
+    private val _state = MutableStateFlow(DailyItineraryState(emptyList(), emptyList()))
+    val state = _state.asStateFlow()
 
-    suspend fun getSuggestions(trip: Trip): DailyItineraryState? {
-        val preferences = trip.preferences ?: return null
+
+    suspend fun getSuggestions(trip: Trip, dates: List<ZonedDateTime>) {
+        val preferences = trip.preferences ?: return
         val destinations = trip.getDestinations()
         val result = repository.genDailyItinerary(
             basicInformation = GenAIData.BasicInformation(
@@ -111,73 +115,76 @@ class SuggestionsUseCase(
                                 it.monthValue,
                                 it.year
                             )
-                        } ?: return null,
+                        } ?: return,
                     )
                 },
                 predictedChanges = emptyList(),
             ),
+            dates = dates,
         )
-        return result?.let { result ->
-            DailyItineraryState(
-                days = result.days.map { day ->
-                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(
-                        day.date
-                    )
-                        ?.let {
-                            ZonedDateTime.ofInstant(
-                                it.toInstant(),
-                                ZoneId.systemDefault()
-                            )
-                        } ?: ZonedDateTime.now()
-                    SuggestedDay(
-                        date = date,
-                        timedPlaces = emptyList(),
-                        sections = day.sections.map { section ->
-                            FlexibleDaySection(
-                                id = UUID.randomUUID().toString(),
-                                name = section.name,
-                                date = date,
-                                city = Place(
-                                    id = section.cityId,
-                                    name = "",
-                                    coverImage = "",
-                                    latitude = 0.0,
-                                    longitude = 0.0,
-                                    address = "",
-                                    externalId = section.cityId,
-                                    timeZone = TimeZone.getDefault(),
-                                    source = "",
-                                ),
-                                categories = section.places.groupBy { it.category }
-                                    .map { (categoryName, places) ->
-                                        FlexibleDayCategory(
-                                            name = categoryName,
-                                            items = places.map { place ->
-                                                val placeId = UUID.randomUUID().toString()
-                                                FlexibleDayItem(
-                                                    id = placeId,
-                                                    place = Place(
-                                                        id = placeId,
-                                                        name = place.name,
-                                                        coverImage = "",
-                                                        latitude = 0.0,
-                                                        longitude = 0.0,
-                                                        address = "",
-                                                        externalId = placeId,
-                                                        timeZone = TimeZone.getDefault(),
-                                                        source = "Gemini",
-                                                    ),
-                                                    note = place.note
-                                                )
-                                            }
-                                        )
-                                    },
-                            )
-                        },
-                    )
-                },
-                predictedChanges = emptyList(),
+        val existingDates = state.value.days.map { it.date.dateString("yyyy-MM-dd") }
+        val existingDays = result?.days?.filter { existingDates.contains(it.date) } ?: emptyList()
+        val newDays = result?.days?.filterNot { existingDates.contains(it.date) }?.map { day ->
+            val date = zonedDateTime(day.date, pattern = "yyyy-MM-dd")
+            SuggestedDay(
+                date = date,
+                timedPlaces = emptyList(),
+                sections = day.sections.map { it.toAppData(date) },
             )
-        }
+        } ?: emptyList()
+        _state.value = state.value.copy(
+            days = newDays + state.value.days.map { currentDay ->
+                val newDay =
+                    existingDays.firstOrNull { it.date == currentDay.date.dateString("yyyy-MM-dd") }
+                currentDay.copy(
+                    sections = currentDay.sections + (newDay?.sections?.map { section ->
+                        section.toAppData(currentDay.date)
+                    } ?: emptyList())
+                )
+            }
+        )
     }
+
+    private fun GenAIData.Section.toAppData(
+        date: ZonedDateTime,
+    ): FlexibleDaySection = FlexibleDaySection(
+        id = UUID.randomUUID().toString(),
+        name = name,
+        date = date,
+        city = Place(
+            id = cityId,
+            name = "",
+            coverImage = "",
+            latitude = 0.0,
+            longitude = 0.0,
+            address = "",
+            externalId = cityId,
+            timeZone = TimeZone.getDefault(),
+            source = "",
+        ),
+        categories = places.groupBy { it.category }
+            .map { (categoryName, places) ->
+                FlexibleDayCategory(
+                    name = categoryName,
+                    items = places.map { place ->
+                        val placeId = UUID.randomUUID().toString()
+                        FlexibleDayItem(
+                            id = placeId,
+                            place = Place(
+                                id = placeId,
+                                name = place.name,
+                                coverImage = "",
+                                latitude = 0.0,
+                                longitude = 0.0,
+                                address = "",
+                                externalId = placeId,
+                                timeZone = TimeZone.getDefault(),
+                                source = "Gemini",
+                            ),
+                            note = place.note
+                        )
+                    }
+                )
+            },
+    )
 }

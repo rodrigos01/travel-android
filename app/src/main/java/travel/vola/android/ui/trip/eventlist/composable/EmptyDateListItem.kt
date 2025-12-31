@@ -6,7 +6,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AutoFixHigh
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,6 +28,7 @@ fun EmptyDateListItem(
     dayOfWeek: String,
     highlightDate: Boolean,
     onTap: () -> Unit,
+    onGenerateTapped: () -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -41,6 +49,9 @@ fun EmptyDateListItem(
             color = MaterialTheme.colorScheme.secondary,
             modifier = Modifier.weight(1f)
         )
+        FilledTonalIconButton(onClick = onGenerateTapped) {
+            Icon(Icons.Rounded.AutoFixHigh, contentDescription = "generate plans", tint = LocalContentColor.current)
+        }
     }
 }
 
@@ -48,6 +59,6 @@ fun EmptyDateListItem(
 @Preview
 fun EmptyDateListItemPreview() {
     AppTheme {
-        EmptyDateListItem("12", "Sat", true, onTap = {})
+        EmptyDateListItem("12", "Sat", true, onTap = {}, onGenerateTapped = {})
     }
 }
