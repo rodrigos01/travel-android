@@ -1,11 +1,13 @@
 package travel.vola.android.extensions
 
+import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.Month
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import java.util.Locale
 import java.util.TimeZone
 import kotlin.time.Duration
 
@@ -14,11 +16,28 @@ fun zonedDateTime(source: String): ZonedDateTime {
         ZonedDateTime.parse(source, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
     } catch (_: DateTimeParseException) {
         try {
-            ZonedDateTime.parse(source, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm Z"))
+            zonedDateTime(source, "yyyy-MM-dd'T'HH:mm Z")
         } catch (_: DateTimeParseException) {
-            ZonedDateTime.parse(source, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm z"))
+            zonedDateTime(source, "yyyy-MM-dd'T'HH:mm z")
         }
     }
+}
+
+fun zonedDateTime(
+    source: String,
+    pattern: String,
+    locale: Locale = Locale.getDefault()
+): ZonedDateTime {
+    return SimpleDateFormat(pattern, locale).parse(source)?.let {
+        ZonedDateTime.ofInstant(
+            it.toInstant(),
+            ZoneId.systemDefault()
+        )
+    } ?: throw DateTimeParseException(
+        "Text '$source' could not be parsed using pattern '$pattern'",
+        source,
+        0
+    )
 }
 
 fun zonedDateTime(epochMillis: Long, timeZone: TimeZone): ZonedDateTime =

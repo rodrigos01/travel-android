@@ -25,10 +25,15 @@ sealed interface UiState {
         SOLO, COUPLE, FAMILY, FRIENDS, COWORKERS
     }
 
+    enum class CTAType {
+        NEXT, UPDATE
+    }
+
     data class InitialParameters(
         val optionGroups: List<OptionGroup>,
         val anythingElse: String = "",
-        val nextButtonEnabled: Boolean = false,
+        val ctaEnabled: Boolean = false,
+        val ctaType: CTAType = CTAType.NEXT,
     ) : UiState
 
     enum class OptionGroupType {
@@ -39,7 +44,8 @@ sealed interface UiState {
 
     data class InitialParametersFollowUp(
         val questions: List<FollowUpQuestion>,
-        val nextButtonEnabled: Boolean = false,
+        val ctaEnabled: Boolean = false,
+        val ctaType: CTAType = CTAType.NEXT,
     ) : UiState
 
     data class FollowUpQuestion(

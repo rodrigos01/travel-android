@@ -7,8 +7,7 @@ sealed interface TripItemState {
 
     val timestamp: ZonedDateTime
 
-    interface Timeable {
-    }
+    interface Timeable
 
     interface SectionItemState {
         val sectionId: String?
@@ -38,6 +37,7 @@ sealed interface TripItemState {
         val dayOfWeekStart: String,
         val dayOfMonthEnd: String,
         val dayOfWeekEnd: String,
+        val isGeneratingPlans: Boolean,
     ) : TripItemState, Timeable, Replaceable, SectionItemState, Focusable {
         override val showDate: Boolean = true
     }
@@ -56,6 +56,7 @@ sealed interface TripItemState {
         override val sectionId: String? = null,
         val dayOfMonth: String,
         val dayOfWeek: String,
+        val isGeneratingPlans: Boolean,
     ) : TripItemState, Timeable, Replaceable, SectionItemState, Focusable {
         override val showDate: Boolean = true
     }
@@ -190,6 +191,7 @@ sealed interface TripItemState {
         override val subtitle: String,
         val categories: List<DaySectionCategory>,
         val searchResults: List<SearchResultItemState>,
+        val isGenerated: Boolean = false,
     ) : EventItemState, EventWithDateState, Focusable, Replaceable {
         override val time: String = ""
         override val title: String = name

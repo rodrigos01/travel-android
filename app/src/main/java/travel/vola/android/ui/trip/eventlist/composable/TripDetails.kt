@@ -112,6 +112,8 @@ fun TripDetails(
         onEditTapped = viewModel::editTapped,
         onAddPlanTypeSelected = { viewModel.onAddPlanTypeSelected(it?.toState()) },
         onScrollStateChange = viewModel::setScrollState,
+        onUpdatePreferencesTapped = viewModel::onUpdatePreferencesTapped,
+        onGenerateTapped = viewModel::onGeneratePlansTapped,
     )
 }
 
@@ -128,6 +130,8 @@ private fun TripDetails(
     onEditTapped: (String) -> Unit = {},
     onAddPlanTypeSelected: (AddPlanType?) -> Unit = {},
     onScrollStateChange: (Int, Int) -> Unit = { _, _ -> },
+    onUpdatePreferencesTapped: () -> Unit = {},
+    onGenerateTapped: (String) -> Unit = {},
 ) {
     val listScrollState = rememberLazyListState()
     val currentPlaceIndex by remember {
@@ -260,6 +264,11 @@ private fun TripDetails(
                                 properties = PopupProperties(focusable = false)
                             ) {
                                 DropdownMenuItem(
+                                    text = { Text("Update Trip Preferences") },
+                                    onClick = onUpdatePreferencesTapped,
+                                    colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.onSecondaryContainer),
+                                )
+                                DropdownMenuItem(
                                     text = { Text("Delete Trip") },
                                     onClick = {
                                         showToolbarOverflowMenu = false
@@ -291,6 +300,7 @@ private fun TripDetails(
                             result.drawable.toBitmapOrNull()
                                 ?.copy(Bitmap.Config.ARGB_8888, true)
                     },
+                    onGenerateTapped,
                 )
                 AnimatedVisibility(
                     visible = state.addPlanItemState != null,
@@ -326,6 +336,7 @@ fun List(
     onEmptyAddRowTapped: (String) -> Unit,
     onEditTapped: (String) -> Unit,
     onPlaceImageLoaded: (String, SuccessResult) -> Unit,
+    onGenerateTapped: (String) -> Unit,
 ) {
     LazyColumn(contentPadding = contentPadding, state = scrollState) {
         items(
@@ -339,6 +350,7 @@ fun List(
                 TripDetailItem(
                     event,
                     addPlanItemActionHandler,
+                    highlightDate = event is TripItemState.Focusable && event.id == state.focusedItemId,
                     onAddButonTapped,
                     onEmptyAddRowTapped,
                     onEditTapped,
@@ -349,7 +361,7 @@ fun List(
                             onPlaceImageLoaded(sectionId, it)
                         }
                     },
-                    highlightDate = event is TripItemState.Focusable && event.id == state.focusedItemId,
+                    onGenerateTapped,
                 )
             }
         }
@@ -360,11 +372,12 @@ fun List(
 private fun TripDetailItem(
     event: TripItemState,
     addPlanItemActionHandler: AddPlanItemActionHandler,
+    highlightDate: Boolean = false,
     onAddButonTapped: (String) -> Unit,
     onEmptyAddRowTapped: (String) -> Unit,
     onEditTapped: (String) -> Unit,
     onImageLoaded: (SuccessResult) -> Unit,
-    highlightDate: Boolean = false,
+    onGenerateTapped: (String) -> Unit,
 ) {
     when (event) {
         is MonthItemState -> MonthEventListItem(event.month, event.year)
@@ -374,14 +387,18 @@ private fun TripDetailItem(
             dayOfMonthEnd = event.dayOfMonthEnd,
             dayOfWeekEnd = event.dayOfWeekEnd,
             focused = highlightDate,
+            isGeneratingSuggestions = event.isGeneratingPlans,
             onAddButtonClick = { onAddButonTapped(event.id) },
+            onGenerateButtonClick = { onGenerateTapped(event.id) },
         )
 
         is EmptyDateItemState -> EmptyDateListItem(
             dayOfMonth = event.dayOfMonth,
             dayOfWeek = event.dayOfWeek,
             highlightDate = highlightDate,
+            isGeneratingSuggestions = event.isGeneratingPlans,
             onTap = { onEmptyAddRowTapped(event.id) },
+            onGenerateTapped = { onGenerateTapped(event.id) },
         )
 
         is PlaceItemState -> PlaceEventListItem(
@@ -559,6 +576,7 @@ fun TripDetailsPreview() {
                 timestamp = zonedDateTime("2025-10-19T19:00 +0200"),
                 dayOfMonth = "19",
                 dayOfWeek = "Fri",
+                isGeneratingPlans = false,
             ),
             HotelCheckOutItemState(
                 id = "7",

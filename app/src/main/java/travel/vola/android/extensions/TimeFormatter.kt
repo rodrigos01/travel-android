@@ -11,6 +11,9 @@ val ZonedDateTime.monthString: String
 val ZonedDateTime.dayOfMonthString: String
     get() = dayOfMonth.toString()
 
+fun ZonedDateTime.dateString(format: String): String =
+    format(DateTimeFormatter.ofPattern(format))
+
 fun ZonedDateTime.dateString(style: FormatStyle = FormatStyle.SHORT): String =
     format(DateTimeFormatter.ofLocalizedDate(style))
 
