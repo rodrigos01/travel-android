@@ -186,7 +186,7 @@ private val itinerarySchema = Schema.obj(
 private val placeSchema = Schema.obj(
     mapOf(
         "name" to Schema.string("name of the place"),
-        "category" to Schema.string("category of the place so it can be grouped with other suggestions"),
+        "category" to Schema.string("A fun category name for the place so it can be grouped with other suggestions"),
         "note" to Schema.string("A short, 5-10 word note indicating why the user should visit this place"),
         "searchQuery" to Schema.string("query to search for the place in google maps"),
         "startTime" to Schema.string(

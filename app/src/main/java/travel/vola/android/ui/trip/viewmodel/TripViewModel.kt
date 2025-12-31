@@ -118,7 +118,7 @@ class TripViewModel(
         combine(
             trip.filterNotNull(),
             flexibleSectionItems,
-            suggestions
+            suggestions,
         ) { currentTrip, sectionItems, suggestions ->
             val items = genItems(currentTrip, sectionItems, suggestions)
             val places =
@@ -179,13 +179,22 @@ class TripViewModel(
     private data class ScrollState(val focusedIndex: Int, val firstVisibleIndex: Int)
 
     private val scrollState = MutableStateFlow(ScrollState(0, 0))
+
+    private val itemsGeneratingSuggestions = MutableStateFlow<Set<String>>(emptySet())
     val viewState: StateFlow<ViewState> = combine(
         eventsFromTrip,
         addPlanItemsState,
-        scrollState
-    ) { state, addPlanItems, currentScrollState ->
+        scrollState,
+        itemsGeneratingSuggestions,
+    ) { state, addPlanItems, currentScrollState, generating ->
         val items = state.items.mapIndexed { index, item ->
-            if (item is TripItemState.Replaceable) {
+            if (item is Identifiable && generating.contains(item.id)) {
+                when (item) {
+                    is TripItemState.DateRangeItemState -> item.copy(isGeneratingPlans = true)
+                    is TripItemState.EmptyDateItemState -> item.copy(isGeneratingPlans = true)
+                    else -> item
+                }
+            } else if (item is TripItemState.Replaceable) {
                 addPlanItems[item.id]?.let { newItem ->
                     newItem.also { it.original = item }
                 } ?: item
@@ -421,8 +430,10 @@ class TripViewModel(
             is TripItemState.EmptyDateItemState -> listOf(tapped.timestamp)
             else -> emptyList()
         }
+        itemsGeneratingSuggestions.value = itemsGeneratingSuggestions.value + itemId
         viewModelScope.launch {
             suggestionsUseCase.getSuggestions(currentTrip, dates)
+            itemsGeneratingSuggestions.value = itemsGeneratingSuggestions.value - itemId
         }
     }
 
@@ -692,6 +703,7 @@ class TripViewModel(
                 dayOfMonthEnd = end.dayOfMonthString,
                 dayOfWeekEnd = end.dayOfWeekString,
                 sectionId = sectionId,
+                isGeneratingPlans = false,
             )
         } else {
             TripItemState.EmptyDateItemState(
@@ -700,6 +712,7 @@ class TripViewModel(
                 dayOfMonth = start.dayOfMonthString,
                 dayOfWeek = start.dayOfWeekString,
                 sectionId = sectionId,
+                isGeneratingPlans = false,
             )
         }
     }
