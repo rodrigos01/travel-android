@@ -387,6 +387,7 @@ private fun TripDetailItem(
             dayOfMonthEnd = event.dayOfMonthEnd,
             dayOfWeekEnd = event.dayOfWeekEnd,
             focused = highlightDate,
+            isGeneratingSuggestions = event.isGeneratingPlans,
             onAddButtonClick = { onAddButonTapped(event.id) },
             onGenerateButtonClick = { onGenerateTapped(event.id) },
         )
@@ -395,6 +396,7 @@ private fun TripDetailItem(
             dayOfMonth = event.dayOfMonth,
             dayOfWeek = event.dayOfWeek,
             highlightDate = highlightDate,
+            isGeneratingSuggestions = event.isGeneratingPlans,
             onTap = { onEmptyAddRowTapped(event.id) },
             onGenerateTapped = { onGenerateTapped(event.id) },
         )
@@ -574,6 +576,7 @@ fun TripDetailsPreview() {
                 timestamp = zonedDateTime("2025-10-19T19:00 +0200"),
                 dayOfMonth = "19",
                 dayOfWeek = "Fri",
+                isGeneratingPlans = false,
             ),
             HotelCheckOutItemState(
                 id = "7",

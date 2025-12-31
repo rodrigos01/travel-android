@@ -37,6 +37,7 @@ sealed interface TripItemState {
         val dayOfWeekStart: String,
         val dayOfMonthEnd: String,
         val dayOfWeekEnd: String,
+        val isGeneratingPlans: Boolean,
     ) : TripItemState, Timeable, Replaceable, SectionItemState, Focusable {
         override val showDate: Boolean = true
     }
@@ -55,6 +56,7 @@ sealed interface TripItemState {
         override val sectionId: String? = null,
         val dayOfMonth: String,
         val dayOfWeek: String,
+        val isGeneratingPlans: Boolean,
     ) : TripItemState, Timeable, Replaceable, SectionItemState, Focusable {
         override val showDate: Boolean = true
     }
