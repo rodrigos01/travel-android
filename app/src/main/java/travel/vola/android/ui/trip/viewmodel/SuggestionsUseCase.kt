@@ -1,7 +1,10 @@
 package travel.vola.android.ui.trip.viewmodel
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import travel.vola.android.common.coroutines.mapAsync
 import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.getDestinations
 import travel.vola.android.extensions.zonedDateTime
@@ -13,12 +16,17 @@ import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.genai.GenAIData
 import travel.vola.android.model.genai.GenAIRepository
+import travel.vola.android.model.repository.PlaceAutoCompleteRepository
 import java.time.ZonedDateTime
 import java.util.TimeZone
 import java.util.UUID
 
 class SuggestionsUseCase(
     private val repository: GenAIRepository,
+    private val placeRepository: PlaceAutoCompleteRepository = PlaceAutoCompleteRepository(
+        types = emptyList(),
+        resolveCity = false,
+    ),
 ) {
 
     data class DailyItineraryState(
@@ -124,20 +132,21 @@ class SuggestionsUseCase(
         )
         val existingDates = state.value.days.map { it.date.dateString("yyyy-MM-dd") }
         val existingDays = result?.days?.filter { existingDates.contains(it.date) } ?: emptyList()
-        val newDays = result?.days?.filterNot { existingDates.contains(it.date) }?.map { day ->
-            val date = zonedDateTime(day.date, pattern = "yyyy-MM-dd")
-            SuggestedDay(
-                date = date,
-                timedPlaces = emptyList(),
-                sections = day.sections.map { it.toAppData(date) },
-            )
-        } ?: emptyList()
+        val newDays =
+            result?.days?.filterNot { existingDates.contains(it.date) }?.mapAsync { day ->
+                val date = zonedDateTime(day.date, pattern = "yyyy-MM-dd")
+                SuggestedDay(
+                    date = date,
+                    timedPlaces = emptyList(),
+                    sections = day.sections.mapAsync { it.toAppData(date) },
+                )
+            } ?: emptyList()
         _state.value = state.value.copy(
-            days = newDays + state.value.days.map { currentDay ->
+            days = newDays + state.value.days.mapAsync { currentDay ->
                 val newDay =
                     existingDays.firstOrNull { it.date == currentDay.date.dateString("yyyy-MM-dd") }
                 currentDay.copy(
-                    sections = currentDay.sections + (newDay?.sections?.map { section ->
+                    sections = currentDay.sections + (newDay?.sections?.mapAsync { section ->
                         section.toAppData(currentDay.date)
                     } ?: emptyList())
                 )
@@ -145,46 +154,44 @@ class SuggestionsUseCase(
         )
     }
 
-    private fun GenAIData.Section.toAppData(
+    private suspend fun GenAIData.Section.toAppData(
         date: ZonedDateTime,
-    ): FlexibleDaySection = FlexibleDaySection(
-        id = UUID.randomUUID().toString(),
-        name = name,
-        date = date,
-        city = Place(
-            id = cityId,
-            name = "",
-            coverImage = "",
-            latitude = 0.0,
-            longitude = 0.0,
-            address = "",
-            externalId = cityId,
-            timeZone = TimeZone.getDefault(),
-            source = "",
-        ),
-        categories = places.groupBy { it.category }
-            .map { (categoryName, places) ->
-                FlexibleDayCategory(
-                    name = categoryName,
-                    items = places.map { place ->
-                        val placeId = UUID.randomUUID().toString()
-                        FlexibleDayItem(
-                            id = placeId,
-                            place = Place(
-                                id = placeId,
-                                name = place.name,
-                                coverImage = "",
-                                latitude = 0.0,
-                                longitude = 0.0,
-                                address = "",
-                                externalId = placeId,
-                                timeZone = TimeZone.getDefault(),
-                                source = "Gemini",
-                            ),
-                            note = place.note
-                        )
-                    }
-                )
-            },
-    )
+    ): FlexibleDaySection =
+        FlexibleDaySection(
+            id = UUID.randomUUID().toString(),
+            name = name,
+            date = date,
+            city = Place(
+                id = cityId,
+                name = "",
+                coverImage = "",
+                latitude = 0.0,
+                longitude = 0.0,
+                address = "",
+                externalId = cityId,
+                timeZone = TimeZone.getDefault(),
+                source = "",
+            ),
+            categories = places.groupBy { it.category }
+                .mapAsync { (categoryName, places) ->
+                    FlexibleDayCategory(
+                        name = categoryName,
+                        items = places.mapAsync { place ->
+                            resolvePlace(place.searchQuery)?.let { place to it }
+                        }.filterNotNull().map { (place, resolved) ->
+                            FlexibleDayItem(
+                                id = resolved.id,
+                                place = resolved,
+                                note = place.note
+                            )
+                        }
+                    )
+                },
+        )
+
+    private suspend fun resolvePlace(searchQuery: String): Place? {
+        val results = placeRepository.autocomplete(searchQuery)
+        val firstResult = results.firstOrNull() ?: return null
+        return placeRepository.details(firstResult.id)?.place
+    }
 }
