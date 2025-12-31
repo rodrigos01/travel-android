@@ -786,6 +786,7 @@ class TripViewModel(
                 event,
                 showDate = showDate,
                 backgroundStyle = backgroundStyle,
+                isGenerated = true, // Flexible items not coming from the use case are generated
             )
         }
     }

@@ -189,6 +189,7 @@ sealed interface TripItemState {
         override val subtitle: String,
         val categories: List<DaySectionCategory>,
         val searchResults: List<SearchResultItemState>,
+        val isGenerated: Boolean = false,
     ) : EventItemState, EventWithDateState, Focusable, Replaceable {
         override val time: String = ""
         override val title: String = name
