@@ -99,38 +99,24 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
         outputSchema = itinerarySchema
     ),
     DAILY_ITINERARY(
-        prompt = "Based on the trip itinerary below, generate a day-by-day itinerary considering the user parameters and the type of itinerary they've chosen. Consider travel time between cities for the itineraries on travel days but don't include travel details (hotel check-in or check-out, transportation) or lodging to it. Open-ended daily itineraries should have sections for each day with a list of suggested places in each and may have timed places for time-sensitive, must-have activities. Sections in Open-ended itineraries must be logically organized by areas so that the user is able to explore a given area or neighborhood using the suggestions. Detailed itineraries must consider realistic travel time between locations and have specific stops for lunch and dinner. Both itinerary types must consider times of operation of places on the dates they're been suggested. For each city, suggest 3 predicted possible changes the user might want to make to the generated day-by-day itinerary for it.",
+        prompt = "Based on the trip itinerary below, generate a reference guide for the dates requested. This reference guide should be organized by the days of the trip and for each day, have a diverse list of suggested places for the user to visit based on their preferences. The places should have categories so that they can be easily filtered in the UI and each day should have between 5 and 10 suggested places, with each category having at least 2 suggestions. Travel days should be divided in sections for each city the user will be on that date.",
         outputSchema = Schema.obj(
             mapOf(
-                "predictedChanges" to Schema.array(
+                "numDays" to Schema.integer(),
+                "days" to Schema.array(
                     Schema.obj(
                         mapOf(
-                            "cityId" to Schema.string("id of the city as provided in the original itinerary"),
-                            "changes" to Schema.array(Schema.string())
-                        )
-                    )
-                ),
-                "days" to Schema.obj(
-                    mapOf(
-                        "timedPlaces" to Schema.array(placeSchema),
-                        "sections" to Schema.array(
-                            Schema.obj(
-                                mapOf(
-                                    "type" to Schema.enumeration(
-                                        listOf(
-                                            "morning",
-                                            "afternoon",
-                                            "evening",
-                                            "late-night",
-                                        ),
-                                        description = "type of section in the day",
-                                    ),
-                                    "name" to Schema.string("A name for the section"),
-                                    "suggestions" to Schema.obj(
-                                        mapOf(
-                                            "category" to Schema.string("the category of the places being suggested"),
-                                            "places" to Schema.array(placeSchema)
-                                        )
+                            "date" to Schema.string(
+                                "date of the day in the format YYYY-MM-DD",
+                                format = StringFormat.Custom("date")
+                            ),
+                            "sections" to Schema.array(
+                                description = "Different sections of the day for when the user will be in different cities in the same day.",
+                                items = Schema.obj(
+                                    mapOf(
+                                        "cityId" to Schema.string("id of the city as provided in the original itinerary"),
+                                        "name" to Schema.string("A Short title describing the selection of places in this section"),
+                                        "places" to Schema.array(placeSchema),
                                     )
                                 )
                             )
@@ -166,6 +152,7 @@ private val itinerarySchema = Schema.obj(
         "cities" to Schema.array(
             Schema.obj(
                 mapOf(
+                    "id" to Schema.string("leave this blank"),
                     "name" to Schema.string("name of the city"),
                     "searchQuery" to Schema.string("query to search for the city in google maps"),
                     "startDate" to Schema.obj(
@@ -199,6 +186,8 @@ private val itinerarySchema = Schema.obj(
 private val placeSchema = Schema.obj(
     mapOf(
         "name" to Schema.string("name of the place"),
+        "category" to Schema.string("A fun category name for the place so it can be grouped with other suggestions"),
+        "note" to Schema.string("A short, 5-10 word note indicating why the user should visit this place"),
         "searchQuery" to Schema.string("query to search for the place in google maps"),
         "startTime" to Schema.string(
             "time the user needs to be at this place, including the date",

@@ -75,9 +75,16 @@ fun InitialParametersFollowUp(
         }
         Button(
             onClick = onNextTapped,
-            enabled = state.nextButtonEnabled,
+            enabled = state.ctaEnabled,
             modifier = Modifier.align(Alignment.End)
-        ) { Text("Next") }
+        ) {
+            Text(
+                when (state.ctaType) {
+                    UiState.CTAType.NEXT -> "Next"
+                    UiState.CTAType.UPDATE -> "Update Trip"
+                }
+            )
+        }
     }
 }
 

@@ -53,37 +53,47 @@ class FlexibleSectionUseCase(
 
     val flexibleSectionItems = trip.filterNotNull().combine(searchSessions) { trip, sessions ->
         trip.flexibleSections.sortedBy { it.date }.map { section ->
-            TripItemState.FlexibleDaySectionState(
-                id = section.id,
-                timestamp = section.date,
-                showDate = false,
-                dayOfMonth = section.date.dayOfMonthString,
-                dayOfWeek = section.date.dayOfWeekString,
-                name = section.name,
-                subtitle = section.categories.flatMap { it.items.map { it.place.name } }.take(3)
-                    .joinToString(", "),
-                categories = section.categories.map { category ->
-                    TripItemState.DaySectionCategory(
-                        name = category.name,
-                        items = category.items.map {
-                            TripItemState.SectionOption(
-                                id = it.id,
-                                title = it.place.name,
-                                subtitle = it.place.address,
-                                imageUrl = it.place.coverImage ?: "",
-                            )
-                        },
-                    )
-                },
-                searchResults = sessions[section.id]?.map {
-                    SearchResultItemState(
-                        it.name,
-                        it.address
-                    )
-                } ?: emptyList(),
-            )
+            createState(section, sessions)
         }
     }
+
+    fun createState(
+        section: FlexibleDaySection,
+        sessions: Map<String, List<SimplePlace>> = emptyMap(),
+        showDate: Boolean = false,
+        backgroundStyle: TripItemState.EventItemState.BackgroundStyle = TripItemState.EventItemState.BackgroundStyle.SINGLE,
+        isGenerated: Boolean = false,
+    ): TripItemState.FlexibleDaySectionState = TripItemState.FlexibleDaySectionState(
+        id = section.id,
+        timestamp = section.date,
+        showDate = showDate,
+        dayOfMonth = section.date.dayOfMonthString,
+        dayOfWeek = section.date.dayOfWeekString,
+        backgroundStyle = backgroundStyle,
+        name = section.name,
+        subtitle = section.categories.flatMap { categories -> categories.items.map { it.place.name } }.take(3)
+            .joinToString(", "),
+        categories = section.categories.map { category ->
+            TripItemState.DaySectionCategory(
+                name = category.name,
+                items = category.items.map {
+                    TripItemState.SectionOption(
+                        id = it.id,
+                        title = it.place.name,
+                        subtitle = it.place.address,
+                        imageUrl = it.place.coverImage ?: "",
+                    )
+                },
+            )
+        },
+        searchResults = sessions[section.id]?.map {
+            SearchResultItemState(
+                it.name,
+                it.address
+            )
+        } ?: emptyList(),
+        isGenerated = isGenerated,
+    )
 
     override fun addItem(
         id: String,

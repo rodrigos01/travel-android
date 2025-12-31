@@ -85,7 +85,11 @@ class MainActivity : ComponentActivity() {
                             HomeScreen(navController)
                         }
                         composable(TripCreationAssistantDestination.ROUTE) {
-                            TripCreationAssistant()
+                            TripCreationAssistant(TripCreationAssistantDestination.Params())
+                        }
+                        composable<TripCreationAssistantDestination.Params> {
+                            val params: TripCreationAssistantDestination.Params = it.toRoute()
+                            TripCreationAssistant(params)
                         }
                         composable(
                             TripDetailsDestination.ROUTE, arguments = listOf(

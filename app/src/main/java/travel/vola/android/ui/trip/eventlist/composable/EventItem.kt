@@ -9,15 +9,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import travel.vola.android.R
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.TripItemState
 
@@ -32,6 +31,8 @@ fun EventItem(
     dayOfMonthString: String?,
     dayOfWeekString: String?,
     position: EventItemPosition = EventItemPosition.MIDDLE,
+    containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
     content: @Composable () -> Unit,
 ) {
     Row(
@@ -66,9 +67,9 @@ fun EventItem(
                         bottomEnd = if (position == EventItemPosition.BOTTOM || position == EventItemPosition.SINGLE) roundedCornerRadius else 0.dp,
                     )
                 )
-                .background(color = MaterialTheme.colorScheme.secondaryContainer),
+                .background(color = containerColor),
         ) {
-            CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSecondaryContainer) {
+            CompositionLocalProvider(LocalContentColor provides contentColor) {
                 content()
             }
         }
