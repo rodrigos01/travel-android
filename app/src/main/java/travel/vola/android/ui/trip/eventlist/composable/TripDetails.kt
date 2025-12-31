@@ -113,6 +113,7 @@ fun TripDetails(
         onAddPlanTypeSelected = { viewModel.onAddPlanTypeSelected(it?.toState()) },
         onScrollStateChange = viewModel::setScrollState,
         onUpdatePreferencesTapped = viewModel::onUpdatePreferencesTapped,
+        onGenerateTapped = viewModel::onGeneratePlansTapped,
     )
 }
 
@@ -130,6 +131,7 @@ private fun TripDetails(
     onAddPlanTypeSelected: (AddPlanType?) -> Unit = {},
     onScrollStateChange: (Int, Int) -> Unit = { _, _ -> },
     onUpdatePreferencesTapped: () -> Unit = {},
+    onGenerateTapped: (String) -> Unit = {},
 ) {
     val listScrollState = rememberLazyListState()
     val currentPlaceIndex by remember {
@@ -298,6 +300,7 @@ private fun TripDetails(
                             result.drawable.toBitmapOrNull()
                                 ?.copy(Bitmap.Config.ARGB_8888, true)
                     },
+                    onGenerateTapped,
                 )
                 AnimatedVisibility(
                     visible = state.addPlanItemState != null,
@@ -333,6 +336,7 @@ fun List(
     onEmptyAddRowTapped: (String) -> Unit,
     onEditTapped: (String) -> Unit,
     onPlaceImageLoaded: (String, SuccessResult) -> Unit,
+    onGenerateTapped: (String) -> Unit,
 ) {
     LazyColumn(contentPadding = contentPadding, state = scrollState) {
         items(
@@ -346,6 +350,7 @@ fun List(
                 TripDetailItem(
                     event,
                     addPlanItemActionHandler,
+                    highlightDate = event is TripItemState.Focusable && event.id == state.focusedItemId,
                     onAddButonTapped,
                     onEmptyAddRowTapped,
                     onEditTapped,
@@ -356,7 +361,7 @@ fun List(
                             onPlaceImageLoaded(sectionId, it)
                         }
                     },
-                    highlightDate = event is TripItemState.Focusable && event.id == state.focusedItemId,
+                    onGenerateTapped,
                 )
             }
         }
@@ -367,11 +372,12 @@ fun List(
 private fun TripDetailItem(
     event: TripItemState,
     addPlanItemActionHandler: AddPlanItemActionHandler,
+    highlightDate: Boolean = false,
     onAddButonTapped: (String) -> Unit,
     onEmptyAddRowTapped: (String) -> Unit,
     onEditTapped: (String) -> Unit,
     onImageLoaded: (SuccessResult) -> Unit,
-    highlightDate: Boolean = false,
+    onGenerateTapped: (String) -> Unit,
 ) {
     when (event) {
         is MonthItemState -> MonthEventListItem(event.month, event.year)
@@ -382,6 +388,7 @@ private fun TripDetailItem(
             dayOfWeekEnd = event.dayOfWeekEnd,
             focused = highlightDate,
             onAddButtonClick = { onAddButonTapped(event.id) },
+            onGenerateButtonClick = { onGenerateTapped(event.id) },
         )
 
         is EmptyDateItemState -> EmptyDateListItem(
@@ -389,6 +396,7 @@ private fun TripDetailItem(
             dayOfWeek = event.dayOfWeek,
             highlightDate = highlightDate,
             onTap = { onEmptyAddRowTapped(event.id) },
+            onGenerateTapped = { onGenerateTapped(event.id) },
         )
 
         is PlaceItemState -> PlaceEventListItem(

@@ -1,13 +1,16 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AutoFixHigh
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -26,6 +29,7 @@ fun DateRangeListItem(
     dayOfWeekEnd: String,
     focused: Boolean,
     onAddButtonClick: () -> Unit,
+    onGenerateButtonClick: () -> Unit,
 ) {
     ListItem(headlineContent = {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -48,10 +52,15 @@ fun DateRangeListItem(
                 showSmall = true,
             )
             Spacer(modifier = Modifier.weight(1F))
-            TextButton(
-                onClick = { onAddButtonClick() },
-            ) {
+            TextButton(onClick = onAddButtonClick) {
                 Text(text = "Add Plans")
+            }
+            FilledTonalIconButton(onClick = onGenerateButtonClick) {
+                Icon(
+                    Icons.Rounded.AutoFixHigh,
+                    contentDescription = "generate plans",
+                    tint = LocalContentColor.current
+                )
             }
         }
     })
@@ -61,6 +70,13 @@ fun DateRangeListItem(
 @Preview
 fun DateRangeListItemPreview() {
     AppTheme {
-        DateRangeListItem("12", "Sat", "20", "Mon", true, onAddButtonClick = {})
+        DateRangeListItem(
+            "12",
+            "Sat",
+            "20",
+            "Mon",
+            true,
+            onAddButtonClick = {},
+            onGenerateButtonClick = {})
     }
 }

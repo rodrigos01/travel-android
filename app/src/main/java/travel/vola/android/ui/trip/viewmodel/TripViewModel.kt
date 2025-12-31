@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -113,10 +112,7 @@ class TripViewModel(
     private val trip = repository.findTripById(tripId)
         .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
 
-    private val suggestions = trip.filterNotNull().map {
-        suggestionsUseCase.getSuggestions(it)
-    }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
-
+    private val suggestions = suggestionsUseCase.state
     private val flexibleSectionItems = flexibleSectionUseCase.flexibleSectionItems
     private val eventsFromTrip =
         combine(
@@ -415,6 +411,30 @@ class TripViewModel(
             endDate = dates.lastOrNull()?.asISO8601String(),
         )
         navController.navigate(route = params)
+    }
+
+    fun onGeneratePlansTapped(itemId: String) {
+        val currentTrip = trip.value ?: return
+        val tapped = viewState.value.items.find { it is Identifiable && it.id == itemId }
+        val dates = when (tapped) {
+            is TripItemState.DateRangeItemState -> tapped.getDates()
+            is TripItemState.EmptyDateItemState -> listOf(tapped.timestamp)
+            else -> emptyList()
+        }
+        viewModelScope.launch {
+            suggestionsUseCase.getSuggestions(currentTrip, dates)
+        }
+    }
+
+    private fun TripItemState.DateRangeItemState.getDates(): List<ZonedDateTime> {
+        val itemIndex = viewState.value.items.indexOf(this)
+        val startDateTime = timestamp
+        val endDateTime = viewState.value.items.getOrNull(itemIndex + 1)?.timestamp
+            ?: startDateTime
+
+        return generateSequence(startDateTime) { it.plusDays(1) }
+            .takeWhile { it.toLocalDate() < endDateTime.toLocalDate() }
+            .toList()
     }
 
     private val TripItemState.Editable.entity: TripEntity?

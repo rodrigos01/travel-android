@@ -16,6 +16,8 @@ import com.google.firebase.ai.type.generationConfig
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import travel.vola.android.extensions.dateString
+import java.time.ZonedDateTime
 import kotlin.reflect.typeOf
 
 class GenAIRepository internal constructor(
@@ -161,6 +163,7 @@ class GenAIRepository internal constructor(
         followUpQuestions: List<GenAIData.FollowUpQuestion>,
         itinerary: GenAIData.Itinerary,
         itineraryType: GenAIData.ItineraryType,
+        dates: List<ZonedDateTime>,
     ): GenAIData.DailyItinerary? {
         val prompt = Prompts.DAILY_ITINERARY
         val promptQuery =
@@ -168,7 +171,8 @@ class GenAIRepository internal constructor(
                     "\n Parameters: \n" + Json.encodeToString(parameters) +
                     "\n Follow-up Questions: \n" + followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" } +
                     "\n Selected Itinerary:\n" + Json.encodeToString(itinerary) +
-                    "\n Itinerary Type: " + itineraryType.value
+                    "\n Itinerary Type: " + itineraryType.value +
+                    "\n Dates: " + dates.joinToString(", ") { it.dateString }
         return withMeasuredLatency("genDailyItinerary") {
             val result = dailyItineraryModel.generateContent(promptQuery)
             result.text?.let { Json.decodeFromString<GenAIData.DailyItinerary>(it) }
