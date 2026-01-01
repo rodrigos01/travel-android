@@ -99,7 +99,7 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
         outputSchema = itinerarySchema
     ),
     DAILY_ITINERARY(
-        prompt = "Based on the trip itinerary below, generate a reference guide for the dates requested. This reference guide should be organized by the days of the trip and for each day, have a diverse list of suggested places for the user to visit based on their preferences. The places should have categories so that they can be easily filtered in the UI and each day should have between 5 and 10 suggested places, with each category having at least 2 suggestions. Travel days should be divided in sections for each city the user will be on that date.",
+        prompt = "Based on the trip itinerary below, generate a reference guide for the dates requested. This reference guide should be organized by the days of the trip and for each day, have a diverse list of suggested places for the user to visit based on their preferences and other plans they already have for that date. The places should have categories so that they can be easily filtered in the UI and each day should have between 5 and 10 suggested places, with each category having at least 2 suggestions. Travel days should be divided in sections for each city the user will be on that date. Make sure the suggestions don’t include places the user already has in their itinerary.",
         outputSchema = Schema.obj(
             mapOf(
                 "numDays" to Schema.integer(),

@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import travel.vola.android.common.coroutines.mapAsync
 import travel.vola.android.extensions.dateString
+import travel.vola.android.extensions.dateTimeString
 import travel.vola.android.extensions.getDestinations
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.zonedDateTime
@@ -12,7 +13,9 @@ import travel.vola.android.model.data.FlexibleDayItem
 import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.GroupType
 import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.SuggestionPlaceholder
+import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.genai.GenAIData
 import travel.vola.android.model.genai.GenAIRepository
@@ -152,17 +155,27 @@ class SuggestionsUseCase(
                     endTime = it.checkout.dateString("yyyy-MM-dd"),
                 )
             },
-            existingPlaces = (trip.places.filter { it.city != it.place }.map { it.place } +
-                    trip.flexibleSections.flatMap { it.categories }.flatMap { it.items }
-                        .map { it.place } +
-                    trip.restaurants.map { it.place }).map {
+            existingPlaces = (trip.places.filter { it.city != it.place } +
+                    trip.flexibleSections.flatMap { it.categories }.flatMap { it.items } +
+                    trip.restaurants).map { item ->
+                val name = when (item) {
+                    is TimedPlace -> item.place
+                    is RestaurantReservation -> item.place
+                    is FlexibleDayItem -> item.place
+                    else -> null
+                }?.let { "${it.name}, ${it.address}" }
+                val (startTime, endTime) = when (item) {
+                    is TimedPlace -> item.startDateTime to item.endDateTime
+                    is RestaurantReservation -> item.dateTime to null
+                    else -> null to null
+                }
                 GenAIData.TimedPlace(
-                    name = "${it.name}, ${it.address}",
+                    name = name ?: "",
                     note = "",
                     category = "",
                     searchQuery = "",
-                    startTime = null,
-                    endTime = null,
+                    startTime = startTime?.dateTimeString,
+                    endTime = endTime?.dateTimeString,
                 )
             },
             dates = dates,
