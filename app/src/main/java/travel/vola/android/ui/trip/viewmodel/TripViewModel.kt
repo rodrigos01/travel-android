@@ -45,6 +45,7 @@ import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Mapeable
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.RestaurantReservation
+import travel.vola.android.model.data.SuggestionPlaceholder
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.data.TripEntity
@@ -411,6 +412,7 @@ class TripViewModel(
         is Lodging -> checkIn
         is RestaurantReservation -> dateTime
         is FlexibleDaySection -> date
+        is SuggestionPlaceholder -> timestamp
     }
 
     fun onUpdatePreferencesTapped() {
@@ -509,6 +511,7 @@ class TripViewModel(
             is TripItemState.PlaceItemState -> trip.value?.places?.firstOrNull { it.id == id }
             is TripItemState.RestaurantReservationItemState -> trip.value?.restaurants?.firstOrNull { it.id == id }
             is TripItemState.FlexibleDaySectionState -> trip.value?.flexibleSections?.firstOrNull { it.id == id }
+            is TripItemState.SuggestionPlaceholderItemState -> null
         }
 
     private fun SuggestionsUseCase.TimedPlaceSuggestion.asTimedPlace(city: Place): TimedPlace {
@@ -552,9 +555,10 @@ class TripViewModel(
                 }
             }
         } ?: emptyList()
+        val suggestionPlaceholders = suggestions?.placeHolders ?: emptyList()
         val events =
             trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants + trip.flexibleSections + (suggestedPlaces
-                ?: emptyList()) + suggestedSections
+                ?: emptyList()) + suggestedSections + suggestionPlaceholders
         val pairs = events.flatMap { event ->
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
@@ -566,6 +570,7 @@ class TripViewModel(
 
                 is RestaurantReservation -> listOf(event.dateTime to event)
                 is FlexibleDaySection -> listOf(event.date to event)
+                is SuggestionPlaceholder -> listOf(event.timestamp to event)
             }
         }.sortedBy { (time, event) ->
             EventComparable(
@@ -856,6 +861,15 @@ class TripViewModel(
                 showDate = showDate,
                 backgroundStyle = backgroundStyle,
                 isGenerated = true, // Flexible items not coming from the use case are generated
+            )
+
+            is SuggestionPlaceholder -> TripItemState.SuggestionPlaceholderItemState(
+                event.timestamp,
+                showDate = showDate,
+                backgroundStyle = backgroundStyle,
+                sectionId = sectionId,
+                dayOfMonth = event.timestamp.dayOfMonthString,
+                dayOfWeek = event.timestamp.dayOfWeekString,
             )
         }
     }

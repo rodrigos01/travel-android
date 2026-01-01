@@ -5,6 +5,7 @@ import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.RestaurantReservation
+import travel.vola.android.model.data.SuggestionPlaceholder
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.data.TripEvent
@@ -33,6 +34,7 @@ fun Trip.getDestinations(): List<TripDestination> =
             is TimedPlace -> listOf(it.startDateTime to it.city)
             is RestaurantReservation -> listOf(it.dateTime to it.city)
             is FlexibleDaySection -> listOf(it.date to it.city)
+            is SuggestionPlaceholder -> listOf()
         }
     }.sortedBy { it.first }.fold(mutableListOf()) { list, (timestamp, item) ->
         val last = list.lastOrNull()
