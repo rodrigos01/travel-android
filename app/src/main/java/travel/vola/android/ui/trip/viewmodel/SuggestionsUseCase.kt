@@ -126,6 +126,29 @@ class SuggestionsUseCase(
                 },
                 predictedChanges = emptyList(),
             ),
+            lodgings = trip.lodgings.map {
+                GenAIData.TimedPlace(
+                    name = it.name ?: it.address,
+                    note = "",
+                    category = "",
+                    searchQuery = "",
+                    startTime = it.checkIn.dateString("yyyy-MM-dd"),
+                    endTime = it.checkout.dateString("yyyy-MM-dd"),
+                )
+            },
+            existingPlaces = (trip.places.filter { it.city != it.place }.map { it.place } +
+                    trip.flexibleSections.flatMap { it.categories }.flatMap { it.items }
+                        .map { it.place } +
+                    trip.restaurants.map { it.place }).map {
+                GenAIData.TimedPlace(
+                    name = "${it.name}, ${it.address}",
+                    note = "",
+                    category = "",
+                    searchQuery = "",
+                    startTime = null,
+                    endTime = null,
+                )
+            },
             dates = dates,
         )
         val existingDates = state.value.days.map { it.date.dateString("yyyy-MM-dd") }
