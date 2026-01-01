@@ -19,7 +19,7 @@ interface TripDao {
 
     @Transaction
     @Query("SELECT * FROM trip WHERE id = :tripId")
-    fun observeTrip(tripId: String): Flow<Trip>
+    fun observeTrip(tripId: String): Flow<Trip?>
 
     @Query("SELECT * FROM trip WHERE id = :tripId")
     suspend fun getTrip(tripId: String): Schema.Trip

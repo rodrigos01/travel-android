@@ -21,16 +21,16 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
     override val trips: Flow<List<Trip>>
         get() = dao.observeTrips().map { it.map { trip -> trip.toAppDataModel() } }
 
-    override fun findTripById(tripId: String): Flow<Trip> {
-        return dao.observeTrip(tripId).map { it.toAppDataModel() }
+    override fun findTripById(tripId: String): Flow<Trip?> {
+        return dao.observeTrip(tripId).map { it?.toAppDataModel() }
     }
 
     override fun getTripFlights(tripId: String): Flow<List<Flight>> {
-        return findTripById(tripId).map { trip -> trip.flights }
+        return findTripById(tripId).map { trip -> trip?.flights ?: emptyList() }
     }
 
     override fun getTripHotels(tripId: String): Flow<List<Lodging>> {
-        return findTripById(tripId).map { trip -> trip.lodgings }
+        return findTripById(tripId).map { trip -> trip?.lodgings ?: emptyList() }
     }
 
     override suspend fun addTrip(): String {

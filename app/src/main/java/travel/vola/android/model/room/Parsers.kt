@@ -36,31 +36,31 @@ fun RoomData.Trip.toAppDataModel(): Trip {
         id = entity.id,
         name = entity.name,
         coverImage = image,
-        preferences = TripPreferences(
-            basicInformation = BasicInformation(
-                groupType = entity.preferences?.basicInformation?.groupType?.toAppDataModel()
-                    ?: GroupType.SOLO,
-                travelers = entity.preferences?.basicInformation?.travelers
-                    ?: 0,
-            ),
-            initialParameters = entity.preferences?.initialParameters.let {
-                TripParameters(
-                    occasions = it?.occasions ?: emptyList(),
-                    interests = it?.interests ?: emptyList(),
-                    vibe = it?.vibe ?: emptyList(),
-                    focus = it?.focus ?: emptyList(),
-                    mustHave = it?.mustHave ?: emptyList(),
-                    duration = it?.duration ?: emptyList(),
-                    anythingElse = it?.anythingElse ?: "",
-                )
-            },
-            questionsAnswers = entity.preferences?.questionsAnswers?.map {
-                AnsweredQuestion(
-                    it.question,
-                    it.answer
-                )
-            } ?: emptyList()
-        ),
+        preferences = entity.preferences?.let { preferences ->
+            TripPreferences(
+                basicInformation = BasicInformation(
+                    groupType = preferences.basicInformation.groupType.toAppDataModel(),
+                    travelers = preferences.basicInformation.travelers,
+                ),
+                initialParameters = preferences.initialParameters.let {
+                    TripParameters(
+                        occasions = it.occasions,
+                        interests = it.interests,
+                        vibe = it.vibe,
+                        focus = it.focus,
+                        mustHave = it.mustHave,
+                        duration = it.duration,
+                        anythingElse = it.anythingElse,
+                    )
+                },
+                questionsAnswers = preferences.questionsAnswers.map {
+                    AnsweredQuestion(
+                        it.question,
+                        it.answer
+                    )
+                }
+            )
+        },
         flights = appFlights,
         lodgings = appLodgings,
         places = appPlaces,
