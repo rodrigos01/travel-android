@@ -5,12 +5,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import travel.vola.android.common.coroutines.mapAsync
 import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.getDestinations
+import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.FlexibleDayCategory
 import travel.vola.android.model.data.FlexibleDayItem
 import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.GroupType
 import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.SuggestionPlaceholder
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.genai.GenAIData
 import travel.vola.android.model.genai.GenAIRepository
@@ -30,6 +32,7 @@ class SuggestionsUseCase(
     data class DailyItineraryState(
         val days: List<SuggestedDay>,
         val predictedChanges: List<String>,
+        val placeHolders: List<SuggestionPlaceholder> = emptyList(),
     )
 
     data class SuggestedDay(
@@ -52,9 +55,22 @@ class SuggestionsUseCase(
     val state = _state.asStateFlow()
 
 
-    suspend fun getSuggestions(trip: Trip, dates: List<ZonedDateTime>, addPlaceHolders: Boolean = false) {
+    suspend fun getSuggestions(
+        trip: Trip,
+        dates: List<ZonedDateTime>,
+        addPlaceHolders: Boolean = false,
+    ) {
         val preferences = trip.preferences ?: return
         val destinations = trip.getDestinations()
+        val normalizedDates = dates.map { it.toMidnight() }
+        if (addPlaceHolders) {
+            _state.value = state.value.copy(placeHolders = normalizedDates.map { date ->
+                SuggestionPlaceholder(
+                    date,
+                    destinations.last { it.startDateTime <= date }.place,
+                )
+            })
+        }
         val result = repository.genDailyItinerary(
             basicInformation = GenAIData.BasicInformation(
                 destination = "",
@@ -171,7 +187,8 @@ class SuggestionsUseCase(
                         section.toAppData(currentDay.date)
                     } ?: emptyList())
                 )
-            }
+            },
+            placeHolders = state.value.placeHolders.filterNot { normalizedDates.contains(it.timestamp) }
         )
     }
 

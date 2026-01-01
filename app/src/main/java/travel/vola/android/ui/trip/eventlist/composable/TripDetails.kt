@@ -470,6 +470,11 @@ private fun TripDetailItem(
             },
         )
 
+        is TripItemState.SuggestionPlaceholderItemState -> SuggestionPlaceholderListItem(
+            event,
+            highlightDate,
+        )
+
         is TripItemState.EventItemState -> Surface(
             onClick = { onEditTapped(event.id) },
         ) {
@@ -522,6 +527,7 @@ private fun TripDetailItem(
                 )
 
                 is TripItemState.FlexibleDaySectionState -> {}
+                is TripItemState.SuggestionPlaceholderItemState -> {}
             }
         }
 

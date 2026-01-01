@@ -187,3 +187,6 @@ data class AnsweredQuestion(
     val answer: String,
 )
 
+data class SuggestionPlaceholder(val timestamp: ZonedDateTime, override val city: Place) :
+    TripEvent, WithCity
+
