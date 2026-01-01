@@ -1,7 +1,5 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import travel.vola.android.common.coroutines.mapAsync
@@ -90,14 +88,14 @@ class SuggestionsUseCase(
             itineraryType = GenAIData.ItineraryType.OPEN_ENDED,
             itinerary = GenAIData.Itinerary(
                 name = trip.name.orEmpty(),
-                startDate = trip.places.first().startDateTime.let {
+                startDate = destinations.first().startDateTime.let {
                     GenAIData.DateResult(
                         it.dayOfMonth,
                         it.monthValue,
                         it.year
                     )
                 },
-                endDate = (trip.places.last().endDateTime ?: ZonedDateTime.now()).let {
+                endDate = (destinations.last().endDateTime ?: ZonedDateTime.now()).let {
                     GenAIData.DateResult(
                         it.dayOfMonth,
                         it.monthValue,
