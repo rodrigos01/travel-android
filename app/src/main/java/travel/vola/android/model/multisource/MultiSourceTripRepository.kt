@@ -40,7 +40,7 @@ class MultiSourceTripRepository(
         dataSourceType.dataSource.trips
     }
 
-    override fun findTripById(tripId: String): Flow<Trip> = currentDataSource.findTripById(tripId)
+    override fun findTripById(tripId: String): Flow<Trip?> = currentDataSource.findTripById(tripId)
 
     override fun getTripFlights(tripId: String): Flow<List<Flight>> =
         currentDataSource.getTripFlights(tripId)

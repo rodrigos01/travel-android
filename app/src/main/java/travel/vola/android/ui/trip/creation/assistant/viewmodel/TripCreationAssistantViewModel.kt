@@ -28,6 +28,7 @@ import travel.vola.android.model.genai.GenAIRepository
 import travel.vola.android.model.repository.GeographyAutoCompleteRepository
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.home.HomeScreenDestination
+import travel.vola.android.ui.trip.creation.assistant.composable.TripCreationAssistantDestination
 import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
 import java.time.DateTimeException
 import java.time.ZonedDateTime
@@ -74,6 +75,7 @@ class TripCreationAssistantViewModel(
                 endDate = endDate?.let { zonedDateTime(it) },
                 fixedDates = startDate != null && endDate != null,
                 nextButtonEnabled = destinations.isNotEmpty() && startDate != null && endDate != null,
+                skipEnabled = tripId == null,
             ),
             initialParameters = null,
             initialParametersFollowUp = null,
@@ -104,7 +106,8 @@ class TripCreationAssistantViewModel(
             is Step.Retry -> UiState.Generating
         } ?: UiState.Error
     }.onEach { internalState.value = it }
-    private val internalState = MutableStateFlow<UiState>(UiState.BasicInformation())
+    private val internalState =
+        MutableStateFlow<UiState>(UiState.BasicInformation(skipEnabled = tripId == null))
 
     val uiState = merge(generatedState, internalState).stateIn(
         viewModelScope, started = SharingStarted.Lazily, internalState.value
@@ -164,6 +167,7 @@ class TripCreationAssistantViewModel(
                 ),
             ),
             ctaType = if (tripId == null) UiState.CTAType.NEXT else UiState.CTAType.UPDATE,
+            skipEnabled = tripId == null,
         )
     }
 
@@ -206,6 +210,7 @@ class TripCreationAssistantViewModel(
                     )
                 },
                 ctaType = if (tripId == null) UiState.CTAType.NEXT else UiState.CTAType.UPDATE,
+                skipEnabled = tripId == null,
             )
         } else if (tripId != null) {
             updateTrip()
@@ -252,6 +257,7 @@ class TripCreationAssistantViewModel(
                     predictedChanges = itinerary.predictedChanges.map { UiState.Option(it) },
                 )
             },
+            skipEnabled = tripId == null,
         )
     }
 
@@ -554,11 +560,8 @@ class TripCreationAssistantViewModel(
         val state = compositeState.value
         viewModelScope.launch {
             tripRepository.updateTripPreferences(id, createTripPreferences(state))
-            navController.navigate(
-                TripDetailsDestination.getRoute(id)
-            ) {
-                popUpTo(HomeScreenDestination.ROUTE)
-            }
+            setResult(TripCreationAssistantDestination.FinishedStatus.COMPLETED)
+            navController.popBackStack()
         }
     }
 
@@ -627,15 +630,22 @@ class TripCreationAssistantViewModel(
     fun onNavigateBack() {
         val currentStage = step.value
         if (currentStage == Step.BasicInformation) {
+            setResult(TripCreationAssistantDestination.FinishedStatus.CANCELLED)
             navController.popBackStack()
             return
         }
         when (currentStage) {
             is Step.InitialParameters -> Step.BasicInformation to currentStage.state
-            is Step.InitialParametersFollowUp -> Step.InitialParameters(UiState.BasicInformation()) to currentStage.state
+            is Step.InitialParametersFollowUp -> Step.InitialParameters(
+                UiState.BasicInformation(
+                    skipEnabled = tripId == null
+                )
+            ) to currentStage.state
+
             is Step.HighLevelItineraryOptions -> Step.InitialParametersFollowUp(
                 UiState.InitialParameters(
-                    emptyList()
+                    emptyList(),
+                    skipEnabled = tripId == null
                 )
             ) to currentStage.state
 
@@ -644,6 +654,13 @@ class TripCreationAssistantViewModel(
             internalState.value = newState
             step.value = newStage
         }
+    }
+
+    private fun setResult(result: TripCreationAssistantDestination.FinishedStatus) {
+        navController.previousBackStackEntry?.savedStateHandle?.set(
+            TripCreationAssistantDestination.RESULT_KEY_FINISHED_STATUS,
+            result,
+        )
     }
 
     private fun List<UiState.OptionGroup>.selectedValues(type: UiState.OptionGroupType): List<String> =

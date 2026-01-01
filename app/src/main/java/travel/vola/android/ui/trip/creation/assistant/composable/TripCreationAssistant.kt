@@ -130,8 +130,10 @@ fun TripCreationAssistant(
                     }
                 },
                 actions = {
-                    TextButton(onClick = onSkipTapped) {
-                        Text("skip")
+                    if (state.skipEnabled) {
+                        TextButton(onClick = onSkipTapped) {
+                            Text("skip")
+                        }
                     }
                 }
             )
@@ -244,6 +246,12 @@ fun TripCreationAssistant(
 
 object TripCreationAssistantDestination {
     const val ROUTE = "trip_creation_assistant"
+
+    const val RESULT_KEY_FINISHED_STATUS = "result_finished_status"
+
+    enum class FinishedStatus {
+        NONE, COMPLETED, CANCELLED
+    }
 
     @Serializable
     data class Params(

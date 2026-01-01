@@ -9,9 +9,13 @@ sealed interface UiState {
 
     data object Error : UiState
 
+    val skipEnabled: Boolean
+        get() = false
+
     data class BasicInformation(
         val destinations: List<String> = emptyList(),
         val destinationSearchResults: List<SearchResult> = emptyList(),
+        override val skipEnabled: Boolean = true,
         val startDate: ZonedDateTime? = null,
         val endDate: ZonedDateTime? = null,
         val fixedDates: Boolean = false,
@@ -32,6 +36,7 @@ sealed interface UiState {
     data class InitialParameters(
         val optionGroups: List<OptionGroup>,
         val anythingElse: String = "",
+        override val skipEnabled: Boolean = true,
         val ctaEnabled: Boolean = false,
         val ctaType: CTAType = CTAType.NEXT,
     ) : UiState
@@ -44,6 +49,7 @@ sealed interface UiState {
 
     data class InitialParametersFollowUp(
         val questions: List<FollowUpQuestion>,
+        override val skipEnabled: Boolean = true,
         val ctaEnabled: Boolean = false,
         val ctaType: CTAType = CTAType.NEXT,
     ) : UiState
@@ -54,6 +60,7 @@ sealed interface UiState {
 
     data class HighLevelItineraryOptions(
         val itineraries: List<Itinerary>,
+        override val skipEnabled: Boolean = true,
         val selected: Itinerary? = null,
     ) : UiState
 

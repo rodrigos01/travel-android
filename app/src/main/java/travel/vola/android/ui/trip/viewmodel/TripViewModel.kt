@@ -12,7 +12,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -423,17 +425,48 @@ class TripViewModel(
     }
 
     fun onGeneratePlansTapped(itemId: String) {
-        val currentTrip = trip.value ?: return
-        val tapped = viewState.value.items.find { it is Identifiable && it.id == itemId }
+        val tapped = viewState.value.items.find { it is Identifiable && it.id == itemId } ?: return
         val dates = when (tapped) {
             is TripItemState.DateRangeItemState -> tapped.getDates()
             is TripItemState.EmptyDateItemState -> listOf(tapped.timestamp)
             else -> emptyList()
         }
-        itemsGeneratingSuggestions.value = itemsGeneratingSuggestions.value + itemId
         viewModelScope.launch {
+            val currentTrip = if (trip.value?.preferences == null) {
+                val currentBackStackEntry = navController.currentBackStackEntry ?: return@launch
+                onUpdatePreferencesTapped()
+                val result = currentBackStackEntry.savedStateHandle.getStateFlow(
+                    TripCreationAssistantDestination.RESULT_KEY_FINISHED_STATUS,
+                    TripCreationAssistantDestination.FinishedStatus.NONE,
+                ).filter { it != TripCreationAssistantDestination.FinishedStatus.NONE }
+                    .first()
+                currentBackStackEntry.savedStateHandle.remove<TripCreationAssistantDestination.FinishedStatus>(
+                    TripCreationAssistantDestination.RESULT_KEY_FINISHED_STATUS
+                )
+                if (result != TripCreationAssistantDestination.FinishedStatus.COMPLETED) {
+                    return@launch
+                }
+                trip.filter { it?.preferences != null }.first()
+            } else {
+                trip.value
+            } ?: return@launch
+            itemsGeneratingSuggestions.value = itemsGeneratingSuggestions.value + itemId
             suggestionsUseCase.getSuggestions(currentTrip, dates)
             itemsGeneratingSuggestions.value = itemsGeneratingSuggestions.value - itemId
+        }
+    }
+
+    fun onSuggestedSectionDismiss(itemId: String) {
+        suggestionsUseCase.dismissSuggestions(itemId)
+    }
+
+    fun onSuggestedSectionConfirmed(itemId: String) {
+        val section =
+            suggestionsUseCase.state.value.days.flatMap { it.sections }.find { it.id == itemId }
+                ?: return
+        viewModelScope.launch {
+            repository.saveFlexibleSection(tripId, section)
+            suggestionsUseCase.dismissSuggestions(itemId)
         }
     }
 
@@ -696,7 +729,7 @@ class TripViewModel(
             null
         } else if (end - 1.days >= start) {
             TripItemState.DateRangeItemState(
-                id = UUID.randomUUID().toString(),
+                id = "${sectionId}_${start.dateString}_${end.dateString}",
                 timestamp = start,
                 dayOfMonthStart = start.dayOfMonthString,
                 dayOfWeekStart = start.dayOfWeekString,
@@ -707,7 +740,7 @@ class TripViewModel(
             )
         } else {
             TripItemState.EmptyDateItemState(
-                id = UUID.randomUUID().toString(),
+                id = "${sectionId}_${start.dateString}",
                 timestamp = start,
                 dayOfMonth = start.dayOfMonthString,
                 dayOfWeek = start.dayOfWeekString,

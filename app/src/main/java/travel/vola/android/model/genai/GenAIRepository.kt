@@ -162,6 +162,8 @@ class GenAIRepository internal constructor(
         parameters: GenAIData.InitialParametersOptions,
         followUpQuestions: List<GenAIData.FollowUpQuestion>,
         itinerary: GenAIData.Itinerary,
+        lodgings: List<GenAIData.TimedPlace>,
+        existingPlaces: List<GenAIData.TimedPlace>,
         itineraryType: GenAIData.ItineraryType,
         dates: List<ZonedDateTime>,
     ): GenAIData.DailyItinerary? {
@@ -171,6 +173,8 @@ class GenAIRepository internal constructor(
                     "\n Parameters: \n" + Json.encodeToString(parameters) +
                     "\n Follow-up Questions: \n" + followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" } +
                     "\n Selected Itinerary:\n" + Json.encodeToString(itinerary) +
+                    "\n lodgings: " + lodgings.joinToString("\n - ") { "${it.startTime} - ${it.endTime}: ${it.name}" } +
+                    "\n Places already in itinerary: " + existingPlaces.joinToString("\n - ") { it.name } +
                     "\n Itinerary Type: " + itineraryType.value +
                     "\n Dates: " + dates.joinToString(", ") { it.dateString }
         return withMeasuredLatency("genDailyItinerary") {

@@ -1,12 +1,14 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,6 +26,10 @@ enum class EventItemPosition {
     TOP, MIDDLE, BOTTOM, SINGLE,
 }
 
+enum class EventItemStyle {
+    Filled, Outlined,
+}
+
 @Composable
 fun EventItem(
     showDate: Boolean = false,
@@ -33,6 +39,7 @@ fun EventItem(
     position: EventItemPosition = EventItemPosition.MIDDLE,
     containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
     contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    style: EventItemStyle = EventItemStyle.Filled,
     content: @Composable () -> Unit,
 ) {
     Row(
@@ -52,6 +59,12 @@ fun EventItem(
         }
         val roundedCornerRadius = 12.dp
         val separatorPadding = 2.dp
+        val shape = RoundedCornerShape(
+            topStart = if (position == EventItemPosition.TOP || position == EventItemPosition.SINGLE) roundedCornerRadius else 0.dp,
+            topEnd = if (position == EventItemPosition.TOP || position == EventItemPosition.SINGLE) roundedCornerRadius else 0.dp,
+            bottomStart = if (position == EventItemPosition.BOTTOM || position == EventItemPosition.SINGLE) roundedCornerRadius else 0.dp,
+            bottomEnd = if (position == EventItemPosition.BOTTOM || position == EventItemPosition.SINGLE) roundedCornerRadius else 0.dp,
+        )
         Box(
             modifier = Modifier
                 .padding(
@@ -59,15 +72,19 @@ fun EventItem(
                     top = if (position == EventItemPosition.TOP || position == EventItemPosition.SINGLE) 4.dp else separatorPadding,
                     bottom = if (position == EventItemPosition.BOTTOM || position == EventItemPosition.SINGLE) 4.dp else separatorPadding,
                 )
-                .clip(
-                    RoundedCornerShape(
-                        topStart = if (position == EventItemPosition.TOP || position == EventItemPosition.SINGLE) roundedCornerRadius else 0.dp,
-                        topEnd = if (position == EventItemPosition.TOP || position == EventItemPosition.SINGLE) roundedCornerRadius else 0.dp,
-                        bottomStart = if (position == EventItemPosition.BOTTOM || position == EventItemPosition.SINGLE) roundedCornerRadius else 0.dp,
-                        bottomEnd = if (position == EventItemPosition.BOTTOM || position == EventItemPosition.SINGLE) roundedCornerRadius else 0.dp,
-                    )
+                .then(
+                    when (style) {
+                        EventItemStyle.Filled -> Modifier
+                            .clip(shape)
+                        EventItemStyle.Outlined -> Modifier.border(
+                            ButtonDefaults.outlinedButtonBorder(
+                                enabled = true
+                            ),
+                            shape = shape,
+                        )
+                    }
                 )
-                .background(color = containerColor),
+                .background(color = containerColor, shape = shape),
         ) {
             CompositionLocalProvider(LocalContentColor provides contentColor) {
                 content()
@@ -93,6 +110,7 @@ fun EventItemPreview() {
             dayOfMonthString = "21",
             dayOfWeekString = "Wed",
             position = EventItemPosition.SINGLE,
+            style = EventItemStyle.Outlined,
         ) {
             Text("An Event")
         }
