@@ -28,6 +28,7 @@ import travel.vola.android.model.genai.GenAIRepository
 import travel.vola.android.model.repository.GeographyAutoCompleteRepository
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.home.HomeScreenDestination
+import travel.vola.android.ui.trip.creation.assistant.composable.TripCreationAssistantDestination
 import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
 import java.time.DateTimeException
 import java.time.ZonedDateTime
@@ -554,11 +555,8 @@ class TripCreationAssistantViewModel(
         val state = compositeState.value
         viewModelScope.launch {
             tripRepository.updateTripPreferences(id, createTripPreferences(state))
-            navController.navigate(
-                TripDetailsDestination.getRoute(id)
-            ) {
-                popUpTo(HomeScreenDestination.ROUTE)
-            }
+            setResult(TripCreationAssistantDestination.FinishedStatus.COMPLETED)
+            navController.popBackStack()
         }
     }
 
@@ -627,6 +625,7 @@ class TripCreationAssistantViewModel(
     fun onNavigateBack() {
         val currentStage = step.value
         if (currentStage == Step.BasicInformation) {
+            setResult(TripCreationAssistantDestination.FinishedStatus.CANCELLED)
             navController.popBackStack()
             return
         }
@@ -644,6 +643,13 @@ class TripCreationAssistantViewModel(
             internalState.value = newState
             step.value = newStage
         }
+    }
+
+    private fun setResult(result: TripCreationAssistantDestination.FinishedStatus) {
+        navController.previousBackStackEntry?.savedStateHandle?.set(
+            TripCreationAssistantDestination.RESULT_KEY_FINISHED_STATUS,
+            result,
+        )
     }
 
     private fun List<UiState.OptionGroup>.selectedValues(type: UiState.OptionGroupType): List<String> =

@@ -26,16 +26,16 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
     override val trips: Flow<List<Trip>> =
         firestore.collection("/trips").asFlow(this::tripConverter)
 
-    override fun findTripById(tripId: String): Flow<Trip> {
+    override fun findTripById(tripId: String): Flow<Trip?> {
         return firestore.document("/trips/$tripId").asFlow(this::tripConverter)
     }
 
     override fun getTripFlights(tripId: String): Flow<List<Flight>> {
-        return findTripById(tripId).map { it.flights }
+        return findTripById(tripId).map { it?.flights ?: emptyList() }
     }
 
     override fun getTripHotels(tripId: String): Flow<List<Lodging>> {
-        return findTripById(tripId).map { it.lodgings }
+        return findTripById(tripId).map { it?.lodgings ?: emptyList() }
     }
 
     private fun tripConverter(snapshot: DocumentSnapshot) =

@@ -15,7 +15,7 @@ interface TripDataSource {
     val dataSourceType: DataSourceType
     val trips: Flow<List<Trip>>
 
-    fun findTripById(tripId: String): Flow<Trip>
+    fun findTripById(tripId: String): Flow<Trip?>
     fun getTripFlights(tripId: String): Flow<List<Flight>>
     fun getTripHotels(tripId: String): Flow<List<Lodging>>
 
