@@ -247,6 +247,10 @@ class TripViewModel(
         )
     }
 
+    fun initialAddButtonTapped(itemId: String) {
+        onAddPlanTypeSelected(AddPlanItemState.Type.entries.first())
+    }
+
     fun emptyDateRowTapped(itemId: String) {
         val tapped = viewState.value.items.find { it is Identifiable && it.id == itemId }
         addPlanUseCase.createAddPlanItem(
@@ -316,7 +320,7 @@ class TripViewModel(
             return
         }
         addPlanUseCase.createAddPlanItem(
-            id = ADDING_PLAN_STATE_ID,
+            id = itemId,
             time = item.timestamp,
             dateSelectionEnabled = item.dateSelectionEnabled,
             type = newType,
