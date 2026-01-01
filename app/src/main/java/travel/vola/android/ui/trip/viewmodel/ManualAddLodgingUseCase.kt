@@ -52,6 +52,8 @@ class ManualAddLodgingUseCase(
             id = id,
             checkIn = time.update(hour = 15, minute = 0),
             isCheckInTimeSet = true,
+            checkOut = time.update(hour = 10, minute = 0) + 1.days,
+            isCheckOutTimeSet = true,
         )
         itemStore.addItem(data, params)
     }
@@ -64,9 +66,9 @@ class ManualAddLodgingUseCase(
     ) {
         val data = PendingLodging(
             id = id,
-            checkIn = checkIn.update(hour = 15),
+            checkIn = checkIn.update(hour = 15, minute = 0),
             isCheckInTimeSet = true,
-            checkOut = checkOut?.update(hour = 10),
+            checkOut = checkOut?.update(hour = 10, minute = 0),
             isCheckOutTimeSet = checkOut != null,
         )
         itemStore.addItem(data, params)
