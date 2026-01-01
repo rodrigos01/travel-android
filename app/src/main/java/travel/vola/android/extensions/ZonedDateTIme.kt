@@ -58,6 +58,9 @@ operator fun ZonedDateTime.minus(other: Long): ZonedDateTime =
 operator fun ZonedDateTime.plus(other: ZonedDateTime): ZonedDateTime =
     this.plusSeconds(other.toEpochSecond())
 
+operator fun ZonedDateTime.minus(other: ZonedDateTime): ZonedDateTime =
+    this.minusSeconds(other.toEpochSecond())
+
 operator fun ZonedDateTime.plus(duration: Duration) = this + duration.inWholeMilliseconds
 
 operator fun ZonedDateTime.minus(duration: Duration) = this - duration.inWholeMilliseconds

@@ -85,7 +85,7 @@ class AddLodgingUseCase(
         id: String,
         time: ZonedDateTime,
         params: AddPlanUseCase.StateParams,
-    ) = lodgingSearchParamsUseCase.addItem(id, time, params)
+    ) = manualAddLodgingUseCase.addItem(id, time, params)
 
     override fun addItem(id: String, entity: Lodging, params: AddPlanUseCase.StateParams) =
         manualAddLodgingUseCase.addItem(id, entity, params)

@@ -44,7 +44,7 @@ fun StartEndAddPlanListItem(
     requiresEnd: Boolean = true,
     canSetEnd: Boolean = true,
 ) {
-    var selectedStartDateTime by remember {
+    var selectedStartDateTime by remember(uiState.startState.dateTime) {
         mutableStateOf(uiState.startState.dateTime)
     }
     var startTimeSelected by remember {
@@ -56,7 +56,7 @@ fun StartEndAddPlanListItem(
     var hasEnd by remember(requiresEnd, canSetEnd) {
         mutableStateOf(requiresEnd && canSetEnd)
     }
-    var selectedEndDateTime by remember {
+    var selectedEndDateTime by remember(uiState.startState.dateTime) {
         mutableStateOf(uiState.endState.dateTime)
     }
     var endTimeSelected by remember {

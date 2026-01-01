@@ -84,4 +84,6 @@ interface AddFlexibleSectionItemActionHandler {
         dateTime: ZonedDateTime,
         timeSelected: Boolean,
     )
+
+    fun onGenerateSectionTapped(itemId: String)
 }
