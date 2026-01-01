@@ -5,6 +5,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import travel.vola.android.extensions.MapFlow
+import travel.vola.android.extensions.minus
 import travel.vola.android.extensions.plus
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.update
@@ -182,12 +183,16 @@ class ManualAddLodgingUseCase(
                 val timeZone =
                     (hotelDetails?.timeZone ?: city?.timeZone ?: data.city?.timeZone)?.toZoneId()
                         ?: data.checkIn.zone
+                val newCheckIn = timeZone?.let { checkIn.update(timeZone = it) } ?: checkIn
+                val newCheckOut =
+                    timeZone?.let { checkOut?.update(timeZone = it) }?.takeIf { it > newCheckIn }
+                        ?: data.checkOut?.minus(data.checkIn)?.plus(newCheckIn)
                 PendingLodging(
                     id = data.id,
                     entityId = data.entityId,
-                    checkIn = timeZone?.let { checkIn.update(timeZone = it) } ?: checkIn,
+                    checkIn = newCheckIn,
                     isCheckInTimeSet = checkInTimeSelected,
-                    checkOut = timeZone?.let { checkOut?.update(timeZone = it) },
+                    checkOut = newCheckOut,
                     isCheckOutTimeSet = checkOutTimeSelected,
                     name = hotelDetails?.name ?: data.name,
                     address = hotelDetails?.address ?: data.address,
