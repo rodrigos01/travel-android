@@ -110,6 +110,7 @@ fun TripDetails(
         onDeleteConfirmed = viewModel::deleteTrip,
         onTripNameChanged = viewModel::tripNameChanged,
         onAddButonTapped = viewModel::addButtonTapped,
+        onInitialAddButonTapped = viewModel::initialAddButtonTapped,
         onEmptyAddRowTapped = viewModel::emptyDateRowTapped,
         onEditTapped = viewModel::editTapped,
         onAddPlanTypeSelected = { viewModel.onAddPlanTypeSelected(it?.toState()) },
@@ -130,6 +131,7 @@ private fun TripDetails(
     onDeleteConfirmed: () -> Unit = {},
     onTripNameChanged: (String) -> Unit = {},
     onAddButonTapped: (String) -> Unit = {},
+    onInitialAddButonTapped: (String) -> Unit = {},
     onEmptyAddRowTapped: (String) -> Unit = {},
     onEditTapped: (String) -> Unit = {},
     onAddPlanTypeSelected: (AddPlanType?) -> Unit = {},
@@ -299,6 +301,7 @@ private fun TripDetails(
                     ),
                     addPlanItemActionHandler,
                     onAddButonTapped,
+                    onInitialAddButonTapped,
                     onEmptyAddRowTapped,
                     onEditTapped,
                     onPlaceImageLoaded = { placeId, result ->
@@ -342,6 +345,7 @@ fun List(
     contentPadding: PaddingValues,
     addPlanItemActionHandler: AddPlanItemActionHandler,
     onAddButonTapped: (String) -> Unit,
+    onInitialAddButonTapped: (String) -> Unit,
     onEmptyAddRowTapped: (String) -> Unit,
     onEditTapped: (String) -> Unit,
     onPlaceImageLoaded: (String, SuccessResult) -> Unit,
@@ -364,6 +368,7 @@ fun List(
                     highlightDate = event is TripItemState.Focusable && event.id == state.focusedItemId,
                     onAddButonTapped,
                     onEmptyAddRowTapped,
+                    onInitialAddButonTapped,
                     onEditTapped,
                     onImageLoaded = {
                         val sectionId =
@@ -388,6 +393,7 @@ private fun TripDetailItem(
     highlightDate: Boolean = false,
     onAddButonTapped: (String) -> Unit,
     onEmptyAddRowTapped: (String) -> Unit,
+    onInitialAddButonTapped: (String) -> Unit,
     onEditTapped: (String) -> Unit,
     onImageLoaded: (SuccessResult) -> Unit,
     onGenerateTapped: (String) -> Unit,
@@ -520,7 +526,7 @@ private fun TripDetailItem(
         }
 
         is TripItemState.InitialAddPlanItemState -> EmptyAddPlanListItem(
-            onAddButtonClick = { onAddButonTapped(event.id) })
+            onAddButtonClick = { onInitialAddButonTapped(event.id) })
 
         is AddPlanItemState -> AddPlanListItem(
             event,
