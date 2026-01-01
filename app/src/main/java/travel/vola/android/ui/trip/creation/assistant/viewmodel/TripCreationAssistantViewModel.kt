@@ -75,6 +75,7 @@ class TripCreationAssistantViewModel(
                 endDate = endDate?.let { zonedDateTime(it) },
                 fixedDates = startDate != null && endDate != null,
                 nextButtonEnabled = destinations.isNotEmpty() && startDate != null && endDate != null,
+                skipEnabled = tripId == null,
             ),
             initialParameters = null,
             initialParametersFollowUp = null,
@@ -105,7 +106,8 @@ class TripCreationAssistantViewModel(
             is Step.Retry -> UiState.Generating
         } ?: UiState.Error
     }.onEach { internalState.value = it }
-    private val internalState = MutableStateFlow<UiState>(UiState.BasicInformation())
+    private val internalState =
+        MutableStateFlow<UiState>(UiState.BasicInformation(skipEnabled = tripId == null))
 
     val uiState = merge(generatedState, internalState).stateIn(
         viewModelScope, started = SharingStarted.Lazily, internalState.value
@@ -165,6 +167,7 @@ class TripCreationAssistantViewModel(
                 ),
             ),
             ctaType = if (tripId == null) UiState.CTAType.NEXT else UiState.CTAType.UPDATE,
+            skipEnabled = tripId == null,
         )
     }
 
@@ -207,6 +210,7 @@ class TripCreationAssistantViewModel(
                     )
                 },
                 ctaType = if (tripId == null) UiState.CTAType.NEXT else UiState.CTAType.UPDATE,
+                skipEnabled = tripId == null,
             )
         } else if (tripId != null) {
             updateTrip()
@@ -253,6 +257,7 @@ class TripCreationAssistantViewModel(
                     predictedChanges = itinerary.predictedChanges.map { UiState.Option(it) },
                 )
             },
+            skipEnabled = tripId == null,
         )
     }
 
@@ -631,10 +636,16 @@ class TripCreationAssistantViewModel(
         }
         when (currentStage) {
             is Step.InitialParameters -> Step.BasicInformation to currentStage.state
-            is Step.InitialParametersFollowUp -> Step.InitialParameters(UiState.BasicInformation()) to currentStage.state
+            is Step.InitialParametersFollowUp -> Step.InitialParameters(
+                UiState.BasicInformation(
+                    skipEnabled = tripId == null
+                )
+            ) to currentStage.state
+
             is Step.HighLevelItineraryOptions -> Step.InitialParametersFollowUp(
                 UiState.InitialParameters(
-                    emptyList()
+                    emptyList(),
+                    skipEnabled = tripId == null
                 )
             ) to currentStage.state
 

@@ -130,8 +130,10 @@ fun TripCreationAssistant(
                     }
                 },
                 actions = {
-                    TextButton(onClick = onSkipTapped) {
-                        Text("skip")
+                    if (state.skipEnabled) {
+                        TextButton(onClick = onSkipTapped) {
+                            Text("skip")
+                        }
                     }
                 }
             )
