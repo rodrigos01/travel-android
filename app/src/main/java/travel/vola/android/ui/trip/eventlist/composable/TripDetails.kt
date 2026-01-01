@@ -114,6 +114,8 @@ fun TripDetails(
         onScrollStateChange = viewModel::setScrollState,
         onUpdatePreferencesTapped = viewModel::onUpdatePreferencesTapped,
         onGenerateTapped = viewModel::onGeneratePlansTapped,
+        onFlexibleSuggestionConfirmed = viewModel::onSuggestedSectionConfirmed,
+        onFlexibleSuggestionDismissed = viewModel::onSuggestedSectionDismiss,
     )
 }
 
@@ -132,6 +134,8 @@ private fun TripDetails(
     onScrollStateChange: (Int, Int) -> Unit = { _, _ -> },
     onUpdatePreferencesTapped: () -> Unit = {},
     onGenerateTapped: (String) -> Unit = {},
+    onFlexibleSuggestionConfirmed: (String) -> Unit = {},
+    onFlexibleSuggestionDismissed: (String) -> Unit = {},
 ) {
     val listScrollState = rememberLazyListState()
     val currentPlaceIndex by remember {
@@ -301,6 +305,8 @@ private fun TripDetails(
                                 ?.copy(Bitmap.Config.ARGB_8888, true)
                     },
                     onGenerateTapped,
+                    onFlexibleSuggestionConfirmed,
+                    onFlexibleSuggestionDismissed,
                 )
                 AnimatedVisibility(
                     visible = state.addPlanItemState != null,
@@ -337,6 +343,8 @@ fun List(
     onEditTapped: (String) -> Unit,
     onPlaceImageLoaded: (String, SuccessResult) -> Unit,
     onGenerateTapped: (String) -> Unit,
+    onFlexibleSuggestionConfirmed: (String) -> Unit,
+    onFlexibleSuggestionDismissed: (String) -> Unit,
 ) {
     LazyColumn(contentPadding = contentPadding, state = scrollState) {
         items(
@@ -362,6 +370,8 @@ fun List(
                         }
                     },
                     onGenerateTapped,
+                    onFlexibleSuggestionConfirmed,
+                    onFlexibleSuggestionDismissed,
                 )
             }
         }
@@ -378,6 +388,8 @@ private fun TripDetailItem(
     onEditTapped: (String) -> Unit,
     onImageLoaded: (SuccessResult) -> Unit,
     onGenerateTapped: (String) -> Unit,
+    onFlexibleSuggestionConfirmed: (String) -> Unit,
+    onFlexibleSuggestionDismissed: (String) -> Unit,
 ) {
     when (event) {
         is MonthItemState -> MonthEventListItem(event.month, event.year)
@@ -440,7 +452,13 @@ private fun TripDetailItem(
                     index,
                     categoryIndex,
                 )
-            }
+            },
+            onSuggestionConfirmed = {
+                onFlexibleSuggestionConfirmed(event.id)
+            },
+            onSuggestionDismissed = {
+                onFlexibleSuggestionDismissed(event.id)
+            },
         )
 
         is TripItemState.EventItemState -> Surface(
