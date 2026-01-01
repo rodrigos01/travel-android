@@ -208,6 +208,20 @@ sealed interface TripItemState {
         val subtitle: String,
         val imageUrl: String,
     )
+
+    data class SuggestionPlaceholderItemState(
+        override val timestamp: ZonedDateTime,
+        override val backgroundStyle: EventItemState.BackgroundStyle,
+        override val sectionId: String?,
+        override val showDate: Boolean,
+        override val dayOfMonth: String?,
+        override val dayOfWeek: String?,
+    ) : EventItemState {
+        override val id: String = timestamp.toString()
+        override val time: String = ""
+        override val title: String? = null
+        override val subtitle: String? = null
+    }
 }
 
 data class ManualAddPlanState(

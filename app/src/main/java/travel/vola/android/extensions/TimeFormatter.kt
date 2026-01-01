@@ -20,6 +20,10 @@ fun ZonedDateTime.dateString(style: FormatStyle = FormatStyle.SHORT): String =
 val ZonedDateTime.dateString: String
     get() = dateString()
 
+val ZonedDateTime.dateTimeString: String
+    get() = format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT))
+
+
 val ZonedDateTime.monthAndYearString: String
     get() = format(DateTimeFormatter.ofPattern("MMMM yyyy"))
 

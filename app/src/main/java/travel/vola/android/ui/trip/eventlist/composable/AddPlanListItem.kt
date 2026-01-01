@@ -190,6 +190,7 @@ fun AddPlanContent(
             AddFlexibleSectionListItem(
                 state = state,
                 onTextChanged = { actionHandler.sectionNameChanged(state.id, it) },
+                onGenerateTapped = { actionHandler.onGenerateSectionTapped(state.id) },
                 onUpdated = { dateTime, timeSelected ->
                     actionHandler.onFlexibleItemDateTimeUpdated(
                         state.id,
@@ -306,6 +307,8 @@ object NoOpActionHandler : AddPlanItemActionHandler {
         timeSelected: Boolean,
         selectedSearchResultIndex: Int
     ) = Unit
+
+    override fun onGenerateSectionTapped(itemId: String) = Unit
 
     override fun restaurantTextChanged(itemId: String, content: CharSequence) = Unit
     override fun sectionNameChanged(itemId: String, content: CharSequence) = Unit

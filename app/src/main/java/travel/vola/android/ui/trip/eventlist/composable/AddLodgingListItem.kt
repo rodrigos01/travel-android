@@ -59,14 +59,6 @@ fun AddLodgingListItem(
                 )
             },
         )
-        TextButton(
-            onClick = onFindLodgingButtonTapped,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-        ) {
-            Text("Find lodging")
-        }
     }
 }
 

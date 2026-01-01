@@ -4,13 +4,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import travel.vola.android.common.coroutines.mapAsync
 import travel.vola.android.extensions.dateString
+import travel.vola.android.extensions.dateTimeString
 import travel.vola.android.extensions.getDestinations
+import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.FlexibleDayCategory
 import travel.vola.android.model.data.FlexibleDayItem
 import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.GroupType
 import travel.vola.android.model.data.Place
+import travel.vola.android.model.data.RestaurantReservation
+import travel.vola.android.model.data.SuggestionPlaceholder
+import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.genai.GenAIData
 import travel.vola.android.model.genai.GenAIRepository
@@ -30,6 +35,7 @@ class SuggestionsUseCase(
     data class DailyItineraryState(
         val days: List<SuggestedDay>,
         val predictedChanges: List<String>,
+        val placeHolders: List<SuggestionPlaceholder> = emptyList(),
     )
 
     data class SuggestedDay(
@@ -52,9 +58,22 @@ class SuggestionsUseCase(
     val state = _state.asStateFlow()
 
 
-    suspend fun getSuggestions(trip: Trip, dates: List<ZonedDateTime>) {
+    suspend fun getSuggestions(
+        trip: Trip,
+        dates: List<ZonedDateTime>,
+        addPlaceHolders: Boolean = false,
+    ) {
         val preferences = trip.preferences ?: return
         val destinations = trip.getDestinations()
+        val normalizedDates = dates.map { it.toMidnight() }
+        if (addPlaceHolders) {
+            _state.value = state.value.copy(placeHolders = normalizedDates.map { date ->
+                SuggestionPlaceholder(
+                    date,
+                    destinations.last { it.startDateTime <= date }.place,
+                )
+            })
+        }
         val result = repository.genDailyItinerary(
             basicInformation = GenAIData.BasicInformation(
                 destination = "",
@@ -136,17 +155,27 @@ class SuggestionsUseCase(
                     endTime = it.checkout.dateString("yyyy-MM-dd"),
                 )
             },
-            existingPlaces = (trip.places.filter { it.city != it.place }.map { it.place } +
-                    trip.flexibleSections.flatMap { it.categories }.flatMap { it.items }
-                        .map { it.place } +
-                    trip.restaurants.map { it.place }).map {
+            existingPlaces = (trip.places.filter { it.city != it.place } +
+                    trip.flexibleSections.flatMap { it.categories }.flatMap { it.items } +
+                    trip.restaurants).map { item ->
+                val name = when (item) {
+                    is TimedPlace -> item.place
+                    is RestaurantReservation -> item.place
+                    is FlexibleDayItem -> item.place
+                    else -> null
+                }?.let { "${it.name}, ${it.address}" }
+                val (startTime, endTime) = when (item) {
+                    is TimedPlace -> item.startDateTime to item.endDateTime
+                    is RestaurantReservation -> item.dateTime to null
+                    else -> null to null
+                }
                 GenAIData.TimedPlace(
-                    name = "${it.name}, ${it.address}",
+                    name = name ?: "",
                     note = "",
                     category = "",
                     searchQuery = "",
-                    startTime = null,
-                    endTime = null,
+                    startTime = startTime?.dateTimeString,
+                    endTime = endTime?.dateTimeString,
                 )
             },
             dates = dates,
@@ -171,7 +200,8 @@ class SuggestionsUseCase(
                         section.toAppData(currentDay.date)
                     } ?: emptyList())
                 )
-            }
+            },
+            placeHolders = state.value.placeHolders.filterNot { normalizedDates.contains(it.timestamp) }
         )
     }
 

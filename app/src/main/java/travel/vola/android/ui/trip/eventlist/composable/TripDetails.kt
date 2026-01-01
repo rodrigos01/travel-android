@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -53,6 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
@@ -108,6 +110,7 @@ fun TripDetails(
         onDeleteConfirmed = viewModel::deleteTrip,
         onTripNameChanged = viewModel::tripNameChanged,
         onAddButonTapped = viewModel::addButtonTapped,
+        onInitialAddButonTapped = viewModel::initialAddButtonTapped,
         onEmptyAddRowTapped = viewModel::emptyDateRowTapped,
         onEditTapped = viewModel::editTapped,
         onAddPlanTypeSelected = { viewModel.onAddPlanTypeSelected(it?.toState()) },
@@ -128,6 +131,7 @@ private fun TripDetails(
     onDeleteConfirmed: () -> Unit = {},
     onTripNameChanged: (String) -> Unit = {},
     onAddButonTapped: (String) -> Unit = {},
+    onInitialAddButonTapped: (String) -> Unit = {},
     onEmptyAddRowTapped: (String) -> Unit = {},
     onEditTapped: (String) -> Unit = {},
     onAddPlanTypeSelected: (AddPlanType?) -> Unit = {},
@@ -297,6 +301,7 @@ private fun TripDetails(
                     ),
                     addPlanItemActionHandler,
                     onAddButonTapped,
+                    onInitialAddButonTapped,
                     onEmptyAddRowTapped,
                     onEditTapped,
                     onPlaceImageLoaded = { placeId, result ->
@@ -322,7 +327,8 @@ private fun TripDetails(
                 TripDetailsToolbar(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = 24.dp),
+                        .padding(bottom = 24.dp)
+                        .pointerInput(Unit) { detectTapGestures { } },
                     addPlanState = state.addPlanItemState,
                     addPlanActionHandler = addPlanItemActionHandler,
                     onTypeSelected = onAddPlanTypeSelected,
@@ -339,6 +345,7 @@ fun List(
     contentPadding: PaddingValues,
     addPlanItemActionHandler: AddPlanItemActionHandler,
     onAddButonTapped: (String) -> Unit,
+    onInitialAddButonTapped: (String) -> Unit,
     onEmptyAddRowTapped: (String) -> Unit,
     onEditTapped: (String) -> Unit,
     onPlaceImageLoaded: (String, SuccessResult) -> Unit,
@@ -361,6 +368,7 @@ fun List(
                     highlightDate = event is TripItemState.Focusable && event.id == state.focusedItemId,
                     onAddButonTapped,
                     onEmptyAddRowTapped,
+                    onInitialAddButonTapped,
                     onEditTapped,
                     onImageLoaded = {
                         val sectionId =
@@ -385,6 +393,7 @@ private fun TripDetailItem(
     highlightDate: Boolean = false,
     onAddButonTapped: (String) -> Unit,
     onEmptyAddRowTapped: (String) -> Unit,
+    onInitialAddButonTapped: (String) -> Unit,
     onEditTapped: (String) -> Unit,
     onImageLoaded: (SuccessResult) -> Unit,
     onGenerateTapped: (String) -> Unit,
@@ -461,6 +470,11 @@ private fun TripDetailItem(
             },
         )
 
+        is TripItemState.SuggestionPlaceholderItemState -> SuggestionPlaceholderListItem(
+            event,
+            highlightDate,
+        )
+
         is TripItemState.EventItemState -> Surface(
             onClick = { onEditTapped(event.id) },
         ) {
@@ -513,11 +527,12 @@ private fun TripDetailItem(
                 )
 
                 is TripItemState.FlexibleDaySectionState -> {}
+                is TripItemState.SuggestionPlaceholderItemState -> {}
             }
         }
 
         is TripItemState.InitialAddPlanItemState -> EmptyAddPlanListItem(
-            onAddButtonClick = { onAddButonTapped(event.id) })
+            onAddButtonClick = { onInitialAddButonTapped(event.id) })
 
         is AddPlanItemState -> AddPlanListItem(
             event,
