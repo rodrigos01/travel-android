@@ -169,14 +169,14 @@ class GenAIRepository internal constructor(
     ): GenAIData.DailyItinerary? {
         val prompt = Prompts.DAILY_ITINERARY
         val promptQuery =
-            prompt.prompt + "\n Basic Information: \n" + Json.encodeToString(basicInformation) +
+            prompt.prompt +
+                    "\n Requested dates: " + dates.joinToString(", ") { it.dateString } +
+                    "\n Basic Information: \n" + Json.encodeToString(basicInformation) +
                     "\n Parameters: \n" + Json.encodeToString(parameters) +
                     "\n Follow-up Questions: \n" + followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" } +
                     "\n Selected Itinerary:\n" + Json.encodeToString(itinerary) +
                     "\n lodgings: " + lodgings.joinToString("\n - ") { "${it.startTime} - ${it.endTime}: ${it.name}" } +
-                    "\n Places already in itinerary: " + existingPlaces.joinToString("\n - ") { it.name } +
-                    "\n Itinerary Type: " + itineraryType.value +
-                    "\n Dates: " + dates.joinToString(", ") { it.dateString }
+                    "\n Places already in itinerary: " + existingPlaces.joinToString("\n - ") { "${it.startTime}: ${it.name}" }
         return withMeasuredLatency("genDailyItinerary") {
             val result = dailyItineraryModel.generateContent(promptQuery)
             result.text?.let { Json.decodeFromString<GenAIData.DailyItinerary>(it) }
