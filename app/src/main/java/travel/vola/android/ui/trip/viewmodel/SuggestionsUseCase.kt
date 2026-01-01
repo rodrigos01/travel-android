@@ -152,6 +152,16 @@ class SuggestionsUseCase(
         )
     }
 
+    fun dismissSuggestions(suggestionId: String) {
+        _state.value = state.value.copy(
+            days = state.value.days.map { day ->
+                day.copy(
+                    sections = day.sections.filter { it.id != suggestionId }
+                )
+            }
+        )
+    }
+
     private suspend fun GenAIData.Section.toAppData(
         date: ZonedDateTime,
     ): FlexibleDaySection =

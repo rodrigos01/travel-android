@@ -456,6 +456,20 @@ class TripViewModel(
         }
     }
 
+    fun onSuggestedSectionDismiss(itemId: String) {
+        suggestionsUseCase.dismissSuggestions(itemId)
+    }
+
+    fun onSuggestedSectionConfirmed(itemId: String) {
+        val section =
+            suggestionsUseCase.state.value.days.flatMap { it.sections }.find { it.id == itemId }
+                ?: return
+        viewModelScope.launch {
+            repository.saveFlexibleSection(tripId, section)
+            suggestionsUseCase.dismissSuggestions(itemId)
+        }
+    }
+
     private fun TripItemState.DateRangeItemState.getDates(): List<ZonedDateTime> {
         val itemIndex = viewState.value.items.indexOf(this)
         val startDateTime = timestamp
