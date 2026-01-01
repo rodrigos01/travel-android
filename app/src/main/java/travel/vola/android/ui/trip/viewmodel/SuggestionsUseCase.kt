@@ -1,7 +1,5 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import travel.vola.android.common.coroutines.mapAsync
@@ -90,14 +88,14 @@ class SuggestionsUseCase(
             itineraryType = GenAIData.ItineraryType.OPEN_ENDED,
             itinerary = GenAIData.Itinerary(
                 name = trip.name.orEmpty(),
-                startDate = trip.places.first().startDateTime.let {
+                startDate = destinations.first().startDateTime.let {
                     GenAIData.DateResult(
                         it.dayOfMonth,
                         it.monthValue,
                         it.year
                     )
                 },
-                endDate = (trip.places.last().endDateTime ?: ZonedDateTime.now()).let {
+                endDate = (destinations.last().endDateTime ?: ZonedDateTime.now()).let {
                     GenAIData.DateResult(
                         it.dayOfMonth,
                         it.monthValue,
@@ -128,6 +126,29 @@ class SuggestionsUseCase(
                 },
                 predictedChanges = emptyList(),
             ),
+            lodgings = trip.lodgings.map {
+                GenAIData.TimedPlace(
+                    name = it.name ?: it.address,
+                    note = "",
+                    category = "",
+                    searchQuery = "",
+                    startTime = it.checkIn.dateString("yyyy-MM-dd"),
+                    endTime = it.checkout.dateString("yyyy-MM-dd"),
+                )
+            },
+            existingPlaces = (trip.places.filter { it.city != it.place }.map { it.place } +
+                    trip.flexibleSections.flatMap { it.categories }.flatMap { it.items }
+                        .map { it.place } +
+                    trip.restaurants.map { it.place }).map {
+                GenAIData.TimedPlace(
+                    name = "${it.name}, ${it.address}",
+                    note = "",
+                    category = "",
+                    searchQuery = "",
+                    startTime = null,
+                    endTime = null,
+                )
+            },
             dates = dates,
         )
         val existingDates = state.value.days.map { it.date.dateString("yyyy-MM-dd") }
@@ -149,6 +170,16 @@ class SuggestionsUseCase(
                     sections = currentDay.sections + (newDay?.sections?.mapAsync { section ->
                         section.toAppData(currentDay.date)
                     } ?: emptyList())
+                )
+            }
+        )
+    }
+
+    fun dismissSuggestions(suggestionId: String) {
+        _state.value = state.value.copy(
+            days = state.value.days.map { day ->
+                day.copy(
+                    sections = day.sections.filter { it.id != suggestionId }
                 )
             }
         )
