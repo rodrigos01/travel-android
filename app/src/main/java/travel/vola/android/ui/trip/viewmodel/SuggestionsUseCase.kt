@@ -52,7 +52,7 @@ class SuggestionsUseCase(
     val state = _state.asStateFlow()
 
 
-    suspend fun getSuggestions(trip: Trip, dates: List<ZonedDateTime>) {
+    suspend fun getSuggestions(trip: Trip, dates: List<ZonedDateTime>, addPlaceHolders: Boolean = false) {
         val preferences = trip.preferences ?: return
         val destinations = trip.getDestinations()
         val result = repository.genDailyItinerary(

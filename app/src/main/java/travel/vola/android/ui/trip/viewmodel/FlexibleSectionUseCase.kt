@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import travel.vola.android.common.coroutines.MutexScope
 import travel.vola.android.common.coroutines.launch
-import travel.vola.android.extensions.MapFlow
+import travel.vola.android.extensions.MapStateFlow
 import travel.vola.android.extensions.MutableMapStateFlow
 import travel.vola.android.extensions.dayOfMonthString
 import travel.vola.android.extensions.dayOfWeekString
@@ -37,6 +37,7 @@ class FlexibleSectionUseCase(
     private val tripId: String,
     private val repository: TripRepository,
     private val coroutineScope: CoroutineScope,
+    private val suggestionsUseCase: SuggestionsUseCase,
     private val itemStore: AddPlanItemStore<PendingData.PendingFlexibleSection, AddFlexibleSectionItemState> = AddPlanItemStore(),
     private val autoCompleteRepository: PlaceAutoCompleteRepository = PlaceAutoCompleteRepository(
         types = listOf()
@@ -44,7 +45,9 @@ class FlexibleSectionUseCase(
 ) : AddPlanUseCase.AddItemUseCase<FlexibleDaySection, AddFlexibleSectionItemState>,
     AddPlanUseCase.EntityFactory<FlexibleDaySection, AddFlexibleSectionItemState>,
     AddFlexibleSectionItemActionHandler {
-    override val items: MapFlow<String, AddFlexibleSectionItemState> = itemStore.items(::createItem)
+    override val items: MapStateFlow<String, AddFlexibleSectionItemState> =
+        itemStore.items(::createItem)
+            .stateIn(coroutineScope, SharingStarted.Eagerly, emptyMap())
 
     val trip = repository.findTripById(tripId)
         .stateIn(coroutineScope, SharingStarted.Eagerly, initialValue = null)
@@ -71,7 +74,8 @@ class FlexibleSectionUseCase(
         dayOfWeek = section.date.dayOfWeekString,
         backgroundStyle = backgroundStyle,
         name = section.name,
-        subtitle = section.categories.flatMap { categories -> categories.items.map { it.place.name } }.take(3)
+        subtitle = section.categories.flatMap { categories -> categories.items.map { it.place.name } }
+            .take(3)
             .joinToString(", "),
         categories = section.categories.map { category ->
             TripItemState.DaySectionCategory(
@@ -250,6 +254,19 @@ class FlexibleSectionUseCase(
                 }
             )
             repository.saveFlexibleSection(tripId, newSection)
+        }
+    }
+
+    override fun onGenerateSectionTapped(itemId: String) {
+        val trip = trip.value ?: return
+        val data = itemStore.getData(itemId) ?: return
+        items[itemId]?.let { itemStore.remove(it) }
+        coroutineScope.launch {
+            suggestionsUseCase.getSuggestions(
+                trip,
+                listOf(data.startDateTime),
+                addPlaceHolders = true
+            )
         }
     }
 

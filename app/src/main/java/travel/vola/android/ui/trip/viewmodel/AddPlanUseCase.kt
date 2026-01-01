@@ -34,10 +34,9 @@ import java.time.ZonedDateTime
 import java.util.UUID
 
 class AddPlanUseCase(
-    tripId: String,
-    tripRepository: TripRepository,
     placeRepository: PlaceRepository,
     coroutineScope: CoroutineScope,
+    private val flexibleSectionUseCase: FlexibleSectionUseCase,
     private val addFlightUseCase: AddFlightUseCase = AddFlightUseCase(coroutineScope = coroutineScope),
     private val addLodgingUseCase: AddLodgingUseCase = AddLodgingUseCase(
         placeRepository = placeRepository,
@@ -45,11 +44,6 @@ class AddPlanUseCase(
     ),
     private val addPlaceUseCase: AddPlaceUseCase = AddPlaceUseCase(coroutineScope = coroutineScope),
     private val addRestaurantUseCase: AddRestaurantUseCase = AddRestaurantUseCase(coroutineScope = coroutineScope),
-    private val flexibleSectionUseCase: FlexibleSectionUseCase = FlexibleSectionUseCase(
-        tripId,
-        tripRepository,
-        coroutineScope,
-    ),
 ) : AddPlanItemActionHandler, AddFlightItemActionHandler by addFlightUseCase,
     AddLodgingItemActionHandler by addLodgingUseCase, AddPlaceItemActionHandler by addPlaceUseCase,
     AddRestaurantItemActionHandler by addRestaurantUseCase,

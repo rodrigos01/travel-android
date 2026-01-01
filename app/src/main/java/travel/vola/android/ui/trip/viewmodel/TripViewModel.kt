@@ -72,20 +72,19 @@ class TripViewModel(
     private val tripId: String,
     private val navController: NavController,
     private val useCaseScope: CoroutineScope = createUseCaseScope(),
+    private val suggestionsUseCase: SuggestionsUseCase = SuggestionsUseCase(
+        repository = GenAIRepository(),
+    ),
     private val flexibleSectionUseCase: FlexibleSectionUseCase = FlexibleSectionUseCase(
         tripId = tripId,
         repository = repository,
         coroutineScope = useCaseScope,
+        suggestionsUseCase = suggestionsUseCase,
     ),
     private val addPlanUseCase: AddPlanUseCase = AddPlanUseCase(
-        tripId = tripId,
-        tripRepository = repository,
         placeRepository = placeRepository,
         coroutineScope = useCaseScope,
         flexibleSectionUseCase = flexibleSectionUseCase,
-    ),
-    private val suggestionsUseCase: SuggestionsUseCase = SuggestionsUseCase(
-        repository = GenAIRepository(),
     ),
 ) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
 
