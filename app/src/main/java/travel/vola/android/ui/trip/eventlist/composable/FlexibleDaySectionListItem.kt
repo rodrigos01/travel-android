@@ -57,10 +57,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import travel.vola.android.common.ui.components.OutlinedInlinedTextField
 import travel.vola.android.common.ui.components.SearchBoxDialog
 import travel.vola.android.common.ui.components.SearchResult
+import travel.vola.android.common.ui.components.placeholderPainter
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.ConfirmationDialog
 import travel.vola.android.ui.trip.state.TripItemState
@@ -203,10 +205,9 @@ fun FlexibleDaySectionListItem(
                     ) {
                         items(options) { option ->
                             CategoryItem {
-                                Image(
-                                    painter = rememberAsyncImagePainter(
-                                        model = option.imageUrl,
-                                    ),
+                                AsyncImage(
+                                    model = option.imageUrl,
+                                    placeholder = placeholderPainter(),
                                     contentScale = ContentScale.Crop,
                                     contentDescription = option.title,
                                     modifier = Modifier

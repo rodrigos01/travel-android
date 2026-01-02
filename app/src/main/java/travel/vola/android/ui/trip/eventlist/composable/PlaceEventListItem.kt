@@ -23,10 +23,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.SuccessResult
 import travel.vola.android.R
+import travel.vola.android.common.ui.components.placeholderPainter
 import travel.vola.android.ui.theme.AppTheme
 
 @Composable
@@ -48,17 +50,13 @@ fun PlaceEventListItem(
                 .wrapContentHeight()
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
-                .background(color = MaterialTheme.colorScheme.tertiary)
         ) {
-            Image(
-                painter = rememberAsyncImagePainter(
-                    model = imageUrl,
-                    onState = {
-                        if (it is AsyncImagePainter.State.Success) {
-                            onImageLoaded(it.result)
-                        }
-                    }
-                ),
+            AsyncImage(
+                model = imageUrl,
+                onSuccess = {
+                    onImageLoaded(it.result)
+                },
+                placeholder = placeholderPainter(),
                 contentDescription = "Place Description",
                 modifier = Modifier
                     .fillMaxWidth()
