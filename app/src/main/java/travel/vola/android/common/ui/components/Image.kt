@@ -37,19 +37,22 @@ fun Modifier.asSizedImageTarget(data: SizedImageState): Modifier {
 }
 
 @Composable
-fun placeholderPainter(): Painter {
-    val images = listOf(
-        R.drawable.background_alps,
-        R.drawable.background_bistro,
-        R.drawable.background_eiffel,
-        R.drawable.background_kyoto,
-        R.drawable.background_nordeste,
-        R.drawable.background_nyc,
-        R.drawable.background_old_town,
-        R.drawable.background_pub,
-    )
+fun rememberPlaceholderPainter(): Painter {
+    val images = remember {
+        listOf(
+            R.drawable.background_alps,
+            R.drawable.background_bistro,
+            R.drawable.background_eiffel,
+            R.drawable.background_kyoto,
+            R.drawable.background_nordeste,
+            R.drawable.background_nyc,
+            R.drawable.background_old_town,
+            R.drawable.background_pub,
+        )
+    }
+    val resId = remember { images.random() }
     return if (LocalInspectionMode.current) {
-        painterResource(images.random())
+        painterResource(resId)
     } else {
         ColorPainter(Color.Transparent)
     }

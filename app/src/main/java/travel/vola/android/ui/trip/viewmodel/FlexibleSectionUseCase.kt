@@ -86,6 +86,7 @@ class FlexibleSectionUseCase(
                         title = it.place.name,
                         subtitle = it.place.address,
                         imageUrl = it.place.coverImage ?: "",
+                        note = it.note,
                     )
                 },
             )
