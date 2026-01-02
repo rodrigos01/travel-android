@@ -82,6 +82,7 @@ fun FlexibleDaySectionListItem(
     onCategoryAdded: (String) -> Unit,
     onLocationSearchTextChanged: (CharSequence) -> Unit,
     onLocationSearchResultSelected: (Int, Int) -> Unit,
+    onNoteAdded: (Int, Int, String) -> Unit,
     onSuggestionConfirmed: () -> Unit,
     onSuggestionDismissed: () -> Unit,
 ) {
@@ -124,6 +125,7 @@ fun FlexibleDaySectionListItem(
                     onCategoryAdded,
                     onLocationSearchTextChanged,
                     onLocationSearchResultSelected,
+                    onNoteAdded,
                     onCollapseTapped = { expanded = false },
                     modifier = modifier
                 )
@@ -144,6 +146,7 @@ private fun ExpandedSection(
     onCategoryAdded: (String) -> Unit,
     onLocationSearchTextChanged: (CharSequence) -> Unit,
     onLocationSearchResultSelected: (Int, Int) -> Unit,
+    onNoteAdded: (Int, Int, String) -> Unit,
     onCollapseTapped: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -348,7 +351,8 @@ private fun ExpandedSection(
                     .padding(top = 4.dp)
                     .clip(MaterialTheme.shapes.large)
                     .background(color = MaterialTheme.colorScheme.surface)
-                    .padding(4.dp)
+                    .padding(4.dp),
+                onNoteAdded = { onNoteAdded(selectedPlaceIndex, selectedCategoryIndex, it) },
             )
         }
     }
@@ -567,6 +571,7 @@ fun FlexibleDaySectionListItemPreview(expanded: Boolean = true, isGenerated: Boo
                 onCategoryAdded = {},
                 onLocationSearchTextChanged = {},
                 onLocationSearchResultSelected = { _, _ -> },
+                onNoteAdded = { _, _, _ -> },
                 onSuggestionConfirmed = {},
                 onSuggestionDismissed = {},
             )
