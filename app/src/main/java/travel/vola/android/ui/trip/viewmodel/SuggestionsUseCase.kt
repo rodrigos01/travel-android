@@ -21,7 +21,6 @@ import travel.vola.android.model.genai.GenAIData
 import travel.vola.android.model.genai.GenAIRepository
 import travel.vola.android.model.repository.PlaceAutoCompleteRepository
 import java.time.ZonedDateTime
-import java.util.TimeZone
 import java.util.UUID
 
 class SuggestionsUseCase(
@@ -182,13 +181,21 @@ class SuggestionsUseCase(
         )
         val existingDates = state.value.days.map { it.date.dateString("yyyy-MM-dd") }
         val existingDays = result?.days?.filter { existingDates.contains(it.date) } ?: emptyList()
+        val destinationsMap = destinations.map { it.place }.associateBy { it.id }
         val newDays =
             result?.days?.filterNot { existingDates.contains(it.date) }?.mapAsync { day ->
                 val date = zonedDateTime(day.date, pattern = "yyyy-MM-dd")
                 SuggestedDay(
                     date = date,
                     timedPlaces = emptyList(),
-                    sections = day.sections.mapAsync { it.toAppData(date) },
+                    sections = day.sections.mapAsync { section ->
+                        destinationsMap[section.cityId]?.let {
+                            section.toAppData(
+                                date,
+                                it
+                            )
+                        }
+                    }.filterNotNull(),
                 )
             } ?: emptyList()
         _state.value = state.value.copy(
@@ -197,8 +204,13 @@ class SuggestionsUseCase(
                     existingDays.firstOrNull { it.date == currentDay.date.dateString("yyyy-MM-dd") }
                 currentDay.copy(
                     sections = currentDay.sections + (newDay?.sections?.mapAsync { section ->
-                        section.toAppData(currentDay.date)
-                    } ?: emptyList())
+                        destinationsMap[section.cityId]?.let {
+                            section.toAppData(
+                                currentDay.date,
+                                it
+                            )
+                        }
+                    }?.filterNotNull() ?: emptyList())
                 )
             },
             placeHolders = state.value.placeHolders.filterNot { normalizedDates.contains(it.timestamp) }
@@ -217,22 +229,13 @@ class SuggestionsUseCase(
 
     private suspend fun GenAIData.Section.toAppData(
         date: ZonedDateTime,
+        city: Place,
     ): FlexibleDaySection =
         FlexibleDaySection(
             id = UUID.randomUUID().toString(),
             name = name,
             date = date,
-            city = Place(
-                id = cityId,
-                name = "",
-                coverImage = "",
-                latitude = 0.0,
-                longitude = 0.0,
-                address = "",
-                externalId = cityId,
-                timeZone = TimeZone.getDefault(),
-                source = "",
-            ),
+            city = city,
             categories = places.groupBy { it.category }
                 .mapAsync { (categoryName, places) ->
                     FlexibleDayCategory(
