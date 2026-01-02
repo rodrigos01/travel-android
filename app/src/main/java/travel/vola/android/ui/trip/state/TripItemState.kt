@@ -192,7 +192,6 @@ sealed interface TripItemState {
         val categories: List<DaySectionCategory>,
         val searchResults: List<SearchResultItemState>,
         val isGenerated: Boolean = false,
-        val selectedPlace: PlaceDetailsItemState? = null,
     ) : EventItemState, EventWithDateState, Focusable, Replaceable {
         override val time: String = ""
         override val title: String = name
@@ -208,6 +207,7 @@ sealed interface TripItemState {
         val title: String,
         val subtitle: String,
         val imageUrl: String,
+        val note: String,
     )
 
     data class SuggestionPlaceholderItemState(

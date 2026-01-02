@@ -15,52 +15,62 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import travel.vola.android.common.ui.components.placeholderPainter
+import travel.vola.android.common.ui.components.rememberPlaceholderPainter
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.TripItemState
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 @Composable
 fun PlaceDetailsListItem(
     state: TripItemState.PlaceDetailsItemState,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier
-            .clip(MaterialTheme.shapes.large)
-            .background(color = MaterialTheme.colorScheme.surface)
-    ) {
+    PlaceDetailsListItem(
+        title = state.name,
+        subtitle = state.subtitle,
+        imageUrl = state.imageUrl,
+        note = state.note,
+        modifier = modifier,
+    )
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun PlaceDetailsListItem(
+    title: String,
+    subtitle: String,
+    imageUrl: String,
+    note: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
         AsyncImage(
-            model = state.imageUrl,
-            placeholder = placeholderPainter(),
+            model = imageUrl,
+            placeholder = rememberPlaceholderPainter(),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .padding(top = 8.dp, start = 8.dp, end = 8.dp)
                 .clip(MaterialTheme.shapes.large)
                 .fillMaxWidth()
-                .aspectRatio(21 / 9F),
+                .aspectRatio(16 / 9F),
         )
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Column(modifier = Modifier.padding(8.dp)) {
             Text(
-                state.name,
+                title,
                 style = MaterialTheme.typography.bodyLarge,
 
                 )
             Text(
-                state.subtitle,
-                style = MaterialTheme.typography.bodyMedium,
+                subtitle,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Text(
+                note,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
-
-        Text(
-            state.note,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 8.dp)
-        )
     }
 }
 
@@ -74,7 +84,7 @@ fun PlaceDetailsListItemPreview() {
                 "Place address",
                 "",
                 "A nice place to visit at some point in your trip",
-            )
+            ), modifier = Modifier.background(MaterialTheme.colorScheme.surface)
         )
     }
 }

@@ -17,8 +17,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Delete
@@ -38,11 +38,13 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -61,7 +63,7 @@ import coil.compose.AsyncImage
 import travel.vola.android.common.ui.components.OutlinedInlinedTextField
 import travel.vola.android.common.ui.components.SearchBoxDialog
 import travel.vola.android.common.ui.components.SearchResult
-import travel.vola.android.common.ui.components.placeholderPainter
+import travel.vola.android.common.ui.components.rememberPlaceholderPainter
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.ConfirmationDialog
 import travel.vola.android.ui.trip.state.TripItemState
@@ -194,12 +196,14 @@ private fun ExpandedSection(
         var selectedCategoryIndex by remember { mutableIntStateOf(0) }
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            contentPadding = PaddingValues(horizontal = 8.dp),
         ) {
             itemsIndexed(state.categories) { index, category ->
                 ToggleButton(
                     checked = index == selectedCategoryIndex,
-                    onCheckedChange = { selectedCategoryIndex = index },
+                    onCheckedChange = {
+                        selectedCategoryIndex = index
+                    },
                     shapes = when (index) {
                         0 -> {
                             ButtonGroupDefaults.connectedLeadingButtonShapes()
@@ -226,16 +230,37 @@ private fun ExpandedSection(
             }
         }
         val options = state.categories.getOrNull(selectedCategoryIndex)?.items ?: emptyList()
+        var selectedPlaceIndex by remember(selectedCategoryIndex) {
+            mutableIntStateOf(-1)
+        }
+        val selectedPlace = options.getOrNull(selectedPlaceIndex)
+        val itemsExpanded = selectedPlace == null
+        val itemScrollState = rememberLazyListState()
+        LaunchedEffect(selectedPlaceIndex) {
+            if (selectedPlaceIndex != -1) {
+                itemScrollState.animateScrollToItem(selectedPlaceIndex)
+            }
+        }
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            contentPadding = PaddingValues(horizontal = 8.dp),
+            state = itemScrollState,
             modifier = Modifier.padding(top = 8.dp)
         ) {
-            items(options) { option ->
-                if (state.selectedPlace == null) {
-                    CategoryItem(option)
-                } else {
-                    CollapsedCategoryItem(option)
+            itemsIndexed(options) { index, option ->
+                val modifier = Modifier.clickable {
+                    selectedPlaceIndex = index
+                }
+                AnimatedContent(itemsExpanded) { expand ->
+                    if (expand) {
+                        CategoryItem(option, modifier = modifier)
+                    } else {
+                        CollapsedCategoryItem(
+                            option,
+                            selected = option == selectedPlace,
+                            modifier = modifier.animateItem(),
+                        )
+                    }
                 }
             }
             if (!state.isGenerated && state.categories.isNotEmpty()) {
@@ -257,41 +282,73 @@ private fun ExpandedSection(
                             },
                         )
                     }
-                    OutlinedCard(
-                        onClick = { showAddPlaceDialog = true },
-                        modifier = Modifier.size(width = 96.dp, height = 144.dp)
-                    ) {
-                        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSecondaryContainer) {
-                            Column(
-                                verticalArrangement = Arrangement.SpaceEvenly,
-                                modifier = Modifier.fillMaxHeight()
+
+                    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSecondaryContainer) {
+
+                        if (itemsExpanded) {
+                            OutlinedCard(
+                                onClick = { showAddPlaceDialog = true },
+                                modifier = Modifier.size(width = 96.dp, height = 144.dp)
                             ) {
-                                Icon(
-                                    Icons.Rounded.Add,
-                                    contentDescription = "add option",
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .aspectRatio(1F)
+                                Column(
+                                    verticalArrangement = Arrangement.SpaceEvenly,
+                                    modifier = Modifier.fillMaxHeight()
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.Add,
+                                        contentDescription = "add option",
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .aspectRatio(1F)
+                                    )
+                                    Text(
+                                        "Add Place",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        modifier = Modifier
+                                            .padding(8.dp)
+                                            .align(Alignment.CenterHorizontally)
+                                    )
+                                }
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { showAddPlaceDialog = true },
+                                modifier = Modifier.height(44.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surface,
                                 )
-                                Text(
-                                    "Add Place",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    modifier = Modifier
-                                        .padding(8.dp)
-                                        .align(Alignment.CenterHorizontally)
-                                )
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.Add,
+                                        contentDescription = "add option",
+                                    )
+                                    Text(
+                                        "Add Place",
+                                        style = MaterialTheme.typography.titleSmall,
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        if (state.selectedPlace != null) {
+        selectedPlace?.let { selected ->
             PlaceDetailsListItem(
-                state.selectedPlace,
+                title = selected.title,
+                subtitle = selected.subtitle,
+                imageUrl = selected.imageUrl,
+                note = selected.note,
                 modifier = Modifier
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 8.dp)
                     .padding(top = 4.dp)
+                    .clip(MaterialTheme.shapes.large)
+                    .background(color = MaterialTheme.colorScheme.surface)
+                    .padding(4.dp)
             )
         }
     }
@@ -344,15 +401,19 @@ private fun CollapsedSection(
 }
 
 @Composable
-private fun CategoryItem(option: TripItemState.SectionOption) {
+private fun CategoryItem(option: TripItemState.SectionOption, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .size(width = 96.dp, height = 144.dp)
             .background(
                 MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.large
             ),
     ) {
-        CategoryItemImage(option)
+        CategoryItemImage(
+            option, modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1F)
+        )
         Column(
             modifier = Modifier.padding(
                 top = 0.dp, start = 8.dp, end = 8.dp, bottom = 8.dp
@@ -375,36 +436,43 @@ private fun CategoryItem(option: TripItemState.SectionOption) {
 }
 
 @Composable
-private fun CollapsedCategoryItem(option: TripItemState.SectionOption) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .height(44.dp)
-            .background(
-                MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.extraLarge
-            ),
-    ) {
-        CategoryItemImage(option)
-        Text(
-            option.title,
-            style = MaterialTheme.typography.titleSmall,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(end = 8.dp)
-        )
+private fun CollapsedCategoryItem(
+    option: TripItemState.SectionOption, modifier: Modifier = Modifier, selected: Boolean = false,
+) {
+    val (containerColor, contentColor) = if (selected) {
+        MaterialTheme.colorScheme.primary to MaterialTheme.colorScheme.onPrimary
+    } else {
+        MaterialTheme.colorScheme.surface to MaterialTheme.colorScheme.onSurface
+    }
+    CompositionLocalProvider(LocalContentColor provides contentColor) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .height(44.dp)
+                .clip(MaterialTheme.shapes.extraLarge)
+                .background(containerColor)
+                .then(modifier),
+        ) {
+            CategoryItemImage(option, modifier = Modifier.size(44.dp))
+            Text(
+                option.title,
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        }
     }
 }
 
 @Composable
-private fun CategoryItemImage(option: TripItemState.SectionOption) {
+private fun CategoryItemImage(option: TripItemState.SectionOption, modifier: Modifier = Modifier) {
     AsyncImage(
         model = option.imageUrl,
-        placeholder = placeholderPainter(),
+        placeholder = rememberPlaceholderPainter(),
         contentScale = ContentScale.Crop,
         contentDescription = option.title,
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(1F)
+        modifier = modifier
             .padding(4.dp)
             .clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.tertiary),
@@ -456,12 +524,14 @@ fun FlexibleDaySectionListItemPreview(expanded: Boolean = true, isGenerated: Boo
                                     title = "Drop Coffee",
                                     subtitle = "Wollmar Yxkullsgatan 10, 118 50 Stockholm, Sweden",
                                     imageUrl = "https://picsum.photos/200/300",
+                                    note = "Popular laptop-friendly coffee shop near your hotel"
                                 ),
                                 TripItemState.SectionOption(
                                     id = "3",
                                     title = "Johan & Nyström - Swedenborgsgatan",
                                     subtitle = "Södermannagatan 23, 116 40 Stockholm, Sweden",
                                     imageUrl = "https://picsum.photos/200/300",
+                                    note = "",
                                 ),
                             ),
                         ),
@@ -472,12 +542,14 @@ fun FlexibleDaySectionListItemPreview(expanded: Boolean = true, isGenerated: Boo
                                     title = "Herr Judit",
                                     subtitle = "Hornsgatan 65, 118 49 Stockholm, Sweden",
                                     imageUrl = "https://picsum.photos/200/300",
+                                    note = "",
                                 ),
                                 TripItemState.SectionOption(
                                     id = "2",
                                     title = "RAINS",
                                     subtitle = "Götgatan 42, 118 26 Stockholm, Sweden",
                                     imageUrl = "https://picsum.photos/200/300",
+                                    note = "",
                                 ),
                             )
                         ),
@@ -487,12 +559,6 @@ fun FlexibleDaySectionListItemPreview(expanded: Boolean = true, isGenerated: Boo
                     ),
                     searchResults = emptyList(),
                     isGenerated = isGenerated,
-                    selectedPlace = TripItemState.PlaceDetailsItemState(
-                        name = "Drop Coffee",
-                        subtitle = "Wollmar Yxkullsgatan 10, 118 50 Stockholm, Sweden",
-                        imageUrl = "https://picsum.photos/200/300",
-                        note = "Popular laptop-friendly coffee shop near your hotel"
-                    )
                 ),
                 startExpanded = expanded,
                 highlightDate = true,
