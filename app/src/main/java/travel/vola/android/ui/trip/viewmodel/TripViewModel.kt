@@ -116,60 +116,78 @@ class TripViewModel(
 
     private val suggestions = suggestionsUseCase.state
     private val flexibleSectionItems = flexibleSectionUseCase.flexibleSectionItems
-    private val eventsFromTrip =
-        combine(
-            trip.filterNotNull(),
-            flexibleSectionItems,
-            suggestions,
-        ) { currentTrip, sectionItems, suggestions ->
-            val items = genItems(currentTrip, sectionItems, suggestions)
-            val places =
-                (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants).fold(mapOf<Place, PlaceState>()) { map, entity: Mapeable ->
-                    val current = map.getOrDefault(
-                        entity.city, PlaceState(
-                            place = entity.city,
-                            listIndex = items.indexOfFirst { it is TripItemState.PlaceItemState && entity.city.name == it.placeName },
-                            markers = emptyList()
+    private val eventsFromTrip = combine(
+        trip.filterNotNull(),
+        flexibleSectionItems,
+        suggestions,
+    ) { currentTrip, sectionItems, suggestions ->
+        val items = genItems(currentTrip, sectionItems, suggestions)
+        val places =
+            (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants + currentTrip.flexibleSections).fold(
+                mapOf<Place, PlaceState>()
+            ) { map, entity: Mapeable ->
+                val current = map.getOrDefault(
+                    entity.city, PlaceState(
+                        place = entity.city,
+                        listIndex = items.indexOfFirst { it is TripItemState.PlaceItemState && entity.city.name == it.placeName },
+                        markers = emptyList()
+                    )
+                )
+                map.toMutableMap().apply {
+                    set(
+                        entity.city, current.copy(
+                            markers = current.markers + createMarkerStates(entity)
                         )
                     )
-                    map.toMutableMap().apply {
-                        set(
-                            entity.city, current.copy(
-                                markers = current.markers + when (entity) {
-                                    is Lodging -> MarkerViewState(
-                                        position = Pair(entity.latitude, entity.longitude),
-                                        name = entity.name ?: entity.address,
-                                        type = MarkerType.Lodging,
-                                    )
-
-                                    is TimedPlace -> MarkerViewState(
-                                        position = Pair(
-                                            entity.place.latitude,
-                                            entity.place.longitude
-                                        ),
-                                        name = entity.place.name,
-                                        type = if (entity.place != entity.city) MarkerType.Place else MarkerType.City,
-                                    )
-
-                                    is RestaurantReservation -> MarkerViewState(
-                                        position = Pair(
-                                            entity.place.latitude,
-                                            entity.place.longitude
-                                        ),
-                                        name = entity.place.name,
-                                        type = MarkerType.Restaurant,
-                                    )
-                                }
-                            )
-                        )
-                    }
                 }
-            ViewState(
-                title = currentTrip.name ?: "Untitled Trip",
-                items = items,
-                places = places.values.toList(),
+            }
+        ViewState(
+            title = currentTrip.name ?: "Untitled Trip",
+            items = items,
+            places = places.values.toList(),
+        )
+    }
+
+    private fun createMarkerStates(entity: Mapeable): List<MarkerViewState> = when (entity) {
+        is Lodging -> listOf(
+            MarkerViewState(
+                position = Pair(entity.latitude, entity.longitude),
+                name = entity.name ?: entity.address,
+                type = MarkerType.Lodging,
+            )
+        )
+
+        is TimedPlace -> listOf(
+            MarkerViewState(
+                position = Pair(
+                    entity.place.latitude, entity.place.longitude
+                ),
+                name = entity.place.name,
+                type = if (entity.place != entity.city) MarkerType.Place else MarkerType.City,
+            )
+        )
+
+        is RestaurantReservation -> listOf(
+            MarkerViewState(
+                position = Pair(
+                    entity.place.latitude, entity.place.longitude
+                ),
+                name = entity.place.name,
+                type = MarkerType.Restaurant,
+            )
+        )
+
+        is FlexibleDaySection -> entity.categories.flatMap { it.items }.map { item ->
+            MarkerViewState(
+                position = Pair(
+                    item.place.latitude, item.place.longitude
+                ),
+                name = item.place.name,
+                type = MarkerType.Place,
             )
         }
+    }
+
     private val addPlanItemsState = addPlanUseCase.items.onEach { state ->
         reversibleItems.keys.forEach { itemId ->
             if (!state.containsKey(itemId)) {
@@ -208,8 +226,7 @@ class TripViewModel(
             state.items.getOrNull(currentScrollState.focusedIndex)?.timestamp?.toLocalDate()
         val focusedDateItem = items.filterIsInstance<TripItemState.Focusable>().lastOrNull {
             items.indexOf(it)
-                .let { index -> index >= currentScrollState.firstVisibleIndex && index <= currentScrollState.focusedIndex }
-                    && it.timestamp.toLocalDate() == focusedDate && it.showDate
+                .let { index -> index >= currentScrollState.firstVisibleIndex && index <= currentScrollState.focusedIndex } && it.timestamp.toLocalDate() == focusedDate && it.showDate
         }
         state.copy(
             items = items,
@@ -312,8 +329,7 @@ class TripViewModel(
     }
 
     override fun addPlanTypeChanged(
-        itemId: String,
-        newType: AddPlanItemState.Type
+        itemId: String, newType: AddPlanItemState.Type
     ) {
         val item = addPlanUseCase.removeItem(itemId) ?: return
         if (item.type == newType) {
@@ -374,8 +390,7 @@ class TripViewModel(
                 is Lodging -> repository.deleteLodging(tripId, entity.id)
                 is TimedPlace -> repository.deleteTimedPlace(tripId, entity.id)
                 is RestaurantReservation -> repository.deleteRestaurantReservation(
-                    tripId,
-                    entity.id
+                    tripId, entity.id
                 )
 
                 is FlexibleDaySection -> repository.deleteFlexibleSection(tripId, entity.id)
@@ -418,8 +433,7 @@ class TripViewModel(
     fun onUpdatePreferencesTapped() {
         val destinations =
             trip.value?.getDestinations()?.map { "${it.place.name}, ${it.place.address}" }
-        val dates =
-            viewState.value.items.map { it.timestamp }
+        val dates = viewState.value.items.map { it.timestamp }
         val params = TripCreationAssistantDestination.Params(
             tripId = tripId,
             destinations = destinations ?: emptyList(),
@@ -443,8 +457,7 @@ class TripViewModel(
                 val result = currentBackStackEntry.savedStateHandle.getStateFlow(
                     TripCreationAssistantDestination.RESULT_KEY_FINISHED_STATUS,
                     TripCreationAssistantDestination.FinishedStatus.NONE,
-                ).filter { it != TripCreationAssistantDestination.FinishedStatus.NONE }
-                    .first()
+                ).filter { it != TripCreationAssistantDestination.FinishedStatus.NONE }.first()
                 currentBackStackEntry.savedStateHandle.remove<TripCreationAssistantDestination.FinishedStatus>(
                     TripCreationAssistantDestination.RESULT_KEY_FINISHED_STATUS
                 )
@@ -478,12 +491,10 @@ class TripViewModel(
     private fun TripItemState.DateRangeItemState.getDates(): List<ZonedDateTime> {
         val itemIndex = viewState.value.items.indexOf(this)
         val startDateTime = timestamp
-        val endDateTime = viewState.value.items.getOrNull(itemIndex + 1)?.timestamp
-            ?: startDateTime
+        val endDateTime = viewState.value.items.getOrNull(itemIndex + 1)?.timestamp ?: startDateTime
 
         return generateSequence(startDateTime) { it.plusDays(1) }
-            .takeWhile { it.toLocalDate() < endDateTime.toLocalDate() }
-            .toList()
+            .takeWhile { it.toLocalDate() < endDateTime.toLocalDate() }.toList()
     }
 
     private val TripItemState.Editable.entity: TripEntity?
@@ -597,9 +608,9 @@ class TripViewModel(
             val firstInPlace = previousItems.lastOrNull()?.place != place
             val nextItems = pairs.nextItems(index)
             val nextItem = nextItems.firstOrNull()
-            val lastInPlace =
-                nextItems.takeWhile { it.place == place || (it.second as? TimedPlace)?.isDayTrip == true }
-                    .isEmpty()
+            val lastInPlace = nextItems
+                .takeWhile { it.place == place || (it.second as? TimedPlace)?.isDayTrip == true }
+                .isEmpty()
             val lastInDay = nextItem?.first?.dateString != time.dateString
             val firstInSection = firstInDay || firstInPlace
             val lastInSection = index == pairs.lastIndex || lastInDay || lastInPlace
@@ -618,16 +629,15 @@ class TripViewModel(
                     )
                 }
                 if (event !is TimedPlace || event.isDayTrip) {
-                    val backgroundStyle =
-                        if (firstInSection && lastInSection) {
-                            TripItemState.EventItemState.BackgroundStyle.SINGLE
-                        } else if (firstInSection) {
-                            TripItemState.EventItemState.BackgroundStyle.TOP
-                        } else if (lastInSection) {
-                            TripItemState.EventItemState.BackgroundStyle.BOTTOM
-                        } else {
-                            TripItemState.EventItemState.BackgroundStyle.MIDDLE
-                        }
+                    val backgroundStyle = if (firstInSection && lastInSection) {
+                        TripItemState.EventItemState.BackgroundStyle.SINGLE
+                    } else if (firstInSection) {
+                        TripItemState.EventItemState.BackgroundStyle.TOP
+                    } else if (lastInSection) {
+                        TripItemState.EventItemState.BackgroundStyle.BOTTOM
+                    } else {
+                        TripItemState.EventItemState.BackgroundStyle.MIDDLE
+                    }
                     add(
                         genItem(
                             time,
@@ -883,15 +893,14 @@ class TripViewModel(
         useCaseScope.cancel()
     }
 
-    class Factory(tripId: String) :
-        ViewModelProvider.Factory by viewModelFactory(initializer = {
-            TripViewModel(
-                factoryDependencies.tripRepository,
-                factoryDependencies.placeRepository,
-                tripId,
-                factoryDependencies.navController,
-            )
-        })
+    class Factory(tripId: String) : ViewModelProvider.Factory by viewModelFactory(initializer = {
+        TripViewModel(
+            factoryDependencies.tripRepository,
+            factoryDependencies.placeRepository,
+            tripId,
+            factoryDependencies.navController,
+        )
+    })
 
 }
 
