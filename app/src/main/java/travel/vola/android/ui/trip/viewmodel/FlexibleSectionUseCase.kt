@@ -32,6 +32,7 @@ import travel.vola.android.ui.trip.state.SearchResultItemState
 import travel.vola.android.ui.trip.state.TripItemState
 import java.time.ZonedDateTime
 import java.util.TimeZone
+import kotlin.collections.plus
 
 class FlexibleSectionUseCase(
     private val tripId: String,
@@ -86,6 +87,7 @@ class FlexibleSectionUseCase(
                         title = it.place.name,
                         subtitle = it.place.address,
                         imageUrl = it.place.coverImage ?: "",
+                        note = it.note,
                     )
                 },
             )
@@ -233,28 +235,50 @@ class FlexibleSectionUseCase(
         index: Int,
         categoryIndex: Int
     ) {
-        val section = getSection(itemId) ?: return
         coroutineScope.launch {
             val selectedResult = searchSessions[itemId]?.getOrNull(index) ?: return@launch
             val place = autoCompleteRepository.details(selectedResult.id, itemId) ?: return@launch
             searchSessions.remove(itemId)
-            val newSection = section.copy(
-                categories = section.categories.mapIndexed { index, category ->
-                    if (index == categoryIndex) {
-                        category.copy(
-                            items = category.items + FlexibleDayItem(
-                                id = place.place.id,
-                                place = place.place,
-                                note = "",
-                            )
-                        )
-                    } else {
-                        category
-                    }
-                }
-            )
-            repository.saveFlexibleSection(tripId, newSection)
+            updateCategory(itemId, categoryIndex) { category ->
+                category.copy(
+                    items = category.items + FlexibleDayItem(
+                        id = place.place.id,
+                        place = place.place,
+                        note = "",
+                    )
+                )
+            }
         }
+    }
+
+    override fun onFlexibleItemNoteAdded(
+        itemId: String, index: Int, categoryIndex: Int, note: String
+    ) {
+        updateCategory(itemId, categoryIndex) {category ->
+            category.copy(items = category.items.mapIndexed { itemIndex, item ->
+                if (itemIndex == index) {
+                    item.copy(note = note)
+                } else {
+                    item
+                }
+            })
+        }
+    }
+
+    private fun updateCategory(itemId: String, categoryIndex: Int, operation: (FlexibleDayCategory) -> FlexibleDayCategory) {
+        val section = getSection(itemId) ?: return
+        val newSection = section.copy(
+            categories = section.categories.mapIndexed { index, category ->
+                if (index == categoryIndex) {
+                    operation(category)
+                } else {
+                    category
+                }
+            }
+        )
+        coroutineScope.launch {
+        repository.saveFlexibleSection(tripId, newSection)
+            }
     }
 
     override fun onGenerateSectionTapped(itemId: String) {

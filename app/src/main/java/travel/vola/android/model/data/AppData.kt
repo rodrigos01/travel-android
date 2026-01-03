@@ -8,8 +8,7 @@ enum class ServerStatus {
 }
 
 enum class DataSourceType {
-    LOCAL,
-    FIREBASE,
+    LOCAL, FIREBASE,
 }
 
 interface Identifiable {
@@ -114,7 +113,7 @@ data class FlexibleDaySection(
     val date: ZonedDateTime,
     val categories: List<FlexibleDayCategory>,
     override val city: Place,
-) : TripEntity, TripEvent, WithCity
+) : TripEntity, TripEvent, Mapeable
 
 data class FlexibleDayCategory(
     val name: String,
@@ -165,11 +164,7 @@ data class BasicInformation(
 )
 
 enum class GroupType {
-    SOLO,
-    FAMILY,
-    FRIENDS,
-    COWORKERS,
-    COUPLE
+    SOLO, FAMILY, FRIENDS, COWORKERS, COUPLE
 }
 
 data class TripParameters(
@@ -188,5 +183,5 @@ data class AnsweredQuestion(
 )
 
 data class SuggestionPlaceholder(val timestamp: ZonedDateTime, override val city: Place) :
-    TripEvent, WithCity
+        TripEvent, WithCity
 

@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import travel.vola.android.ui.theme.AppTheme
@@ -33,23 +34,24 @@ import travel.vola.android.ui.theme.AppTheme
 fun InlinedTextField(
     initialValue: String = "",
     onDone: (String) -> Unit,
+    colors: ButtonColors? = null,
     label: @Composable (() -> Unit),
 ) {
-    InlinedTextField(initialValue, InlinedTextFieldStyle.NORMAL, onDone, label)
+    InlinedTextField(initialValue, InlinedTextFieldStyle.NORMAL, onDone, colors, label)
 }
 
 @Composable
 fun OutlinedInlinedTextField(
     initialValue: String = "",
     onDone: (String) -> Unit,
+    colors: ButtonColors? = null,
     label: @Composable (() -> Unit),
 ) {
-    InlinedTextField(initialValue, InlinedTextFieldStyle.OUTLINED, onDone, label)
+    InlinedTextField(initialValue, InlinedTextFieldStyle.OUTLINED, onDone, colors, label)
 }
 
 private enum class InlinedTextFieldStyle {
-    NORMAL,
-    OUTLINED,
+    NORMAL, OUTLINED,
 }
 
 @Composable
@@ -57,6 +59,7 @@ private fun InlinedTextField(
     initialValue: String = "",
     style: InlinedTextFieldStyle,
     onDone: (String) -> Unit,
+    colors: ButtonColors? = null,
     label: @Composable () -> Unit,
 ) {
     var showTextField by remember { mutableStateOf(false) }
@@ -87,8 +90,7 @@ private fun InlinedTextField(
                         Icon(Icons.Default.Done, contentDescription = "confirm")
                     }
                 }
-            }
-        )
+            })
         DisposableEffect(focusRequester) {
             focusRequester.requestFocus()
             onDispose {
@@ -98,11 +100,17 @@ private fun InlinedTextField(
     } else {
         when (style) {
             InlinedTextFieldStyle.NORMAL -> {
-                TextButton(onClick = { showTextField = true }) { label() }
+                TextButton(
+                    onClick = { showTextField = true },
+                    colors = colors ?: ButtonDefaults.textButtonColors(),
+                ) { label() }
             }
 
             InlinedTextFieldStyle.OUTLINED -> {
-                OutlinedButton(onClick = { showTextField = true }) { label() }
+                OutlinedButton(
+                    onClick = { showTextField = true },
+                    colors = colors ?: ButtonDefaults.outlinedButtonColors(),
+                ) { label() }
             }
         }
     }
