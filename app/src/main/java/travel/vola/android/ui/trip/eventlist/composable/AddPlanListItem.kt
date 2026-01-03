@@ -46,8 +46,7 @@ fun AddPlanListItem(
 
 @Composable
 fun AddPlanContent(
-    state: AddPlanItemState,
-    actionHandler: AddPlanItemActionHandler
+    state: AddPlanItemState, actionHandler: AddPlanItemActionHandler
 ) {
     when (state) {
         is ManualStartEndAddPlanState -> {
@@ -143,10 +142,7 @@ fun AddPlanContent(
                         },
                         onUpdated = { dateTime, timeSelected, selectedSearchResultIndex ->
                             actionHandler.onUpdated(
-                                state.id,
-                                dateTime,
-                                timeSelected,
-                                selectedSearchResultIndex
+                                state.id, dateTime, timeSelected, selectedSearchResultIndex
                             )
                         },
                     )
@@ -189,16 +185,20 @@ fun AddPlanContent(
         is AddFlexibleSectionItemState -> {
             AddFlexibleSectionListItem(
                 state = state,
-                onTextChanged = { actionHandler.sectionNameChanged(state.id, it) },
-                onGenerateTapped = { actionHandler.onGenerateSectionTapped(state.id) },
+                onTextChanged = {
+                    actionHandler.sectionNameChanged(
+                        state.id,
+                        it
+                    )
+                },
+                onGenerateTapped = {
+                    actionHandler.onGenerateSectionTapped(state.id)
+                },
                 onUpdated = { dateTime, timeSelected ->
                     actionHandler.onFlexibleItemDateTimeUpdated(
-                        state.id,
-                        dateTime,
-                        timeSelected
+                        state.id, dateTime, timeSelected
                     )
-                }
-            )
+                })
         }
     }
 }
@@ -315,14 +315,14 @@ object NoOpActionHandler : AddPlanItemActionHandler {
     override fun onFlexibleCategoryAdded(itemId: String, category: String) = Unit
     override fun onFlexibleItemSearchTextChanged(itemId: String, content: CharSequence) = Unit
     override fun onFlexibleItemSearchResultSelected(
-        itemId: String,
-        index: Int,
-        categoryIndex: Int
+        itemId: String, index: Int, categoryIndex: Int
+    ) = Unit
+
+    override fun onFlexibleItemNoteAdded(
+        itemId: String, index: Int, categoryIndex: Int, note: String
     ) = Unit
 
     override fun onFlexibleItemDateTimeUpdated(
-        itemId: String,
-        dateTime: ZonedDateTime,
-        timeSelected: Boolean
+        itemId: String, dateTime: ZonedDateTime, timeSelected: Boolean
     ) = Unit
 }

@@ -177,8 +177,8 @@ private fun TripDetails(
     val colorSchemeBitmaps = remember { mutableStateMapOf<String, Bitmap?>() }
     val seedColor by remember(focusedPlace, colorSchemeBitmaps) {
         derivedStateOf {
-            colorSchemeBitmaps[focusedPlace?.place?.id]?.let { Palette.from(it) }?.generate()
-                ?.dominantSwatch?.rgb
+            colorSchemeBitmaps[focusedPlace?.place?.id]?.let { Palette.from(it) }
+                ?.generate()?.dominantSwatch?.rgb
         }
     }
     val colorScheme = animateColorScheme(seedColor?.let {
@@ -210,13 +210,15 @@ private fun TripDetails(
                 if (showDeleteConfirmation) {
                     ConfirmationDialog(
                         onConfirm = {
-                            showDeleteConfirmation = false
-                            onDeleteConfirmed()
-                        },
-                        onDismiss = { showDeleteConfirmation = false },
-                        confirmButtonLabel = "Delete",
-                        confirmButtonColors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                        dismissButtonLabel = "Cancel"
+                        showDeleteConfirmation = false
+                        onDeleteConfirmed()
+                    },
+                                       onDismiss = { showDeleteConfirmation = false },
+                                       confirmButtonLabel = "Delete",
+                                       confirmButtonColors = ButtonDefaults.textButtonColors(
+                                           contentColor = MaterialTheme.colorScheme.error
+                                       ),
+                                       dismissButtonLabel = "Cancel"
                     ) {
                         Text("Delete ${state.title}?")
                     }
@@ -306,8 +308,7 @@ private fun TripDetails(
                     onEditTapped,
                     onPlaceImageLoaded = { placeId, result ->
                         colorSchemeBitmaps[placeId] =
-                            result.drawable.toBitmapOrNull()
-                                ?.copy(Bitmap.Config.ARGB_8888, true)
+                            result.drawable.toBitmapOrNull()?.copy(Bitmap.Config.ARGB_8888, true)
                     },
                     onGenerateTapped,
                     onFlexibleSuggestionConfirmed,
@@ -355,8 +356,7 @@ fun List(
 ) {
     LazyColumn(contentPadding = contentPadding, state = scrollState) {
         items(
-            state.items,
-            key = { (it as? Identifiable)?.id ?: it.hashCode() }) { event ->
+            state.items, key = { (it as? Identifiable)?.id ?: it.hashCode() }) { event ->
             Box(
                 modifier = Modifier
                     .animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
@@ -371,8 +371,7 @@ fun List(
                     onInitialAddButonTapped,
                     onEditTapped,
                     onImageLoaded = {
-                        val sectionId =
-                            (event as? TripItemState.SectionItemState)?.sectionId
+                        val sectionId = (event as? TripItemState.SectionItemState)?.sectionId
                         if (sectionId != null) {
                             onPlaceImageLoaded(sectionId, it)
                         }
@@ -439,20 +438,17 @@ private fun TripDetailItem(
             },
             onDeleteConfirmed = {
                 addPlanItemActionHandler.delete(
-                    AddPlanItemState.Type.FlexibleSection,
-                    event.id
+                    AddPlanItemState.Type.FlexibleSection, event.id
                 )
             },
             onCategoryAdded = {
                 addPlanItemActionHandler.onFlexibleCategoryAdded(
-                    event.id,
-                    it
+                    event.id, it
                 )
             },
             onLocationSearchTextChanged = {
                 addPlanItemActionHandler.onFlexibleItemSearchTextChanged(
-                    event.id,
-                    it
+                    event.id, it
                 )
             },
             onLocationSearchResultSelected = { index, categoryIndex ->
@@ -460,6 +456,14 @@ private fun TripDetailItem(
                     event.id,
                     index,
                     categoryIndex,
+                )
+            },
+            onNoteAdded = { index, categoryIndex, note ->
+                addPlanItemActionHandler.onFlexibleItemNoteAdded(
+                    event.id,
+                    index,
+                    categoryIndex,
+                    note,
                 )
             },
             onSuggestionConfirmed = {
@@ -522,8 +526,7 @@ private fun TripDetailItem(
 
                 is TripItemState.TimedPlaceItemState -> TimedPlaceListItem(event, highlightDate)
                 is TripItemState.RestaurantReservationItemState -> RestaurantListItem(
-                    event,
-                    highlightDate
+                    event, highlightDate
                 )
 
                 is TripItemState.FlexibleDaySectionState -> {}

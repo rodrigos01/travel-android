@@ -207,6 +207,7 @@ sealed interface TripItemState {
         val title: String,
         val subtitle: String,
         val imageUrl: String,
+        val note: String,
     )
 
     data class SuggestionPlaceholderItemState(
@@ -222,6 +223,13 @@ sealed interface TripItemState {
         override val title: String? = null
         override val subtitle: String? = null
     }
+
+    data class PlaceDetailsItemState(
+        val name: String,
+        val subtitle: String,
+        val imageUrl: String,
+        val note: String,
+    )
 }
 
 data class ManualAddPlanState(
