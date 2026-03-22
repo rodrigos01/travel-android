@@ -117,3 +117,6 @@ gradle-app.setting
 # kotlin session files
 .kotlin/
 /app/schemas/travel.vola.android.model.room.TravelDatabase/3.json
+
+# Firebase config
+app/google-services.json

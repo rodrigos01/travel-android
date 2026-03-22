@@ -2,6 +2,21 @@ import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+import java.util.Properties
+import java.io.FileInputStream
+
+val localProperties = Properties()
+val localPropertiesFile = project.rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+
+val mapsApiKey: String = System.getenv("MAPS_API_KEY") ?: localProperties.getProperty("MAPS_API_KEY", "")
+val ktorClientSecret: String = System.getenv("CLIENT_SECRET") ?: localProperties.getProperty("CLIENT_SECRET", "")
+val keystorePass: String = System.getenv("KEYSTORE_PASSWORD") ?: localProperties.getProperty("KEYSTORE_PASSWORD", "")
+val keyAliasValue: String = System.getenv("KEY_ALIAS") ?: localProperties.getProperty("KEY_ALIAS", "")
+val keyPass: String = System.getenv("KEY_PASSWORD") ?: localProperties.getProperty("KEY_PASSWORD", "")
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -25,9 +40,9 @@ android {
             // You need to specify either an absolute path or include the
             // keystore file in the same directory as the build.gradle file.
             storeFile = file("travel-release.jks")
-            storePassword = "SZoyCEhfiC1mBX10"
-            keyAlias = "travel-release-key"
-            keyPassword = "SZoyCEhfiC1mBX10"
+            storePassword = keystorePass
+            keyAlias = keyAliasValue
+            keyPassword = keyPass
         }
     }
     defaultConfig {
@@ -40,6 +55,8 @@ android {
                 ?.let { ".$it" }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
+        buildConfigField("String", "CLIENT_SECRET", "\"$ktorClientSecret\"")
     }
     buildTypes {
         release {
