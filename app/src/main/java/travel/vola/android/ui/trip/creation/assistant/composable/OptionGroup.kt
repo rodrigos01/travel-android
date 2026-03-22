@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -32,7 +35,7 @@ fun OptionGroup(
                             onOptionAdded(textFieldContent)
                         }
                     },
-                    label = { Text("Add More") }
+                    label = { Text(stringResource(R.string.action_add_more)) }
                 )
             },
         )

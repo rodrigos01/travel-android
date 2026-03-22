@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -50,11 +53,11 @@ fun AddPlanScaffold(
         ConfirmationDialog(
             onConfirm = onDeleteConfirmed,
             onDismiss = { showDeleteConfirmation = false },
-            confirmButtonLabel = "Delete",
+            confirmButtonLabel = stringResource(R.string.action_delete),
             confirmButtonColors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-            dismissButtonLabel = "Cancel"
+            dismissButtonLabel = stringResource(R.string.action_cancel)
         ) {
-            Text("Delete ${type.label}?")
+            Text(stringResource(R.string.dialog_delete_plan_confirmation, type.label))
         }
     }
     Column(
@@ -71,7 +74,7 @@ fun AddPlanScaffold(
                 Spacer(modifier = Modifier.weight(1F))
                 TextButton(onClick = { showDeleteConfirmation = true }) {
                     Icon(Icons.Filled.Delete, contentDescription = null)
-                    Text("Delete")
+                    Text(stringResource(R.string.action_delete))
                 }
             }
         }
@@ -103,9 +106,9 @@ fun AddPlanScaffoldPreview() {
             deleteButtonEnabled = true,
             onDeleteConfirmed = {},
             primaryButtonEnabled = true,
-            primaryButtonLabel = "Save",
+            primaryButtonLabel = stringResource(R.string.action_save),
             onPrimaryButtonTapped = {},
-            secondaryButtonLabel = "Cancel",
+            secondaryButtonLabel = stringResource(R.string.action_cancel),
             onSecondaryButtonTapped = {},
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {

@@ -24,4 +24,91 @@
     </plurals>
     <string name="review_count_thousands">%1$.1fk reviews</string>
     <string name="review_count_millions">%1$.1fm reviews</string>
+
+    <!-- Actions / Buttons -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_add">Add</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_dismiss">Dismiss</string>
+    <string name="action_skip">skip</string>
+    <string name="action_next">Next</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_apply">Apply</string>
+    <string name="action_sort">Sort</string>
+    <string name="action_filter">Filter</string>
+    <string name="action_generate_suggestions">Generate suggestions</string>
+    <string name="action_add_category">Add Category</string>
+    <string name="action_add_place">Add Place</string>
+    <string name="action_back_to_trip">Back to Trip</string>
+    <string name="action_continue_browsing">Continue browsing</string>
+    <string name="action_delete_trip">Delete Trip</string>
+    <string name="action_update_trip_preferences">Update Trip Preferences</string>
+    <string name="action_return_to_list">Return to list</string>
+    <string name="action_create_trip">Create Trip</string>
+    <string name="action_add_more">Add More</string>
+    <string name="action_pick_time">Pick Time</string>
+    <string name="action_pick_start_time">Pick Start Time</string>
+    <string name="action_pick_end_time">Pick End Time</string>
+    <string name="action_pick_checkin_time">Check-in Time</string>
+    <string name="action_pick_checkout_time">Check-out Time</string>
+    <string name="action_choose_departure_time">Choose Departure Time</string>
+    <string name="action_choose_arrival_time">Choose Arrival Time</string>
+
+    <!-- Labels / UI Text -->
+    <string name="app_name_vola">Vola</string>
+    <string name="label_start">Start</string>
+    <string name="label_end">End</string>
+    <string name="label_title">Title</string>
+    <string name="label_checkin">CheckIn</string>
+    <string name="label_checkout">Check-out</string>
+    <string name="label_departure">Departure</string>
+    <string name="label_arrival">Arrival</string>
+    <string name="label_price_range">Price Range</string>
+    <string name="label_stars">Stars</string>
+    <string name="label_rating">Rating</string>
+    <string name="label_rooms">Rooms</string>
+    <string name="label_reviews">Reviews</string>
+    <string name="label_travelers">Travelers</string>
+    <string name="label_group_type">Group Type</string>
+    <string name="label_dates">Dates</string>
+    <string name="label_destinations">Destinations</string>
+    <string name="label_anything_else">Anything Else?</string>
+    <string name="label_see_more_offers">See %1$d more offers</string>
+    <string name="label_traveled_on_date">Traveled on %1$s</string>
+    <string name="label_more_photos">+%1$d</string>
+    <string name="star_option_any">Any</string>
+    <string name="star_option_three_plus">3+ stars</string>
+    <string name="star_option_four_plus">4+ stars</string>
+    <string name="star_option_five">5 stars</string>
+
+    <!-- Formats -->
+    <string name="format_rating_plus">%1$.1f+</string>
+    <string name="format_date_range">%1$s - %2$s</string>
+
+    <!-- Dialogs & Prompts -->
+    <string name="dialog_delete_item_confirmation">Delete %1$s?</string>
+    <string name="dialog_dismiss_suggestion_confirmation">Dismiss %1$s?</string>
+    <string name="dialog_delete_trip_confirmation">Delete %1$s?</string>
+    <string name="dialog_delete_plan_confirmation">Delete %1$s?</string>
+    <string name="dialog_lodging_added_continue_browsing">Added to your trip. Do you want to continue browsing?</string>
+    <string name="prompt_enter_lodging_manually">or enter lodging details manually</string>
+    <string name="prompt_enter_location">Enter location</string>
+    <string name="prompt_select_itinerary">Select the itinerary that more closely matches your preferences. You can make changes to it after selecting it.</string>
+    <string name="prompt_additional_info">Any other information you think it's relevant for creating your trip.</string>
+    <string name="error_time_after_min">Please select a time after %1$s</string>
+
+    <!-- States & Options -->
+    <string name="state_generating">Generating...</string>
+    <string name="option_flexible_dates">Flexible</string>
+    <string name="option_fixed_dates">Fixed</string>
+    <string name="option_something_else">Something Else</string>
+    <string name="source_local">Local</string>
+    <string name="source_firebase">Firebase</string>
+    <!-- Navigation / Tabs -->
+
+    <string name="error_no_tab_found">No Tab Found for id %1$s</string>
+    <string name="error_something_went_wrong">Something went wrong</string>
 </resources>

@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import android.graphics.Bitmap
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.VisibilityThreshold
@@ -214,13 +217,13 @@ private fun TripDetails(
                         onDeleteConfirmed()
                     },
                                        onDismiss = { showDeleteConfirmation = false },
-                                       confirmButtonLabel = "Delete",
+                                       confirmButtonLabel = stringResource(R.string.action_delete),
                                        confirmButtonColors = ButtonDefaults.textButtonColors(
                                            contentColor = MaterialTheme.colorScheme.error
                                        ),
-                                       dismissButtonLabel = "Cancel"
+                                       dismissButtonLabel = stringResource(R.string.action_cancel)
                     ) {
-                        Text("Delete ${state.title}?")
+                        Text(stringResource(R.string.dialog_delete_trip_confirmation, state.title))
                     }
                 }
                 TopAppBar(title = {
@@ -274,12 +277,12 @@ private fun TripDetails(
                                 properties = PopupProperties(focusable = false)
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Update Trip Preferences") },
+                                    text = { Text(stringResource(R.string.action_update_trip_preferences)) },
                                     onClick = onUpdatePreferencesTapped,
                                     colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.onSecondaryContainer),
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Delete Trip") },
+                                    text = { Text(stringResource(R.string.action_delete_trip)) },
                                     onClick = {
                                         showToolbarOverflowMenu = false
                                         showDeleteConfirmation = true

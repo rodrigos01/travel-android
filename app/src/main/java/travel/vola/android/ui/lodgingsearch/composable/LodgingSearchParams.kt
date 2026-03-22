@@ -1,5 +1,8 @@
 package travel.vola.android.ui.lodgingsearch.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -75,7 +78,7 @@ fun LodgingSearchParams(
                 val focusRequester = remember { FocusRequester() }
                 SearchBox(
                     query = query,
-                    placeHolder = { Text("Enter location") },
+                    placeHolder = { Text(stringResource(R.string.prompt_enter_location)) },
                     searchResults = searchResults.map { SearchResult(it.title, it.subtitle) },
                     onQueryChange = {
                         query = it

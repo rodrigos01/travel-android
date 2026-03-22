@@ -1,5 +1,8 @@
 package travel.vola.android.ui.lodgingsearch.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -104,7 +107,7 @@ fun LodgingReviewItem(state: LodgingReviewState) {
                     }
                 }
                 Text(
-                    "Traveled on ${state.tripDate.monthAndYearString}",
+                    stringResource(R.string.label_traveled_on_date, state.tripDate.monthAndYearString),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium
                 )

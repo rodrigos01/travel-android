@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.creation.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,9 +28,9 @@ fun ConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     confirmButtonEnabled: Boolean = true,
-    confirmButtonLabel: String = "Confirm",
+    confirmButtonLabel: String = stringResource(R.string.action_confirm),
     confirmButtonColors: ButtonColors = ButtonDefaults.textButtonColors(),
-    dismissButtonLabel: String = "Cancel",
+    dismissButtonLabel: String = stringResource(R.string.action_cancel),
     content: @Composable () -> Unit,
 ) {
     Dialog(

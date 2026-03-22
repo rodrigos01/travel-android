@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -55,7 +58,7 @@ fun InitialParameters(
         OutlinedTextField(
             value = state.anythingElse,
             placeholder = {
-                Text("Any other information you think it's relevant for creating your trip.")
+                Text(stringResource(R.string.prompt_additional_info))
             },
             onValueChange = onAnythingElseTextChanged,
             modifier = Modifier
