@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -60,7 +63,7 @@ fun DateRangeListItem(
             AnimatedContent(isGeneratingSuggestions) { generating ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (generating) {
-                        Text("Generating")
+                        Text(stringResource(R.string.state_generating))
                         LoadingIndicator()
                     } else {
                         TextButton(onClick = onAddButtonClick) {

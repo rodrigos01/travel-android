@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -162,13 +165,13 @@ fun StartEndAddPlanListItemPreview() {
                     deleteButtonEnabled = true,
                     saveButtonEnabled = true,
                 ),
-                startTitle = { Text("Start") },
-                startTimeSelectorLabel = "Pick Start Time",
+                startTitle = { Text(stringResource(R.string.label_start)) },
+                startTimeSelectorLabel = stringResource(R.string.action_pick_start_time),
                 startPlaceHolder = "Enter Start point",
                 startLabelText = "Start",
                 onStartTextChanged = {},
-                endTitle = { Text("End") },
-                endTimeSelectorLabel = "Pick End Time",
+                endTitle = { Text(stringResource(R.string.label_end)) },
+                endTimeSelectorLabel = stringResource(R.string.action_pick_end_time),
                 endPlaceHolder = "Enter End point",
                 endLabelText = "End",
                 onEndTextChanged = {},

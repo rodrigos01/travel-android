@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,14 +35,14 @@ fun AddLodgingListItem(
     Column {
         StartEndAddPlanListItem(
             uiState = uiState,
-            startTitle = { Text("CheckIn") },
-            startTimeSelectorLabel = "Check-in Time",
+            startTitle = { Text(stringResource(R.string.label_checkin)) },
+            startTimeSelectorLabel = stringResource(R.string.action_pick_checkin_time),
             startLabelText = "Lodging Name",
             startPlaceHolder = "Enter Hotel name or Address",
             onStartTextChanged = onLodgingTextChanged,
             showEndTimePickerButton = false,
-            endTitle = { Text("Check-out") },
-            endTimeSelectorLabel = "Check-out Time",
+            endTitle = { Text(stringResource(R.string.label_checkout)) },
+            endTimeSelectorLabel = stringResource(R.string.action_pick_checkout_time),
             endLabelText = "Check-out time",
             endPlaceHolder = "Check-out time",
             onUpdated = {

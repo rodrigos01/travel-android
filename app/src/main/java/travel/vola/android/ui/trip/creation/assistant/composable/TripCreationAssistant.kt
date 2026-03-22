@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -132,7 +135,7 @@ fun TripCreationAssistant(
                 actions = {
                     if (state.skipEnabled) {
                         TextButton(onClick = onSkipTapped) {
-                            Text("skip")
+                            Text(stringResource(R.string.action_skip))
                         }
                     }
                 }
@@ -164,7 +167,7 @@ fun TripCreationAssistant(
                         style = MaterialTheme.typography.titleLarge
                     )
                     Button(onClick = onRetryTapped) {
-                        Text("Retry")
+                        Text(stringResource(R.string.action_retry))
                     }
                 }
             }

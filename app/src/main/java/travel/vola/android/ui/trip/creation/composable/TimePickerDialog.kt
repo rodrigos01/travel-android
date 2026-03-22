@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.creation.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,7 +61,7 @@ fun TimePickerDialog(
                         .fillMaxWidth()
                 ) {
                     Text(
-                        text = "Please select a time after ${minDateTime.timeString}",
+                        text = stringResource(R.string.error_time_after_min, minDateTime.timeString),
                         color = Color.Red,
                         textAlign = TextAlign.Center,
                     )

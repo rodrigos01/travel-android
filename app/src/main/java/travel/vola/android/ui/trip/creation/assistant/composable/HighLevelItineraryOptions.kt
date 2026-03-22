@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -53,18 +56,18 @@ fun HighLevelItineraryOptions(
                 InlinedTextField(
                     initialValue = "",
                     onDone = { onConfirmationOptionTapped(it) },
-                    label = { Text("Something Else") }
+                    label = { Text(stringResource(R.string.option_something_else)) }
                 )
                 Row(modifier = Modifier.align(Alignment.End)) {
                     TextButton(onClick = { onItinerarySelected(null) }) {
-                        Text("Return to list")
+                        Text(stringResource(R.string.action_return_to_list))
                     }
                     Button(onClick = { onCreateTripTapped(selectedItinerary) }) {
-                        Text("Create Trip")
+                        Text(stringResource(R.string.action_create_trip))
                     }
                 }
             } else {
-                Text("Select the itinerary that more closely matches your preferences. You can make changes to it after selecting it.")
+                Text(stringResource(R.string.prompt_select_itinerary))
                 state.itineraries.forEach { itinerary ->
                     ItineraryCard(itinerary, onTap = { onItinerarySelected(itinerary) })
                 }
@@ -92,7 +95,7 @@ fun ItineraryCard(itinerary: UiState.Itinerary, onTap: () -> Unit) {
                 style = MaterialTheme.typography.headlineMedium
             )
             Text(
-                "${itinerary.startDate.dateString} - ${itinerary.endDate.dateString}",
+                stringResource(R.string.format_date_range, itinerary.startDate.dateString, itinerary.endDate.dateString),
                 style = MaterialTheme.typography.labelMedium
             )
             Text(
@@ -117,7 +120,7 @@ fun ItineraryCard(itinerary: UiState.Itinerary, onTap: () -> Unit) {
                         modifier = Modifier.padding(top = 8.dp)
                     )
                     Text(
-                        "${city.startDate.dateString} - ${city.endDate.dateString}",
+                        stringResource(R.string.format_date_range, city.startDate.dateString, city.endDate.dateString),
                         style = MaterialTheme.typography.labelMedium
                     )
                 }

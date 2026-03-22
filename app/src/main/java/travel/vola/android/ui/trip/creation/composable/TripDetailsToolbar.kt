@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.creation.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.SizeTransform
@@ -129,10 +132,10 @@ fun TripDetailsToolbar(
                             onClick = { addPlanActionHandler.cancelEdit(state.id) },
                             colors = ButtonDefaults.textButtonColors()
                             ) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.action_cancel))
                         }
                         TextButton(onClick = {addPlanActionHandler.save(state.id)}, enabled = state.saveButtonEnabled) {
-                            Text("Save")
+                            Text(stringResource(R.string.action_save))
                         }
                     }
                 }

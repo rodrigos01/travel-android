@@ -1,5 +1,8 @@
 package travel.vola.android.common.ui.components
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -54,7 +57,7 @@ class TabbedHostScope(
                 Icons.Filled.Warning, contentDescription = null
             )
         },
-        content = { Text("No Tab Found for id $tabId") },
+        content = { Text(stringResource(R.string.error_no_tab_found, tabId)) },
     )
 }
 

@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
@@ -70,7 +73,7 @@ fun InitialParametersFollowUp(
             InlinedTextField(
                 initialValue = "",
                 onDone = { onCustomAnswerAdded(it, question) },
-                label = { Text("Something Else") }
+                label = { Text(stringResource(R.string.option_something_else)) }
             )
         }
         Button(

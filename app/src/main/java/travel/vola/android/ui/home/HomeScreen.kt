@@ -1,5 +1,8 @@
 package travel.vola.android.ui.home
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -46,7 +49,7 @@ fun HomeScreen(navController: NavController) {
         topBar = {
             var showDataSourceSelector by remember { mutableStateOf(false) }
             TopAppBar(
-                title = { Text("Vola") }, modifier = Modifier.combinedClickable(
+                title = { Text(stringResource(R.string.app_name_vola)) }, modifier = Modifier.combinedClickable(
                     onClick = {},
                     onLongClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -57,14 +60,14 @@ fun HomeScreen(navController: NavController) {
                 expanded = showDataSourceSelector,
                 onDismissRequest = { showDataSourceSelector = false }) {
                 DropdownMenuItem(
-                    text = { Text("Local") },
+                    text = { Text(stringResource(R.string.source_local)) },
                     onClick = {
                         viewModel.onDataSourceChanged(DataSourceType.LOCAL)
                         showDataSourceSelector = false
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text("Firebase") },
+                    text = { Text(stringResource(R.string.source_firebase)) },
                     onClick = {
                         viewModel.onDataSourceChanged(DataSourceType.FIREBASE)
                         showDataSourceSelector = false

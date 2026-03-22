@@ -1,5 +1,8 @@
 package travel.vola.android.ui.lodgingsearch.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
@@ -114,10 +117,10 @@ private fun LodgingSearch(
         ConfirmationDialog(
             onConfirm = { navController.popBackStack() },
             onDismiss = onContinueBrowsingTapped,
-            confirmButtonLabel = "Back to Trip",
-            dismissButtonLabel = "Continue browsing"
+            confirmButtonLabel = stringResource(R.string.action_back_to_trip),
+            dismissButtonLabel = stringResource(R.string.action_continue_browsing)
         ) {
-            Text("Added to your trip. Do you want to continue browsing?")
+            Text(stringResource(R.string.dialog_lodging_added_continue_browsing))
         }
     }
     val mapScaffoldState = rememberMapScaffoldState(mapInitiallyVisible = showMap)
@@ -284,7 +287,7 @@ fun ResultsWithMap(
                         tab(
                             id = tabId,
                             selected = openedResultId == tabId,
-                            title = { Text(lodging.name) },
+                            title = { Text(stringResource(R.string.title_lodging_search)) },
                         )
                     }
                 }
@@ -390,7 +393,7 @@ private fun SearchTopBar(
                 Icon(
                     painterResource(R.drawable.tune_baseline_24), contentDescription = null
                 )
-                Text("Filter")
+                Text(stringResource(R.string.action_filter))
             }
             TextButton(onClick = {
                 controlsVisible1 = ControlsVisible.SORT
@@ -398,7 +401,7 @@ private fun SearchTopBar(
                 Icon(
                     painterResource(R.drawable.sort_baseline_24), contentDescription = null
                 )
-                Text("Sort")
+                Text(stringResource(R.string.action_sort))
             }
         }
         AnimatedContent(
@@ -447,7 +450,7 @@ private fun SearchTopBar(
                                     filterState.priceRange.start.toDouble()..filterState.priceRange.endInclusive.toDouble(),
                                 )
                             }) {
-                                Text("Apply")
+                                Text(stringResource(R.string.action_apply))
                             }
                         }
                     }
@@ -615,10 +618,10 @@ private fun LoadingError(
                 end = 16.dp,
             ),
     ) {
-        Text("Something went wrong")
+        Text(stringResource(R.string.error_something_went_wrong))
         IconTextButton(onClick = onRetryTapped) {
             Icon(Icons.Default.Refresh, contentDescription = null)
-            Text("Retry")
+            Text(stringResource(R.string.action_retry))
         }
     }
 }

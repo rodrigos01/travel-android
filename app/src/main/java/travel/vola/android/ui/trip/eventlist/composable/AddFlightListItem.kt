@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,13 +30,13 @@ fun AddFlightListItem(
 ) {
     StartEndAddPlanListItem(
         uiState = uiState,
-        startTitle = { Text("Departure") },
-        startTimeSelectorLabel = "Choose Departure Time",
+        startTitle = { Text(stringResource(R.string.label_departure)) },
+        startTimeSelectorLabel = stringResource(R.string.action_choose_departure_time),
         startLabelText = "from",
         startPlaceHolder = "Enter City or Airport",
         onStartTextChanged = onAirportFromTextChanged,
-        endTitle = { Text("Arrival") },
-        endTimeSelectorLabel = "Choose Arrival Time",
+        endTitle = { Text(stringResource(R.string.label_arrival)) },
+        endTimeSelectorLabel = stringResource(R.string.action_choose_arrival_time),
         endLabelText = "to",
         endPlaceHolder = "Enter City or Airport",
         onEndTextChanged = onAirportToTextChanged,

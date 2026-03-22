@@ -1,5 +1,8 @@
 package travel.vola.android.ui.lodgingsearch.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedContent
@@ -249,7 +252,7 @@ fun LodgingDetailsContent(
                             modifier = Modifier.asSizedImageTarget(sizedImageState)
                         )
                         Text(
-                            text = "+${state.photos.size - 2}",
+                            text = stringResource(R.string.label_more_photos, state.photos.size - 2),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.inverseOnSurface,
                             modifier = Modifier.align(Alignment.Center)
@@ -315,7 +318,7 @@ fun LodgingDetailsContent(
                                 Icons.Filled.KeyboardArrowDown,
                                 contentDescription = null
                             )
-                            Text("See ${state.rooms.size - 1} more offers")
+                            Text(stringResource(R.string.label_see_more_offers, state.rooms.size - 1))
                         }
                     }
                 }
@@ -411,7 +414,7 @@ fun LodgingDetailsContent(
                     contentState.setReviewsOffset(it.positionInParent())
                 },
             ) {
-                Text("Reviews", style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.label_reviews), style = MaterialTheme.typography.titleLarge)
                 Spacer(modifier = Modifier.weight(1f))
                 TextButton(onClick = {
                     context.startActivity(
@@ -436,7 +439,7 @@ fun LodgingDetailsContent(
         }
         if (state.rooms.size > 1) {
             Text(
-                "Rooms",
+                stringResource(R.string.label_rooms),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.onGloballyPositioned {
                     roomsOffset = it.positionInParent()

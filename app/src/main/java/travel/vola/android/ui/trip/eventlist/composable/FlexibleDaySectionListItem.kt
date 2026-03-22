@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -103,14 +106,14 @@ fun FlexibleDaySectionListItem(
             ConfirmationDialog(
                 onConfirm = if (state.isGenerated) onSuggestionDismissed else onDeleteConfirmed,
                 onDismiss = { showDeleteConfirmation = false },
-                confirmButtonLabel = if (state.isGenerated) "Dismiss" else "Delete",
+                confirmButtonLabel = if (state.isGenerated) stringResource(R.string.action_dismiss) else stringResource(R.string.action_delete),
                 confirmButtonColors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                dismissButtonLabel = "Cancel"
+                dismissButtonLabel = stringResource(R.string.action_cancel)
             ) {
                 if (state.isGenerated) {
-                    Text("Dismiss ${state.name}?")
+                    Text(stringResource(R.string.dialog_dismiss_suggestion_confirmation, state.name))
                 } else {
-                    Text("Delete ${state.name}?")
+                    Text(stringResource(R.string.dialog_delete_item_confirmation, state.name))
                 }
             }
         }
@@ -227,7 +230,7 @@ private fun ExpandedSection(
             if (!state.isGenerated) {
                 item {
                     OutlinedInlinedTextField(onDone = onCategoryAdded) {
-                        Text("Add Category")
+                        Text(stringResource(R.string.action_add_category))
                     }
                 }
             }
@@ -305,7 +308,7 @@ private fun ExpandedSection(
                                             .aspectRatio(1F)
                                     )
                                     Text(
-                                        "Add Place",
+                                        stringResource(R.string.action_add_place),
                                         style = MaterialTheme.typography.titleSmall,
                                         modifier = Modifier
                                             .padding(8.dp)
@@ -330,7 +333,7 @@ private fun ExpandedSection(
                                         contentDescription = "add option",
                                     )
                                     Text(
-                                        "Add Place",
+                                        stringResource(R.string.action_add_place),
                                         style = MaterialTheme.typography.titleSmall,
                                     )
                                 }

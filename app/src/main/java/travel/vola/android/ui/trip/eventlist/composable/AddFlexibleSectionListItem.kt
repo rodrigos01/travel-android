@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoFixHigh
@@ -31,7 +34,7 @@ fun AddFlexibleSectionListItem(
             timeSelectedInitially = state.hasStartTime,
             searchResults = emptyList(),
             title = {},
-            timeSelectorLabel = "Pick Time",
+            timeSelectorLabel = stringResource(R.string.action_pick_time),
             labelText = "Section Name",
             text = state.sectionName,
             placeHolder = "Section Name",
@@ -47,7 +50,7 @@ fun AddFlexibleSectionListItem(
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Icon(Icons.Rounded.AutoFixHigh, contentDescription = "Generate suggestions")
-            Text("Generate suggestions")
+            Text(stringResource(R.string.action_generate_suggestions))
         }
     }
 }

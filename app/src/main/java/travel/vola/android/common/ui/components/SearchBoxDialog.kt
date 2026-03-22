@@ -1,5 +1,8 @@
 package travel.vola.android.common.ui.components
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,7 +26,7 @@ fun SearchBoxDialog(
         val focusRequester = remember { FocusRequester() }
         SearchBox(
             query = query,
-            placeHolder = { Text("Enter location") },
+            placeHolder = { Text(stringResource(R.string.prompt_enter_location)) },
             searchResults = searchResults,
             onQueryChange = {
                 query = it

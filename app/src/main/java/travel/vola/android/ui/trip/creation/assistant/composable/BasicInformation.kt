@@ -1,5 +1,8 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -79,7 +82,7 @@ fun BasicInformationForm(
                 )
             }
             TextButton(onClick = { showSearchDialog = true }) {
-                Text("Add")
+                Text(stringResource(R.string.action_add))
             }
         }
         AnimatedVisibility(visible = showSearchDialog) {
@@ -99,14 +102,14 @@ fun BasicInformationForm(
                 onCheckedChange = onFixedDatesSet,
                 shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
             ) {
-                Text("Fixed")
+                Text(stringResource(R.string.option_fixed_dates))
             }
             OutlinedToggleButton(
                 checked = !state.fixedDates,
                 onCheckedChange = { onFixedDatesSet(!it) },
                 shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
             ) {
-                Text("Flexible")
+                Text(stringResource(R.string.option_flexible_dates))
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -156,7 +159,7 @@ fun BasicInformationForm(
             state.travelers?.toString().orEmpty(),
             enabled = state.travelersChangeEnabled,
             onValueChange = { onTravelersSet(it.toIntOrNull()) },
-            label = { Text("Travelers") },
+            label = { Text(stringResource(R.string.label_travelers)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.widthIn(max = 120.dp)
@@ -165,7 +168,7 @@ fun BasicInformationForm(
             onClick = onNextTapped,
             enabled = state.nextButtonEnabled,
             modifier = Modifier.align(Alignment.End)
-        ) { Text("Next") }
+        ) { Text(stringResource(R.string.action_next)) }
     }
 }
 

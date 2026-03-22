@@ -1,5 +1,8 @@
 package travel.vola.android.ui.lodgingsearch.composable
 
+import travel.vola.android.R
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -87,7 +90,7 @@ fun FilterOptions(
             .padding(16.dp),
     ) {
         ProvideTextStyle(MaterialTheme.typography.bodyLarge) {
-            Text("Rating")
+            Text(stringResource(R.string.label_rating))
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -102,7 +105,7 @@ fun FilterOptions(
                 )
                 Text("%.1f+".format(state.minRating))
             }
-            Text("Stars")
+            Text(stringResource(R.string.label_stars))
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                 LodgingSearchViewModel.StarOption.entries.forEachIndexed { index, option ->
                     SegmentedButton(
@@ -113,17 +116,18 @@ fun FilterOptions(
                         selected = option.stars == state.minStars,
                         onClick = { state.minStars = option.stars },
                     ) {
-                        val label = when (option) {
-                            LodgingSearchViewModel.StarOption.ANY -> "Any"
-                            LodgingSearchViewModel.StarOption.THREE -> "3+ stars"
-                            LodgingSearchViewModel.StarOption.FOUR -> "4+ stars"
-                            LodgingSearchViewModel.StarOption.FIVE -> "5 stars"
-                        }
-                        Text(text = label)
+                        Text(
+                            text = when (option) {
+                                LodgingSearchViewModel.StarOption.ANY -> stringResource(R.string.star_option_any)
+                                LodgingSearchViewModel.StarOption.THREE -> stringResource(R.string.star_option_three_plus)
+                                LodgingSearchViewModel.StarOption.FOUR -> stringResource(R.string.star_option_four_plus)
+                                LodgingSearchViewModel.StarOption.FIVE -> stringResource(R.string.star_option_five)
+                            }
+                        )
                     }
                 }
             }
-            Text("Price Range")
+            Text(stringResource(R.string.label_price_range))
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
