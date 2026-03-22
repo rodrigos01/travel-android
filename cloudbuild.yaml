@@ -99,6 +99,11 @@ steps:
         - 'GRADLE_USER_HOME=/build_cache/.gradle'
         - 'GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.workers.max=8 -Dkotlin.incremental=false"'
         - 'BRANCH_NAME=$BRANCH_NAME'
+        - 'MAPS_API_KEY=$_MAPS_API_KEY'
+        - 'CLIENT_SECRET=$_CLIENT_SECRET'
+        - 'KEYSTORE_PASSWORD=$_KEYSTORE_PASSWORD'
+        - 'KEY_ALIAS=$_KEY_ALIAS'
+        - 'KEY_PASSWORD=$_KEY_PASSWORD'
     waitFor: [ 'setup_config' ]
     volumes:
       - name: 'build_cache'

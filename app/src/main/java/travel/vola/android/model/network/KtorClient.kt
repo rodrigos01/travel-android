@@ -43,7 +43,7 @@ data class Token(val accessToken: String, val expiration: Long)
 
 private const val AUTH_URL = "https://us-central1-travel-164715.cloudfunctions.net/auth"
 private const val CLIENT_ID = "travel-app-android"
-private const val CLIENT_SECRET = "QzD70JbccmYDyI4GjqpUlt4MrpBU259iI0ho"
+private val CLIENT_SECRET = BuildConfig.CLIENT_SECRET
 
 private suspend fun updateToken(): Token {
     val response = HttpClient {
