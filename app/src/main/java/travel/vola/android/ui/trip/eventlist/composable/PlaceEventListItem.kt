@@ -35,18 +35,18 @@ fun PlaceEventListItem(
     startDate: String,
     endDate: String,
     onImageLoaded: (SuccessResult) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier
             .background(color = MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
         Box(
             Modifier
                 .wrapContentHeight()
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(12.dp)),
         ) {
             AsyncImage(
                 model = imageUrl,
@@ -61,15 +61,15 @@ fun PlaceEventListItem(
                 contentScale = ContentScale.FillWidth,
                 colorFilter = ColorFilter.tint(
                     MaterialTheme.colorScheme.scrim.copy(alpha = 0.3F),
-                    blendMode = BlendMode.SrcAtop
-                )
+                    blendMode = BlendMode.SrcAtop,
+                ),
             )
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .matchParentSize()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
                 Text(
                     text = placeName,
@@ -84,7 +84,6 @@ fun PlaceEventListItem(
             }
         }
     }
-
 }
 
 @Composable

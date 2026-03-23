@@ -80,26 +80,28 @@ class TripCreationAssistantViewModel(
             initialParameters = null,
             initialParametersFollowUp = null,
             highLevelItineraryOptions = null,
-        )
+        ),
     )
 
     private val generatedState = combine(step, compositeState) { step, state ->
         when (step) {
             is Step.BasicInformation -> state.basicInformation
             is Step.InitialParameters -> state.initialParameters ?: generateInitialParametersState(
-                state.basicInformation
+                state.basicInformation,
             )
 
-            is Step.InitialParametersFollowUp -> state.initialParametersFollowUp
-                ?: state.initialParameters?.let { getInitialParametersFollowUpState(it) }
+            is Step.InitialParametersFollowUp ->
+                state.initialParametersFollowUp
+                    ?: state.initialParameters?.let { getInitialParametersFollowUpState(it) }
 
-            is Step.HighLevelItineraryOptions -> state.highLevelItineraryOptions
-                ?: state.initialParametersFollowUp?.let { getHighLevelItineraryOptionsState(it) }
+            is Step.HighLevelItineraryOptions ->
+                state.highLevelItineraryOptions
+                    ?: state.initialParametersFollowUp?.let { getHighLevelItineraryOptionsState(it) }
 
             is Step.ItineraryRefinement -> state.highLevelItineraryOptions?.let {
                 getItineraryRefinementState(
                     step.option,
-                    it
+                    it,
                 )
             }
 
@@ -110,7 +112,9 @@ class TripCreationAssistantViewModel(
         MutableStateFlow<UiState>(UiState.BasicInformation(skipEnabled = tripId == null))
 
     val uiState = merge(generatedState, internalState).stateIn(
-        viewModelScope, started = SharingStarted.Lazily, internalState.value
+        viewModelScope,
+        started = SharingStarted.Lazily,
+        internalState.value,
     )
 
     private suspend fun generateInitialParametersState(
@@ -173,7 +177,7 @@ class TripCreationAssistantViewModel(
 
     private fun List<String>.asOptionGroup(
         type: UiState.OptionGroupType,
-        selectedOptions: List<String>?
+        selectedOptions: List<String>?,
     ): UiState.OptionGroup {
         val selected = selectedOptions.orEmpty()
         return UiState.OptionGroup(
@@ -181,9 +185,9 @@ class TripCreationAssistantViewModel(
             selected.map {
                 UiState.Option(
                     it,
-                    isSelected = true
+                    isSelected = true,
                 )
-            } + (this - selected).map { UiState.Option(it) }
+            } + (this - selected).map { UiState.Option(it) },
         )
     }
 
@@ -263,7 +267,7 @@ class TripCreationAssistantViewModel(
 
     private suspend fun getItineraryRefinementState(
         refinement: String,
-        state: UiState.HighLevelItineraryOptions
+        state: UiState.HighLevelItineraryOptions,
     ): UiState.HighLevelItineraryOptions {
         val selected = state.selected ?: return state
         val refinementResult = repository.genRefinedItinerary(
@@ -314,12 +318,14 @@ class TripCreationAssistantViewModel(
                 } else {
                     it
                 }
-            }
+            },
         )
     }
 
     private fun ZonedDateTime.asDateResult() = GenAIData.DateResult(
-        year = year, month = monthValue, day = dayOfMonth
+        year = year,
+        month = monthValue,
+        day = dayOfMonth,
     )
 
     private fun GenAIData.DateResult.parseAsDate(): ZonedDateTime {
@@ -328,7 +334,14 @@ class TripCreationAssistantViewModel(
         } catch (_: DateTimeException) {
             // The LLM might hallucinate 2/29 on a non-Leap year.
             return ZonedDateTime.of(
-                year, month, day - 1, 0, 0, 0, 0, TimeZone.getDefault().toZoneId()
+                year,
+                month,
+                day - 1,
+                0,
+                0,
+                0,
+                0,
+                TimeZone.getDefault().toZoneId(),
             )
         }
     }
@@ -343,9 +356,10 @@ class TripCreationAssistantViewModel(
                         destinationSearchResults = results.map {
                             SearchResult(
                                 it.name,
-                                it.address
+                                it.address,
                             )
-                        })
+                        },
+                    ),
                 )
             }
         }
@@ -361,8 +375,8 @@ class TripCreationAssistantViewModel(
             updateBasicState(
                 state.copy(
                     destinations = state.destinations + destinationName,
-                    destinationSearchResults = emptyList()
-                )
+                    destinationSearchResults = emptyList(),
+                ),
             )
         }
     }
@@ -371,8 +385,8 @@ class TripCreationAssistantViewModel(
         val state = uiState.value as? UiState.BasicInformation ?: return
         updateBasicState(
             state.copy(
-                destinations = state.destinations - state.destinations[index]
-            )
+                destinations = state.destinations - state.destinations[index],
+            ),
         )
     }
 
@@ -385,8 +399,9 @@ class TripCreationAssistantViewModel(
         val state = uiState.value as? UiState.BasicInformation ?: return
         updateBasicState(
             state.copy(
-                startDate = date, endDate = state.endDate ?: date.plusDays(7)
-            )
+                startDate = date,
+                endDate = state.endDate ?: date.plusDays(7),
+            ),
         )
     }
 
@@ -408,8 +423,8 @@ class TripCreationAssistantViewModel(
             state.copy(
                 groupType = groupType,
                 travelersChangeEnabled = travelersChangeEnabled,
-                travelers = newTravelerCount
-            )
+                travelers = newTravelerCount,
+            ),
         )
     }
 
@@ -436,11 +451,13 @@ class TripCreationAssistantViewModel(
         val state = uiState.value as? UiState.InitialParameters ?: return
         val newOptionGroups = state.optionGroups.map { group ->
             if (group.type == optionGroupType) {
-                group.copy(options = group.options.mapIndexed { optionIndex, option ->
-                    option.copy(
-                        isSelected = if (optionIndex == index) !option.isSelected else option.isSelected
-                    )
-                })
+                group.copy(
+                    options = group.options.mapIndexed { optionIndex, option ->
+                        option.copy(
+                            isSelected = if (optionIndex == index) !option.isSelected else option.isSelected,
+                        )
+                    },
+                )
             } else {
                 group
             }
@@ -484,18 +501,22 @@ class TripCreationAssistantViewModel(
         val state = uiState.value as? UiState.InitialParametersFollowUp ?: return
         val newQuestions = state.questions.map { currentQuestion ->
             if (currentQuestion == question) {
-                currentQuestion.copy(answers = currentQuestion.answers.mapIndexed { optionIndex, option ->
-                    option.copy(isSelected = optionIndex == index)
-                })
+                currentQuestion.copy(
+                    answers = currentQuestion.answers.mapIndexed { optionIndex, option ->
+                        option.copy(isSelected = optionIndex == index)
+                    },
+                )
             } else {
                 currentQuestion
             }
         }
         compositeState.update {
             initialParametersFollowUp = state.copy(
-                questions = newQuestions, ctaEnabled = newQuestions.all { question ->
+                questions = newQuestions,
+                ctaEnabled = newQuestions.all { question ->
                     question.answers.any { it.isSelected }
-                })
+                },
+            )
         }
     }
 
@@ -503,18 +524,23 @@ class TripCreationAssistantViewModel(
         val state = uiState.value as? UiState.InitialParametersFollowUp ?: return
         val newQuestions = state.questions.map { currentQuestion ->
             if (currentQuestion == question) {
-                currentQuestion.copy(answers = currentQuestion.answers.map { it.copy(isSelected = false) } + UiState.Option(
-                    answer, isSelected = true
-                ))
+                currentQuestion.copy(
+                    answers = currentQuestion.answers.map { it.copy(isSelected = false) } + UiState.Option(
+                        answer,
+                        isSelected = true,
+                    ),
+                )
             } else {
                 currentQuestion
             }
         }
         compositeState.update {
             initialParametersFollowUp = state.copy(
-                questions = newQuestions, ctaEnabled = newQuestions.all { question ->
+                questions = newQuestions,
+                ctaEnabled = newQuestions.all { question ->
                     question.answers.any { it.isSelected }
-                })
+                },
+            )
         }
     }
 
@@ -586,7 +612,7 @@ class TripCreationAssistantViewModel(
                 preferences = createTripPreferences(state),
             )
             navController.navigate(
-                TripDetailsDestination.getRoute(tripId)
+                TripDetailsDestination.getRoute(tripId),
             ) {
                 popUpTo(HomeScreenDestination.ROUTE)
             }
@@ -617,7 +643,7 @@ class TripCreationAssistantViewModel(
             question.answers.firstOrNull { it.isSelected }?.option?.let { answer ->
                 AnsweredQuestion(
                     question.question,
-                    answer
+                    answer,
                 )
             }
         } ?: emptyList(),
@@ -638,15 +664,15 @@ class TripCreationAssistantViewModel(
             is Step.InitialParameters -> Step.BasicInformation to currentStage.state
             is Step.InitialParametersFollowUp -> Step.InitialParameters(
                 UiState.BasicInformation(
-                    skipEnabled = tripId == null
-                )
+                    skipEnabled = tripId == null,
+                ),
             ) to currentStage.state
 
             is Step.HighLevelItineraryOptions -> Step.InitialParametersFollowUp(
                 UiState.InitialParameters(
                     emptyList(),
-                    skipEnabled = tripId == null
-                )
+                    skipEnabled = tripId == null,
+                ),
             ) to currentStage.state
 
             else -> null

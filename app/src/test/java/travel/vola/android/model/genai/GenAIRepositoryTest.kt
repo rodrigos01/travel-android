@@ -12,7 +12,6 @@ import org.mockito.kotlin.stub
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 
-
 class GenAIRepositoryTest {
 
     private val logger: GenAIRepository.Logger = mock()
@@ -35,7 +34,7 @@ class GenAIRepositoryTest {
                 "",
                 GenAIData.GroupType.SOLO,
                 1,
-            )
+            ),
         )
         verify(logger, times(3)).error(any(), any(), any())
         verify(chat, times(3)).sendMessage(any<String>())
@@ -58,12 +57,11 @@ class GenAIRepositoryTest {
                 emptyList(),
                 emptyList(),
                 emptyList(),
-                ""
-            )
+                "",
+            ),
         )
         assertThat(result).isNull()
         verify(logger, times(0)).error(any(), any(), any())
         verify(chat, mode = times(1)).sendMessage(any<String>())
     }
-
 }

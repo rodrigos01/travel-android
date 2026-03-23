@@ -51,18 +51,23 @@ private suspend fun updateToken(): Token {
             gzip()
         }
         install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-                namingStrategy = JsonNamingStrategy.SnakeCase
-                explicitNulls = false
-            })
+            json(
+                Json {
+                    ignoreUnknownKeys = true
+                    namingStrategy = JsonNamingStrategy.SnakeCase
+                    explicitNulls = false
+                },
+            )
         }
-    }.submitForm(url = AUTH_URL, formParameters = parameters {
-        append("grant_type", "client_credentials")
-        append("client_id", CLIENT_ID)
-        append("client_secret", CLIENT_SECRET)
-        append("scope", SERVER_URL)
-    }).body<AuthResponse>()
+    }.submitForm(
+        url = AUTH_URL,
+        formParameters = parameters {
+            append("grant_type", "client_credentials")
+            append("client_id", CLIENT_ID)
+            append("client_secret", CLIENT_SECRET)
+            append("scope", SERVER_URL)
+        },
+    ).body<AuthResponse>()
     val newToken = Token(response.accessToken, System.currentTimeMillis() + response.expiresIn)
     applicationContext.dataStore.edit {
         it[stringPreferencesKey("token")] = newToken.accessToken
@@ -76,11 +81,13 @@ private val Context.dataStore by preferencesDataStore("auth")
 @OptIn(ExperimentalSerializationApi::class)
 private val client = HttpClient {
     install(ContentNegotiation) {
-        json(Json {
-            ignoreUnknownKeys = true
-            namingStrategy = JsonNamingStrategy.SnakeCase
-            explicitNulls = false
-        })
+        json(
+            Json {
+                ignoreUnknownKeys = true
+                namingStrategy = JsonNamingStrategy.SnakeCase
+                explicitNulls = false
+            },
+        )
     }
     if (BuildConfig.REQUIRES_AUTH) {
         install(Auth) {
@@ -131,7 +138,8 @@ private const val SERVER_URL = BuildConfig.SERVER_URL
 fun httpClient() = client
 
 suspend inline fun <reified T> request(
-    path: String, noinline builder: HttpRequestBuilder.() -> Unit = {},
+    path: String,
+    noinline builder: HttpRequestBuilder.() -> Unit = {},
 ): T? {
     val response = get(path, builder)
     return if (response.status == HttpStatusCode.OK) {
@@ -142,7 +150,8 @@ suspend inline fun <reified T> request(
 }
 
 suspend fun get(
-    path: String, builder: HttpRequestBuilder.() -> Unit = {},
+    path: String,
+    builder: HttpRequestBuilder.() -> Unit = {},
 ): HttpResponse {
     return httpClient().get(SERVER_URL) {
         url { path(path) }

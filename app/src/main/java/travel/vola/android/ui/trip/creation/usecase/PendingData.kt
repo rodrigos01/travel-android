@@ -74,6 +74,6 @@ sealed interface PendingData {
         val hasStartTime: Boolean = false,
         val sectionName: String,
         val city: Place,
-        val categories: List<FlexibleDayCategory>
+        val categories: List<FlexibleDayCategory>,
     ) : PendingData
 }

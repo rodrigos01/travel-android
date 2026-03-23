@@ -50,7 +50,7 @@ fun IconTextButton(
                     contentDescription = null,
                     modifier = Modifier
                         .align(Alignment.CenterVertically)
-                        .size(leadingIconSize)
+                        .size(leadingIconSize),
                 )
             }
             content()
@@ -61,7 +61,7 @@ fun IconTextButton(
                     contentDescription = null,
                     modifier = Modifier
                         .align(Alignment.CenterVertically)
-                        .size(trailingIconSize)
+                        .size(trailingIconSize),
                 )
             }
         }

@@ -26,11 +26,16 @@ sealed interface UiState {
     ) : UiState
 
     enum class TravelGroupType {
-        SOLO, COUPLE, FAMILY, FRIENDS, COWORKERS
+        SOLO,
+        COUPLE,
+        FAMILY,
+        FRIENDS,
+        COWORKERS,
     }
 
     enum class CTAType {
-        NEXT, UPDATE
+        NEXT,
+        UPDATE,
     }
 
     data class InitialParameters(
@@ -42,7 +47,12 @@ sealed interface UiState {
     ) : UiState
 
     enum class OptionGroupType {
-        OCCASIONS, INTERESTS, VIBE, FOCUS, DURATION, MUST_HAVE
+        OCCASIONS,
+        INTERESTS,
+        VIBE,
+        FOCUS,
+        DURATION,
+        MUST_HAVE,
     }
 
     data class OptionGroup(val type: OptionGroupType, val options: List<Option>)
@@ -55,7 +65,9 @@ sealed interface UiState {
     ) : UiState
 
     data class FollowUpQuestion(
-        val choices: List<String>, val question: String, val answers: List<Option>
+        val choices: List<String>,
+        val question: String,
+        val answers: List<Option>,
     )
 
     data class HighLevelItineraryOptions(

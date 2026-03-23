@@ -38,7 +38,7 @@ fun RestaurantListItemPreview() {
                 time = "15:30 AM",
                 restaurantName = "Le relais de venise - L'Entrecot",
                 restaurantAddress = "271 Bd Pereire",
-            )
+            ),
         )
     }
 }

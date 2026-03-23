@@ -1,12 +1,11 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import travel.vola.android.R
 import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.AddFlightItemState
@@ -51,7 +50,8 @@ fun AddFlightListItemPreview() {
         Surface {
             AddFlightListItem(
                 uiState = AddFlightItemState(
-                    "", ZonedDateTime.now(),
+                    "",
+                    ZonedDateTime.now(),
                     typeSelectionEnabled = false,
                     startState = ManualAddPlanState(
                         dateTime = zonedDateTime("2025-06-12T05:00 -0300"),

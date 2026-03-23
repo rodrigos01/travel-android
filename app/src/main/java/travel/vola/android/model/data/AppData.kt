@@ -4,11 +4,13 @@ import java.time.ZonedDateTime
 import java.util.TimeZone
 
 enum class ServerStatus {
-    OK, UNAVAILABLE,
+    OK,
+    UNAVAILABLE,
 }
 
 enum class DataSourceType {
-    LOCAL, FIREBASE,
+    LOCAL,
+    FIREBASE,
 }
 
 interface Identifiable {
@@ -164,7 +166,11 @@ data class BasicInformation(
 )
 
 enum class GroupType {
-    SOLO, FAMILY, FRIENDS, COWORKERS, COUPLE
+    SOLO,
+    FAMILY,
+    FRIENDS,
+    COWORKERS,
+    COUPLE,
 }
 
 data class TripParameters(
@@ -183,5 +189,4 @@ data class AnsweredQuestion(
 )
 
 data class SuggestionPlaceholder(val timestamp: ZonedDateTime, override val city: Place) :
-        TripEvent, WithCity
-
+    TripEvent, WithCity

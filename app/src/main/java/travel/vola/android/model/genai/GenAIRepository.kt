@@ -22,7 +22,7 @@ import kotlin.reflect.typeOf
 
 class GenAIRepository internal constructor(
     private val logger: Logger,
-    modelFactory: () -> GenerativeModel
+    modelFactory: () -> GenerativeModel,
 ) {
 
     interface Logger {
@@ -38,58 +38,61 @@ class GenAIRepository internal constructor(
         DAILY_ITINERARY("genDailyItinerary"),
     }
 
-    constructor() : this(object : Logger {
-        override fun error(
-            tag: String,
-            message: String,
-            throwable: Throwable?
-        ) = Log.e(tag, message, throwable)
+    constructor() : this(
+        object : Logger {
+            override fun error(
+                tag: String,
+                message: String,
+                throwable: Throwable?,
+            ) = Log.e(tag, message, throwable)
 
-        override fun debug(tag: String, message: String): Int = Log.d(tag, message)
-    }, modelFactory = {
-        Firebase.ai(backend = GenerativeBackend.googleAI())
-            .generativeModel(
-                generationConfig = generationConfig {
-                    maxOutputTokens = 65536 // Use max output tokens to avoid truncation
-                },
-                modelName = "gemini-3-flash-preview",
-                systemInstruction = content {
-                    text("You are an AI Travel Assistant running on the background of a Travel Planning application. Help the user plan a trip, initially by planning a high-level travel itinerary focused only on destination and dates, then later by planning fine-grained day-by-day itineraries")
-                },
-                toolConfig = ToolConfig(FunctionCallingConfig.any()),
-                tools = listOf(
-                    Tool.functionDeclarations(
-                        listOf(
-                            FunctionDeclaration(
-                                name = FunctionNames.INITIAL_PARAMETERS.value,
-                                parameters = mapOf("parameters" to Prompts.INITIAL_PARAMETERS.outputSchema),
-                                description = "Creates the initial set of parameter options for the trip creation assistant"
+            override fun debug(tag: String, message: String): Int = Log.d(tag, message)
+        },
+        modelFactory = {
+            Firebase.ai(backend = GenerativeBackend.googleAI())
+                .generativeModel(
+                    generationConfig = generationConfig {
+                        maxOutputTokens = 65536 // Use max output tokens to avoid truncation
+                    },
+                    modelName = "gemini-3-flash-preview",
+                    systemInstruction = content {
+                        text("You are an AI Travel Assistant running on the background of a Travel Planning application. Help the user plan a trip, initially by planning a high-level travel itinerary focused only on destination and dates, then later by planning fine-grained day-by-day itineraries")
+                    },
+                    toolConfig = ToolConfig(FunctionCallingConfig.any()),
+                    tools = listOf(
+                        Tool.functionDeclarations(
+                            listOf(
+                                FunctionDeclaration(
+                                    name = FunctionNames.INITIAL_PARAMETERS.value,
+                                    parameters = mapOf("parameters" to Prompts.INITIAL_PARAMETERS.outputSchema),
+                                    description = "Creates the initial set of parameter options for the trip creation assistant",
+                                ),
+                                FunctionDeclaration(
+                                    name = FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP.value,
+                                    parameters = mapOf("questions" to Prompts.INITIAL_PARAMETERS_FOLLOW_UP.outputSchema),
+                                    description = "Creates the follow-up questions for the trip creation assistant",
+                                ),
+                                FunctionDeclaration(
+                                    name = FunctionNames.HIGH_LEVEL_ITINERARY_OPTIONS.value,
+                                    parameters = mapOf("result" to Prompts.HIGH_LEVEL_ITINERARY_OPTIONS.outputSchema),
+                                    description = "Creates the high-level travel itinerary options for the trip creation assistant",
+                                ),
+                                FunctionDeclaration(
+                                    name = FunctionNames.REFINE_ITINERARY.value,
+                                    parameters = mapOf("result" to Prompts.REFINE_ITINERARY.outputSchema),
+                                    description = "Creates the refined itinerary based on the user's feedback for the trip creation assistant",
+                                ),
+                                FunctionDeclaration(
+                                    name = FunctionNames.DAILY_ITINERARY.value,
+                                    parameters = mapOf("result" to Prompts.DAILY_ITINERARY.outputSchema),
+                                    description = "Creates the daily itineraries for the trip creation assistant",
+                                ),
                             ),
-                            FunctionDeclaration(
-                                name = FunctionNames.INITIAL_PARAMETERS_FOLLOW_UP.value,
-                                parameters = mapOf("questions" to Prompts.INITIAL_PARAMETERS_FOLLOW_UP.outputSchema),
-                                description = "Creates the follow-up questions for the trip creation assistant"
-                            ),
-                            FunctionDeclaration(
-                                name = FunctionNames.HIGH_LEVEL_ITINERARY_OPTIONS.value,
-                                parameters = mapOf("result" to Prompts.HIGH_LEVEL_ITINERARY_OPTIONS.outputSchema),
-                                description = "Creates the high-level travel itinerary options for the trip creation assistant"
-                            ),
-                            FunctionDeclaration(
-                                name = FunctionNames.REFINE_ITINERARY.value,
-                                parameters = mapOf("result" to Prompts.REFINE_ITINERARY.outputSchema),
-                                description = "Creates the refined itinerary based on the user's feedback for the trip creation assistant",
-                            ),
-                            FunctionDeclaration(
-                                name = FunctionNames.DAILY_ITINERARY.value,
-                                parameters = mapOf("result" to Prompts.DAILY_ITINERARY.outputSchema),
-                                description = "Creates the daily itineraries for the trip creation assistant",
-                            ),
-                        )
-                    )
+                        ),
+                    ),
                 )
-            )
-    })
+        },
+    )
 
     private val model by lazy { modelFactory() }
 
@@ -103,12 +106,12 @@ class GenAIRepository internal constructor(
         return sendMessage<GenAIData.InitialParametersOptions>(
             promptQuery,
             FunctionNames.INITIAL_PARAMETERS,
-            "parameters"
+            "parameters",
         )
     }
 
     suspend fun genInitialParametersFollowUpQuestions(
-        parameters: GenAIData.InitialParametersOptions
+        parameters: GenAIData.InitialParametersOptions,
     ): GenAIData.FollowUpQuestionsOutput? {
         val prompt = Prompts.INITIAL_PARAMETERS_FOLLOW_UP
         val promptQuery = prompt.prompt + "\n Parameters: \n" + Json.encodeToString(parameters)
@@ -132,12 +135,12 @@ class GenAIRepository internal constructor(
 
     suspend fun genRefinedItinerary(
         refinement: String,
-        itinerary: GenAIData.Itinerary
+        itinerary: GenAIData.Itinerary,
     ): GenAIData.Itinerary? {
         val prompt = Prompts.REFINE_ITINERARY
         val promptQuery =
             prompt.prompt + "\n Feedback: " + refinement +
-                    "\n Selected Itinerary:\n" + Json.encodeToString(itinerary)
+                "\n Selected Itinerary:\n" + Json.encodeToString(itinerary)
         return sendMessage<GenAIData.Itinerary>(
             promptQuery,
             FunctionNames.REFINE_ITINERARY,
@@ -170,13 +173,13 @@ class GenAIRepository internal constructor(
         val prompt = Prompts.DAILY_ITINERARY
         val promptQuery =
             prompt.prompt +
-                    "\n Requested dates: " + dates.joinToString(", ") { it.dateString } +
-                    "\n Basic Information: \n" + Json.encodeToString(basicInformation) +
-                    "\n Parameters: \n" + Json.encodeToString(parameters) +
-                    "\n Follow-up Questions: \n" + followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" } +
-                    "\n Selected Itinerary:\n" + Json.encodeToString(itinerary) +
-                    "\n lodgings: " + lodgings.joinToString("\n - ") { "${it.startTime} - ${it.endTime}: ${it.name}" } +
-                    "\n Places already in itinerary: " + existingPlaces.joinToString("\n - ") { "${it.startTime}: ${it.name}" }
+                "\n Requested dates: " + dates.joinToString(", ") { it.dateString } +
+                "\n Basic Information: \n" + Json.encodeToString(basicInformation) +
+                "\n Parameters: \n" + Json.encodeToString(parameters) +
+                "\n Follow-up Questions: \n" + followUpQuestions.joinToString("\n") { "Q: ${it.question}, A: ${it.answers.first()}" } +
+                "\n Selected Itinerary:\n" + Json.encodeToString(itinerary) +
+                "\n lodgings: " + lodgings.joinToString("\n - ") { "${it.startTime} - ${it.endTime}: ${it.name}" } +
+                "\n Places already in itinerary: " + existingPlaces.joinToString("\n - ") { "${it.startTime}: ${it.name}" }
         return withMeasuredLatency("genDailyItinerary") {
             val result = dailyItineraryModel.generateContent(promptQuery)
             result.text?.let { Json.decodeFromString<GenAIData.DailyItinerary>(it) }
@@ -184,7 +187,8 @@ class GenAIRepository internal constructor(
     }
 
     private fun GenerateContentResponse.getJsonArgs(
-        functionName: FunctionNames, argName: String
+        functionName: FunctionNames,
+        argName: String,
     ): JsonElement? {
         val functionCall = functionCalls.find { it.name == functionName.value }
 
@@ -197,7 +201,8 @@ class GenAIRepository internal constructor(
     }
 
     private suspend inline fun <reified T> GenerateContentResponse.getFunctionCallParams(
-        functionName: FunctionNames, argName: String
+        functionName: FunctionNames,
+        argName: String,
     ): T {
         val json = getJsonArgs(functionName, argName)
         if (json == null) {
@@ -209,20 +214,25 @@ class GenAIRepository internal constructor(
         }
         val jsonString = json.toString()
         val params = Json.decodeFromString<T>(jsonString)
-        chatModel.sendMessage(content("function") {
-            part(
-                FunctionResponsePart(
-                    functionName.value, JsonObject(
-                        mapOf(argName to json)
-                    )
+        chatModel.sendMessage(
+            content("function") {
+                part(
+                    FunctionResponsePart(
+                        functionName.value,
+                        JsonObject(
+                            mapOf(argName to json),
+                        ),
+                    ),
                 )
-            )
-        })
+            },
+        )
         return params
     }
 
     private suspend inline fun <reified T> sendMessage(
-        prompt: String, functionName: FunctionNames, argName: String,
+        prompt: String,
+        functionName: FunctionNames,
+        argName: String,
     ): T? {
         var currentPrompt = prompt
         return withMeasuredLatency("sendMessage") {
@@ -232,7 +242,7 @@ class GenAIRepository internal constructor(
                     val response = chatModel.sendMessage(currentPrompt)
                     return@withMeasuredLatency response.getFunctionCallParams<T>(
                         functionName,
-                        argName
+                        argName,
                     )
                 } catch (t: Throwable) {
                     logger.error("GenAIRepository", "Error sending message", t)
@@ -247,7 +257,7 @@ class GenAIRepository internal constructor(
 
     private suspend fun <T> withMeasuredLatency(
         processIdentifier: String,
-        block: suspend () -> T
+        block: suspend () -> T,
     ): T {
         logger.debug("GenAIRepository", "starting $processIdentifier")
         val startTime = System.currentTimeMillis()

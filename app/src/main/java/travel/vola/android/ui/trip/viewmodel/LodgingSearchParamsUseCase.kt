@@ -29,7 +29,8 @@ class LodgingSearchParamsUseCase(
     private val itemStore: AddPlanItemStore<PendingData.LodgingSearchParams, LodgingSearchItemState> = AddPlanItemStore(),
     private val repository: LodgingSearchRepository = LodgingSearchRepository(),
     private val placeRepository: PlaceRepository,
-) : AddPlanUseCase.AddItemUseCase<Lodging, LodgingSearchItemState>, LodgingSearchItemActionHandler,
+) : AddPlanUseCase.AddItemUseCase<Lodging, LodgingSearchItemState>,
+    LodgingSearchItemActionHandler,
     LodgingSearchParamsFactory {
 
     override val items: MapFlow<String, LodgingSearchItemState> = itemStore.items(::createItem)
@@ -43,7 +44,7 @@ class LodgingSearchParamsUseCase(
             val results = repository.autocompleteCity(content.toString())
             itemStore.update(itemId) { data ->
                 data.copy(
-                    searchResults = results
+                    searchResults = results,
                 )
             }
         }
@@ -88,7 +89,7 @@ class LodgingSearchParamsUseCase(
             checkIn = entity.checkIn,
             checkOut = entity.checkout,
             city = null, // TODO: Use city from entity when Unified Places API is available
-            params = params
+            params = params,
         )
     }
 
@@ -128,7 +129,8 @@ class LodgingSearchParamsUseCase(
         locationText = searchParams.city?.name,
         searchResults = searchParams.searchResults.map {
             SearchResultItemState(
-                it.name, it.address
+                it.name,
+                it.address,
             )
         },
     )
@@ -144,7 +146,7 @@ class LodgingSearchParamsUseCase(
                 checkIn = it.checkIn.timeInMillis,
                 checkOut = it.checkOut.timeInMillis,
                 locationId = it.city.id,
-                timeZoneId = it.checkIn.zone.id
+                timeZoneId = it.checkIn.zone.id,
             )
         } else {
             null

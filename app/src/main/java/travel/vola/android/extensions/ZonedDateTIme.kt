@@ -26,17 +26,17 @@ fun zonedDateTime(source: String): ZonedDateTime {
 fun zonedDateTime(
     source: String,
     pattern: String,
-    locale: Locale = Locale.getDefault()
+    locale: Locale = Locale.getDefault(),
 ): ZonedDateTime {
     return SimpleDateFormat(pattern, locale).parse(source)?.let {
         ZonedDateTime.ofInstant(
             it.toInstant(),
-            ZoneId.systemDefault()
+            ZoneId.systemDefault(),
         )
     } ?: throw DateTimeParseException(
         "Text '$source' could not be parsed using pattern '$pattern'",
         source,
-        0
+        0,
     )
 }
 

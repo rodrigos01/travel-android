@@ -68,7 +68,7 @@ fun TabBar(
         state = tabBarListState,
         modifier = Modifier
             .background(
-                MaterialTheme.colorScheme.surfaceContainer
+                MaterialTheme.colorScheme.surfaceContainer,
             )
             .then(modifier),
     ) {
@@ -97,11 +97,11 @@ fun TabBar(
                         IntOffset(x = offsetX.roundToInt(), y = 0)
                     }
                     .zIndex(zIndex)
-                    .animateItem()
+                    .animateItem(),
             ) {
                 Row(
                     horizontalArrangement = spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     tab.icon()
                     tab.title()

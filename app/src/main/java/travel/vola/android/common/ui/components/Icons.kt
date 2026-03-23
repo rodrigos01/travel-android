@@ -6,7 +6,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import travel.vola.android.R
 
-
 val Icons.Filled.Map: ImageVector
     @Composable get() = ImageVector.vectorResource(R.drawable.map_baseline_24)
 

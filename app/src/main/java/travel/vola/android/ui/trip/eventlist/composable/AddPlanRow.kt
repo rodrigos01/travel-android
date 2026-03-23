@@ -37,12 +37,12 @@ import androidx.compose.ui.unit.dp
 import travel.vola.android.R
 import travel.vola.android.common.ui.components.Clock
 import travel.vola.android.common.ui.components.IconTextButton
-import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.dayOfMonthString
 import travel.vola.android.extensions.dayOfWeekString
 import travel.vola.android.extensions.timeString
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.update
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.AutoCompleteTextField
 import travel.vola.android.ui.trip.creation.composable.DatePickerDialog
@@ -125,7 +125,7 @@ fun AddPlanRow(
             modifier = Modifier.minimumInteractiveComponentSize(),
         ) {
             Box(
-                modifier = Modifier.width(80.dp)
+                modifier = Modifier.width(80.dp),
             ) {
                 ProvideTextStyle(MaterialTheme.typography.titleMedium, title)
             }
@@ -139,7 +139,8 @@ fun AddPlanRow(
                     ),
                 ) {
                     Text(
-                        text = timeText, style = MaterialTheme.typography.bodyMedium
+                        text = timeText,
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 }
             }
@@ -147,7 +148,7 @@ fun AddPlanRow(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             if (dateSelectionEnabled) {
                 var showDatePickerState by remember { mutableStateOf(false) }
@@ -160,7 +161,7 @@ fun AddPlanRow(
                         top = 8.dp,
                         bottom = 8.dp,
                     ),
-                    modifier = Modifier.width(80.dp)
+                    modifier = Modifier.width(80.dp),
                 ) {
                     Row {
                         LeadingDate(
@@ -171,7 +172,7 @@ fun AddPlanRow(
                             painter = painterResource(id = R.drawable.arrow_drop_down_filled_24),
                             colorFilter = ColorFilter.tint(LocalContentColor.current),
                             contentDescription = null,
-                            modifier = Modifier.align(Alignment.CenterVertically)
+                            modifier = Modifier.align(Alignment.CenterVertically),
                         )
                     }
                 }
@@ -202,7 +203,8 @@ fun AddPlanRow(
             if (showTextField) {
                 AutoCompleteTextField(
                     state = rememberAutoCompleteTextFieldState(
-                        text, searchResults,
+                        text,
+                        searchResults,
                     ),
                     label = labelText,
                     placeHolder = placeHolder,
@@ -286,7 +288,7 @@ fun AddPlanRowPreview(hasTextField: Boolean = true) {
         Box(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.surface)
-                .fillMaxWidth()
+                .fillMaxWidth(),
         ) {
             AddPlanRow(
                 initialDateTime = zonedDateTime("2025-06-12T03:45 -0300"),

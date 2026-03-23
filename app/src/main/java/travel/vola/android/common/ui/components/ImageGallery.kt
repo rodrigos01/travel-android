@@ -65,7 +65,7 @@ fun ImageGallery(
                 columns = GridCells.Adaptive(minSize = 96.dp),
                 horizontalArrangement = Arrangement.spacedBy(
                     8.dp,
-                    alignment = Alignment.CenterHorizontally
+                    alignment = Alignment.CenterHorizontally,
                 ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = contentPadding,
@@ -87,7 +87,7 @@ fun ImageGallery(
                 modifier = Modifier
                     .fillMaxHeight()
                     .padding(contentPadding)
-                    .then(modifier)
+                    .then(modifier),
             ) {
                 TextButton(
                     onClick = { selectedModel = null },
@@ -97,11 +97,11 @@ fun ImageGallery(
                         ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.inverseOnSurface)
                     } else {
                         ButtonDefaults.textButtonColors()
-                    }
+                    },
                 ) {
                     Icon(
                         Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = "Back"
+                        contentDescription = "Back",
                     )
                     Text(text = "All Photos", style = MaterialTheme.typography.labelLarge)
                 }
@@ -109,7 +109,7 @@ fun ImageGallery(
                 Image(
                     painter = rememberAsyncImagePainter(
                         sizedImageState.model,
-                        contentScale = ContentScale.Fit
+                        contentScale = ContentScale.Fit,
                     ),
                     contentDescription = "Lodging Image Description",
                     contentScale = ContentScale.Fit,
@@ -121,16 +121,16 @@ fun ImageGallery(
                                 Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
                             } else {
                                 Modifier
-                            }
+                            },
                         )
-                        .asSizedImageTarget(sizedImageState)
+                        .asSizedImageTarget(sizedImageState),
                 )
                 val scrollState = rememberLazyListState()
                 LazyRow(
                     state = scrollState,
                     horizontalArrangement = Arrangement.spacedBy(
                         8.dp,
-                        alignment = Alignment.CenterHorizontally
+                        alignment = Alignment.CenterHorizontally,
                     ),
                     contentPadding = PaddingValues(16.dp),
                     modifier = Modifier.fillMaxWidth(),
@@ -142,12 +142,17 @@ fun ImageGallery(
                                 .size(96.dp)
                                 .clickable { selectedModel = model }
                                 .then(
-                                    if (model == selected) Modifier.border(
-                                        border = BorderStroke(
-                                            width = 3.dp,
-                                            color = MaterialTheme.colorScheme.primary,
-                                        ), shape = MaterialTheme.shapes.large
-                                    ) else Modifier
+                                    if (model == selected) {
+                                        Modifier.border(
+                                            border = BorderStroke(
+                                                width = 3.dp,
+                                                color = MaterialTheme.colorScheme.primary,
+                                            ),
+                                            shape = MaterialTheme.shapes.large,
+                                        )
+                                    } else {
+                                        Modifier
+                                    },
                                 ),
                             colorFilter = if (model == selected) {
                                 ColorFilter.tint(
@@ -156,7 +161,7 @@ fun ImageGallery(
                                 )
                             } else {
                                 null
-                            }
+                            },
                         )
                     }
                 }
@@ -206,7 +211,7 @@ fun ImageGalleryPreview() {
                 selectedInitially = models.first(),
                 contentPadding = PaddingValues(top = 96.dp),
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxSize(),
             )
         }
     }

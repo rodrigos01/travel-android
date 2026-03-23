@@ -1,8 +1,5 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -58,11 +55,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import travel.vola.android.R
 import travel.vola.android.common.ui.components.OutlinedInlinedTextField
 import travel.vola.android.common.ui.components.SearchBoxDialog
 import travel.vola.android.common.ui.components.SearchResult
@@ -99,7 +98,7 @@ fun FlexibleDaySectionListItem(
         position = position,
         style = if (state.isGenerated) EventItemStyle.Outlined else EventItemStyle.Filled,
         containerColor = containerColor,
-        contentColor = contentColor
+        contentColor = contentColor,
     ) {
         var showDeleteConfirmation by remember { mutableStateOf(false) }
         if (showDeleteConfirmation) {
@@ -108,7 +107,7 @@ fun FlexibleDaySectionListItem(
                 onDismiss = { showDeleteConfirmation = false },
                 confirmButtonLabel = if (state.isGenerated) stringResource(R.string.action_dismiss) else stringResource(R.string.action_delete),
                 confirmButtonColors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                dismissButtonLabel = stringResource(R.string.action_cancel)
+                dismissButtonLabel = stringResource(R.string.action_cancel),
             ) {
                 if (state.isGenerated) {
                     Text(stringResource(R.string.dialog_dismiss_suggestion_confirmation, state.name))
@@ -130,7 +129,7 @@ fun FlexibleDaySectionListItem(
                     onLocationSearchResultSelected,
                     onNoteAdded,
                     onCollapseTapped = { expanded = false },
-                    modifier = modifier
+                    modifier = modifier,
                 )
             } else {
                 CollapsedSection(state, onTap = { expanded = true })
@@ -157,8 +156,9 @@ private fun ExpandedSection(
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                top = 8.dp, bottom = 8.dp
-            )
+                top = 8.dp,
+                bottom = 8.dp,
+            ),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -187,7 +187,7 @@ private fun ExpandedSection(
             ) {
                 Icon(
                     if (state.isGenerated) Icons.Rounded.Check else Icons.Rounded.Edit,
-                    contentDescription = null
+                    contentDescription = null,
                 )
             }
             IconButton(
@@ -195,7 +195,7 @@ private fun ExpandedSection(
             ) {
                 Icon(
                     if (state.isGenerated) Icons.Rounded.Close else Icons.Filled.Delete,
-                    contentDescription = null
+                    contentDescription = null,
                 )
             }
         }
@@ -251,7 +251,7 @@ private fun ExpandedSection(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             contentPadding = PaddingValues(horizontal = 8.dp),
             state = itemScrollState,
-            modifier = Modifier.padding(top = 8.dp)
+            modifier = Modifier.padding(top = 8.dp),
         ) {
             itemsIndexed(options) { index, option ->
                 val modifier = Modifier.clickable {
@@ -277,42 +277,43 @@ private fun ExpandedSection(
                             onDismiss = { showAddPlaceDialog = false },
                             searchResults = state.searchResults.map {
                                 SearchResult(
-                                    it.title, it.subtitle
+                                    it.title,
+                                    it.subtitle,
                                 )
                             },
                             onLocationSearchTextChanged,
                             onLocationSearchResultSelected = {
                                 onLocationSearchResultSelected(
-                                    it, selectedCategoryIndex
+                                    it,
+                                    selectedCategoryIndex,
                                 )
                             },
                         )
                     }
 
                     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSecondaryContainer) {
-
                         if (itemsExpanded) {
                             OutlinedCard(
                                 onClick = { showAddPlaceDialog = true },
-                                modifier = Modifier.size(width = 96.dp, height = 144.dp)
+                                modifier = Modifier.size(width = 96.dp, height = 144.dp),
                             ) {
                                 Column(
                                     verticalArrangement = Arrangement.SpaceEvenly,
-                                    modifier = Modifier.fillMaxHeight()
+                                    modifier = Modifier.fillMaxHeight(),
                                 ) {
                                     Icon(
                                         Icons.Rounded.Add,
                                         contentDescription = "add option",
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .aspectRatio(1F)
+                                            .aspectRatio(1F),
                                     )
                                     Text(
                                         stringResource(R.string.action_add_place),
                                         style = MaterialTheme.typography.titleSmall,
                                         modifier = Modifier
                                             .padding(8.dp)
-                                            .align(Alignment.CenterHorizontally)
+                                            .align(Alignment.CenterHorizontally),
                                     )
                                 }
                             }
@@ -322,11 +323,11 @@ private fun ExpandedSection(
                                 modifier = Modifier.height(44.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     containerColor = MaterialTheme.colorScheme.surface,
-                                )
+                                ),
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
                                     Icon(
                                         Icons.Rounded.Add,
@@ -363,7 +364,9 @@ private fun ExpandedSection(
 
 @Composable
 private fun CollapsedSection(
-    state: TripItemState.FlexibleDaySectionState, onTap: () -> Unit, modifier: Modifier = Modifier,
+    state: TripItemState.FlexibleDaySectionState,
+    onTap: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     ListItem(
         colors = ListItemDefaults.colors(
@@ -388,7 +391,7 @@ private fun CollapsedSection(
         headlineContent = {
             Text(
                 state.name,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
             )
         },
         supportingContent = {
@@ -413,18 +416,23 @@ private fun CategoryItem(option: TripItemState.SectionOption, modifier: Modifier
         modifier = modifier
             .size(width = 96.dp, height = 144.dp)
             .background(
-                MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.large
+                MaterialTheme.colorScheme.surface,
+                shape = MaterialTheme.shapes.large,
             ),
     ) {
         CategoryItemImage(
-            option, modifier = Modifier
+            option,
+            modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(1F)
+                .aspectRatio(1F),
         )
         Column(
             modifier = Modifier.padding(
-                top = 0.dp, start = 8.dp, end = 8.dp, bottom = 8.dp
-            )
+                top = 0.dp,
+                start = 8.dp,
+                end = 8.dp,
+                bottom = 8.dp,
+            ),
         ) {
             Text(
                 option.title,
@@ -444,7 +452,9 @@ private fun CategoryItem(option: TripItemState.SectionOption, modifier: Modifier
 
 @Composable
 private fun CollapsedCategoryItem(
-    option: TripItemState.SectionOption, modifier: Modifier = Modifier, selected: Boolean = false,
+    option: TripItemState.SectionOption,
+    modifier: Modifier = Modifier,
+    selected: Boolean = false,
 ) {
     val (containerColor, contentColor) = if (selected) {
         MaterialTheme.colorScheme.primary to MaterialTheme.colorScheme.onPrimary
@@ -466,7 +476,7 @@ private fun CollapsedCategoryItem(
                 style = MaterialTheme.typography.titleSmall,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(end = 8.dp)
+                modifier = Modifier.padding(end = 8.dp),
             )
         }
     }
@@ -511,7 +521,7 @@ fun FlexibleDaySectionListItemPreview(expanded: Boolean = true, isGenerated: Boo
         Box(
             modifier = Modifier
                 .padding(16.dp)
-                .fillMaxWidth()
+                .fillMaxWidth(),
         ) {
             FlexibleDaySectionListItem(
                 state = TripItemState.FlexibleDaySectionState(
@@ -531,7 +541,7 @@ fun FlexibleDaySectionListItemPreview(expanded: Boolean = true, isGenerated: Boo
                                     title = "Drop Coffee",
                                     subtitle = "Wollmar Yxkullsgatan 10, 118 50 Stockholm, Sweden",
                                     imageUrl = "https://picsum.photos/200/300",
-                                    note = "Popular laptop-friendly coffee shop near your hotel"
+                                    note = "Popular laptop-friendly coffee shop near your hotel",
                                 ),
                                 TripItemState.SectionOption(
                                     id = "3",
@@ -543,7 +553,8 @@ fun FlexibleDaySectionListItemPreview(expanded: Boolean = true, isGenerated: Boo
                             ),
                         ),
                         TripItemState.DaySectionCategory(
-                            name = "\uD83D\uDECD\uFE0F Shopping", items = listOf(
+                            name = "\uD83D\uDECD\uFE0F Shopping",
+                            items = listOf(
                                 TripItemState.SectionOption(
                                     id = "1",
                                     title = "Herr Judit",
@@ -558,10 +569,11 @@ fun FlexibleDaySectionListItemPreview(expanded: Boolean = true, isGenerated: Boo
                                     imageUrl = "https://picsum.photos/200/300",
                                     note = "",
                                 ),
-                            )
+                            ),
                         ),
                         TripItemState.DaySectionCategory(
-                            name = "Other", items = emptyList()
+                            name = "Other",
+                            items = emptyList(),
                         ),
                     ),
                     searchResults = emptyList(),

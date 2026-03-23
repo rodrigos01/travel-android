@@ -79,7 +79,9 @@ fun rememberMapScaffoldState(
 }
 
 enum class SizeClass {
-    SMALL, MEDIUM, EXPANDED
+    SMALL,
+    MEDIUM,
+    EXPANDED,
 }
 
 val SizeClass.isLargeScreen: Boolean
@@ -118,7 +120,7 @@ fun MapScaffold(
             )
             if (isExpandedWindowSize) {
                 Box(
-                    modifier = Modifier.widthIn(max = contentWidth)
+                    modifier = Modifier.widthIn(max = contentWidth),
                 ) {
                     additionalContent(PaddingValues(0.dp))
                 }
@@ -162,7 +164,7 @@ fun MapScaffold(
                             bottom = paddingValues.calculateBottomPadding(),
                             start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
                             end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                        )
+                        ),
                 ) {
                     Map(
                         markers,
@@ -170,14 +172,16 @@ fun MapScaffold(
                         onMarkerTapped,
                         minZoom,
                         markerDescriptor,
-                        modifier = Modifier
+                        modifier = Modifier,
                     )
                     mapContent()
                 }
             }
-            Box(modifier = Modifier.onGloballyPositioned {
-                additionalContentSize = it.size
-            }) {
+            Box(
+                modifier = Modifier.onGloballyPositioned {
+                    additionalContentSize = it.size
+                },
+            ) {
                 additionalContent(paddingValues)
             }
         })
@@ -195,7 +199,8 @@ private fun Map(
 ) {
     val points = boundsPoints.takeIf { it.isNotEmpty() } ?: markers.map {
         LatLng(
-            it.position.first, it.position.second
+            it.position.first,
+            it.position.second,
         )
     }
     val boundingBox =
@@ -233,7 +238,7 @@ private fun Map(
         },
         modifier = modifier
             .fillMaxSize()
-            .background(color = MaterialTheme.colorScheme.tertiaryContainer)
+            .background(color = MaterialTheme.colorScheme.tertiaryContainer),
     ) {
         markers.forEach { markerState ->
             val position = LatLng(markerState.position.first, markerState.position.second)
@@ -245,7 +250,8 @@ private fun Map(
                 onClick = {
                     onMarkerTapped(markerState)
                     false
-                })
+                },
+            )
         }
     }
 }
@@ -272,11 +278,13 @@ fun MapScaffoldPreview(
                 tab(
                     "search",
                     selected = true,
-                    icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
+                    icon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                )
                 tab(
                     "map",
                     selected = false,
-                    icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
+                    icon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                )
             }
         },
         additionalContent = {
@@ -284,7 +292,7 @@ fun MapScaffoldPreview(
                 Box(
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.secondaryContainer)
-                        .fillMaxSize()
+                        .fillMaxSize(),
                 )
             }
         },
@@ -302,7 +310,7 @@ fun MapScaffoldPreview(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface)
+                    .background(MaterialTheme.colorScheme.surface),
             )
         },
     )

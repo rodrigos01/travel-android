@@ -13,18 +13,24 @@ sealed interface RoomData {
     data class Trip(
         @Embedded val entity: Schema.Trip,
         @Relation(
-            entity = Schema.Flight::class, parentColumn = "id", entityColumn = "tripId"
+            entity = Schema.Flight::class,
+            parentColumn = "id",
+            entityColumn = "tripId",
         ) val flights: List<Flight>,
         @Relation(
-            entity = Schema.Lodging::class, parentColumn = "id", entityColumn = "tripId"
+            entity = Schema.Lodging::class,
+            parentColumn = "id",
+            entityColumn = "tripId",
         ) val lodgings: List<Lodging>,
         @Relation(
-            entity = Schema.TimedPlace::class, parentColumn = "id", entityColumn = "tripId"
+            entity = Schema.TimedPlace::class,
+            parentColumn = "id",
+            entityColumn = "tripId",
         ) val places: List<TimedPlace>,
         @Relation(
             entity = Schema.RestaurantReservation::class,
             parentColumn = "id",
-            entityColumn = "tripId"
+            entityColumn = "tripId",
         ) val restaurants: List<RestaurantReservation>,
         @Relation(
             entity = Schema.FlexibleSection::class,
@@ -36,58 +42,71 @@ sealed interface RoomData {
     data class Flight(
         @Embedded val entity: Schema.Flight,
         @Relation(
-            entity = Schema.FlightSegment::class, parentColumn = "id", entityColumn = "flightId"
+            entity = Schema.FlightSegment::class,
+            parentColumn = "id",
+            entityColumn = "flightId",
         ) val segments: List<FlightSegment>,
     )
 
     data class FlightSegment(
         @Embedded val entity: Schema.FlightSegment,
         @Relation(
-            entity = Schema.Airport::class, parentColumn = "airportFrom", entityColumn = "iata"
+            entity = Schema.Airport::class,
+            parentColumn = "airportFrom",
+            entityColumn = "iata",
         ) val airportFrom: Airport,
         @Relation(
-            entity = Schema.Airport::class, parentColumn = "airportTo", entityColumn = "iata"
+            entity = Schema.Airport::class,
+            parentColumn = "airportTo",
+            entityColumn = "iata",
         ) val airportTo: Airport,
     )
 
     data class Airport(
         @Embedded val entity: Schema.Airport,
         @Relation(
-            parentColumn = "city", entityColumn = "id"
+            parentColumn = "city",
+            entityColumn = "id",
         ) val city: Place,
     )
 
     data class Lodging(
         @Embedded val entity: Schema.Lodging,
         @Relation(
-            parentColumn = "city", entityColumn = "id"
+            parentColumn = "city",
+            entityColumn = "id",
         ) val city: Place,
     )
 
     data class TimedPlace(
         @Embedded val entity: Schema.TimedPlace,
         @Relation(
-            parentColumn = "place", entityColumn = "id"
+            parentColumn = "place",
+            entityColumn = "id",
         ) val place: Place,
         @Relation(
-            parentColumn = "city", entityColumn = "id"
+            parentColumn = "city",
+            entityColumn = "id",
         ) val city: Place,
     )
 
     data class RestaurantReservation(
         @Embedded val entity: Schema.RestaurantReservation,
         @Relation(
-            parentColumn = "place", entityColumn = "id"
+            parentColumn = "place",
+            entityColumn = "id",
         ) val place: Place,
         @Relation(
-            parentColumn = "city", entityColumn = "id"
+            parentColumn = "city",
+            entityColumn = "id",
         ) val city: Place,
     )
 
     data class FlexibleSection(
         @Embedded val entity: Schema.FlexibleSection,
         @Relation(
-            parentColumn = "city", entityColumn = "id"
+            parentColumn = "city",
+            entityColumn = "id",
         ) val city: Place,
         @Relation(
             entity = Schema.FlexibleSectionCategory::class,
@@ -108,10 +127,10 @@ sealed interface RoomData {
     data class FlexibleSectionItem(
         @Embedded val entity: Schema.FlexibleSectionItem,
         @Relation(
-            parentColumn = "place", entityColumn = "id"
+            parentColumn = "place",
+            entityColumn = "id",
         ) val place: Place,
     )
-
 
     @Entity
     data class Place(
@@ -145,7 +164,7 @@ sealed interface RoomData {
         FAMILY,
         FRIENDS,
         COWORKERS,
-        COUPLE
+        COUPLE,
     }
 
     @Serializable
@@ -257,6 +276,5 @@ sealed interface RoomData {
             val place: String,
             val note: String,
         )
-
     }
 }

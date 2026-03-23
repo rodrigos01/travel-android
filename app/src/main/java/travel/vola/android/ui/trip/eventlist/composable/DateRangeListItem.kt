@@ -1,8 +1,5 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,8 +20,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import travel.vola.android.R
 import travel.vola.android.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -45,7 +44,7 @@ fun DateRangeListItem(
                 dayOfMonth = dayOfMonthStart,
                 dayOfWeek = dayOfWeekStart,
                 showSmall = true,
-                highlightDate = focused
+                highlightDate = focused,
             )
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -73,7 +72,7 @@ fun DateRangeListItem(
                             Icon(
                                 Icons.Rounded.AutoFixHigh,
                                 contentDescription = "generate plans",
-                                tint = LocalContentColor.current
+                                tint = LocalContentColor.current,
                             )
                         }
                     }
@@ -95,6 +94,7 @@ fun DateRangeListItemPreview() {
             focused = true,
             isGeneratingSuggestions = true,
             onAddButtonClick = {},
-            onGenerateButtonClick = {})
+            onGenerateButtonClick = {},
+        )
     }
 }

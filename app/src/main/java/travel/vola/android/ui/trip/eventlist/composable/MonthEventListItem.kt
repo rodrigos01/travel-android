@@ -16,7 +16,7 @@ fun MonthEventListItem(month: String, year: String) {
                 R.string.month_event_title,
                 month,
                 year,
-            )
+            ),
         )
     })
 }

@@ -41,7 +41,7 @@ class FlexibleSectionUseCase(
     private val suggestionsUseCase: SuggestionsUseCase,
     private val itemStore: AddPlanItemStore<PendingData.PendingFlexibleSection, AddFlexibleSectionItemState> = AddPlanItemStore(),
     private val autoCompleteRepository: PlaceAutoCompleteRepository = PlaceAutoCompleteRepository(
-        types = listOf()
+        types = listOf(),
     ),
 ) : AddPlanUseCase.AddItemUseCase<FlexibleDaySection, AddFlexibleSectionItemState>,
     AddPlanUseCase.EntityFactory<FlexibleDaySection, AddFlexibleSectionItemState>,
@@ -95,7 +95,7 @@ class FlexibleSectionUseCase(
         searchResults = sessions[section.id]?.map {
             SearchResultItemState(
                 it.name,
-                it.address
+                it.address,
             )
         } ?: emptyList(),
         isGenerated = isGenerated,
@@ -104,7 +104,7 @@ class FlexibleSectionUseCase(
     override fun addItem(
         id: String,
         time: ZonedDateTime,
-        params: AddPlanUseCase.StateParams
+        params: AddPlanUseCase.StateParams,
     ) {
         itemStore.addItem(
             PendingData.PendingFlexibleSection(
@@ -132,7 +132,7 @@ class FlexibleSectionUseCase(
     override fun addItem(
         id: String,
         entity: FlexibleDaySection,
-        params: AddPlanUseCase.StateParams
+        params: AddPlanUseCase.StateParams,
     ) {
         itemStore.addItem(
             PendingData.PendingFlexibleSection(
@@ -176,7 +176,7 @@ class FlexibleSectionUseCase(
     override fun onFlexibleItemDateTimeUpdated(
         itemId: String,
         dateTime: ZonedDateTime,
-        timeSelected: Boolean
+        timeSelected: Boolean,
     ) {
         itemStore.update(itemId) {
             it.copy(startDateTime = dateTime, hasStartTime = timeSelected)
@@ -200,12 +200,13 @@ class FlexibleSectionUseCase(
         val section = getSection(itemId) ?: return
         coroutineScope.launch {
             repository.saveFlexibleSection(
-                tripId, section.copy(
+                tripId,
+                section.copy(
                     categories = section.categories + FlexibleDayCategory(
                         name = category,
                         items = emptyList(),
-                    )
-                )
+                    ),
+                ),
             )
         }
     }
@@ -214,7 +215,7 @@ class FlexibleSectionUseCase(
 
     override fun onFlexibleItemSearchTextChanged(
         itemId: String,
-        content: CharSequence
+        content: CharSequence,
     ) {
         if (content.length < 3) {
             return
@@ -233,7 +234,7 @@ class FlexibleSectionUseCase(
     override fun onFlexibleItemSearchResultSelected(
         itemId: String,
         index: Int,
-        categoryIndex: Int
+        categoryIndex: Int,
     ) {
         coroutineScope.launch {
             val selectedResult = searchSessions[itemId]?.getOrNull(index) ?: return@launch
@@ -245,23 +246,28 @@ class FlexibleSectionUseCase(
                         id = place.place.id,
                         place = place.place,
                         note = "",
-                    )
+                    ),
                 )
             }
         }
     }
 
     override fun onFlexibleItemNoteAdded(
-        itemId: String, index: Int, categoryIndex: Int, note: String
+        itemId: String,
+        index: Int,
+        categoryIndex: Int,
+        note: String,
     ) {
-        updateCategory(itemId, categoryIndex) {category ->
-            category.copy(items = category.items.mapIndexed { itemIndex, item ->
-                if (itemIndex == index) {
-                    item.copy(note = note)
-                } else {
-                    item
-                }
-            })
+        updateCategory(itemId, categoryIndex) { category ->
+            category.copy(
+                items = category.items.mapIndexed { itemIndex, item ->
+                    if (itemIndex == index) {
+                        item.copy(note = note)
+                    } else {
+                        item
+                    }
+                },
+            )
         }
     }
 
@@ -274,11 +280,11 @@ class FlexibleSectionUseCase(
                 } else {
                     category
                 }
-            }
+            },
         )
         coroutineScope.launch {
-        repository.saveFlexibleSection(tripId, newSection)
-            }
+            repository.saveFlexibleSection(tripId, newSection)
+        }
     }
 
     override fun onGenerateSectionTapped(itemId: String) {
@@ -289,7 +295,7 @@ class FlexibleSectionUseCase(
             suggestionsUseCase.getSuggestions(
                 trip,
                 listOf(data.startDateTime),
-                addPlaceHolders = true
+                addPlaceHolders = true,
             )
         }
     }

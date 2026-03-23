@@ -1,8 +1,5 @@
 package travel.vola.android.common.ui.components
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -29,15 +26,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import travel.vola.android.R
 import travel.vola.android.ui.theme.AppTheme
 import kotlin.math.max
 
 class TabbedHostScope(
-    builder: TabbedGraphBuilder.() -> Unit, val navigate: (String) -> Unit
+    builder: TabbedGraphBuilder.() -> Unit,
+    val navigate: (String) -> Unit,
 ) {
     class Tab(
         val id: String,
@@ -54,7 +54,8 @@ class TabbedHostScope(
         tabId,
         icon = {
             Icon(
-                Icons.Filled.Warning, contentDescription = null
+                Icons.Filled.Warning,
+                contentDescription = null,
             )
         },
         content = { Text(stringResource(R.string.error_no_tab_found, tabId)) },
@@ -77,8 +78,8 @@ class TabbedGraphBuilder {
                     icon,
                     title,
                     modifier,
-                    content
-                )
+                    content,
+                ),
             )
         }
     }
@@ -88,7 +89,7 @@ class TabbedGraphBuilder {
 fun TabbedHost(
     startDestination: String,
     tabBarListState: LazyListState = rememberLazyListState(),
-    builder: TabbedGraphBuilder.() -> Unit
+    builder: TabbedGraphBuilder.() -> Unit,
 ) {
     var currentTabId by remember { mutableStateOf(startDestination) }
     val scope = TabbedHostScope(builder, navigate = { currentTabId = it })
@@ -96,12 +97,12 @@ fun TabbedHost(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background),
     ) {
         Box(
             modifier = Modifier
                 .weight(1F)
-                .fillMaxWidth()
+                .fillMaxWidth(),
         ) {
             stateHolder.SaveableStateProvider(currentTabId) {
                 scope.findTab(currentTabId).content(scope)
@@ -113,7 +114,7 @@ fun TabbedHost(
                 onTabClick = { currentTabId = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .windowInsetsPadding(WindowInsets.navigationBars),
             ) {
                 scope.tabs.forEach {
                     tab(

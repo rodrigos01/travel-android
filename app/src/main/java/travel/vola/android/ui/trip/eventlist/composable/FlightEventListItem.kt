@@ -26,7 +26,7 @@ fun FlightEventListItem(
         icon = R.drawable.flight_takeoff_baseline_24,
         headline = stringResource(R.string.flight_event_tile, destination),
         supporting = airportName,
-        position = position
+        position = position,
     )
 }
 

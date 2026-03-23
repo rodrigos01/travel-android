@@ -30,10 +30,10 @@ fun TripListItem(name: String?, coverImageUrl: String?, modifier: Modifier = Mod
                         Modifier.background(MaterialTheme.colorScheme.tertiary)
                     } else {
                         Modifier
-                    }
+                    },
                 ),
             contentDescription = "Place Description",
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
         )
         Text(
             text = name ?: "",
@@ -41,7 +41,7 @@ fun TripListItem(name: String?, coverImageUrl: String?, modifier: Modifier = Mod
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.Start)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         )
     }
 }

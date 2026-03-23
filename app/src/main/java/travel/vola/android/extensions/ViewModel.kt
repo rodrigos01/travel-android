@@ -15,7 +15,7 @@ import travel.vola.android.di.LocalViewModelCreationExtras
 @Composable
 inline fun <reified VM : ViewModel> viewModel(
     factory: ViewModelProvider.Factory,
-    additionalExtras: CreationExtras = CreationExtras.Empty
+    additionalExtras: CreationExtras = CreationExtras.Empty,
 ): VM {
     val viewModelStoreOwner = LocalViewModelStoreOwner.current
     val creationExtras = if (viewModelStoreOwner is HasDefaultViewModelProviderFactory) {

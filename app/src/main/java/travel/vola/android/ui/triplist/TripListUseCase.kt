@@ -7,7 +7,7 @@ import travel.vola.android.model.repository.TripRepository
 class TripListUseCase(private val repository: TripRepository) {
 
     data class State(
-        val trips: List<Trip>
+        val trips: List<Trip>,
     )
 
     val state = repository.trips.map {

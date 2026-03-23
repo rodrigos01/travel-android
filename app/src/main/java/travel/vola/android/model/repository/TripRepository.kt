@@ -31,14 +31,13 @@ interface TripRepository {
     suspend fun saveTimedPlace(tripId: String, timedPlace: TimedPlace)
     suspend fun saveRestaurantReservation(
         tripId: String,
-        restaurantReservation: RestaurantReservation
+        restaurantReservation: RestaurantReservation,
     )
 
     suspend fun saveFlexibleSection(
         tripId: String,
-        flexibleSection: FlexibleDaySection
+        flexibleSection: FlexibleDaySection,
     )
-
 
     suspend fun deleteFlight(tripId: String, flightId: String)
     suspend fun deleteLodging(tripId: String, lodgingId: String)

@@ -14,7 +14,7 @@ import androidx.room.migration.Migration
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 4, to = 5),
-    ]
+    ],
 )
 @TypeConverters(Converters::class)
 abstract class TravelDatabase : RoomDatabase() {
@@ -35,6 +35,6 @@ fun buildDatabase(context: Context): TravelDatabase =
         },
         Migration(5, 6) {
             it.execSQL("ALTER TABLE flexibleSection ADD COLUMN city TEXT")
-        }
+        },
     )
         .build()

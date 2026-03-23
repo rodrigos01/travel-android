@@ -19,7 +19,7 @@ class TripListViewModel(
     val viewState = tripListUseCase.state.stateIn(
         viewModelScope,
         SharingStarted.Eagerly,
-        initialValue = TripListUseCase.State(emptyList())
+        initialValue = TripListUseCase.State(emptyList()),
     )
 
     fun addTrip() {

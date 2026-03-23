@@ -82,7 +82,7 @@ class TripViewModelTest {
                     airportFromName = "Humberto Delgado International Airport",
                     departure = "2024-06-14T17:05:00+01:00",
                 ),
-            )
+            ),
         )
         val departures =
             subject.viewState.value.items.filterIsInstance(FlightDepartureItemState::class.java)
@@ -127,7 +127,7 @@ class TripViewModelTest {
                     airportToName = "John F. Kennedy Intl. Airport",
                     arrival = "2024-06-14T20:05:00-04:00",
                 ),
-            )
+            ),
         )
         val arrivals =
             subject.viewState.value.items.filterIsInstance(FlightArrivalItemState::class.java)
@@ -152,18 +152,20 @@ class TripViewModelTest {
                     address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
                     checkIn = "2024-05-19T13:00:00+01:00",
                     checkout = "2024-05-21T11:00:00+01:00",
-                ), Lodging(
+                ),
+                Lodging(
                     name = "Hôtel La Villa Nice Victor Hugo",
                     address = "19 Bis Bd Victor Hugo, 06000 Nice, France",
                     checkIn = "2024-05-29T13:00:00+02:00",
                     checkout = "2024-06-02T11:00:00+02:00",
-                ), Lodging(
+                ),
+                Lodging(
                     name = "Hotel Conca Park",
                     address = "Via degli Aranci, 13\\bis, 80067 Sorrento NA, Italy",
                     checkIn = "2024-06-12T13:00:00+02:00",
                     checkout = "2024-06-14T11:00:00+02:00",
-                )
-            )
+                ),
+            ),
         )
         val lodgings = subject.viewState.value.items.filterIsInstance<HotelCheckInItemState>()
         assertThat(lodgings).satisfiesExactly({ item ->
@@ -193,18 +195,20 @@ class TripViewModelTest {
                     address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
                     checkIn = "2024-05-19T13:00:00+01:00",
                     checkout = "2024-05-21T11:00:00+01:00",
-                ), Lodging(
+                ),
+                Lodging(
                     name = "Hôtel La Villa Nice Victor Hugo",
                     address = "19 Bis Bd Victor Hugo, 06000 Nice, France",
                     checkIn = "2024-05-29T13:00:00+02:00",
                     checkout = "2024-06-02T11:00:00+02:00",
-                ), Lodging(
+                ),
+                Lodging(
                     name = "Hotel Conca Park",
                     address = "Via degli Aranci, 13\\bis, 80067 Sorrento NA, Italy",
                     checkIn = "2024-06-12T13:00:00+02:00",
                     checkout = "2024-06-14T11:00:00+02:00",
-                )
-            )
+                ),
+            ),
         )
         val lodgings = subject.viewState.value.items.filterIsInstance<HotelCheckOutItemState>()
         assertThat(lodgings).satisfiesExactly({ item ->
@@ -250,27 +254,30 @@ class TripViewModelTest {
                     cityFromName = "Sorrento",
                     cityToName = "New York",
                 ),
-            ), lodgings = listOf(
+            ),
+            lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
                     address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
                     checkIn = "2024-05-19T13:00:00+01:00",
                     checkout = "2024-05-21T11:00:00+01:00",
-                    cityName = "Porto"
-                ), Lodging(
+                    cityName = "Porto",
+                ),
+                Lodging(
                     name = "Hôtel La Villa Nice Victor Hugo",
                     address = "19 Bis Bd Victor Hugo, 06000 Nice, France",
                     checkIn = "2024-05-29T13:00:00+02:00",
                     checkout = "2024-06-02T11:00:00+02:00",
-                    cityName = "Nice"
-                ), Lodging(
+                    cityName = "Nice",
+                ),
+                Lodging(
                     name = "Hotel Conca Park",
                     address = "Via degli Aranci, 13\\bis, 80067 Sorrento NA, Italy",
                     checkIn = "2024-06-12T13:00:00+02:00",
                     checkout = "2024-06-14T11:00:00+02:00",
-                    cityName = "Sorrento"
-                )
-            )
+                    cityName = "Sorrento",
+                ),
+            ),
         )
         val places = subject.viewState.value.items.filterIsInstance<PlaceItemState>()
         assertThat(places).satisfiesExactly({ item ->
@@ -308,15 +315,16 @@ class TripViewModelTest {
                     cityFromName = "Sorrento",
                     cityToName = "New York",
                 ),
-            ), lodgings = listOf(
+            ),
+            lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
                     address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
                     checkIn = "2024-05-19T13:00:00+01:00",
                     checkout = "2024-05-21T11:00:00+01:00",
-                    cityName = "Lisbon"
+                    cityName = "Lisbon",
                 ),
-            )
+            ),
         )
         val places = subject.viewState.value.items.filterIsInstance<PlaceItemState>()
         assertThat(places).noneSatisfy {
@@ -344,15 +352,16 @@ class TripViewModelTest {
                     cityFromName = "Lisbon",
                     cityToName = "New York",
                 ),
-            ), lodgings = listOf(
+            ),
+            lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
                     address = "R. de Sá da Bandeira 91, 4000-427 Porto, Portugal",
                     checkIn = "2024-05-19T13:00:00+01:00",
                     checkout = "2024-05-21T11:00:00+01:00",
-                    cityName = "Porto"
+                    cityName = "Porto",
                 ),
-            )
+            ),
         )
         val places = subject.viewState.value.items.filterIsInstance<PlaceItemState>()
         assertThat(places).noneSatisfy {
@@ -414,14 +423,15 @@ class TripViewModelTest {
                     cityToName = "New York",
                     arrival = "2024-06-14T20:15:00-04:00",
                 ),
-            ), lodgings = listOf(
+            ),
+            lodgings = listOf(
                 Lodging(
                     name = "Pestana Porto - A Brasileira",
                     checkIn = "2024-05-11T13:00:00+01:00",
                     checkout = "2024-06-14T11:00:00+01:00",
-                    cityName = "Porto"
+                    cityName = "Porto",
                 ),
-            )
+            ),
         )
         val eventItems =
             subject.viewState.value.items.filterIsInstance<TripItemState.EventItemState>()
@@ -468,7 +478,7 @@ class TripViewModelTest {
                     checkIn = "2024-05-11T13:00:00+01:00",
                     checkout = "2024-05-19T11:00:00+01:00",
                 ),
-            )
+            ),
         )
         val dateRanges = subject.viewState.value.items.filterIsInstance<DateRangeItemState>()
         assertThat(dateRanges).satisfiesExactly({ item ->
@@ -488,8 +498,8 @@ class TripViewModelTest {
                     arrival = "2024-05-11T10:00:00+01:00",
                     cityFromName = "New York",
                     cityToName = "Porto",
-                )
-            )
+                ),
+            ),
         )
         val dateRanges = subject.viewState.value.items.filterIsInstance<DateRangeItemState>()
         assertThat(dateRanges).noneSatisfy { item ->
@@ -507,7 +517,7 @@ class TripViewModelTest {
                     checkIn = "2024-05-11T13:00:00+01:00",
                     checkout = "2024-05-13T11:00:00+01:00",
                 ),
-            )
+            ),
         )
         val dateRanges = subject.viewState.value.items.filterIsInstance<DateRangeItemState>()
         assertThat(dateRanges).noneSatisfy { item ->
@@ -525,7 +535,7 @@ class TripViewModelTest {
                     checkIn = "2024-05-11T13:00:00+01:00",
                     checkout = "2024-05-13T11:00:00+01:00",
                 ),
-            )
+            ),
         )
         val dateRanges = subject.viewState.value.items.filterIsInstance<EmptyDateItemState>()
         assertThat(dateRanges).satisfiesExactly({ item ->
@@ -542,15 +552,15 @@ class TripViewModelTest {
                     name = lodgingName,
                     checkIn = "2024-05-29T13:00:00+02:00",
                     checkout = "2024-05-30T11:00:00+02:00",
-                    cityName = "Montfleuri"
+                    cityName = "Montfleuri",
                 ),
                 Lodging(
                     name = "Hôtel La Villa Nice Victor Hugo",
                     checkIn = "2024-05-30T13:00:00+02:00",
                     checkout = "2024-06-01T11:00:00+02:00",
-                    cityName = "Nice"
+                    cityName = "Nice",
                 ),
-            )
+            ),
         )
         val checkOutItem =
             subject.viewState.value.items.first { it is HotelCheckOutItemState && it.hotelName == lodgingName } as TripItemState.EventItemState
@@ -572,7 +582,7 @@ class TripViewModelTest {
                     checkIn = "2024-05-11T13:00:00+01:00",
                     checkout = "2024-05-19T11:00:00+01:00",
                 ),
-            )
+            ),
         )
         val addPlanItemId = "originalItemId"
         val expected: AddFlightItemState = mock {
@@ -596,14 +606,16 @@ class TripViewModelTest {
                     checkIn = "2024-05-11T13:00:00+01:00",
                     checkout = "2024-05-19T11:00:00+01:00",
                 ),
-            )
+            ),
         )
         val originalItem =
             subject.viewState.value.items.filterIsInstance<DateRangeItemState>().first()
         subject.addButtonTapped(originalItem.id)
         verify(addPlanUseCase).createAddPlanItem(
             id = eq(originalItem.id),
-            time = any(), dateSelectionEnabled = eq(true), type = any<AddPlanItemState.Type>(),
+            time = any(),
+            dateSelectionEnabled = eq(true),
+            type = any<AddPlanItemState.Type>(),
         )
     }
 
@@ -616,7 +628,7 @@ class TripViewModelTest {
                     checkIn = "2024-05-11T13:00:00+01:00",
                     checkout = "2024-05-13T11:00:00+01:00",
                 ),
-            )
+            ),
         )
         val addPlanItemId = "originalItemId"
         val expected: AddFlightItemState = mock {
@@ -640,7 +652,7 @@ class TripViewModelTest {
                     checkIn = "2024-05-11T13:00:00+01:00",
                     checkout = "2024-05-19T11:00:00+01:00",
                 ),
-            )
+            ),
         )
         val newItemId = "originalItemId"
         val newAddPlanItem = mock<AddFlightItemState> {
@@ -659,7 +671,7 @@ class TripViewModelTest {
                     checkIn = "2024-05-11T13:00:00+01:00",
                     checkout = "2024-05-19T11:00:00+01:00",
                 ),
-            )
+            ),
         )
         val addPlanItemId = "originalItemId"
         val expected: AddFlightItemState = mock {
@@ -682,7 +694,7 @@ class TripViewModelTest {
                     checkIn = "2024-05-11T13:00:00+01:00",
                     checkout = "2024-05-19T11:00:00+01:00",
                 ),
-            )
+            ),
         )
         val addPlanItemId = "originalItemId"
         val originalItem =
@@ -754,7 +766,7 @@ class TripViewModelTest {
                     city = Place(cityToName),
                 ),
                 arrival = arrival.asTime(),
-            )
+            ),
         ),
     )
 

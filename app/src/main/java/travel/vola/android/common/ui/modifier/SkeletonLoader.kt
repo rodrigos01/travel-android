@@ -32,8 +32,8 @@ fun Modifier.skeletonLoader(
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = durationMillis),
             repeatMode = RepeatMode.Reverse,
-            initialStartOffset = StartOffset(offsetMillis = startDelayMillis)
-        )
+            initialStartOffset = StartOffset(offsetMillis = startDelayMillis),
+        ),
     )
     return this
         .drawBehind {
@@ -49,7 +49,7 @@ fun SkeletonLoaderPreview() {
             Box(
                 modifier = Modifier
                     .padding(16.dp)
-                    .skeletonLoader()
+                    .skeletonLoader(),
             )
         }
     }

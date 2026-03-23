@@ -15,7 +15,7 @@ class PlaceAutoCompleteRepository(
     override suspend fun autocomplete(
         query: String,
         autocompleteKey: String,
-        locationBias: Pair<Double, Double>?
+        locationBias: Pair<Double, Double>?,
     ): List<SimplePlace> {
         return request<ApiResponse.PlaceAutoComplete>("/places/autocomplete") {
             url {

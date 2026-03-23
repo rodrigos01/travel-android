@@ -1,12 +1,11 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import travel.vola.android.R
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
@@ -25,7 +24,8 @@ fun AddPlaceListItem(
         selectedSearchResultIndex: Int,
     ) -> Unit,
 ) {
-    StartEndAddPlanListItem(uiState = uiState,
+    StartEndAddPlanListItem(
+        uiState = uiState,
         startTitle = { Text(stringResource(R.string.label_start)) },
         startTimeSelectorLabel = stringResource(R.string.action_pick_start_time),
         startLabelText = "Location",
@@ -49,9 +49,10 @@ fun AddPlaceListItem(
                 startTimeSelected,
                 endDateTime,
                 endTimeSelected,
-                selectedStartSearchResultIndex
+                selectedStartSearchResultIndex,
             )
-        })
+        },
+    )
 }
 
 @PreviewLightDark
@@ -61,7 +62,8 @@ fun AddPlaceListItemPreview() {
         Surface {
             AddPlaceListItem(
                 uiState = ManualAddLodgingItemState(
-                    "", ZonedDateTime.now(),
+                    "",
+                    ZonedDateTime.now(),
                     typeSelectionEnabled = false,
                     startState = ManualAddPlanState(
                         dateTime = null,
@@ -69,7 +71,7 @@ fun AddPlaceListItemPreview() {
                         isTimeSet = false,
                         dateSelectionEnabled = false,
                         locationText = null,
-                        searchResults = emptyList()
+                        searchResults = emptyList(),
                     ),
                     endState = ManualAddPlanState(
                         dateTime = null,
@@ -77,7 +79,7 @@ fun AddPlaceListItemPreview() {
                         isTimeSet = false,
                         dateSelectionEnabled = true,
                         locationText = null,
-                        searchResults = emptyList()
+                        searchResults = emptyList(),
                     ),
                     deleteButtonEnabled = true,
                     saveButtonEnabled = true,

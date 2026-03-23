@@ -27,11 +27,11 @@ class HomeViewModel private constructor(
     }.stateIn(
         viewModelScope,
         SharingStarted.Eagerly,
-        initialValue = UiState(TripListUseCase.State(emptyList()))
+        initialValue = UiState(TripListUseCase.State(emptyList())),
     )
 
     data class UiState(
-        val tripListState: TripListUseCase.State
+        val tripListState: TripListUseCase.State,
     )
 
     fun addTrip() {

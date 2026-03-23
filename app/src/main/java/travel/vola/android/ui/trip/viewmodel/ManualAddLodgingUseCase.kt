@@ -38,7 +38,7 @@ class ManualAddLodgingUseCase(
             val results = repository.autocomplete(content.toString(), autocompleteKey = itemId)
             itemStore.update(itemId) { data ->
                 data.copy(
-                    searchResults = results
+                    searchResults = results,
                 )
             }
         }
@@ -112,7 +112,8 @@ class ManualAddLodgingUseCase(
                 locationText = data.name ?: data.address,
                 searchResults = data.searchResults.map {
                     AutoCompleteResultState(
-                        it.name, subtitle = it.address,
+                        it.name,
+                        subtitle = it.address,
                     )
                 },
             ),
@@ -124,8 +125,10 @@ class ManualAddLodgingUseCase(
                 locationText = null,
                 searchResults = emptyList(),
             ),
-            saveButtonEnabled = data.checkOut != null && data.checkOut > data.checkIn && (data.name
-                ?: data.address) != null && data.isCheckInTimeSet && data.isCheckOutTimeSet,
+            saveButtonEnabled = data.checkOut != null && data.checkOut > data.checkIn && (
+                data.name
+                    ?: data.address
+                ) != null && data.isCheckInTimeSet && data.isCheckOutTimeSet,
             deleteButtonEnabled = stateParams.deleteEnabled,
             typeSelectionEnabled = stateParams.typeSelectionEnabled,
         )

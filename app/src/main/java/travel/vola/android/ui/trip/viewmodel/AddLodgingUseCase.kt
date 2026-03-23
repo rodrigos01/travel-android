@@ -19,14 +19,16 @@ class AddLodgingUseCase(
     placeRepository: PlaceRepository,
     private val coroutineScope: CoroutineScope,
     private val manualAddLodgingUseCase: ManualAddLodgingUseCase = ManualAddLodgingUseCase(
-        coroutineScope = coroutineScope
+        coroutineScope = coroutineScope,
     ),
     private val lodgingSearchParamsUseCase: LodgingSearchParamsUseCase = LodgingSearchParamsUseCase(
-        placeRepository = placeRepository, coroutineScope = coroutineScope
+        placeRepository = placeRepository,
+        coroutineScope = coroutineScope,
     ),
 ) : AddPlanUseCase.AddItemUseCase<Lodging, AddLodgingItemState>,
     AddPlanUseCase.EntityFactory<Lodging, ManualAddLodgingItemState> by manualAddLodgingUseCase,
-    LodgingSearchParamsFactory by lodgingSearchParamsUseCase, AddLodgingItemActionHandler {
+    LodgingSearchParamsFactory by lodgingSearchParamsUseCase,
+    AddLodgingItemActionHandler {
 
     override fun onSwitchToManualButtonTapped(itemId: String) {
         val item = items[itemId] ?: return
@@ -36,7 +38,9 @@ class AddLodgingUseCase(
             checkIn = item.timestamp,
             checkOut = item.checkOut,
             params = AddPlanUseCase.StateParams(
-                item.dateSelectionEnabled, item.typeSelectionEnabled, item.deleteButtonEnabled
+                item.dateSelectionEnabled,
+                item.typeSelectionEnabled,
+                item.deleteButtonEnabled,
             ),
         )
     }
@@ -50,7 +54,9 @@ class AddLodgingUseCase(
             checkOut = item.checkOut,
             city = null, // TODO: Use city from item when Unified Places API is available
             params = AddPlanUseCase.StateParams(
-                item.dateSelectionEnabled, item.typeSelectionEnabled, item.deleteButtonEnabled
+                item.dateSelectionEnabled,
+                item.typeSelectionEnabled,
+                item.deleteButtonEnabled,
             ),
         )
     }

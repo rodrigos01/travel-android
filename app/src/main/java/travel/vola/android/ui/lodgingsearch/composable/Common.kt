@@ -19,14 +19,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import travel.vola.android.common.ui.components.rememberSizedImageState
 
 @Composable
 fun LodgingImage(
     painter: Painter,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
-    colorFilter: ColorFilter? = null
+    colorFilter: ColorFilter? = null,
 ) {
     Image(
         modifier = modifier
@@ -44,7 +43,7 @@ fun ButtonContent(
     @DrawableRes iconResId: Int? = null,
     icon: ImageVector? = null,
     iconContentDescription: String,
-    text: String
+    text: String,
 ) {
     Row(
         horizontalArrangement = spacedBy(8.dp),
@@ -54,7 +53,8 @@ fun ButtonContent(
             Icon(icon, contentDescription = iconContentDescription)
         } else if (iconResId != null) {
             Icon(
-                painterResource(iconResId), contentDescription = iconContentDescription
+                painterResource(iconResId),
+                contentDescription = iconContentDescription,
             )
         }
         Text(text, maxLines = 1, overflow = TextOverflow.Ellipsis)

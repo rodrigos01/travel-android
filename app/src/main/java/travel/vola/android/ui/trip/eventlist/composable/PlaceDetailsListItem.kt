@@ -28,7 +28,6 @@ import travel.vola.android.common.ui.components.rememberPlaceholderPainter
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.TripItemState
 
-
 @Composable
 fun PlaceDetailsListItem(
     state: TripItemState.PlaceDetailsItemState,
@@ -94,15 +93,16 @@ fun PlaceDetailsListItem(
                     LocalContentColor.current
                 } else {
                     MaterialTheme.colorScheme.onSecondaryContainer
-                }
+                },
             ),
         ) {
             Text(
-                text = if (hasNote) note else "Add note", style = if (hasNote) {
+                text = if (hasNote) note else "Add note",
+                style = if (hasNote) {
                     MaterialTheme.typography.bodyMedium
                 } else {
                     ButtonDefaults.textStyleFor(ButtonDefaults.MinHeight)
-                }
+                },
             )
         }
     }

@@ -1,8 +1,5 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,8 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import travel.vola.android.R
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.UiState
 
@@ -30,7 +29,7 @@ fun InitialParameters(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
+        modifier = modifier,
     ) {
         state.optionGroups.forEach { group ->
             OptionGroup(
@@ -50,7 +49,8 @@ fun InitialParameters(
                         onClick = { onOptionTapped(index, group.type) },
                         label = {
                             Text(option.option)
-                        })
+                        },
+                    )
                 }
             }
         }
@@ -63,18 +63,18 @@ fun InitialParameters(
             onValueChange = onAnythingElseTextChanged,
             modifier = Modifier
                 .padding(top = 4.dp)
-                .height(96.dp)
+                .height(96.dp),
         )
         Button(
             onClick = onNextTapped,
             enabled = state.ctaEnabled,
-            modifier = Modifier.align(Alignment.End)
+            modifier = Modifier.align(Alignment.End),
         ) {
             Text(
                 when (state.ctaType) {
                     UiState.CTAType.NEXT -> "Next"
                     UiState.CTAType.UPDATE -> "Update Trip"
-                }
+                },
             )
         }
     }
@@ -90,13 +90,13 @@ fun InitialParametersPreview() {
                     optionGroups = listOf(
                         UiState.OptionGroup(
                             UiState.OptionGroupType.OCCASIONS,
-                            listOfOptions("Workation", "Vacation", "Business Trip", "Family Trip")
+                            listOfOptions("Workation", "Vacation", "Business Trip", "Family Trip"),
                         ),
                         UiState.OptionGroup(
                             UiState.OptionGroupType.INTERESTS,
-                            listOfOptions("Hiking", "Shopping", "Sightseeing")
-                        )
-                    )
+                            listOfOptions("Hiking", "Shopping", "Sightseeing"),
+                        ),
+                    ),
                 ),
                 onOptionTapped = { _, _ -> },
                 onOptionAdded = { _, _ -> },

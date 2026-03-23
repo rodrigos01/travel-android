@@ -1,8 +1,5 @@
 package travel.vola.android.ui.trip.creation.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.SizeTransform
@@ -46,10 +43,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import travel.vola.android.R
 import travel.vola.android.common.ui.components.toPx
 import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.theme.AppTheme
@@ -79,20 +78,28 @@ fun TripDetailsToolbar(
         var toolbarSize by remember { mutableStateOf(IntSize.Zero) }
         val offset by animateDpAsState(
             if (addPlanState != null) 0.dp else FloatingToolbarDefaults.ContainerSize + 8.dp,
-            animationSpec = if (addPlanState != null) spring(visibilityThreshold = Dp.VisibilityThreshold) else tween(
-                delayMillis = 100
-            )
+            animationSpec = if (addPlanState != null) {
+                spring(visibilityThreshold = Dp.VisibilityThreshold)
+            } else {
+                tween(
+                    delayMillis = 100,
+                )
+            },
         )
         AnimatedContent(
             targetState = addPlanState,
             transitionSpec = {
-                (fadeIn() + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) { height ->
-                    height + spaceBetweenInPx
-                }) togetherWith (slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) { height ->
-                    height + spaceBetweenInPx
-                } + fadeOut()) using SizeTransform { initialSize, targetSize ->
+                (
+                    fadeIn() + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) { height ->
+                        height + spaceBetweenInPx
+                    }
+                    ) togetherWith (
+                    slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) { height ->
+                        height + spaceBetweenInPx
+                    } + fadeOut()
+                    ) using SizeTransform { initialSize, targetSize ->
                     if (targetSize.height > initialSize.height) {
-                        //enter
+                        // enter
                         keyframes {
                             toolbarSize at 0
                             toolbarSize at durationMillis / 3
@@ -126,15 +133,15 @@ fun TripDetailsToolbar(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier
                             .padding(top = 8.dp, end = 16.dp)
-                            .align(Alignment.End)
+                            .align(Alignment.End),
                     ) {
                         TextButton(
                             onClick = { addPlanActionHandler.cancelEdit(state.id) },
-                            colors = ButtonDefaults.textButtonColors()
-                            ) {
+                            colors = ButtonDefaults.textButtonColors(),
+                        ) {
                             Text(stringResource(R.string.action_cancel))
                         }
-                        TextButton(onClick = {addPlanActionHandler.save(state.id)}, enabled = state.saveButtonEnabled) {
+                        TextButton(onClick = { addPlanActionHandler.save(state.id) }, enabled = state.saveButtonEnabled) {
                             Text(stringResource(R.string.action_save))
                         }
                     }
@@ -149,7 +156,7 @@ fun TripDetailsToolbar(
                 if (toolbarSize == IntSize.Zero) {
                     toolbarSize = it.size
                 }
-            }
+            },
         ) {
             types.forEach {
                 ToolbarItem(
@@ -170,24 +177,26 @@ fun ToolbarItem(
     addPlanType: AddPlanType,
 ) {
     TonalToggleButton(
-        checked = selected, onCheckedChange = { onSelected() },
+        checked = selected,
+        onCheckedChange = { onSelected() },
         colors = ToggleButtonDefaults.tonalToggleButtonColors(
-            containerColor = FloatingToolbarDefaults.vibrantFloatingToolbarColors().toolbarContainerColor
+            containerColor = FloatingToolbarDefaults.vibrantFloatingToolbarColors().toolbarContainerColor,
         ),
     ) {
         AnimatedContent(selected, transitionSpec = {
             expandHorizontally(expandFrom = Alignment.Start).togetherWith(
                 shrinkHorizontally(
-                    shrinkTowards = Alignment.Start
-                )
+                    shrinkTowards = Alignment.Start,
+                ),
             )
         }) { expanded ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Icon(
-                    imageVector = addPlanType.icon(), contentDescription = addPlanType.label
+                    imageVector = addPlanType.icon(),
+                    contentDescription = addPlanType.label,
                 )
 
                 if (expanded) {
@@ -231,7 +240,7 @@ fun TripDetailsToolbarPreview() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = MaterialTheme.colorScheme.background)
+                .background(color = MaterialTheme.colorScheme.background),
         ) {
             Surface(onClick = { currentState = null }, modifier = Modifier.fillMaxSize()) {}
             TripDetailsToolbar(
@@ -242,7 +251,8 @@ fun TripDetailsToolbarPreview() {
                 addPlanActionHandler = NoOpActionHandler,
                 onTypeSelected = {
                     currentState = state
-                })
+                },
+            )
         }
     }
 }

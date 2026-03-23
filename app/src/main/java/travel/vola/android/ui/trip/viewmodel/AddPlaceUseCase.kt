@@ -19,12 +19,14 @@ class AddPlaceUseCase(
     private val coroutineScope: CoroutineScope,
     private val placeRepository: PlaceAutoCompleteRepository = PlaceAutoCompleteRepository(
         types = listOf(
-            "city", "point_of_interest"
-        )
+            "city",
+            "point_of_interest",
+        ),
     ),
     private val itemStore: AddPlanItemStore<PendingData.PendingTimedPlace, AddPlaceItemState> = AddPlanItemStore(),
 ) : AddPlanUseCase.AddItemUseCase<TimedPlace, AddPlaceItemState>,
-    AddPlanUseCase.EntityFactory<TimedPlace, AddPlaceItemState>, AddPlaceItemActionHandler {
+    AddPlanUseCase.EntityFactory<TimedPlace, AddPlaceItemState>,
+    AddPlaceItemActionHandler {
 
     override val items: MapFlow<String, AddPlaceItemState> = itemStore.items(::createItem)
 
@@ -56,7 +58,8 @@ class AddPlaceUseCase(
     }
 
     private fun createItem(
-        data: PendingData.PendingTimedPlace, params: AddPlanUseCase.StateParams,
+        data: PendingData.PendingTimedPlace,
+        params: AddPlanUseCase.StateParams,
     ): AddPlaceItemState {
         return AddPlaceItemState(
             id = data.id,
@@ -72,7 +75,8 @@ class AddPlaceUseCase(
             placeName = data.place?.name,
             searchResults = data.searchResults.map {
                 AutoCompleteResultState(
-                    it.name, it.address
+                    it.name,
+                    it.address,
                 )
             },
         )

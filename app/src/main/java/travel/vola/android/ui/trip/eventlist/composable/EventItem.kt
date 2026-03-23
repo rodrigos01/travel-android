@@ -23,11 +23,15 @@ import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.TripItemState
 
 enum class EventItemPosition {
-    TOP, MIDDLE, BOTTOM, SINGLE,
+    TOP,
+    MIDDLE,
+    BOTTOM,
+    SINGLE,
 }
 
 enum class EventItemStyle {
-    Filled, Outlined,
+    Filled,
+    Outlined,
 }
 
 @Composable
@@ -45,7 +49,7 @@ fun EventItem(
     Row(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 16.dp),
     ) {
         if (showDate && dayOfMonthString != null && dayOfWeekString != null) {
             LeadingDate(
@@ -74,15 +78,16 @@ fun EventItem(
                 )
                 .then(
                     when (style) {
-                        EventItemStyle.Filled -> Modifier
-                            .clip(shape)
+                        EventItemStyle.Filled ->
+                            Modifier
+                                .clip(shape)
                         EventItemStyle.Outlined -> Modifier.border(
                             ButtonDefaults.outlinedButtonBorder(
-                                enabled = true
+                                enabled = true,
                             ),
                             shape = shape,
                         )
-                    }
+                    },
                 )
                 .background(color = containerColor, shape = shape),
         ) {

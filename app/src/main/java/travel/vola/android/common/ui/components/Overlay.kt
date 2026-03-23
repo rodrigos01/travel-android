@@ -77,8 +77,8 @@ fun Overlay(content: @Composable () -> Unit) {
                 }
                 .width(LocalConfiguration.current.screenWidthDp.dp)
                 .height(
-                    LocalConfiguration.current.screenHeightDp.dp
-                )
+                    LocalConfiguration.current.screenHeightDp.dp,
+                ),
         )
     }
     DisposableEffect(content) {
@@ -96,7 +96,7 @@ fun OverlayPreview() {
         Overlay {
             Column(verticalArrangement = Arrangement.Center, modifier = Modifier.padding(16.dp)) {
                 TextButton(
-                    onClick = {}
+                    onClick = {},
                 ) {
                     Text("Button")
                 }
@@ -104,10 +104,9 @@ fun OverlayPreview() {
                     shadowElevation = 16.dp,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(9 / 16F)
+                        .aspectRatio(9 / 16F),
                 ) {}
             }
         }
     }
 }
-

@@ -1,8 +1,5 @@
 package travel.vola.android.ui.lodgingsearch.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,8 +25,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import travel.vola.android.R
 import travel.vola.android.ui.lodgingsearch.viewmodel.LodgingSearchViewModel
 import java.text.NumberFormat
 import kotlin.math.roundToInt
@@ -43,7 +42,7 @@ fun SortOptionSelector(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
             .selectableGroup()
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         LodgingSearchViewModel.SortOption.entries.forEach { option ->
             val selected = state.sortOption == option
@@ -54,7 +53,7 @@ fun SortOptionSelector(
                     onClick = {
                         onSortOptionSelected(option)
                     },
-                )
+                ),
             ) {
                 RadioButton(selected = selected, onClick = null)
                 val label = when (option) {
@@ -111,7 +110,7 @@ fun FilterOptions(
                     SegmentedButton(
                         shape = SegmentedButtonDefaults.itemShape(
                             index,
-                            LodgingSearchViewModel.StarOption.entries.size
+                            LodgingSearchViewModel.StarOption.entries.size,
                         ),
                         selected = option.stars == state.minStars,
                         onClick = { state.minStars = option.stars },
@@ -122,7 +121,7 @@ fun FilterOptions(
                                 LodgingSearchViewModel.StarOption.THREE -> stringResource(R.string.star_option_three_plus)
                                 LodgingSearchViewModel.StarOption.FOUR -> stringResource(R.string.star_option_four_plus)
                                 LodgingSearchViewModel.StarOption.FIVE -> stringResource(R.string.star_option_five)
-                            }
+                            },
                         )
                     }
                 }
@@ -146,7 +145,7 @@ fun FilterOptions(
                 colors = SliderDefaults.colors(
                     activeTickColor = Color.Transparent,
                     inactiveTickColor = Color.Transparent,
-                )
+                ),
             )
         }
     }
@@ -174,7 +173,7 @@ fun FilterOptionsPreview() {
             FilterOptionsState(
                 0.0,
                 0,
-                0.0..6000.0
+                0.0..6000.0,
             ),
             valueRange = 0.0..6000.0,
         )

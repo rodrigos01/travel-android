@@ -41,14 +41,14 @@ fun SelectorButton(
             onClick = { showTypeSelectorMenu = true },
             enabled = enabled,
             leadingIcon = leadingIcon,
-            trailingIcon = Icons.Default.ArrowDropDown.takeIf { enabled }
+            trailingIcon = Icons.Default.ArrowDropDown.takeIf { enabled },
         ) {
             Text(options[selectedIndex].label, maxLines = 1)
         }
         DropdownMenu(
             expanded = showTypeSelectorMenu,
             onDismissRequest = { showTypeSelectorMenu = false },
-            properties = PopupProperties(focusable = false)
+            properties = PopupProperties(focusable = false),
         ) {
             options.forEach { option ->
                 DropdownMenuItem(

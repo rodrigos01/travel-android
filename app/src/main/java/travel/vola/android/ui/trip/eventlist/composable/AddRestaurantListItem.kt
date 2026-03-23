@@ -1,12 +1,11 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import travel.vola.android.R
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
@@ -44,9 +43,10 @@ fun AddRestaurantListItem(
             onUpdated(
                 startDateTime,
                 startTimeSelected,
-                selectedStartSearchResultIndex
+                selectedStartSearchResultIndex,
             )
-        })
+        },
+    )
 }
 
 @PreviewLightDark
@@ -56,7 +56,8 @@ fun AddRestaurantListItemPreview() {
         Surface {
             AddRestaurantListItem(
                 uiState = ManualAddLodgingItemState(
-                    "", ZonedDateTime.now(),
+                    "",
+                    ZonedDateTime.now(),
                     typeSelectionEnabled = false,
                     startState = ManualAddPlanState(
                         dateTime = null,
@@ -64,7 +65,7 @@ fun AddRestaurantListItemPreview() {
                         isTimeSet = false,
                         dateSelectionEnabled = false,
                         locationText = null,
-                        searchResults = emptyList()
+                        searchResults = emptyList(),
                     ),
                     endState = ManualAddPlanState(
                         dateTime = null,
@@ -72,7 +73,7 @@ fun AddRestaurantListItemPreview() {
                         isTimeSet = false,
                         dateSelectionEnabled = true,
                         locationText = null,
-                        searchResults = emptyList()
+                        searchResults = emptyList(),
                     ),
                     deleteButtonEnabled = true,
                     saveButtonEnabled = true,

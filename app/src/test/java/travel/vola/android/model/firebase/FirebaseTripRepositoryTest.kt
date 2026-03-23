@@ -71,7 +71,7 @@ class FirebaseTripRepositoryTest {
 
         Assert.assertEquals(
             MockData.trip.flights.map { it.toAppDataModel() },
-            flightsObservable.expectItem()
+            flightsObservable.expectItem(),
         )
         verify(firestore).document("/trips/myTrip")
     }
@@ -84,7 +84,7 @@ class FirebaseTripRepositoryTest {
 
         Assert.assertEquals(
             MockData.trip.lodgings.map { it.toAppDataModel() },
-            hotelsObservable.expectItem()
+            hotelsObservable.expectItem(),
         )
         verify(firestore).document("/trips/myTrip")
     }

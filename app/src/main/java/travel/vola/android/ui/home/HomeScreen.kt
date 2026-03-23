@@ -1,8 +1,5 @@
 package travel.vola.android.ui.home
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -27,10 +24,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import travel.vola.android.R
 import travel.vola.android.extensions.viewModel
 import travel.vola.android.model.data.DataSourceType
 import travel.vola.android.ui.trip.creation.assistant.composable.TripCreationAssistantDestination
@@ -41,7 +40,7 @@ import travel.vola.android.ui.triplist.composable.TripList
 @Composable
 fun HomeScreen(navController: NavController) {
     val viewModel: HomeViewModel = viewModel(
-        factory = HomeViewModel.Factory()
+        factory = HomeViewModel.Factory(),
     )
     val uiState by viewModel.uiState.collectAsState()
     val haptic = LocalHapticFeedback.current
@@ -49,29 +48,32 @@ fun HomeScreen(navController: NavController) {
         topBar = {
             var showDataSourceSelector by remember { mutableStateOf(false) }
             TopAppBar(
-                title = { Text(stringResource(R.string.app_name_vola)) }, modifier = Modifier.combinedClickable(
+                title = { Text(stringResource(R.string.app_name_vola)) },
+                modifier = Modifier.combinedClickable(
                     onClick = {},
                     onLongClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         showDataSourceSelector = true
-                    })
+                    },
+                ),
             )
             DropdownMenu(
                 expanded = showDataSourceSelector,
-                onDismissRequest = { showDataSourceSelector = false }) {
+                onDismissRequest = { showDataSourceSelector = false },
+            ) {
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.source_local)) },
                     onClick = {
                         viewModel.onDataSourceChanged(DataSourceType.LOCAL)
                         showDataSourceSelector = false
-                    }
+                    },
                 )
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.source_firebase)) },
                     onClick = {
                         viewModel.onDataSourceChanged(DataSourceType.FIREBASE)
                         showDataSourceSelector = false
-                    }
+                    },
                 )
             }
         },
@@ -81,7 +83,7 @@ fun HomeScreen(navController: NavController) {
             }) {
                 Icon(imageVector = Icons.Filled.Add, contentDescription = "")
             }
-        }
+        },
     ) { paddingValues ->
         TripList(
             state = uiState.tripListState,

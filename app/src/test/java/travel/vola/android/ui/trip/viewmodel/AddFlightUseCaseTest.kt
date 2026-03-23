@@ -12,8 +12,8 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
-import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.get
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.AirportSearchResult
 import travel.vola.android.model.data.Flight
@@ -40,16 +40,21 @@ class AddFlightUseCaseTest {
     private val subject = AddFlightUseCase(testScope, itemStore, repository)
 
     private val items = subject.items.stateIn(
-        testScope, started = SharingStarted.Eagerly, initialValue = emptyMap()
+        testScope,
+        started = SharingStarted.Eagerly,
+        initialValue = emptyMap(),
     )
 
     @Test
     fun `itemStore items updated should update items`() {
-        itemStore.addItem(mock {
-            on { id } doReturn "flight_id"
-            on { departure } doReturn zonedDateTime("2024-10-16T18:25+02:00")
-            on { arrival } doReturn zonedDateTime("2024-10-16T16:15+02:00")
-        }, mock())
+        itemStore.addItem(
+            mock {
+                on { id } doReturn "flight_id"
+                on { departure } doReturn zonedDateTime("2024-10-16T18:25+02:00")
+                on { arrival } doReturn zonedDateTime("2024-10-16T16:15+02:00")
+            },
+            mock(),
+        )
         assertThat(items["flight_id"]?.id).isEqualTo("flight_id")
         assertThat(items["flight_id"]?.startState?.dateTime).isEqualTo(zonedDateTime("2024-10-16T18:25+02:00"))
     }
@@ -186,7 +191,7 @@ class AddFlightUseCaseTest {
                     title = "Beauvais Airport",
                     subtitle = "Paris, FR",
                 ),
-            )
+            ),
         )
     }
 
@@ -200,7 +205,7 @@ class AddFlightUseCaseTest {
                 mock(),
                 expected,
                 mock(),
-            )
+            ),
         )
         val airport: Airport = mock {
             on { name } doReturn "Charles de Gaule Airport"
@@ -291,7 +296,7 @@ class AddFlightUseCaseTest {
                     title = "Beauvais Airport",
                     subtitle = "Paris, FR",
                 ),
-            )
+            ),
         )
     }
 
@@ -299,11 +304,13 @@ class AddFlightUseCaseTest {
     fun `airport to search result tapped should update item with selected airport`() {
         val expected = AirportSearchResult("CDG", "Charles de Gaule Airport", "Paris, FR")
         val originalData = PendingFlight(
-            id = "item_id", departure = mock(), airportToSearchResults = listOf(
+            id = "item_id",
+            departure = mock(),
+            airportToSearchResults = listOf(
                 mock(),
                 expected,
                 mock(),
-            )
+            ),
         )
         val airport: Airport = mock {
             on { name } doReturn "Charles de Gaule Airport"

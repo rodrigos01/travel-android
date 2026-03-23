@@ -1,8 +1,5 @@
 package travel.vola.android.ui.lodgingsearch.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -53,10 +51,16 @@ fun LodgingSearchParams(
     Column {
         Row(horizontalArrangement = Arrangement.SpaceAround, modifier = Modifier.fillMaxWidth()) {
             DatePickerTextButton(
-                checkIn, minCheckIn, label = "check-in date", onCheckInDateSelected
+                checkIn,
+                minCheckIn,
+                label = "check-in date",
+                onCheckInDateSelected,
             )
             DatePickerTextButton(
-                checkOut, minCheckOut, label = "check-out date", onCheckOutDateSelected
+                checkOut,
+                minCheckOut,
+                label = "check-out date",
+                onCheckOutDateSelected,
             )
         }
         var showSearchDialog by remember { mutableStateOf(false) }
@@ -64,9 +68,10 @@ fun LodgingSearchParams(
         FilledTonalButton(
             onClick = {
                 showSearchDialog = true
-            }, modifier = Modifier
+            },
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
         ) {
             Text(buttonLabel ?: "Tap to enter location")
         }
@@ -126,7 +131,8 @@ private fun DatePickerTextButton(
             },
             onDismiss = {
                 showDatePickerState = false
-            })
+            },
+        )
     }
 }
 

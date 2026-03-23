@@ -20,7 +20,7 @@ class DataStoreUserPreferencesRepository(private val dataStore: DataStore<UserPr
                     DATASOURCE_KEY_LOCAL -> DataSourceType.LOCAL
                     DATASOURCE_KEY_FIREBASE -> DataSourceType.FIREBASE
                     else -> DataSourceType.LOCAL
-                }
+                },
             )
         }
 
@@ -31,7 +31,7 @@ class DataStoreUserPreferencesRepository(private val dataStore: DataStore<UserPr
                     when (dataSourceType) {
                         DataSourceType.LOCAL -> DATASOURCE_KEY_LOCAL
                         DataSourceType.FIREBASE -> DATASOURCE_KEY_FIREBASE
-                    }
+                    },
                 )
                 .build()
         }

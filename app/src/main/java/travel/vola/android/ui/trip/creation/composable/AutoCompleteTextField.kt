@@ -41,7 +41,7 @@ fun <T> AutoCompleteTextField(
 ) {
     val focusManager = LocalFocusManager.current
     Box(
-        modifier = modifier
+        modifier = modifier,
     ) {
         var input: String? by remember {
             mutableStateOf(null)
@@ -71,7 +71,7 @@ fun <T> AutoCompleteTextField(
         DropdownMenu(
             expanded = showSuggestions,
             onDismissRequest = { showSuggestions = false },
-            properties = PopupProperties(focusable = false)
+            properties = PopupProperties(focusable = false),
         ) {
             state.suggestions.forEachIndexed { index, option ->
                 DropdownMenuItem(
@@ -102,7 +102,7 @@ fun AutoCompleteTextFieldPreview() {
                 onTextChanged = {},
                 onOptionSelected = {},
                 itemText = { it },
-                itemContent = { Text(it) }
+                itemContent = { Text(it) },
             )
         }
     }

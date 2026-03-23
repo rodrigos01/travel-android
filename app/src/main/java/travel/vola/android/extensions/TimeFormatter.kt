@@ -23,7 +23,6 @@ val ZonedDateTime.dateString: String
 val ZonedDateTime.dateTimeString: String
     get() = format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT))
 
-
 val ZonedDateTime.monthAndYearString: String
     get() = format(DateTimeFormatter.ofPattern("MMMM yyyy"))
 

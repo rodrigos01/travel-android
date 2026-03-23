@@ -86,13 +86,13 @@ fun EventListItem(
             headlineContent = {
                 Text(
                     headline,
-                    style = typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                    style = typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                 )
             },
             supportingContent = {
                 Text(
                     text = supporting,
-                    style = typography.bodyMedium
+                    style = typography.bodyMedium,
                 )
             },
         )

@@ -1,8 +1,5 @@
 package travel.vola.android.ui.trip.creation.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,10 +14,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import travel.vola.android.R
 import travel.vola.android.ui.theme.AppTheme
 
 @Composable
@@ -34,7 +33,8 @@ fun ConfirmationDialog(
     content: @Composable () -> Unit,
 ) {
     Dialog(
-        onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Card(
             modifier = Modifier
@@ -43,19 +43,19 @@ fun ConfirmationDialog(
             shape = MaterialTheme.shapes.medium,
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(start = 16.dp, top = 16.dp, end = 16.dp)
+                        .padding(start = 16.dp, top = 16.dp, end = 16.dp),
                 ) {
                     content()
                 }
                 Row(
                     modifier = Modifier
                         .align(Alignment.End)
-                        .padding(end = 8.dp, bottom = 8.dp)
+                        .padding(end = 8.dp, bottom = 8.dp),
                 ) {
                     TextButton(
                         onClick = onDismiss,
@@ -84,4 +84,3 @@ fun ConfirmationDialogPreview() = AppTheme {
         confirmButtonEnabled = true,
     ) { Text("This is a Dialog") }
 }
-

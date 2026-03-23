@@ -32,6 +32,8 @@ coreTesting = "2.2.0"
 espressoCore = "3.7.0"
 junit = "4.13.2"
 paletteKtx = "1.0.0"
+spotless = "6.25.0"
+
 [libraries]
 # General
 androidx-adaptive-layout-android = { module = "androidx.compose.material3.adaptive:adaptive-layout-android", version.ref = "material3Adaptative" }
@@ -102,4 +104,4 @@ androidx-palette-ktx = { group = "androidx.palette", name = "palette-ktx", versi
 
 
 [plugins]
-
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

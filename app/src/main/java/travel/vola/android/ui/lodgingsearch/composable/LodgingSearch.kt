@@ -1,8 +1,5 @@
 package travel.vola.android.ui.lodgingsearch.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
@@ -62,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
@@ -88,8 +86,8 @@ import travel.vola.android.common.ui.modifier.skeletonLoader
 import travel.vola.android.common.ui.preview.TabletPreview
 import travel.vola.android.common.ui.state.MarkerType
 import travel.vola.android.common.ui.state.MarkerViewState
-import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.viewModel
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.lodgingsearch.state.LodgingDetailsState
 import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
 import travel.vola.android.ui.lodgingsearch.state.LodgingSearchResultState
@@ -118,7 +116,7 @@ private fun LodgingSearch(
             onConfirm = { navController.popBackStack() },
             onDismiss = onContinueBrowsingTapped,
             confirmButtonLabel = stringResource(R.string.action_back_to_trip),
-            dismissButtonLabel = stringResource(R.string.action_continue_browsing)
+            dismissButtonLabel = stringResource(R.string.action_continue_browsing),
         ) {
             Text(stringResource(R.string.dialog_lodging_added_continue_browsing))
         }
@@ -154,7 +152,9 @@ private fun LodgingSearch(
 }
 
 enum class ControlsVisible {
-    NONE, FILTERS, SORT,
+    NONE,
+    FILTERS,
+    SORT,
 }
 
 @Composable
@@ -175,7 +175,7 @@ fun ResultsWithMap(
     val loadedState = state as? LodgingSearchViewModel.UiState.Loaded
     var selectedId by remember(openedResultId?.takeIf { mapScaffoldState.sizeClass.isLargeScreen }) {
         mutableStateOf(
-            openedResultId
+            openedResultId,
         )
     }
     val markers = loadedState?.results?.map {
@@ -227,7 +227,8 @@ fun ResultsWithMap(
             val bitmap = loadedState?.results?.getOrNull(index)?.let {
                 LodgingSearchMarkerIcon(
                     NumberFormat.getCurrencyInstance()
-                    .apply { maximumFractionDigits = 0 }.format(it.price), marker.selected
+                        .apply { maximumFractionDigits = 0 }.format(it.price),
+                    marker.selected,
                 )
             } ?: mapMarkerIcon(MarkerType.Lodging, selected = marker.selected)
             BitmapDescriptorFactory.fromBitmap(bitmap)
@@ -269,20 +270,23 @@ fun ResultsWithMap(
             val openedResults = loadedState?.openedResults ?: emptyMap()
             AnimatedVisibility(openedResults.isNotEmpty()) {
                 TabBar(
-                    tabBarListState = tabBarScrollState, onTabClick = { tabId ->
+                    tabBarListState = tabBarScrollState,
+                    onTabClick = { tabId ->
                         val lodgingId = loadedState?.results?.firstOrNull { it.id == tabId }
                         onLodgingTapped(lodgingId)
-                    }, modifier = Modifier
+                    },
+                    modifier = Modifier
                         .padding(
                             bottom = WindowInsets.safeDrawing.asPaddingValues()
-                                .calculateBottomPadding()
+                                .calculateBottomPadding(),
                         )
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
                 ) {
                     tab(
                         SEARCH_TAB_ID,
                         selected = loadedState?.selectedResult == null,
-                        icon = { Icon(Icons.Outlined.Search, contentDescription = null) })
+                        icon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                    )
                     openedResults.forEach { (tabId, lodging) ->
                         tab(
                             id = tabId,
@@ -299,7 +303,7 @@ fun ResultsWithMap(
                     state,
                     mapResultsScrollState,
                     onLodgingTapped,
-                    modifier = Modifier.align(Alignment.BottomStart)
+                    modifier = Modifier.align(Alignment.BottomStart),
                 )
             }
         },
@@ -332,7 +336,8 @@ fun ResultsWithMap(
                     )
                 }
             }
-        })
+        },
+    )
 }
 
 @Composable
@@ -353,12 +358,13 @@ private fun SearchTopBar(
         modifier = Modifier
             .background(color = MaterialTheme.colorScheme.surface)
             .padding(bottom = 8.dp)
-            .animateContentSize()
+            .animateContentSize(),
     ) {
         TopAppBar(title = { Text("Lodging Search") }, navigationIcon = {
             IconButton(onClick = { navController.popBackStack() }) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = ""
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "",
                 )
             }
         }, actions = {
@@ -385,13 +391,14 @@ private fun SearchTopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
         ) {
             TextButton(onClick = {
                 controlsVisible1 = ControlsVisible.FILTERS
             }) {
                 Icon(
-                    painterResource(R.drawable.tune_baseline_24), contentDescription = null
+                    painterResource(R.drawable.tune_baseline_24),
+                    contentDescription = null,
                 )
                 Text(stringResource(R.string.action_filter))
             }
@@ -399,7 +406,8 @@ private fun SearchTopBar(
                 controlsVisible1 = ControlsVisible.SORT
             }) {
                 Icon(
-                    painterResource(R.drawable.sort_baseline_24), contentDescription = null
+                    painterResource(R.drawable.sort_baseline_24),
+                    contentDescription = null,
                 )
                 Text(stringResource(R.string.action_sort))
             }
@@ -418,7 +426,7 @@ private fun SearchTopBar(
                 }
                 val slideSpec = spring<IntOffset>(stiffness = Spring.StiffnessMediumLow)
                 (fadeIn() + slideIntoContainer(direction, slideSpec)).togetherWith(
-                    slideOutOfContainer(direction, slideSpec) + fadeOut()
+                    slideOutOfContainer(direction, slideSpec) + fadeOut(),
                 )
             },
         ) { currentControls ->
@@ -428,7 +436,7 @@ private fun SearchTopBar(
                         val filterState = FilterOptionsState(
                             minRating = state.sortAndFilterState.minRating,
                             minStars = state.sortAndFilterState.minStars,
-                            priceRange = state.sortAndFilterState.priceRange
+                            priceRange = state.sortAndFilterState.priceRange,
                         )
                         FilterOptions(
                             state = filterState,
@@ -439,7 +447,8 @@ private fun SearchTopBar(
                                 controlsVisible1 = ControlsVisible.NONE
                             }) {
                                 Text(
-                                    "Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    "Cancel",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                             TextButton(onClick = {
@@ -464,7 +473,8 @@ private fun SearchTopBar(
                         coroutineScope.launch {
                             resultsScrollState.animateScrollToItem(0)
                         }
-                    })
+                    },
+                )
 
                 ControlsVisible.NONE -> {}
             }
@@ -483,7 +493,8 @@ fun MapTopBar(navController: NavController, onListButtonTapped: () -> Unit) {
     ) {
         FilledTonalIconButton(onClick = { navController.popBackStack() }) {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = ""
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "",
             )
         }
         FilledTonalIconButton(onClick = onListButtonTapped) {
@@ -507,7 +518,7 @@ fun MapSearchResults(
         state = scrollState,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(all = 16.dp),
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
     ) {
         when (state) {
             is LodgingSearchViewModel.UiState.Loading -> {
@@ -580,7 +591,7 @@ private fun LazyListScope.Loaded(
             style = itemStyle,
             modifier = itemModifier
                 .animateItem()
-                .clickable(onClick = { onLodgingTapped(result) })
+                .clickable(onClick = { onLodgingTapped(result) }),
         )
     }
 }
@@ -590,12 +601,12 @@ private fun LazyListScope.Loading() {
         Column(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.large)
-                .skeletonLoader(startDelayMillis = index * 300)
+                .skeletonLoader(startDelayMillis = index * 300),
         ) {
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1.77f)
+                    .aspectRatio(1.77f),
             )
             Box(Modifier.height(64.dp))
         }
@@ -641,13 +652,13 @@ fun LodgingRating(rating: Double) {
         modifier = Modifier
             .size(32.dp)
             .clip(MaterialTheme.shapes.extraLarge)
-            .background(color = MaterialTheme.colorScheme.secondaryContainer)
+            .background(color = MaterialTheme.colorScheme.secondaryContainer),
     ) {
         Text(
             "%.1f".format(rating),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.align(Alignment.Center)
+            modifier = Modifier.align(Alignment.Center),
         )
     }
 }
@@ -669,7 +680,7 @@ fun LodgingSearch(
     navController: NavController,
 ) {
     val viewModel: LodgingSearchViewModel = viewModel(
-        factory = LodgingSearchViewModel.Factory(params)
+        factory = LodgingSearchViewModel.Factory(params),
     )
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     LodgingSearch(
@@ -720,14 +731,16 @@ fun LodgingSearchPreview(showMap: Boolean = false, initialSelectedResult: String
                     sortAndFilterState = LodgingSearchViewModel.SortAndFilterState(),
                     results = results,
                     openedResults = details,
-                    selectedResult = details[selectedResultId]
+                    selectedResult = details[selectedResultId],
                 )
             }
         }
         LodgingSearch(
             navController = rememberNavController(),
             state = LodgingSearchViewModel.UiState.Error(
-                state.searchState, state.localState, state.sortAndFilterState
+                state.searchState,
+                state.localState,
+                state.sortAndFilterState,
             ),
             onLodgingTapped = { lodging ->
                 selectedResultId = lodging?.id

@@ -1,8 +1,5 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -35,9 +32,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import travel.vola.android.R
 import travel.vola.android.common.ui.components.SearchBoxDialog
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.UiState
@@ -78,7 +77,7 @@ fun BasicInformationForm(
                                 .clickable(onClick = { onDestinationClearTapped(index) })
                                 .size(16.dp),
                         )
-                    }
+                    },
                 )
             }
             TextButton(onClick = { showSearchDialog = true }) {
@@ -117,7 +116,7 @@ fun BasicInformationForm(
             DatePickerButton(
                 label = "Pick Date",
                 selectedTime = state.startDate,
-                onDateSelected = onStartDateSet
+                onDateSelected = onStartDateSet,
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -125,13 +124,13 @@ fun BasicInformationForm(
             DatePickerButton(
                 label = "Pick Date",
                 selectedTime = state.endDate,
-                onDateSelected = onEndDateSet
+                onDateSelected = onEndDateSet,
             )
         }
         Text("Group Type", style = MaterialTheme.typography.titleMedium)
         Row(
             horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-            modifier = Modifier.horizontalScroll(rememberScrollState())
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
         ) {
             UiState.TravelGroupType.entries.forEachIndexed { index, option ->
                 ToggleButton(
@@ -162,12 +161,12 @@ fun BasicInformationForm(
             label = { Text(stringResource(R.string.label_travelers)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.widthIn(max = 120.dp)
+            modifier = Modifier.widthIn(max = 120.dp),
         )
         Button(
             onClick = onNextTapped,
             enabled = state.nextButtonEnabled,
-            modifier = Modifier.align(Alignment.End)
+            modifier = Modifier.align(Alignment.End),
         ) { Text(stringResource(R.string.action_next)) }
     }
 }

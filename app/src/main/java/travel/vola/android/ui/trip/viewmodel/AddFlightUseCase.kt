@@ -26,7 +26,8 @@ class AddFlightUseCase(
     private val itemStore: AddPlanItemStore<PendingFlight, AddFlightItemState> = AddPlanItemStore(),
     private val repository: AddFlightRepository = AddFlightRepository(),
 ) : AddPlanUseCase.AddItemUseCase<Flight, AddFlightItemState>,
-    AddPlanUseCase.EntityFactory<Flight, AddFlightItemState>, AddFlightItemActionHandler {
+    AddPlanUseCase.EntityFactory<Flight, AddFlightItemState>,
+    AddFlightItemActionHandler {
 
     override val items: MapFlow<String, AddFlightItemState> = itemStore.items(::createItem)
 
@@ -63,8 +64,10 @@ class AddFlightUseCase(
         stateParams: AddPlanUseCase.StateParams,
     ): AddFlightItemState {
         val minArrival =
-            (data.airportTo?.let { data.departure.atTimeZone(it.timeZone) }
-                ?: data.departure) + 1.hours
+            (
+                data.airportTo?.let { data.departure.atTimeZone(it.timeZone) }
+                    ?: data.departure
+                ) + 1.hours
         return AddFlightItemState(
             id = data.id,
             timestamp = data.departure,
@@ -86,7 +89,8 @@ class AddFlightUseCase(
                 locationText = data.airportTo?.name,
                 searchResults = data.airportToSearchResults.map {
                     AutoCompleteResultState(
-                        it.name, it.location
+                        it.name,
+                        it.location,
                     )
                 },
             ),
@@ -119,7 +123,7 @@ class AddFlightUseCase(
                     data.departure,
                     data.airportTo,
                     data.arrival,
-                )
+                ),
             ),
             0.0,
         )
@@ -127,7 +131,8 @@ class AddFlightUseCase(
 
     private val autoCompleteScope = MutexScope(coroutineScope.coroutineContext)
     override fun airportFromSearchTextChanged(
-        itemId: String, content: CharSequence,
+        itemId: String,
+        content: CharSequence,
     ) {
         if (content.length < 3) {
             return
@@ -141,7 +146,8 @@ class AddFlightUseCase(
     }
 
     override fun airportToSearchTextChanged(
-        itemId: String, content: CharSequence,
+        itemId: String,
+        content: CharSequence,
     ) {
         if (content.length < 3) {
             return
@@ -191,13 +197,13 @@ class AddFlightUseCase(
                     id = data.id,
                     entityId = data.entityId,
                     departure = departureTime.update(
-                        timeZone = airportFrom?.timeZone?.toZoneId() ?: data.departure.zone
+                        timeZone = airportFrom?.timeZone?.toZoneId() ?: data.departure.zone,
                     ),
                     departureTimeSet = departureTimeSelected,
                     airportFrom = airportFrom,
                     arrival = arrivalTime?.update(
                         timeZone = airportTo?.timeZone?.toZoneId() ?: data.arrival?.zone
-                        ?: data.departure.zone
+                            ?: data.departure.zone,
                     ),
                     arrivalTimeSet = arrivalTimeSelected,
                     airportTo = airportTo,

@@ -1,8 +1,5 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -10,10 +7,11 @@ import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import travel.vola.android.R
 import travel.vola.android.common.ui.components.InlinedTextField
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.UiState
-
 
 @Composable
 fun OptionGroup(
@@ -35,7 +33,7 @@ fun OptionGroup(
                             onOptionAdded(textFieldContent)
                         }
                     },
-                    label = { Text(stringResource(R.string.action_add_more)) }
+                    label = { Text(stringResource(R.string.action_add_more)) },
                 )
             },
         )

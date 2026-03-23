@@ -20,12 +20,13 @@ import travel.vola.android.model.room.buildDatabase
 private val FACTORY_DEPENDENCIES_KEY = CreationExtras.Key<ViewModelFactoryDependencies>()
 
 class ViewModelFactoryDependencies(
-    val navController: NavController, getApplicationContext: () -> Context
+    val navController: NavController,
+    getApplicationContext: () -> Context,
 ) {
 
     private val roomTripDataSource by lazy {
         RoomTripDataSource(
-            buildDatabase(getApplicationContext()).tripDao
+            buildDatabase(getApplicationContext()).tripDao,
         )
     }
 
@@ -43,7 +44,7 @@ class ViewModelFactoryDependencies(
         MultiSourceTripRepository(
             userPreferencesRepository = userPreferencesRepository,
             roomTripDataSource,
-            firebaseTripDataSource
+            firebaseTripDataSource,
         )
     }
 

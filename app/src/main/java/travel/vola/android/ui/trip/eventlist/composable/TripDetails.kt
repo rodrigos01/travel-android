@@ -1,8 +1,5 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import android.graphics.Bitmap
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.VisibilityThreshold
@@ -59,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -73,6 +71,7 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.ktx.animateColorScheme
 import com.materialkolor.rememberDynamicColorScheme
+import travel.vola.android.R
 import travel.vola.android.common.ui.components.MapScaffold
 import travel.vola.android.common.ui.components.rememberMapScaffoldState
 import travel.vola.android.common.ui.preview.TabletPreview
@@ -146,13 +145,15 @@ private fun TripDetails(
 ) {
     val listScrollState = rememberLazyListState()
     val currentPlaceIndex by remember {
-        derivedStateOf(policy = object : SnapshotMutationPolicy<Int> {
-            override fun equivalent(a: Int, b: Int): Boolean {
-                val itemA = state.items.getOrNull(a)
-                val itemB = state.items.getOrNull(b)
-                return itemA != null && (itemA !is PlaceItemState || itemA == itemB)
-            }
-        }) {
+        derivedStateOf(
+            policy = object : SnapshotMutationPolicy<Int> {
+                override fun equivalent(a: Int, b: Int): Boolean {
+                    val itemA = state.items.getOrNull(a)
+                    val itemB = state.items.getOrNull(b)
+                    return itemA != null && (itemA !is PlaceItemState || itemA == itemB)
+                }
+            },
+        ) {
             if (!listScrollState.canScrollBackward) {
                 -1
             } else if (!listScrollState.canScrollForward) {
@@ -175,7 +176,6 @@ private fun TripDetails(
     val boundingMarkers = focusedPlace?.markers ?: emptyList()
     val mapScaffoldState = rememberMapScaffoldState()
 
-
     val isDarkTheme = isSystemInDarkTheme()
     val colorSchemeBitmaps = remember { mutableStateMapOf<String, Bitmap?>() }
     val seedColor by remember(focusedPlace, colorSchemeBitmaps) {
@@ -184,14 +184,16 @@ private fun TripDetails(
                 ?.generate()?.dominantSwatch?.rgb
         }
     }
-    val colorScheme = animateColorScheme(seedColor?.let {
-        rememberDynamicColorScheme(
-            seedColor = Color(it),
-            isDark = isDarkTheme,
-            specVersion = ColorSpec.SpecVersion.SPEC_2025,
-            style = PaletteStyle.Expressive,
-        )
-    } ?: MaterialTheme.colorScheme)
+    val colorScheme = animateColorScheme(
+        seedColor?.let {
+            rememberDynamicColorScheme(
+                seedColor = Color(it),
+                isDark = isDarkTheme,
+                specVersion = ColorSpec.SpecVersion.SPEC_2025,
+                style = PaletteStyle.Expressive,
+            )
+        } ?: MaterialTheme.colorScheme,
+    )
     MaterialTheme(
         colorScheme = colorScheme,
     ) {
@@ -213,15 +215,15 @@ private fun TripDetails(
                 if (showDeleteConfirmation) {
                     ConfirmationDialog(
                         onConfirm = {
-                        showDeleteConfirmation = false
-                        onDeleteConfirmed()
-                    },
-                                       onDismiss = { showDeleteConfirmation = false },
-                                       confirmButtonLabel = stringResource(R.string.action_delete),
-                                       confirmButtonColors = ButtonDefaults.textButtonColors(
-                                           contentColor = MaterialTheme.colorScheme.error
-                                       ),
-                                       dismissButtonLabel = stringResource(R.string.action_cancel)
+                            showDeleteConfirmation = false
+                            onDeleteConfirmed()
+                        },
+                        onDismiss = { showDeleteConfirmation = false },
+                        confirmButtonLabel = stringResource(R.string.action_delete),
+                        confirmButtonColors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error,
+                        ),
+                        dismissButtonLabel = stringResource(R.string.action_cancel),
                     ) {
                         Text(stringResource(R.string.dialog_delete_trip_confirmation, state.title))
                     }
@@ -236,7 +238,7 @@ private fun TripDetails(
                     IconButton(onClick = onBackPressed) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = ""
+                            contentDescription = "",
                         )
                     }
                 }, actions = {
@@ -258,14 +260,13 @@ private fun TripDetails(
                             IconButton(onClick = { mapScaffoldState.showMap = false }) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Default.List,
-                                    contentDescription = ""
+                                    contentDescription = "",
                                 )
                             }
                         } else {
                             IconButton(onClick = { mapScaffoldState.showMap = true }) {
                                 Icon(imageVector = Icons.Default.Map, contentDescription = "")
                             }
-
                         }
                         Box {
                             IconButton(onClick = { showToolbarOverflowMenu = true }) {
@@ -274,7 +275,7 @@ private fun TripDetails(
                             DropdownMenu(
                                 expanded = showToolbarOverflowMenu,
                                 onDismissRequest = { showToolbarOverflowMenu = false },
-                                properties = PopupProperties(focusable = false)
+                                properties = PopupProperties(focusable = false),
                             ) {
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.action_update_trip_preferences)) },
@@ -302,7 +303,7 @@ private fun TripDetails(
                     PaddingValues(
                         top = paddingValues.calculateTopPadding(),
                         start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                        bottom = paddingValues.calculateBottomPadding() + 24.dp + FloatingToolbarDefaults.ContainerSize
+                        bottom = paddingValues.calculateBottomPadding() + 24.dp + FloatingToolbarDefaults.ContainerSize,
                     ),
                     addPlanItemActionHandler,
                     onAddButonTapped,
@@ -359,11 +360,13 @@ fun List(
 ) {
     LazyColumn(contentPadding = contentPadding, state = scrollState) {
         items(
-            state.items, key = { (it as? Identifiable)?.id ?: it.hashCode() }) { event ->
+            state.items,
+            key = { (it as? Identifiable)?.id ?: it.hashCode() },
+        ) { event ->
             Box(
                 modifier = Modifier
                     .animateItem(placementSpec = spring(visibilityThreshold = IntOffset.VisibilityThreshold))
-                    .background(MaterialTheme.colorScheme.surface)
+                    .background(MaterialTheme.colorScheme.surface),
             ) {
                 TripDetailItem(
                     event,
@@ -430,7 +433,8 @@ private fun TripDetailItem(
             event.dateStart,
             event.dateEnd,
             onImageLoaded,
-            modifier = Modifier.clickable { onEditTapped(event.id) })
+            modifier = Modifier.clickable { onEditTapped(event.id) },
+        )
 
         is TripItemState.FlexibleDaySectionState -> FlexibleDaySectionListItem(
             event,
@@ -441,17 +445,20 @@ private fun TripDetailItem(
             },
             onDeleteConfirmed = {
                 addPlanItemActionHandler.delete(
-                    AddPlanItemState.Type.FlexibleSection, event.id
+                    AddPlanItemState.Type.FlexibleSection,
+                    event.id,
                 )
             },
             onCategoryAdded = {
                 addPlanItemActionHandler.onFlexibleCategoryAdded(
-                    event.id, it
+                    event.id,
+                    it,
                 )
             },
             onLocationSearchTextChanged = {
                 addPlanItemActionHandler.onFlexibleItemSearchTextChanged(
-                    event.id, it
+                    event.id,
+                    it,
                 )
             },
             onLocationSearchResultSelected = { index, categoryIndex ->
@@ -529,7 +536,8 @@ private fun TripDetailItem(
 
                 is TripItemState.TimedPlaceItemState -> TimedPlaceListItem(event, highlightDate)
                 is TripItemState.RestaurantReservationItemState -> RestaurantListItem(
-                    event, highlightDate
+                    event,
+                    highlightDate,
                 )
 
                 is TripItemState.FlexibleDaySectionState -> {}
@@ -538,7 +546,8 @@ private fun TripDetailItem(
         }
 
         is TripItemState.InitialAddPlanItemState -> EmptyAddPlanListItem(
-            onAddButtonClick = { onInitialAddButonTapped(event.id) })
+            onAddButtonClick = { onInitialAddButonTapped(event.id) },
+        )
 
         is AddPlanItemState -> AddPlanListItem(
             event,

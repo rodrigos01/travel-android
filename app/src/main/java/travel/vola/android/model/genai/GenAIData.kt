@@ -9,7 +9,7 @@ object GenAIData {
         FAMILY,
         FRIENDS,
         COWORKERS,
-        COUPLE
+        COUPLE,
     }
 
     enum class ItineraryType(val value: String) {
@@ -40,14 +40,14 @@ object GenAIData {
     @Serializable
     data class FollowUpQuestionsOutput(
         val numQuestions: Int,
-        val questions: List<FollowUpQuestion>
+        val questions: List<FollowUpQuestion>,
     )
 
     @Serializable
     data class FollowUpQuestion(
         val parameterSelections: List<String>,
         val question: String,
-        val answers: List<String>
+        val answers: List<String>,
     )
 
     @Serializable
@@ -122,5 +122,4 @@ object GenAIData {
         val categoryName: String,
         val places: List<TimedPlace>,
     )
-
 }

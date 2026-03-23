@@ -1,18 +1,12 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import travel.vola.android.R
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
@@ -58,7 +52,7 @@ fun AddLodgingListItem(
                     startTimeSelected,
                     endDateTime,
                     endTimeSelected,
-                    selectedStartSearchResultIndex
+                    selectedStartSearchResultIndex,
                 )
             },
         )
@@ -72,7 +66,8 @@ fun AddLodgingListItemPreview() {
         Surface {
             AddLodgingListItem(
                 uiState = ManualAddLodgingItemState(
-                    "", ZonedDateTime.now(),
+                    "",
+                    ZonedDateTime.now(),
                     typeSelectionEnabled = false,
                     startState = ManualAddPlanState(
                         dateTime = null,
@@ -80,7 +75,7 @@ fun AddLodgingListItemPreview() {
                         isTimeSet = false,
                         dateSelectionEnabled = false,
                         locationText = null,
-                        searchResults = emptyList()
+                        searchResults = emptyList(),
                     ),
                     endState = ManualAddPlanState(
                         dateTime = null,
@@ -88,7 +83,7 @@ fun AddLodgingListItemPreview() {
                         isTimeSet = false,
                         dateSelectionEnabled = true,
                         locationText = null,
-                        searchResults = emptyList()
+                        searchResults = emptyList(),
                     ),
                     deleteButtonEnabled = true,
                     saveButtonEnabled = true,

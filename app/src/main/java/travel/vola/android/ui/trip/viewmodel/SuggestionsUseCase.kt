@@ -56,7 +56,6 @@ class SuggestionsUseCase(
     private val _state = MutableStateFlow(DailyItineraryState(emptyList(), emptyList()))
     val state = _state.asStateFlow()
 
-
     suspend fun getSuggestions(
         trip: Trip,
         dates: List<ZonedDateTime>,
@@ -66,12 +65,14 @@ class SuggestionsUseCase(
         val destinations = trip.getDestinations()
         val normalizedDates = dates.map { it.toMidnight() }
         if (addPlaceHolders) {
-            _state.value = state.value.copy(placeHolders = normalizedDates.map { date ->
-                SuggestionPlaceholder(
-                    date,
-                    destinations.last { it.startDateTime <= date }.place,
-                )
-            })
+            _state.value = state.value.copy(
+                placeHolders = normalizedDates.map { date ->
+                    SuggestionPlaceholder(
+                        date,
+                        destinations.last { it.startDateTime <= date }.place,
+                    )
+                },
+            )
         }
         val result = repository.genDailyItinerary(
             basicInformation = GenAIData.BasicInformation(
@@ -85,7 +86,7 @@ class SuggestionsUseCase(
                     GroupType.COWORKERS -> GenAIData.GroupType.COWORKERS
                     GroupType.COUPLE -> GenAIData.GroupType.COUPLE
                 },
-                travelers = preferences.basicInformation.travelers
+                travelers = preferences.basicInformation.travelers,
             ),
             parameters = GenAIData.InitialParametersOptions(
                 occasions = preferences.initialParameters.occasions,
@@ -100,7 +101,7 @@ class SuggestionsUseCase(
                 GenAIData.FollowUpQuestion(
                     parameterSelections = emptyList(),
                     question = it.question,
-                    answers = listOf(it.answer)
+                    answers = listOf(it.answer),
                 )
             },
             itineraryType = GenAIData.ItineraryType.OPEN_ENDED,
@@ -110,14 +111,14 @@ class SuggestionsUseCase(
                     GenAIData.DateResult(
                         it.dayOfMonth,
                         it.monthValue,
-                        it.year
+                        it.year,
                     )
                 },
                 endDate = (destinations.last().endDateTime ?: ZonedDateTime.now()).let {
                     GenAIData.DateResult(
                         it.dayOfMonth,
                         it.monthValue,
-                        it.year
+                        it.year,
                     )
                 },
                 description = "",
@@ -130,14 +131,14 @@ class SuggestionsUseCase(
                             GenAIData.DateResult(
                                 it.dayOfMonth,
                                 it.monthValue,
-                                it.year
+                                it.year,
                             )
                         },
                         endDate = destination.endDateTime?.let {
                             GenAIData.DateResult(
                                 it.dayOfMonth,
                                 it.monthValue,
-                                it.year
+                                it.year,
                             )
                         } ?: return,
                     )
@@ -154,9 +155,11 @@ class SuggestionsUseCase(
                     endTime = it.checkout.dateString("yyyy-MM-dd"),
                 )
             },
-            existingPlaces = (trip.places.filter { it.city != it.place } +
+            existingPlaces = (
+                trip.places.filter { it.city != it.place } +
                     trip.flexibleSections.flatMap { it.categories }.flatMap { it.items } +
-                    trip.restaurants).map { item ->
+                    trip.restaurants
+                ).map { item ->
                 val name = when (item) {
                     is TimedPlace -> item.place
                     is RestaurantReservation -> item.place
@@ -192,7 +195,7 @@ class SuggestionsUseCase(
                         destinationsMap[section.cityId]?.let {
                             section.toAppData(
                                 date,
-                                it
+                                it,
                             )
                         }
                     }.filterNotNull(),
@@ -203,17 +206,19 @@ class SuggestionsUseCase(
                 val newDay =
                     existingDays.firstOrNull { it.date == currentDay.date.dateString("yyyy-MM-dd") }
                 currentDay.copy(
-                    sections = currentDay.sections + (newDay?.sections?.mapAsync { section ->
-                        destinationsMap[section.cityId]?.let {
-                            section.toAppData(
-                                currentDay.date,
-                                it
-                            )
-                        }
-                    }?.filterNotNull() ?: emptyList())
+                    sections = currentDay.sections + (
+                        newDay?.sections?.mapAsync { section ->
+                            destinationsMap[section.cityId]?.let {
+                                section.toAppData(
+                                    currentDay.date,
+                                    it,
+                                )
+                            }
+                        }?.filterNotNull() ?: emptyList()
+                        ),
                 )
             },
-            placeHolders = state.value.placeHolders.filterNot { normalizedDates.contains(it.timestamp) }
+            placeHolders = state.value.placeHolders.filterNot { normalizedDates.contains(it.timestamp) },
         )
     }
 
@@ -221,9 +226,9 @@ class SuggestionsUseCase(
         _state.value = state.value.copy(
             days = state.value.days.map { day ->
                 day.copy(
-                    sections = day.sections.filter { it.id != suggestionId }
+                    sections = day.sections.filter { it.id != suggestionId },
                 )
-            }
+            },
         )
     }
 
@@ -246,9 +251,9 @@ class SuggestionsUseCase(
                             FlexibleDayItem(
                                 id = resolved.id,
                                 place = resolved,
-                                note = place.note
+                                note = place.note,
                             )
-                        }
+                        },
                     )
                 },
         )
