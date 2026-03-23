@@ -8,28 +8,30 @@ import travel.vola.android.model.data.SimplePlace
 
 class GeographyAutoCompleteRepository(
     private val regionsAutoCompleteRepository: PlaceAutoCompleteRepository = PlaceAutoCompleteRepository(
-        types = listOf("(regions)"), resolveCity = false,
+        types = listOf("(regions)"),
+        resolveCity = false,
     ),
     private val areasAutoCompleteRepository: PlaceAutoCompleteRepository = PlaceAutoCompleteRepository(
-        types = listOf("continent", "colloquial_area"), resolveCity = false,
-    )
+        types = listOf("continent", "colloquial_area"),
+        resolveCity = false,
+    ),
 ) : AutoCompleteRepository<SimplePlace, PlaceDetailsResult> {
     override suspend fun autocomplete(
         query: String,
         autocompleteKey: String,
-        locationBias: Pair<Double, Double>?
+        locationBias: Pair<Double, Double>?,
     ): List<SimplePlace> {
         return coroutineScope {
             awaitAll(
                 async { regionsAutoCompleteRepository.autocomplete(query, autocompleteKey) },
-                async { areasAutoCompleteRepository.autocomplete(query, autocompleteKey) }
+                async { areasAutoCompleteRepository.autocomplete(query, autocompleteKey) },
             ).flatten()
         }
     }
 
     override suspend fun details(
         id: String,
-        autocompleteKey: String
+        autocompleteKey: String,
     ): PlaceDetailsResult? {
         return areasAutoCompleteRepository.details(id, autocompleteKey)
     }

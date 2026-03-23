@@ -1,8 +1,5 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,8 +13,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import travel.vola.android.R
 import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.lodgingsearch.composable.LodgingSearchParams
 import travel.vola.android.ui.theme.AppTheme
@@ -51,7 +50,9 @@ fun LodgingSearchListItem(
         mutableIntStateOf(-1)
     }
     LaunchedEffect(
-        checkInState, checkOutState, selectedSearchResultIndexState
+        checkInState,
+        checkOutState,
+        selectedSearchResultIndexState,
     ) {
         onUpdated(
             checkInState,
@@ -60,7 +61,8 @@ fun LodgingSearchListItem(
         )
     }
     Column {
-        LodgingSearchParams(checkIn,
+        LodgingSearchParams(
+            checkIn,
             minCheckIn,
             checkOut,
             minCheckOut,
@@ -69,12 +71,13 @@ fun LodgingSearchListItem(
             onCheckInDateSelected = { checkInState = it },
             onCheckOutDateSelected = { checkOutState = it },
             onLocationSearchTextChanged,
-            onLocationSearchResultSelected = { selectedSearchResultIndexState = it })
+            onLocationSearchResultSelected = { selectedSearchResultIndexState = it },
+        )
         TextButton(
             onClick = onSwitchToManualButtonTapped,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
         ) {
             Text(stringResource(R.string.prompt_enter_lodging_manually))
         }
@@ -86,13 +89,15 @@ fun LodgingSearchListItem(
 fun LodgingSearchListItemPreview() {
     AppTheme {
         AddPlanScaffold(AddPlanType.Lodging, {}, true, false, {}, true, "Save", {}, "Cancel", {}) {
-            LodgingSearchListItem(checkIn = zonedDateTime("2025-12-05T12:00 +0100"),
+            LodgingSearchListItem(
+                checkIn = zonedDateTime("2025-12-05T12:00 +0100"),
                 checkOut = null,
                 searchResults = List(5) { SearchResultItemState("City$it", "Address$it") },
                 locationText = null,
                 onLocationSearchTextChanged = {},
                 onSwitchToManualButtonTapped = {},
-                onUpdated = { _, _, _ -> })
+                onUpdated = { _, _, _ -> },
+            )
         }
     }
 }

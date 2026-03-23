@@ -63,7 +63,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         })
-
     }
 
     @ExperimentalMaterial3Api
@@ -79,7 +78,7 @@ class MainActivity : ComponentActivity() {
                 CompositionLocalProvider(LocalViewModelCreationExtras provides viewModelCreationExtras) {
                     NavHost(
                         navController = navController,
-                        startDestination = HomeScreenDestination.ROUTE
+                        startDestination = HomeScreenDestination.ROUTE,
                     ) {
                         composable(HomeScreenDestination.ROUTE) {
                             HomeScreen(navController)
@@ -92,13 +91,15 @@ class MainActivity : ComponentActivity() {
                             TripCreationAssistant(params)
                         }
                         composable(
-                            TripDetailsDestination.ROUTE, arguments = listOf(
+                            TripDetailsDestination.ROUTE,
+                            arguments = listOf(
                                 navArgument(
-                                    TripDetailsDestination.ARG_TRIP_ID
-                                ) { type = NavType.StringType })
+                                    TripDetailsDestination.ARG_TRIP_ID,
+                                ) { type = NavType.StringType },
+                            ),
                         ) {
                             val tripId = it.arguments?.getString(
-                                TripDetailsDestination.ARG_TRIP_ID
+                                TripDetailsDestination.ARG_TRIP_ID,
                             ) ?: error("tripId must be provided")
                             TripDetails(tripId, navController)
                         }

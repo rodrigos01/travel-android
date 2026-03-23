@@ -3,8 +3,12 @@ package travel.vola.android.ui.trip.creation.usecase
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import java.time.ZonedDateTime
 
-interface AddPlanItemActionHandler : AddLodgingItemActionHandler, AddFlightItemActionHandler,
-    AddPlaceItemActionHandler, AddRestaurantItemActionHandler, AddFlexibleSectionItemActionHandler {
+interface AddPlanItemActionHandler :
+    AddLodgingItemActionHandler,
+    AddFlightItemActionHandler,
+    AddPlaceItemActionHandler,
+    AddRestaurantItemActionHandler,
+    AddFlexibleSectionItemActionHandler {
     fun addPlanTypeChanged(itemId: String, newType: AddPlanItemState.Type)
     fun save(itemId: String)
     fun cancelEdit(itemId: String)
@@ -56,11 +60,13 @@ interface AddRestaurantItemActionHandler {
 
 interface AddFlightItemActionHandler {
     fun airportFromSearchTextChanged(
-        itemId: String, content: CharSequence,
+        itemId: String,
+        content: CharSequence,
     )
 
     fun airportToSearchTextChanged(
-        itemId: String, content: CharSequence,
+        itemId: String,
+        content: CharSequence,
     )
 
     fun onUpdated(

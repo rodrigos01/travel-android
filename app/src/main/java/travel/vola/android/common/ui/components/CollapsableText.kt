@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun CollapsableText(text: String, collapsed: Boolean, collapsedMaxLines: Int = 6) {
-
 }
 
 @Composable
@@ -40,7 +39,7 @@ fun CollapsableText(text: String, collapsedMaxLines: Int = 6) {
         if (hasMoreText) {
             TextButton(
                 onClick = { expanded = !expanded },
-                modifier = Modifier.align(Alignment.End)
+                modifier = Modifier.align(Alignment.End),
             ) {
                 Text(if (expanded) "Read less" else "Read more")
             }

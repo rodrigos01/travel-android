@@ -45,9 +45,12 @@ class AddPlanItemStoreTest {
 
     @Test
     fun `update should set data at itemId`() {
-        subject.addItem(mock {
-            on { id } doReturn "item"
-        }, stateParams = mock())
+        subject.addItem(
+            mock {
+                on { id } doReturn "item"
+            },
+            stateParams = mock(),
+        )
 
         val newData = mock<PendingData>()
         subject.update("item") { newData }
@@ -61,9 +64,12 @@ class AddPlanItemStoreTest {
                 on { id } doReturn "removed"
             }
         }.stateIn(testScope)
-        subject.addItem(mock {
-            on { id } doReturn "removed"
-        }, stateParams = mock())
+        subject.addItem(
+            mock {
+                on { id } doReturn "removed"
+            },
+            stateParams = mock(),
+        )
         val item = items["removed"] ?: error("item not found")
         subject.remove(item)
         assertThat(items["removed"]).isNull()

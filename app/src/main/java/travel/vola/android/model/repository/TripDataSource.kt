@@ -47,5 +47,4 @@ interface TripDataSource {
     suspend fun deleteTimedPlace(tripId: String, timedPlaceId: String)
     suspend fun deleteRestaurantReservation(tripId: String, restaurantReservationId: String)
     suspend fun deleteFlexibleSection(tripId: String, flexibleSectionId: String)
-
 }

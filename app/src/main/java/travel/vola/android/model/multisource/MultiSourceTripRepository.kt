@@ -24,7 +24,7 @@ import travel.vola.android.model.repository.UserPreferencesRepository
 @OptIn(ExperimentalCoroutinesApi::class)
 class MultiSourceTripRepository(
     userPreferencesRepository: UserPreferencesRepository,
-    private vararg val dataSources: TripDataSource
+    private vararg val dataSources: TripDataSource,
 ) : TripRepository {
 
     private val currentDataSourceType =
@@ -53,7 +53,7 @@ class MultiSourceTripRepository(
     override suspend fun addTrip(
         name: String,
         places: List<TimedPlace>,
-        preferences: TripPreferences
+        preferences: TripPreferences,
     ): String {
         return currentDataSource.addTrip(name, places, preferences)
     }
@@ -69,15 +69,18 @@ class MultiSourceTripRepository(
     override suspend fun deleteTrip(tripId: String) = currentDataSource.deleteTrip(tripId)
 
     override suspend fun saveFlight(
-        tripId: String, flight: Flight
+        tripId: String,
+        flight: Flight,
     ) = currentDataSource.saveFlight(tripId, flight)
 
     override suspend fun saveLodging(
-        tripId: String, lodging: Lodging
+        tripId: String,
+        lodging: Lodging,
     ) = currentDataSource.saveLodging(tripId, lodging)
 
     override suspend fun saveTimedPlace(
-        tripId: String, timedPlace: TimedPlace
+        tripId: String,
+        timedPlace: TimedPlace,
     ) = currentDataSource.saveTimedPlace(tripId, timedPlace)
 
     override suspend fun deleteFlight(tripId: String, flightId: String) =
@@ -92,28 +95,28 @@ class MultiSourceTripRepository(
 
     override suspend fun saveRestaurantReservation(
         tripId: String,
-        restaurantReservation: RestaurantReservation
+        restaurantReservation: RestaurantReservation,
     ) {
         currentDataSource.saveRestaurantReservation(tripId, restaurantReservation)
     }
 
     override suspend fun saveFlexibleSection(
         tripId: String,
-        flexibleSection: FlexibleDaySection
+        flexibleSection: FlexibleDaySection,
     ) {
         currentDataSource.saveFlexibleSection(tripId, flexibleSection)
     }
 
     override suspend fun deleteRestaurantReservation(
         tripId: String,
-        restaurantReservationId: String
+        restaurantReservationId: String,
     ) {
         currentDataSource.deleteRestaurantReservation(tripId, restaurantReservationId)
     }
 
     override suspend fun deleteFlexibleSection(
         tripId: String,
-        flexibleSectionId: String
+        flexibleSectionId: String,
     ) {
         currentDataSource.deleteFlexibleSection(tripId, flexibleSectionId)
     }

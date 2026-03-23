@@ -1,8 +1,5 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,8 +18,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import travel.vola.android.R
 import travel.vola.android.common.ui.components.InlinedTextField
 import travel.vola.android.extensions.dateString
 import travel.vola.android.ui.theme.AppTheme
@@ -56,7 +55,7 @@ fun HighLevelItineraryOptions(
                 InlinedTextField(
                     initialValue = "",
                     onDone = { onConfirmationOptionTapped(it) },
-                    label = { Text(stringResource(R.string.option_something_else)) }
+                    label = { Text(stringResource(R.string.option_something_else)) },
                 )
                 Row(modifier = Modifier.align(Alignment.End)) {
                     TextButton(onClick = { onItinerarySelected(null) }) {
@@ -82,25 +81,25 @@ fun ItineraryCard(itinerary: UiState.Itinerary, onTap: () -> Unit) {
         onClick = onTap,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-        )
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ),
     ) {
         Column(
             modifier = Modifier
                 .padding(16.dp)
-                .fillMaxWidth()
+                .fillMaxWidth(),
         ) {
             Text(
                 itinerary.name,
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineMedium,
             )
             Text(
                 stringResource(R.string.format_date_range, itinerary.startDate.dateString, itinerary.endDate.dateString),
-                style = MaterialTheme.typography.labelMedium
+                style = MaterialTheme.typography.labelMedium,
             )
             Text(
                 itinerary.description,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
             )
 
             Column(
@@ -108,7 +107,7 @@ fun ItineraryCard(itinerary: UiState.Itinerary, onTap: () -> Unit) {
                     .padding(top = 16.dp)
                     .background(
                         MaterialTheme.colorScheme.surfaceContainer,
-                        shape = MaterialTheme.shapes.medium
+                        shape = MaterialTheme.shapes.medium,
                     )
                     .padding(8.dp)
                     .fillMaxWidth(),
@@ -117,11 +116,11 @@ fun ItineraryCard(itinerary: UiState.Itinerary, onTap: () -> Unit) {
                     Text(
                         city.name,
                         style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier.padding(top = 8.dp)
+                        modifier = Modifier.padding(top = 8.dp),
                     )
                     Text(
                         stringResource(R.string.format_date_range, city.startDate.dateString, city.endDate.dateString),
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.labelMedium,
                     )
                 }
             }
@@ -165,9 +164,9 @@ fun HighLevelItineraryOptionsPreview() {
 
                             predictedChanges = listOfOptions(
                                 "Gimme more Lights!",
-                                "More coffee cities"
+                                "More coffee cities",
                             ),
-                        )
+                        ),
                     ),
                 ),
                 onItinerarySelected = {},

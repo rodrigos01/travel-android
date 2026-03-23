@@ -51,7 +51,8 @@ fun OutlinedInlinedTextField(
 }
 
 private enum class InlinedTextFieldStyle {
-    NORMAL, OUTLINED,
+    NORMAL,
+    OUTLINED,
 }
 
 @Composable
@@ -90,7 +91,8 @@ private fun InlinedTextField(
                         Icon(Icons.Default.Done, contentDescription = "confirm")
                     }
                 }
-            })
+            },
+        )
         DisposableEffect(focusRequester) {
             focusRequester.requestFocus()
             onDispose {

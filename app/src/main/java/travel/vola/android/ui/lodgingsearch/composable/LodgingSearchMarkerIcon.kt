@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import travel.vola.android.common.ui.components.toPx
 import travel.vola.android.ui.theme.AppTheme
-import kotlin.math.roundToInt
 
 @Composable
 fun LodgingSearchMarkerIcon(text: String, selected: Boolean = false): Bitmap {
@@ -51,7 +50,7 @@ fun LodgingSearchMarkerIcon(text: String, selected: Boolean = false): Bitmap {
     val bitmap = Bitmap.createBitmap(
         width.toInt() + borderWidth.toInt(),
         height.toInt() + pinSizePx.toInt() + borderWidth.toInt(),
-        Bitmap.Config.ARGB_8888
+        Bitmap.Config.ARGB_8888,
     )
     val cornerRadius = 12.dp.toPx()
     Canvas(bitmap).apply {
@@ -81,7 +80,8 @@ fun LodgingSearchMarkerIcon(text: String, selected: Boolean = false): Bitmap {
             height,
             cornerRadius,
             cornerRadius,
-            strokePaint,)
+            strokePaint,
+        )
         val pinStartX = width / 2 - pinSizePx / 2
         val pinPath = Path().apply {
             moveTo(pinStartX, height)
@@ -104,7 +104,7 @@ fun LodgingSearchMarkerIconPreview() {
         Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
             Image(
                 bitmap = LodgingSearchMarkerIcon("$200").asImageBitmap(),
-                contentDescription = null
+                contentDescription = null,
             )
         }
     }

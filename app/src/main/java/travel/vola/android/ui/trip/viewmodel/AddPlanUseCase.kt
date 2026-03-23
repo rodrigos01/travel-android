@@ -15,7 +15,6 @@ import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.TripEntity
-import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.trip.creation.usecase.AddFlexibleSectionItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddFlightItemActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandler
@@ -44,8 +43,10 @@ class AddPlanUseCase(
     ),
     private val addPlaceUseCase: AddPlaceUseCase = AddPlaceUseCase(coroutineScope = coroutineScope),
     private val addRestaurantUseCase: AddRestaurantUseCase = AddRestaurantUseCase(coroutineScope = coroutineScope),
-) : AddPlanItemActionHandler, AddFlightItemActionHandler by addFlightUseCase,
-    AddLodgingItemActionHandler by addLodgingUseCase, AddPlaceItemActionHandler by addPlaceUseCase,
+) : AddPlanItemActionHandler,
+    AddFlightItemActionHandler by addFlightUseCase,
+    AddLodgingItemActionHandler by addLodgingUseCase,
+    AddPlaceItemActionHandler by addPlaceUseCase,
     AddRestaurantItemActionHandler by addRestaurantUseCase,
     LodgingSearchParamsFactory by addLodgingUseCase,
     AddFlexibleSectionItemActionHandler by flexibleSectionUseCase {
@@ -94,7 +95,8 @@ class AddPlanUseCase(
 
     fun createAddPlanItem(id: String, entity: TripEntity, deleteEnabled: Boolean = true) {
         return entity.asState(
-            id, StateParams(typeSelectionEnabled = false, deleteEnabled = deleteEnabled)
+            id,
+            StateParams(typeSelectionEnabled = false, deleteEnabled = deleteEnabled),
         )
     }
 
@@ -147,9 +149,9 @@ class AddPlanUseCase(
             AddPlanItemState.Type.FlexibleSection -> flexibleSectionUseCase
         }
 
-
     private fun TripEntity.asState(
-        id: String, params: StateParams = StateParams(),
+        id: String,
+        params: StateParams = StateParams(),
     ) {
         return when (this) {
             is Flight -> addFlightUseCase.addItem(id, this, params)

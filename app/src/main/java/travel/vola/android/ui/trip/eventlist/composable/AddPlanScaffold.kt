@@ -1,8 +1,5 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,8 +23,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import travel.vola.android.R
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.AddPlanType
 import travel.vola.android.ui.trip.creation.composable.ConfirmationDialog
@@ -55,14 +54,14 @@ fun AddPlanScaffold(
             onDismiss = { showDeleteConfirmation = false },
             confirmButtonLabel = stringResource(R.string.action_delete),
             confirmButtonColors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-            dismissButtonLabel = stringResource(R.string.action_cancel)
+            dismissButtonLabel = stringResource(R.string.action_cancel),
         ) {
             Text(stringResource(R.string.dialog_delete_plan_confirmation, type.label))
         }
     }
     Column(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.surface),
     ) {
         Row {
             TypeSelectorButton(
@@ -83,7 +82,7 @@ fun AddPlanScaffold(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .padding(top = 8.dp, end = 16.dp)
-                .align(Alignment.End)
+                .align(Alignment.End),
         ) {
             OutlinedButton(onClick = onSecondaryButtonTapped) {
                 Text(secondaryButtonLabel)
@@ -110,7 +109,7 @@ fun AddPlanScaffoldPreview() {
             onPrimaryButtonTapped = {},
             secondaryButtonLabel = stringResource(R.string.action_cancel),
             onSecondaryButtonTapped = {},
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier.padding(horizontal = 16.dp),
         ) {
             Text("Add Plan Content 1")
             Text("Add Plan Content 2")

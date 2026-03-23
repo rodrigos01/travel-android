@@ -51,7 +51,9 @@ fun mapMarkerIcon(
     val paddingPx = 4.dp.toPx()
     val iconSizePx = markerSizePx - paddingPx * 2
     val bitmap = Bitmap.createBitmap(
-        markerSizePx.toInt(), markerSizePx.toInt(), Bitmap.Config.ARGB_8888
+        markerSizePx.toInt(),
+        markerSizePx.toInt(),
+        Bitmap.Config.ARGB_8888,
     )
     val androidCanvas = android.graphics.Canvas(bitmap)
     CanvasDrawScope().draw(
@@ -98,9 +100,8 @@ fun MapMarkerIconPreview() {
         Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
             Image(
                 bitmap = mapMarkerIcon(MarkerType.Place, selected = true).asImageBitmap(),
-                contentDescription = null
+                contentDescription = null,
             )
         }
     }
 }
-

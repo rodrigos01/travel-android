@@ -18,7 +18,7 @@ import java.time.ZonedDateTime
 @Composable
 fun SuggestionPlaceholderListItem(
     state: SuggestionPlaceholderItemState,
-    highlightDate: Boolean = false
+    highlightDate: Boolean = false,
 ) {
     EventItem(
         showDate = state.showDate,
@@ -46,8 +46,8 @@ fun SuggestionPlaceholderListItemPreview() {
                 showDate = true,
                 dayOfMonth = "17",
                 dayOfWeek = "Fri",
-                sectionId = ""
-            )
+                sectionId = "",
+            ),
         )
     }
 }

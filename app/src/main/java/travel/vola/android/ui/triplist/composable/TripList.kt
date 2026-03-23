@@ -66,7 +66,7 @@ fun TripListPreview() {
                 restaurants = emptyList(),
                 flexibleSections = emptyList(),
             )
-        }
+        },
     )
     AppTheme {
         TripList(state, onTripClicked = {})

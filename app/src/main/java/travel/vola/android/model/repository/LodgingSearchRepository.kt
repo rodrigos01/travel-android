@@ -56,7 +56,9 @@ class LodgingSearchRepository : AutoCompleteRepository<SimplePlace, Place> {
     }
 
     suspend fun search(
-        locationId: String, checkIn: ZonedDateTime, checkOut: ZonedDateTime
+        locationId: String,
+        checkIn: ZonedDateTime,
+        checkOut: ZonedDateTime,
     ): List<LodgingSearchResult> {
         return request<ApiResponse.LodgingSearch>("/lodging/search") {
             url {
@@ -66,7 +68,8 @@ class LodgingSearchRepository : AutoCompleteRepository<SimplePlace, Place> {
                 parameters.append("adults", "2")
                 parameters.append("children", "0")
                 parameters.append(
-                    "currency", Currency.getInstance(Locale.getDefault()).currencyCode
+                    "currency",
+                    Currency.getInstance(Locale.getDefault()).currencyCode,
                 )
             }
         }?.hotels?.map { it.toAppDataModel() } ?: emptyList()
@@ -89,7 +92,8 @@ class LodgingSearchRepository : AutoCompleteRepository<SimplePlace, Place> {
                 parameters.append("lat", latitude.toString())
                 parameters.append("lon", longitude.toString())
                 parameters.append(
-                    "currency", Currency.getInstance(Locale.getDefault()).currencyCode
+                    "currency",
+                    Currency.getInstance(Locale.getDefault()).currencyCode,
                 )
             }
         }

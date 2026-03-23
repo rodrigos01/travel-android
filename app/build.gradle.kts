@@ -1,9 +1,8 @@
 import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
-import java.util.Properties
 import java.io.FileInputStream
+import java.util.Properties
 
 val localProperties = Properties()
 val localPropertiesFile = project.rootProject.file("local.properties")
@@ -51,7 +50,8 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName =
-            "1.0" + System.getenv("BUILD_NUMBER")?.let { ".$it" } + System.getenv("BRANCH_NAME")
+            "1.0" + System.getenv("BUILD_NUMBER")?.let { ".$it" } +
+            System.getenv("BRANCH_NAME")
                 ?.let { ".$it" }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -81,7 +81,9 @@ android {
         create("prod") {
             dimension = "host"
             buildConfigField(
-                "String", "SERVER_URL", "\"https://travel-api-master-rlbhlyi7ja-uc.a.run.app\""
+                "String",
+                "SERVER_URL",
+                "\"https://travel-api-master-rlbhlyi7ja-uc.a.run.app\"",
             )
             buildConfigField("boolean", "REQUIRES_AUTH", "true")
         }
@@ -109,13 +111,14 @@ android {
             all {
                 it.testLogging {
                     it.outputs.upToDateWhen { false }
-                    events = setOf(
-                        TestLogEvent.PASSED,
-                        TestLogEvent.SKIPPED,
-                        TestLogEvent.FAILED,
-                        TestLogEvent.STANDARD_OUT,
-                        TestLogEvent.STANDARD_ERROR
-                    )
+                    events =
+                        setOf(
+                            TestLogEvent.PASSED,
+                            TestLogEvent.SKIPPED,
+                            TestLogEvent.FAILED,
+                            TestLogEvent.STANDARD_OUT,
+                            TestLogEvent.STANDARD_ERROR,
+                        )
                 }
                 it.jvmArgs("-Djava.locale.providers=COMPAT", "-Dfile.encoding=UTF-8")
             }

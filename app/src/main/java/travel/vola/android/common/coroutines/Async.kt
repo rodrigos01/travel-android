@@ -8,7 +8,7 @@ suspend fun <T, R> Iterable<T>.mapAsync(transform: suspend (T) -> R): List<R> = 
     map {
         async {
             transform(
-                it
+                it,
             )
         }
     }.awaitAll()
@@ -19,7 +19,7 @@ suspend fun <K, V, R> Map<K, V>.mapAsync(transform: suspend (Map.Entry<K, V>) ->
         map {
             async {
                 transform(
-                    it
+                    it,
                 )
             }
         }.awaitAll()

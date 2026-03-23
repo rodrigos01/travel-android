@@ -39,8 +39,10 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
     }
 
     private fun tripConverter(snapshot: DocumentSnapshot) =
-        (snapshot.toObject(FirebaseData.Trip::class.java)?.copy(id = snapshot.id)
-            ?: FirebaseData.Trip(snapshot.id)).toAppDataModel()
+        (
+            snapshot.toObject(FirebaseData.Trip::class.java)?.copy(id = snapshot.id)
+                ?: FirebaseData.Trip(snapshot.id)
+            ).toAppDataModel()
 
     override suspend fun addTrip(): String {
         val newTrip = FirebaseData.Trip()
@@ -51,7 +53,7 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
     override suspend fun addTrip(
         name: String,
         places: List<TimedPlace>,
-        preferences: TripPreferences
+        preferences: TripPreferences,
     ): String {
         val newTrip = FirebaseData.Trip(
             name = name,
@@ -68,7 +70,7 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
 
     override suspend fun updateTripPreferences(
         tripId: String,
-        preferences: TripPreferences
+        preferences: TripPreferences,
     ) {
         firestore.document("/trips/$tripId")
             .update("preferences", preferences.toFirebaseDataModel())
@@ -121,7 +123,7 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
 
     override suspend fun saveFlexibleSection(
         tripId: String,
-        flexibleSection: FlexibleDaySection
+        flexibleSection: FlexibleDaySection,
     ) {
         val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
         firestore.document("/trips/$tripId").update(
@@ -139,7 +141,8 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
     }
 
     override suspend fun saveRestaurantReservation(
-        tripId: String, restaurantReservation: RestaurantReservation
+        tripId: String,
+        restaurantReservation: RestaurantReservation,
     ) {
         val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
         firestore.document("/trips/$tripId").update(
@@ -149,7 +152,8 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
     }
 
     override suspend fun deleteRestaurantReservation(
-        tripId: String, restaurantReservationId: String
+        tripId: String,
+        restaurantReservationId: String,
     ) {
         val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
         firestore.document("/trips/$tripId").update(
@@ -160,7 +164,7 @@ class FirebaseTripDataSource(private val firestore: FirebaseFirestore) : TripDat
 
     override suspend fun deleteFlexibleSection(
         tripId: String,
-        flexibleSectionId: String
+        flexibleSectionId: String,
     ) {
         val trip = getTrip(tripId).toObject<FirebaseData.Trip>() ?: return
         firestore.document("/trips/$tripId").update(

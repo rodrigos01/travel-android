@@ -44,8 +44,8 @@ fun SearchBox(
                         Modifier.focusRequester(focusRequester)
                     } else {
                         Modifier
-                    }
-                )
+                    },
+                ),
             )
         },
         expanded = expanded,
@@ -53,14 +53,15 @@ fun SearchBox(
         colors = SearchBarDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 16.dp),
     ) {
         searchResults.forEachIndexed { index, result ->
             Column(
                 modifier = Modifier
                     .clickable { onResultTapped(index) }
                     .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .fillMaxWidth()) {
+                    .fillMaxWidth(),
+            ) {
                 Text(result.title, style = MaterialTheme.typography.labelMedium)
                 Text(result.subtitle, style = MaterialTheme.typography.bodySmall)
             }

@@ -38,12 +38,13 @@ enum class AddPlanType(
     Flight(R.drawable.flight_baseline_24, "Flight"),
     Lodging(R.drawable.hotel_baseline_24, "Lodging"),
     Restaurant(R.drawable.restaurant_baseline_24, "Restaurant"),
-    FlexibleSection(Icons.Rounded.Explore, "Section");
+    FlexibleSection(Icons.Rounded.Explore, "Section"),
+    ;
 
     constructor(@DrawableRes drawableId: Int, label: String) : this(
         icon = {
             ImageVector.vectorResource(
-                drawableId
+                drawableId,
             )
         },
         label = label,
@@ -73,14 +74,14 @@ fun TypeSelectorButton(
             onClick = { showTypeSelectorMenu = true },
             enabled = enabled,
             leadingIcon = type.icon(),
-            trailingIcon = Icons.Default.ArrowDropDown.takeIf { enabled }
+            trailingIcon = Icons.Default.ArrowDropDown.takeIf { enabled },
         ) {
             Text(type.label, maxLines = 1)
         }
         DropdownMenu(
             expanded = showTypeSelectorMenu,
             onDismissRequest = { showTypeSelectorMenu = false },
-            properties = PopupProperties(focusable = false)
+            properties = PopupProperties(focusable = false),
         ) {
             AddPlanType.entries.toTypedArray().forEach { option ->
                 DropdownMenuItem(
@@ -111,7 +112,7 @@ fun TypeSelectorButtonPreview() {
         Box(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.surface)
-                .padding(16.dp)
+                .padding(16.dp),
         ) {
             TypeSelectorButton(AddPlanType.Lodging, {})
         }

@@ -12,12 +12,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import travel.vola.android.di.factoryDependencies
 import travel.vola.android.extensions.MutableMapStateFlow
-import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.get
 import travel.vola.android.extensions.remove
 import travel.vola.android.extensions.set
 import travel.vola.android.extensions.update
 import travel.vola.android.extensions.viewModelFactory
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.LodgingSearchResult
@@ -91,11 +91,17 @@ class LodgingSearchViewModel(
     )
 
     enum class SortOption {
-        BEST, RATING, PRICE_LOW_TO_HIGH, PRICE_HIGH_TO_LOW
+        BEST,
+        RATING,
+        PRICE_LOW_TO_HIGH,
+        PRICE_HIGH_TO_LOW,
     }
 
     enum class StarOption(val stars: Int) {
-        ANY(0), THREE(3), FOUR(4), FIVE(5)
+        ANY(0),
+        THREE(3),
+        FOUR(4),
+        FIVE(5),
     }
 
     private val location =
@@ -109,11 +115,12 @@ class LodgingSearchViewModel(
             checkIn = zonedDateTime(checkInMillis, TimeZone.getTimeZone(timeZoneId)),
             checkOut = zonedDateTime(checkOutMillis, TimeZone.getTimeZone(timeZoneId)),
             locationText = location.name,
-        )
+        ),
     )
     private val loadAttemptCountState = MutableStateFlow(0)
     private val searchResultState = combine(
-        searchParamsState, loadAttemptCountState
+        searchParamsState,
+        loadAttemptCountState,
     ) { params, _ -> params }.onEach { loadingState.value = true }.map {
         it to repository.search(
             locationId = location.id,
@@ -147,7 +154,9 @@ class LodgingSearchViewModel(
                 localState = localState,
                 sortAndFilterState = if (results.isNotEmpty()) {
                     sortAndFilter.copy(availablePriceRange = results.minOf { it.price }..results.maxOf { it.price })
-                } else sortAndFilter,
+                } else {
+                    sortAndFilter
+                },
                 results = results.asSequence().sortedBy { it.sortValue(sortAndFilter.sortOption) }
                     .filter { it.passesFilter(sortAndFilter) }.map {
                         LodgingSearchResultState(
@@ -168,9 +177,12 @@ class LodgingSearchViewModel(
             )
         }
     }.stateIn(
-        viewModelScope, SharingStarted.Eagerly, UiState.Loading(
-            searchState = searchParamsState.value, localState = localState.value
-        )
+        viewModelScope,
+        SharingStarted.Eagerly,
+        UiState.Loading(
+            searchState = searchParamsState.value,
+            localState = localState.value,
+        ),
     )
 
     fun onSortOptionSelected(option: SortOption) {
@@ -187,7 +199,9 @@ class LodgingSearchViewModel(
     }
 
     fun onFiltersApplied(
-        minRating: Double, minStars: Int, priceRange: ClosedFloatingPointRange<Double>,
+        minRating: Double,
+        minStars: Int,
+        priceRange: ClosedFloatingPointRange<Double>,
     ) {
         sortAndFilterState.value = sortAndFilterState.value.copy(
             minRating = minRating,
@@ -235,7 +249,7 @@ class LodgingSearchViewModel(
                 searchParamsState.value.checkIn,
                 searchParamsState.value.checkOut,
                 latitude = initialState.latitude,
-                initialState.longitude
+                initialState.longitude,
             ) ?: return@launch
             openedResultsState[lodgingId] = initialState.copy(
                 photos = initialState.photos + lodging.photos.subList(1, lodging.photos.size),

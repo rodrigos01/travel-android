@@ -1,8 +1,5 @@
 package travel.vola.android.ui.trip.creation.assistant.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,9 +30,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.Serializable
+import travel.vola.android.R
 import travel.vola.android.extensions.viewModel
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.assistant.viewmodel.TripCreationAssistantViewModel
@@ -51,7 +50,7 @@ fun TripCreationAssistant(params: TripCreationAssistantDestination.Params) {
                 destinations = params.destinations,
                 startDate = params.startDate,
                 endDate = params.endDate,
-            )
+            ),
         )
     val state by viewModel.uiState.collectAsState()
     TripCreationAssistant(
@@ -116,7 +115,8 @@ fun TripCreationAssistant(
                     val title = when (state) {
                         is UiState.Error,
                         is UiState.Generating,
-                        is UiState.BasicInformation -> "Travel Creation Assistant"
+                        is UiState.BasicInformation,
+                        -> "Travel Creation Assistant"
 
                         is UiState.InitialParameters -> "Initial Parameters"
                         is UiState.InitialParametersFollowUp -> "Follow Up Questions"
@@ -128,7 +128,7 @@ fun TripCreationAssistant(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = ""
+                            contentDescription = "",
                         )
                     }
                 },
@@ -138,9 +138,9 @@ fun TripCreationAssistant(
                             Text(stringResource(R.string.action_skip))
                         }
                     }
-                }
+                },
             )
-        }
+        },
     ) { contentPadding ->
         val paddingValues = PaddingValues(
             top = contentPadding.calculateTopPadding() + 16.dp,
@@ -155,16 +155,16 @@ fun TripCreationAssistant(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .padding(paddingValues),
                 ) {
                     Icon(
                         Icons.Default.Error,
                         contentDescription = "error",
-                        tint = MaterialTheme.colorScheme.error
+                        tint = MaterialTheme.colorScheme.error,
                     )
                     Text(
                         "There was an error generating content",
-                        style = MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleLarge,
                     )
                     Button(onClick = onRetryTapped) {
                         Text(stringResource(R.string.action_retry))
@@ -178,7 +178,7 @@ fun TripCreationAssistant(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .padding(paddingValues),
                 ) {
                     LoadingIndicator()
                     Text("Generating...", style = MaterialTheme.typography.titleLarge)
@@ -214,7 +214,7 @@ fun TripCreationAssistant(
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
-                        .padding(paddingValues)
+                        .padding(paddingValues),
                 )
             }
 
@@ -227,7 +227,7 @@ fun TripCreationAssistant(
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
-                        .padding(paddingValues)
+                        .padding(paddingValues),
                 )
             }
 
@@ -253,7 +253,9 @@ object TripCreationAssistantDestination {
     const val RESULT_KEY_FINISHED_STATUS = "result_finished_status"
 
     enum class FinishedStatus {
-        NONE, COMPLETED, CANCELLED
+        NONE,
+        COMPLETED,
+        CANCELLED,
     }
 
     @Serializable

@@ -19,8 +19,8 @@ class AddRestaurantUseCase(
     private val coroutineScope: CoroutineScope,
     private val placeRepository: PlaceAutoCompleteRepository = PlaceAutoCompleteRepository(
         types = listOf(
-            "restaurant"
-        )
+            "restaurant",
+        ),
     ),
     private val itemStore: AddPlanItemStore<PendingData.PendingRestaurant, AddRestaurantItemState> = AddPlanItemStore(),
 ) : AddPlanUseCase.AddItemUseCase<RestaurantReservation, AddRestaurantItemState>,
@@ -39,7 +39,7 @@ class AddRestaurantUseCase(
     override fun addItem(
         id: String,
         entity: RestaurantReservation,
-        params: AddPlanUseCase.StateParams
+        params: AddPlanUseCase.StateParams,
     ) {
         itemStore.addItem(
             PendingData.PendingRestaurant(
@@ -59,7 +59,8 @@ class AddRestaurantUseCase(
     }
 
     private fun createItem(
-        data: PendingData.PendingRestaurant, params: AddPlanUseCase.StateParams,
+        data: PendingData.PendingRestaurant,
+        params: AddPlanUseCase.StateParams,
     ): AddRestaurantItemState {
         return AddRestaurantItemState(
             id = data.id,
@@ -72,7 +73,8 @@ class AddRestaurantUseCase(
             restaurantName = data.place?.name,
             searchResults = data.searchResults.map {
                 AutoCompleteResultState(
-                    it.name, it.address
+                    it.name,
+                    it.address,
                 )
             },
         )

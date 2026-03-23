@@ -22,7 +22,7 @@ object MockData {
             airportTo = lis,
             departure = "2024-05-10T22:05 -0400",
             arrival = "2024-05-11T10:00 +0100",
-        )
+        ),
     )
     val lisbonAirBnB = Lodging(
         name = null,
@@ -48,7 +48,7 @@ object MockData {
             airportTo = ory,
             departure = "2024-05-21T16:50 +0100",
             arrival = "2024-05-21T20:15 +0200",
-        )
+        ),
     )
     val parisAirBnB = Lodging(
         name = null,
@@ -98,18 +98,20 @@ object MockData {
         ),
     )
     val trip = Trip(
-        id = "minhaTrip", flights = listOf(
+        id = "minhaTrip",
+        flights = listOf(
             flightToLisbon,
             flightToParis,
             flightToNewYork,
-        ), lodgings = listOf(
+        ),
+        lodgings = listOf(
             lisbonAirBnB,
             portoHotel,
             parisAirBnB,
             niceHotel,
             milanHotel,
             sorentoHotel,
-        )
+        ),
     )
 
     val tripList = listOf(trip)

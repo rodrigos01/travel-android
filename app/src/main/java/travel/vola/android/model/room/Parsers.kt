@@ -29,9 +29,9 @@ fun RoomData.Trip.toAppDataModel(): Trip {
     val appRestaurants = restaurants.map { it.toAppDataModel() }
     val image =
         entity.coverImage ?: appLodgings.firstOrNull()?.city?.coverImage
-        ?: appFlights.firstOrNull()?.segments?.firstOrNull()?.airportTo?.city?.coverImage
-        ?: appPlaces.firstOrNull()?.city?.coverImage
-        ?: appRestaurants.firstOrNull()?.city?.coverImage
+            ?: appFlights.firstOrNull()?.segments?.firstOrNull()?.airportTo?.city?.coverImage
+            ?: appPlaces.firstOrNull()?.city?.coverImage
+            ?: appRestaurants.firstOrNull()?.city?.coverImage
     return Trip(
         id = entity.id,
         name = entity.name,
@@ -56,9 +56,9 @@ fun RoomData.Trip.toAppDataModel(): Trip {
                 questionsAnswers = preferences.questionsAnswers.map {
                     AnsweredQuestion(
                         it.question,
-                        it.answer
+                        it.answer,
                     )
-                }
+                },
             )
         },
         flights = appFlights,
@@ -146,9 +146,9 @@ fun TripPreferences.toRoomDataModel() = RoomData.TripPreferences(
     questionsAnswers.map {
         RoomData.AnsweredQuestion(
             it.question,
-            it.answer
+            it.answer,
         )
-    }
+    },
 )
 
 fun GroupType.toRoomDataModel(): RoomData.GroupType = when (this) {
@@ -181,9 +181,9 @@ fun RoomData.FlexibleSection.toAppDataModel(): FlexibleDaySection = FlexibleDayS
                     place = it.place.toAppDataModel(),
                     note = it.entity.note,
                 )
-            }
+            },
         )
-    }
+    },
 )
 
 class Converters {

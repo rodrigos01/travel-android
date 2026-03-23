@@ -1,8 +1,5 @@
 package travel.vola.android.ui.trip.eventlist.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,8 +19,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import travel.vola.android.R
 import travel.vola.android.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -45,7 +44,7 @@ fun EmptyDateListItem(
             Modifier
         }
             .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 16.dp),
     ) {
         LeadingDate(
             dayOfMonth = dayOfMonth,
@@ -63,13 +62,13 @@ fun EmptyDateListItem(
                         text = "No plans yet, tap to add",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                     FilledTonalIconButton(onClick = onGenerateTapped) {
                         Icon(
                             Icons.Rounded.AutoFixHigh,
                             contentDescription = "generate plans",
-                            tint = LocalContentColor.current
+                            tint = LocalContentColor.current,
                         )
                     }
                 }
@@ -83,8 +82,12 @@ fun EmptyDateListItem(
 fun EmptyDateListItemPreview() {
     AppTheme {
         EmptyDateListItem(
-            "12", "Sat", highlightDate = true,
-            isGeneratingSuggestions = false, onTap = {}, onGenerateTapped = {},
+            "12",
+            "Sat",
+            highlightDate = true,
+            isGeneratingSuggestions = false,
+            onTap = {},
+            onGenerateTapped = {},
         )
     }
 }

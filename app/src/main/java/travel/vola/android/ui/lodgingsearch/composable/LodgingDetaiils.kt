@@ -1,8 +1,5 @@
 package travel.vola.android.ui.lodgingsearch.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedContent
@@ -74,6 +71,7 @@ import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
@@ -102,7 +100,6 @@ import travel.vola.android.ui.lodgingsearch.state.LodgingReviewState
 import travel.vola.android.ui.lodgingsearch.state.LodgingRoomOfferState
 import travel.vola.android.ui.theme.AppTheme
 import kotlin.math.roundToInt
-
 
 @Composable
 fun LodgingDetails(
@@ -178,7 +175,7 @@ fun LodgingDetailsContent(
             .padding(horizontal = 16.dp)
             .padding(
                 top = paddingValues.calculateTopPadding() + 16.dp,
-                bottom = paddingValues.calculateBottomPadding() + 16.dp
+                bottom = paddingValues.calculateBottomPadding() + 16.dp,
             )
             .animateContentSize(),
     ) {
@@ -187,14 +184,14 @@ fun LodgingDetailsContent(
             horizontalArrangement = spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(16F / 9F)
+                .aspectRatio(16F / 9F),
         ) {
             photos.firstOrNull()?.let {
                 val heroSizedState = rememberSizedImageState(it)
                 LodgingImage(
                     rememberAsyncImagePainter(
                         model = heroSizedState.model,
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop,
                     ),
                     modifier = Modifier
                         .weight(1F)
@@ -215,7 +212,7 @@ fun LodgingDetailsContent(
                     LodgingImage(
                         rememberAsyncImagePainter(
                             model = image2SizedState.model,
-                            contentScale = ContentScale.Crop
+                            contentScale = ContentScale.Crop,
                         ),
                         modifier = Modifier
                             .weight(1F)
@@ -241,43 +238,43 @@ fun LodgingDetailsContent(
                         LodgingImage(
                             rememberAsyncImagePainter(
                                 model = sizedImageState.model,
-                                contentScale = ContentScale.Crop
+                                contentScale = ContentScale.Crop,
                             ),
                             colorFilter = ColorFilter.tint(
                                 MaterialTheme.colorScheme.scrim.copy(
-                                    alpha = 0.3F
+                                    alpha = 0.3F,
                                 ),
                                 blendMode = BlendMode.SrcAtop,
                             ),
-                            modifier = Modifier.asSizedImageTarget(sizedImageState)
+                            modifier = Modifier.asSizedImageTarget(sizedImageState),
                         )
                         Text(
                             text = stringResource(R.string.label_more_photos, state.photos.size - 2),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.inverseOnSurface,
-                            modifier = Modifier.align(Alignment.Center)
+                            modifier = Modifier.align(Alignment.Center),
                         )
                     }
                 }
             }
         }
         Row(horizontalArrangement = spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-            FilledTonalButton(onClick = {/* Save lodging */ }) {
+            FilledTonalButton(onClick = { /* Save lodging */ }) {
                 ButtonContent(
                     iconResId = R.drawable.bookmark_border_outline_24,
                     iconContentDescription = "Save button icon",
-                    text = "Save lodging"
+                    text = "Save lodging",
                 )
             }
             Button(
                 onClick = onAddToTripTapped,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
-                modifier = Modifier.weight(1F)
+                modifier = Modifier.weight(1F),
             ) {
                 ButtonContent(
                     icon = Icons.Filled.Add,
                     iconContentDescription = "Add button icon",
-                    text = "Add to trip"
+                    text = "Add to trip",
                 )
             }
         }
@@ -288,7 +285,7 @@ fun LodgingDetailsContent(
                         .height(64.dp)
                         .fillMaxWidth()
                         .clip(MaterialTheme.shapes.large)
-                        .skeletonLoader()
+                        .skeletonLoader(),
                 )
             } else if (state.rooms.isNotEmpty()) {
                 Column {
@@ -300,7 +297,7 @@ fun LodgingDetailsContent(
                             Intent(
                                 Intent.ACTION_VIEW,
                                 Uri.parse(room.bookingUrl),
-                            )
+                            ),
                         )
                     })
                     if (state.rooms.size > 1) {
@@ -308,15 +305,15 @@ fun LodgingDetailsContent(
                             onClick = {
                                 coroutineScope.launch {
                                     contentState.scrollState.animateScrollTo(
-                                        roomsOffset?.y?.roundToInt() ?: 0
+                                        roomsOffset?.y?.roundToInt() ?: 0,
                                     )
                                 }
                             },
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
                         ) {
                             Icon(
                                 Icons.Filled.KeyboardArrowDown,
-                                contentDescription = null
+                                contentDescription = null,
                             )
                             Text(stringResource(R.string.label_see_more_offers, state.rooms.size - 1))
                         }
@@ -341,7 +338,7 @@ fun LodgingDetailsContent(
             if (hasMoreText) {
                 TextButton(
                     onClick = { expanded = !expanded },
-                    modifier = Modifier.align(Alignment.End)
+                    modifier = Modifier.align(Alignment.End),
                 ) {
                     Text(if (expanded) "Read less" else "Read more")
                 }
@@ -349,7 +346,7 @@ fun LodgingDetailsContent(
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = spacedBy(8.dp)
+            horizontalArrangement = spacedBy(8.dp),
         ) {
             Image(Icons.Filled.Place, contentDescription = "Location icon")
             Text(state.address, style = MaterialTheme.typography.labelLarge)
@@ -362,7 +359,7 @@ fun LodgingDetailsContent(
                             .fillMaxWidth()
                             .aspectRatio(6 / 4f)
                             .clip(MaterialTheme.shapes.large)
-                            .skeletonLoader(startDelayMillis = 300)
+                            .skeletonLoader(startDelayMillis = 300),
                     )
                 } else {
                     Box(
@@ -370,7 +367,7 @@ fun LodgingDetailsContent(
                             .fillMaxWidth()
                             .aspectRatio(6 / 4f)
                             .clip(MaterialTheme.shapes.large)
-                            .background(color = MaterialTheme.colorScheme.surfaceContainer)
+                            .background(color = MaterialTheme.colorScheme.surfaceContainer),
                     ) {
                         val cameraPositionState = rememberCameraPositionState()
                         val markerState = rememberUpdatedMarkerState(position = marker)
@@ -397,7 +394,9 @@ fun LodgingDetailsContent(
                             modifier = Modifier.fillMaxSize(),
                         ) {
                             Marker(
-                                state = markerState, title = state.name, snippet = state.address
+                                state = markerState,
+                                title = state.name,
+                                snippet = state.address,
                             )
                         }
                         Surface(color = Color.Transparent, onClick = {
@@ -421,13 +420,13 @@ fun LodgingDetailsContent(
                         Intent(
                             Intent.ACTION_VIEW,
                             Uri.parse(state.reviewsUrl),
-                        )
+                        ),
                     )
                 }) {
                     ButtonContent(
                         iconResId = R.drawable.open_in_new_outline_24,
                         iconContentDescription = "Open reviews button icon",
-                        text = "View all on ${state.reviewsSource}"
+                        text = "View all on ${state.reviewsSource}",
                     )
                 }
             }
@@ -443,7 +442,8 @@ fun LodgingDetailsContent(
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.onGloballyPositioned {
                     roomsOffset = it.positionInParent()
-                })
+                },
+            )
             state.rooms.subList(1, state.rooms.size).forEach { room ->
                 RoomOfferItem(room, onCoverImageTapped = { coverImage ->
                     onRoomCoverImageTapped(room, coverImage)
@@ -452,7 +452,7 @@ fun LodgingDetailsContent(
                         Intent(
                             Intent.ACTION_VIEW,
                             Uri.parse(room.bookingUrl),
-                        )
+                        ),
                     )
                 })
             }
@@ -462,7 +462,7 @@ fun LodgingDetailsContent(
         showImageGallery && imageGalleryModels.isNotEmpty(),
         enter = fadeIn(),
         exit = fadeOut(),
-        modifier = Modifier.wrapContentSize(unbounded = true)
+        modifier = Modifier.wrapContentSize(unbounded = true),
     ) {
         DismissableOverlay(onDismiss = {
             showImageGallery = false
@@ -475,9 +475,10 @@ fun LodgingDetailsContent(
         }
     }
     AnimatedVisibility(
-        showExpandedMap, enter = fadeIn(),
+        showExpandedMap,
+        enter = fadeIn(),
         exit = fadeOut(),
-        modifier = Modifier.wrapContentSize(unbounded = true)
+        modifier = Modifier.wrapContentSize(unbounded = true),
     ) {
         DismissableOverlay(onDismiss = {
             showExpandedMap = false
@@ -502,10 +503,12 @@ fun LodgingDetailsContent(
                     .fillMaxWidth()
                     .fillMaxHeight(0.8F)
                     .clip(MaterialTheme.shapes.large)
-                    .background(color = MaterialTheme.colorScheme.surfaceContainer)
+                    .background(color = MaterialTheme.colorScheme.surfaceContainer),
             ) {
                 Marker(
-                    state = markerState, title = state.name, snippet = state.address
+                    state = markerState,
+                    title = state.name,
+                    snippet = state.address,
                 )
             }
         }
@@ -531,11 +534,12 @@ fun LodgingDetailsTopBar(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = spacedBy(8.dp),
-            modifier = Modifier.padding(all = 16.dp)
+            modifier = Modifier.padding(all = 16.dp),
         ) {
             LodgingRating(state.rating)
             Text(
-                state.reviewCount.reviewCountString(), modifier = Modifier
+                state.reviewCount.reviewCountString(),
+                modifier = Modifier
                     .clickable {
                         contentState.reviewsOffset.value?.y?.let {
                             coroutineScope.launch {
@@ -543,7 +547,7 @@ fun LodgingDetailsTopBar(
                             }
                         }
                     }
-                    .padding(vertical = 8.dp)
+                    .padding(vertical = 8.dp),
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(state.lodgingType)
@@ -554,7 +558,7 @@ fun LodgingDetailsTopBar(
 @Composable
 private fun DismissableOverlay(
     onDismiss: () -> Unit,
-    content: @Composable (paddingValues: PaddingValues) -> Unit
+    content: @Composable (paddingValues: PaddingValues) -> Unit,
 ) {
     Overlay {
         Box {
@@ -571,16 +575,16 @@ private fun DismissableOverlay(
                             top = windowInsetsPadding.calculateTopPadding() + with(density) { it.size.height.toDp() },
                             bottom = windowInsetsPadding.calculateBottomPadding(),
                             start = windowInsetsPadding.calculateStartPadding(layoutDirection),
-                            end = windowInsetsPadding.calculateEndPadding(layoutDirection)
+                            end = windowInsetsPadding.calculateEndPadding(layoutDirection),
                         )
                     }
                     .align(Alignment.TopEnd)
-                    .padding(end = 16.dp, top = windowInsetsPadding.calculateTopPadding() + 8.dp)
+                    .padding(end = 16.dp, top = windowInsetsPadding.calculateTopPadding() + 8.dp),
             ) {
                 Icon(
                     Icons.Filled.Close,
                     contentDescription = "",
-                    tint = MaterialTheme.colorScheme.inverseOnSurface
+                    tint = MaterialTheme.colorScheme.inverseOnSurface,
                 )
             }
         }
@@ -636,7 +640,7 @@ fun LodgingDetailsPreview() {
                 authorName = "Author",
                 authorLocation = "Author Location",
                 review = loremIpsum(),
-                title = "A Lovely stay"
+                title = "A Lovely stay",
             )
         },
         isLoading = false,

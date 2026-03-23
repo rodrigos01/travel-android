@@ -46,7 +46,8 @@ fun AddPlanListItem(
 
 @Composable
 fun AddPlanContent(
-    state: AddPlanItemState, actionHandler: AddPlanItemActionHandler
+    state: AddPlanItemState,
+    actionHandler: AddPlanItemActionHandler,
 ) {
     when (state) {
         is ManualStartEndAddPlanState -> {
@@ -56,12 +57,14 @@ fun AddPlanContent(
                         uiState = state,
                         onAirportFromTextChanged = {
                             actionHandler.airportFromSearchTextChanged(
-                                state.id, it
+                                state.id,
+                                it,
                             )
                         },
                         onAirportToTextChanged = {
                             actionHandler.airportToSearchTextChanged(
-                                state.id, it
+                                state.id,
+                                it,
                             )
                         },
                         onUpdated = {
@@ -90,7 +93,8 @@ fun AddPlanContent(
                         uiState = state,
                         onLodgingTextChanged = {
                             actionHandler.lodgingTextChanged(
-                                state.id, it
+                                state.id,
+                                it,
                             )
                         },
                         onFindLodgingButtonTapped = {
@@ -142,7 +146,10 @@ fun AddPlanContent(
                         },
                         onUpdated = { dateTime, timeSelected, selectedSearchResultIndex ->
                             actionHandler.onUpdated(
-                                state.id, dateTime, timeSelected, selectedSearchResultIndex
+                                state.id,
+                                dateTime,
+                                timeSelected,
+                                selectedSearchResultIndex,
                             )
                         },
                     )
@@ -159,7 +166,8 @@ fun AddPlanContent(
                 searchResults = state.searchResults,
                 onLocationSearchTextChanged = {
                     actionHandler.lodgingTextChanged(
-                        state.id, it
+                        state.id,
+                        it,
                     )
                 },
                 onSwitchToManualButtonTapped = {
@@ -188,7 +196,7 @@ fun AddPlanContent(
                 onTextChanged = {
                     actionHandler.sectionNameChanged(
                         state.id,
-                        it
+                        it,
                     )
                 },
                 onGenerateTapped = {
@@ -196,9 +204,12 @@ fun AddPlanContent(
                 },
                 onUpdated = { dateTime, timeSelected ->
                     actionHandler.onFlexibleItemDateTimeUpdated(
-                        state.id, dateTime, timeSelected
+                        state.id,
+                        dateTime,
+                        timeSelected,
                     )
-                })
+                },
+            )
         }
     }
 }
@@ -235,7 +246,7 @@ fun AddPlanListItemPreview() {
                         dateSelectionEnabled = false,
                         locationText = "Charles de Gaule",
                         searchResults = emptyList(),
-                        isTimeSet = true
+                        isTimeSet = true,
                     ),
                     endState = ManualAddPlanState(
                         zonedDateTime("2025-10-18T06:00 -0300"),
@@ -243,7 +254,7 @@ fun AddPlanListItemPreview() {
                         dateSelectionEnabled = true,
                         locationText = "John F. Kennedy",
                         searchResults = emptyList(),
-                        isTimeSet = true
+                        isTimeSet = true,
                     ),
                     typeSelectionEnabled = true,
                     saveButtonEnabled = true,
@@ -305,7 +316,7 @@ object NoOpActionHandler : AddPlanItemActionHandler {
         itemId: String,
         dateTime: ZonedDateTime?,
         timeSelected: Boolean,
-        selectedSearchResultIndex: Int
+        selectedSearchResultIndex: Int,
     ) = Unit
 
     override fun onGenerateSectionTapped(itemId: String) = Unit
@@ -315,14 +326,21 @@ object NoOpActionHandler : AddPlanItemActionHandler {
     override fun onFlexibleCategoryAdded(itemId: String, category: String) = Unit
     override fun onFlexibleItemSearchTextChanged(itemId: String, content: CharSequence) = Unit
     override fun onFlexibleItemSearchResultSelected(
-        itemId: String, index: Int, categoryIndex: Int
+        itemId: String,
+        index: Int,
+        categoryIndex: Int,
     ) = Unit
 
     override fun onFlexibleItemNoteAdded(
-        itemId: String, index: Int, categoryIndex: Int, note: String
+        itemId: String,
+        index: Int,
+        categoryIndex: Int,
+        note: String,
     ) = Unit
 
     override fun onFlexibleItemDateTimeUpdated(
-        itemId: String, dateTime: ZonedDateTime, timeSelected: Boolean
+        itemId: String,
+        dateTime: ZonedDateTime,
+        timeSelected: Boolean,
     ) = Unit
 }

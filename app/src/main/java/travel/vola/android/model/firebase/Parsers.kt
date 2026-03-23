@@ -28,9 +28,9 @@ fun FirebaseData.Trip.toAppDataModel(): Trip {
     val appRestaurants = restaurants.map { it.toAppDataModel() }
     val image =
         coverImage ?: appLodgings.firstOrNull()?.city?.coverImage
-        ?: appFlights.firstOrNull()?.segments?.firstOrNull()?.airportTo?.city?.coverImage
-        ?: appPlaces.firstOrNull()?.city?.coverImage
-        ?: appRestaurants.firstOrNull()?.city?.coverImage
+            ?: appFlights.firstOrNull()?.segments?.firstOrNull()?.airportTo?.city?.coverImage
+            ?: appPlaces.firstOrNull()?.city?.coverImage
+            ?: appRestaurants.firstOrNull()?.city?.coverImage
     return Trip(
         id = id,
         name = name,
@@ -178,7 +178,7 @@ fun RestaurantReservation.toFirebaseDataModel() = FirebaseData.RestaurantReserva
 fun FirebaseData.TripPreferences.toAppDataModel() = TripPreferences(
     basicInformation = BasicInformation(
         groupType = basicInformation.groupType.toAppDataModel(),
-        travelers = basicInformation.travelers
+        travelers = basicInformation.travelers,
     ),
     initialParameters = TripParameters(
         occasions = initialParameters.occasions,
@@ -187,9 +187,9 @@ fun FirebaseData.TripPreferences.toAppDataModel() = TripPreferences(
         focus = initialParameters.focus,
         mustHave = initialParameters.mustHave,
         duration = initialParameters.duration,
-        anythingElse = initialParameters.anythingElse
+        anythingElse = initialParameters.anythingElse,
     ),
-    questionsAnswers = questionsAnswers.map { AnsweredQuestion(it.question, it.answer) }
+    questionsAnswers = questionsAnswers.map { AnsweredQuestion(it.question, it.answer) },
 )
 
 fun TripPreferences.toFirebaseDataModel() = FirebaseData.TripPreferences(
@@ -204,14 +204,14 @@ fun TripPreferences.toFirebaseDataModel() = FirebaseData.TripPreferences(
         focus = initialParameters.focus,
         mustHave = initialParameters.mustHave,
         duration = initialParameters.duration,
-        anythingElse = initialParameters.anythingElse
+        anythingElse = initialParameters.anythingElse,
     ),
     questionsAnswers = questionsAnswers.map {
         FirebaseData.AnsweredQuestion(
             it.question,
-            it.answer
+            it.answer,
         )
-    }
+    },
 )
 
 fun GroupType.toFirebaseDataModel() = when (this) {
@@ -243,11 +243,11 @@ fun FirebaseData.FlexibleDaySection.toAppDataModel(): FlexibleDaySection {
                     FlexibleDayItem(
                         id = it.id,
                         place = it.place.toAppDataModel(),
-                        note = it.note
+                        note = it.note,
                     )
-                }
+                },
             )
-        }
+        },
     )
 }
 
@@ -263,11 +263,11 @@ fun FlexibleDaySection.toFirebaseDataModel() = FirebaseData.FlexibleDaySection(
                 FirebaseData.FlexibleSectionItem(
                     id = it.id,
                     place = it.place.toFirebaseDataModel(),
-                    note = it.note
+                    note = it.note,
                 )
             },
         )
-    }
+    },
 )
 
 fun String.toTime(): ZonedDateTime = zonedDateTime(this)

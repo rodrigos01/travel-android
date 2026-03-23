@@ -17,10 +17,10 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import travel.vola.android.R
 import travel.vola.android.common.ui.components.IconTextButton
-import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.timeInMillis
 import travel.vola.android.extensions.update
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.theme.AppTheme
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -49,7 +49,8 @@ fun DatePickerButton(
             onDateSelected = onDateSelected,
             onDismiss = {
                 showDatePickerState = false
-            })
+            },
+        )
     }
 }
 
@@ -72,14 +73,15 @@ fun DatePickerDialog(
                 override fun isSelectableDate(utcTimeMillis: Long): Boolean {
                     return minTimeInDeviceTimeZone == null || utcTimeMillis >= minTimeInDeviceTimeZone.timeInMillis
                 }
-            })
+            },
+        )
     ConfirmationDialog(
         onConfirm = {
             datePickerState.selectedTime?.let {
                 onDateSelected(
                     it.update(
-                        timeZone = selectedTime?.zone ?: ZoneId.systemDefault()
-                    )
+                        timeZone = selectedTime?.zone ?: ZoneId.systemDefault(),
+                    ),
                 )
             }
             onDismiss()

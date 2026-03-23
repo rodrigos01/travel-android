@@ -21,7 +21,7 @@ fun TimedPlaceListItem(state: TripItemState.TimedPlaceItemState, highlightDate: 
         iconPainter = rememberVectorPainter(Icons.Default.Place),
         headline = state.placeName,
         supporting = state.cityName,
-        position = state.backgroundStyle.asEventItemPosition()
+        position = state.backgroundStyle.asEventItemPosition(),
     )
 }
 
@@ -40,8 +40,8 @@ fun TimedPlaceListItemPreview() {
                 showTime = true,
                 placeName = "Fushimi Inari Taisha",
                 cityName = "Kyoto, Japan",
-                imageUrl = ""
-            )
+                imageUrl = "",
+            ),
         )
     }
 }

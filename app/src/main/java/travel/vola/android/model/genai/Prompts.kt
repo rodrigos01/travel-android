@@ -6,13 +6,13 @@ import com.google.firebase.ai.type.StringFormat
 enum class Prompts(val prompt: String, val outputSchema: Schema) {
     INITIAL_PARAMETERS(
         "provide sets of options, based on the basic information provided by the user, to allow for the generation of their initial itinerary. The options should be compatible and commonly used with the basic information provided. The options should be associated with the basic information provided" +
-                "The options should follow the below descriptions and quantity requirements:" +
-                "Occasion: 3-5 occasions travelers commonly travel for. Include a generic option like “vacation” for when there's no special occasion\n" +
-                "Interests: 10-15 short-phrased broad interests (1-3 words)\n" +
-                "Vibe: 5-8 short (one or two words) atmospheres travelers commonly look for\n" +
-                "Focus: 3-5 \"themes\" travelers would often plan their trips around\n" +
-                "Must Have: 3-5 possible experiences travelers often travel for\n" +
-                "Duration (if not provided in the basic information): 3 time range options that are optimal for this trip.\n",
+            "The options should follow the below descriptions and quantity requirements:" +
+            "Occasion: 3-5 occasions travelers commonly travel for. Include a generic option like “vacation” for when there's no special occasion\n" +
+            "Interests: 10-15 short-phrased broad interests (1-3 words)\n" +
+            "Vibe: 5-8 short (one or two words) atmospheres travelers commonly look for\n" +
+            "Focus: 3-5 \"themes\" travelers would often plan their trips around\n" +
+            "Must Have: 3-5 possible experiences travelers often travel for\n" +
+            "Duration (if not provided in the basic information): 3 time range options that are optimal for this trip.\n",
         Schema.obj(
             mapOf(
                 "occasions" to Schema.array(
@@ -53,8 +53,8 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                     maxItems = 3,
                 ),
                 "anythingElse" to Schema.string("leave this blank"),
-            )
-        )
+            ),
+        ),
     ),
     INITIAL_PARAMETERS_FOLLOW_UP(
         prompt = "The user has selected the below parameters from the options you provided. generate a maximum of 3 follow-up clarifying questions for any choices they might have made that conflict with each other or with their basic trip information or that require further clarification. Each question should be accompanied with 2-3 possible answers for the user to choose. Keep the questions short and don’t include the user choices that triggered the question in the text as they will be presented to the User in the UI. Keep the answers as brief, single sentences. The answers should be definitive and not require further clarification. If the basic information and parameters are enough for generating an itinerary, it is acceptable to return no questions.",
@@ -66,25 +66,25 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                         mapOf(
                             "parameterSelections" to Schema.array(
                                 Schema.string(),
-                                "selections in the parameter that generated the question"
+                                "selections in the parameter that generated the question",
                             ),
                             "question" to Schema.string("question to ask the user. Keep it short and don't include the options that triggered it as they'll be shown in the UI."),
                             "answers" to Schema.array(
-                                Schema.string("possible answers to the question")
-                            )
-                        )
+                                Schema.string("possible answers to the question"),
+                            ),
+                        ),
                     ),
-                    maxItems = 3
-                )
-            )
-        )
+                    maxItems = 3,
+                ),
+            ),
+        ),
     ),
     HIGH_LEVEL_ITINERARY_OPTIONS(
         prompt = "Generate 3 high-level travel itinerary options based on the user's basic information, the parameters provided and the answers provided to the questions below. These itineraries should be basic skeletons with just cities visited and how long to stay in each. If the destination is not specific (i.e. a region, a country or a continent), suggest itineraries that include multiple cities to match their parameters. If the duration is not specific (a range of days) the itineraries should include suggested start and end dates that best match the destinations and parameters. The itineraries should consider their interests, focus and must-have experiences for their dates. If the itineraries include multiple cities, it should consider travel between the destinations for their order. For each itinerary, suggest 3 short, single-sentence predicted potential changes the users might want to make to it, focused solely on the cities and periods in each of them. The changes should be self-contained and not require follow up questions. Make sure to call genHighLevelItineraryOptions function to generate it",
         outputSchema = Schema.obj(
             mapOf(
                 "planningLogic" to Schema.string(
-                    description = "A one-sentence summary of why you chose these 3 options."
+                    description = "A one-sentence summary of why you chose these 3 options.",
                 ),
                 "itineraries" to Schema.array(
                     itinerarySchema,
@@ -92,11 +92,11 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                     maxItems = 3,
                 ),
             ),
-        )
+        ),
     ),
     REFINE_ITINERARY(
         prompt = "The user has given the following feedback to the itinerary below. Re-generate this itinerary according to their feedback and previously chosen preferences. Make sure to call the refineItinerary to generate it",
-        outputSchema = itinerarySchema
+        outputSchema = itinerarySchema,
     ),
     DAILY_ITINERARY(
         prompt = "Based on the trip itinerary below, generate a reference guide for the dates requested. This reference guide should be organized by the days of the trip and for each day, have a diverse list of suggested places for the user to visit based on their preferences and other plans they already have for that date. The places should have categories so that they can be easily filtered in the UI and each day should have between 5 and 10 suggested places, with each category having at least 2 suggestions. Travel days should be divided in sections for each city the user will be on that date. Make sure the suggestions don’t include places the user already has in their itinerary.",
@@ -108,7 +108,7 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                         mapOf(
                             "date" to Schema.string(
                                 "date of the day in the format YYYY-MM-DD",
-                                format = StringFormat.Custom("date")
+                                format = StringFormat.Custom("date"),
                             ),
                             "sections" to Schema.array(
                                 description = "Different sections of the day for when the user will be in different cities in the same day.",
@@ -117,17 +117,16 @@ enum class Prompts(val prompt: String, val outputSchema: Schema) {
                                         "cityId" to Schema.string("id of the city as provided in the original itinerary"),
                                         "name" to Schema.string("A Short title describing the selection of places in this section"),
                                         "places" to Schema.array(placeSchema),
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        )
-    )
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    ),
 }
-
 
 private val itinerarySchema = Schema.obj(
     mapOf(
@@ -171,8 +170,8 @@ private val itinerarySchema = Schema.obj(
                         ),
                         description = "date representing the last day in this city",
                     ),
-                )
-            )
+                ),
+            ),
         ),
         "predictedChanges" to Schema.array(
             Schema.string(),
@@ -180,7 +179,7 @@ private val itinerarySchema = Schema.obj(
             minItems = 3,
             maxItems = 3,
         ),
-    )
+    ),
 )
 
 private val placeSchema = Schema.obj(
@@ -198,6 +197,6 @@ private val placeSchema = Schema.obj(
             "time the user needs to leave this place, including the date",
             nullable = true,
             format = StringFormat.Custom("date-time"),
-        )
-    )
+        ),
+    ),
 )

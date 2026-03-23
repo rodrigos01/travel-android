@@ -94,7 +94,7 @@ sealed interface FirebaseData {
         FAMILY,
         FRIENDS,
         COWORKERS,
-        COUPLE
+        COUPLE,
     }
 
     data class TripParameters(
@@ -130,5 +130,4 @@ sealed interface FirebaseData {
         val place: Place = Place(),
         val note: String = "",
     )
-
 }

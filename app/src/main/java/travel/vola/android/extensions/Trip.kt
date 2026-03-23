@@ -23,12 +23,12 @@ fun Trip.getDestinations(): List<TripDestination> =
         when (it) {
             is FlightSegment -> listOf(
                 it.departure to it.getPlace(it.departure),
-                it.arrival to it.getPlace(it.arrival)
+                it.arrival to it.getPlace(it.arrival),
             )
 
             is Lodging -> listOf(
                 it.checkIn to it.city,
-                it.checkout to it.city
+                it.checkout to it.city,
             )
 
             is TimedPlace -> listOf(it.startDateTime to it.city)

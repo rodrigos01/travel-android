@@ -47,9 +47,11 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
         val id = UUID.randomUUID().toString()
         dao.addTrip(
             RoomData.Schema.Trip(
-                id, name, coverImage = null,
+                id,
+                name,
+                coverImage = null,
                 preferences = preferences.toRoomDataModel(),
-            )
+            ),
         )
         places.forEach {
             saveTimedPlace(id, it)
@@ -71,7 +73,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
 
     override suspend fun updateTripPreferences(
         tripId: String,
-        preferences: TripPreferences
+        preferences: TripPreferences,
     ) {
         withTrip(tripId) { trip ->
             dao.updateTrip(trip.copy(preferences = preferences.toRoomDataModel()))
@@ -84,7 +86,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
                 id = flight.id,
                 tripId = tripId,
                 price = flight.price,
-            )
+            ),
         )
         flight.segments.forEachIndexed { index, segment ->
             savePlace(segment.airportFrom.city)
@@ -94,7 +96,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
                     name = segment.airportFrom.name,
                     timeZone = segment.airportFrom.timeZone,
                     city = segment.airportFrom.city.id,
-                )
+                ),
             )
             savePlace(segment.airportTo.city)
             dao.saveAirport(
@@ -103,7 +105,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
                     name = segment.airportTo.name,
                     timeZone = segment.airportTo.timeZone,
                     city = segment.airportTo.city.id,
-                )
+                ),
             )
             dao.saveFlightSegment(
                 RoomData.Schema.FlightSegment(
@@ -113,7 +115,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
                     airportTo = segment.airportTo.iata,
                     departure = segment.departure,
                     arrival = segment.arrival,
-                )
+                ),
             )
         }
     }
@@ -131,7 +133,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
                 city = lodging.city.id,
                 checkIn = lodging.checkIn,
                 checkout = lodging.checkout,
-            )
+            ),
         )
     }
 
@@ -148,7 +150,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
                 hasEndTime = timedPlace.hasEndTime,
                 place = timedPlace.place.id,
                 city = timedPlace.city.id,
-            )
+            ),
         )
     }
 
@@ -165,13 +167,13 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
                 dateTime = restaurantReservation.dateTime,
                 place = restaurantReservation.place.id,
                 city = restaurantReservation.city.id,
-            )
+            ),
         )
     }
 
     override suspend fun saveFlexibleSection(
         tripId: String,
-        flexibleSection: FlexibleDaySection
+        flexibleSection: FlexibleDaySection,
     ) {
         flexibleSection.categories.forEach { category ->
             val categoryId = UUID.randomUUID().toString()
@@ -183,7 +185,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
                         categoryId = categoryId,
                         place = it.place.id,
                         note = it.note,
-                    )
+                    ),
                 )
             }
             dao.saveFlexibleSectionCategory(
@@ -191,7 +193,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
                     id = categoryId,
                     sectionId = flexibleSection.id,
                     name = category.name,
-                )
+                ),
             )
         }
         dao.saveFlexibleSection(
@@ -201,7 +203,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
                 name = flexibleSection.name,
                 date = flexibleSection.date,
                 city = flexibleSection.city.id,
-            )
+            ),
         )
     }
 
@@ -225,7 +227,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
 
     override suspend fun deleteRestaurantReservation(
         tripId: String,
-        restaurantReservationId: String
+        restaurantReservationId: String,
     ) {
         dao.getRestaurantReservation(tripId, restaurantReservationId).let { restaurantReservation ->
             dao.deleteRestaurantReservation(restaurantReservation)
@@ -234,7 +236,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
 
     override suspend fun deleteFlexibleSection(
         tripId: String,
-        flexibleSectionId: String
+        flexibleSectionId: String,
     ) {
         val section = dao.getFlexibleSection(tripId, flexibleSectionId)
         dao.deleteFlexibleSection(section)
@@ -255,7 +257,7 @@ class RoomTripDataSource(private val dao: TripDao) : TripDataSource {
                 address = place.address,
                 externalId = place.externalId,
                 source = place.source,
-            )
+            ),
         )
     }
 }

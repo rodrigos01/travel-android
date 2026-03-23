@@ -53,14 +53,14 @@ fun LodgingSearchResultListItem(
 @Composable
 private fun CompactLodgingSearchResultListItem(
     result: LodgingSearchResultState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
             .height(IntrinsicSize.Max)
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large)
             .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.surface),
     ) {
         val sizedImageState = rememberSizedImageState(result.coverImage)
         Image(
@@ -70,14 +70,14 @@ private fun CompactLodgingSearchResultListItem(
                 .weight(1 / 3F)
                 .background(color = MaterialTheme.colorScheme.tertiary)
                 .asSizedImageTarget(sizedImageState),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
         )
         ItemContent(
             result,
             modifier = Modifier
                 .weight(2 / 3F)
                 .wrapContentHeight()
-                .padding(all = 16.dp)
+                .padding(all = 16.dp),
         )
     }
 }
@@ -85,7 +85,7 @@ private fun CompactLodgingSearchResultListItem(
 @Composable
 private fun ExpandedLodgingSearchResultListItem(
     result: LodgingSearchResultState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -93,7 +93,7 @@ private fun ExpandedLodgingSearchResultListItem(
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large)
             .clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surface)
-            .padding(bottom = 16.dp)
+            .padding(bottom = 16.dp),
     ) {
         val sizedImageState = rememberSizedImageState(result.coverImage)
         Image(
@@ -104,7 +104,7 @@ private fun ExpandedLodgingSearchResultListItem(
                 .aspectRatio(1.77f)
                 .background(color = MaterialTheme.colorScheme.tertiary)
                 .asSizedImageTarget(sizedImageState),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
         )
         ItemContent(result, modifier = Modifier.padding(horizontal = 16.dp))
     }
@@ -129,7 +129,7 @@ private fun ItemContent(result: LodgingSearchResultState, modifier: Modifier = M
                 result.lodgingType,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             PriceText(result.price)
         }

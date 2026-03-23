@@ -1,8 +1,5 @@
 package travel.vola.android.ui.lodgingsearch.composable
 
-import travel.vola.android.R
-import androidx.compose.ui.res.stringResource
-
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,16 +25,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
+import travel.vola.android.R
 import travel.vola.android.common.ui.preview.loremIpsum
-import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.monthAndYearString
+import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.lodgingsearch.state.LodgingReviewState
 import travel.vola.android.ui.theme.AppTheme
 import java.time.format.FormatStyle
@@ -54,7 +53,7 @@ fun LodgingReviewItem(state: LodgingReviewState) {
                 Text(
                     state.reviewTime.dateString(style = FormatStyle.LONG),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
             Image(
@@ -62,10 +61,10 @@ fun LodgingReviewItem(state: LodgingReviewState) {
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(state.ratingImageUrl)
                         .decoderFactory(SvgDecoder.Factory())
-                        .build()
+                        .build(),
                 ),
                 contentDescription = null,
-                modifier = Modifier.height(24.dp)
+                modifier = Modifier.height(24.dp),
             )
         }
         var expanded by remember { mutableStateOf(true) }
@@ -85,7 +84,7 @@ fun LodgingReviewItem(state: LodgingReviewState) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.heightIn(min = ButtonDefaults.MinHeight)
+            modifier = Modifier.heightIn(min = ButtonDefaults.MinHeight),
         ) {
             Image(
                 painter = rememberAsyncImagePainter(state.authorAvatarUrl),
@@ -93,7 +92,7 @@ fun LodgingReviewItem(state: LodgingReviewState) {
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
             )
             Column {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -102,14 +101,14 @@ fun LodgingReviewItem(state: LodgingReviewState) {
                         Text(
                             location,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
                         )
                     }
                 }
                 Text(
                     stringResource(R.string.label_traveled_on_date, state.tripDate.monthAndYearString),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
             if (hasMoreText) {
@@ -121,7 +120,6 @@ fun LodgingReviewItem(state: LodgingReviewState) {
                 }
             }
         }
-
     }
 }
 
@@ -141,7 +139,7 @@ fun LodgingReviewItemPreview() {
                     authorLocation = "Author Location",
                     review = loremIpsum(),
                     title = "A Super long review title that will span multiple lines for sure",
-                )
+                ),
             )
         }
     }

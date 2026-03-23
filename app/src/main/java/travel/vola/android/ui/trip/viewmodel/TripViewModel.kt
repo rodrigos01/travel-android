@@ -124,20 +124,22 @@ class TripViewModel(
         val items = genItems(currentTrip, sectionItems, suggestions)
         val places =
             (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants + currentTrip.flexibleSections).fold(
-                mapOf<Place, PlaceState>()
+                mapOf<Place, PlaceState>(),
             ) { map, entity: Mapeable ->
                 val current = map.getOrDefault(
-                    entity.city, PlaceState(
+                    entity.city,
+                    PlaceState(
                         place = entity.city,
                         listIndex = items.indexOfFirst { it is TripItemState.PlaceItemState && entity.city.name == it.placeName },
-                        markers = emptyList()
-                    )
+                        markers = emptyList(),
+                    ),
                 )
                 map.toMutableMap().apply {
                     set(
-                        entity.city, current.copy(
-                            markers = current.markers + createMarkerStates(entity)
-                        )
+                        entity.city,
+                        current.copy(
+                            markers = current.markers + createMarkerStates(entity),
+                        ),
                     )
                 }
             }
@@ -154,33 +156,36 @@ class TripViewModel(
                 position = Pair(entity.latitude, entity.longitude),
                 name = entity.name ?: entity.address,
                 type = MarkerType.Lodging,
-            )
+            ),
         )
 
         is TimedPlace -> listOf(
             MarkerViewState(
                 position = Pair(
-                    entity.place.latitude, entity.place.longitude
+                    entity.place.latitude,
+                    entity.place.longitude,
                 ),
                 name = entity.place.name,
                 type = if (entity.place != entity.city) MarkerType.Place else MarkerType.City,
-            )
+            ),
         )
 
         is RestaurantReservation -> listOf(
             MarkerViewState(
                 position = Pair(
-                    entity.place.latitude, entity.place.longitude
+                    entity.place.latitude,
+                    entity.place.longitude,
                 ),
                 name = entity.place.name,
                 type = MarkerType.Restaurant,
-            )
+            ),
         )
 
         is FlexibleDaySection -> entity.categories.flatMap { it.items }.map { item ->
             MarkerViewState(
                 position = Pair(
-                    item.place.latitude, item.place.longitude
+                    item.place.latitude,
+                    item.place.longitude,
                 ),
                 name = item.place.name,
                 type = MarkerType.Place,
@@ -231,12 +236,16 @@ class TripViewModel(
         state.copy(
             items = items,
             addPlanItemState = addPlanItems[ADDING_PLAN_STATE_ID],
-            focusedItemId = focusedDateItem?.id
+            focusedItemId = focusedDateItem?.id,
         )
     }.stateIn(
-        viewModelScope, started = SharingStarted.Eagerly, initialValue = ViewState(
-            title = "", items = emptyList(), places = emptyList()
-        )
+        viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = ViewState(
+            title = "",
+            items = emptyList(),
+            places = emptyList(),
+        ),
     )
 
     fun tripNameChanged(newName: String) {
@@ -323,13 +332,14 @@ class TripViewModel(
                 id = ADDING_PLAN_STATE_ID,
                 time = timestamp,
                 type = type,
-                place = findPlaceForTimestamp(timestamp)
+                place = findPlaceForTimestamp(timestamp),
             )
         }
     }
 
     override fun addPlanTypeChanged(
-        itemId: String, newType: AddPlanItemState.Type
+        itemId: String,
+        newType: AddPlanItemState.Type,
     ) {
         val item = addPlanUseCase.removeItem(itemId) ?: return
         if (item.type == newType) {
@@ -340,7 +350,7 @@ class TripViewModel(
             time = item.timestamp,
             dateSelectionEnabled = item.dateSelectionEnabled,
             type = newType,
-            place = findPlaceForTimestamp(item.timestamp)
+            place = findPlaceForTimestamp(item.timestamp),
         )
     }
 
@@ -390,7 +400,8 @@ class TripViewModel(
                 is Lodging -> repository.deleteLodging(tripId, entity.id)
                 is TimedPlace -> repository.deleteTimedPlace(tripId, entity.id)
                 is RestaurantReservation -> repository.deleteRestaurantReservation(
-                    tripId, entity.id
+                    tripId,
+                    entity.id,
                 )
 
                 is FlexibleDaySection -> repository.deleteFlexibleSection(tripId, entity.id)
@@ -459,7 +470,7 @@ class TripViewModel(
                     TripCreationAssistantDestination.FinishedStatus.NONE,
                 ).filter { it != TripCreationAssistantDestination.FinishedStatus.NONE }.first()
                 currentBackStackEntry.savedStateHandle.remove<TripCreationAssistantDestination.FinishedStatus>(
-                    TripCreationAssistantDestination.RESULT_KEY_FINISHED_STATUS
+                    TripCreationAssistantDestination.RESULT_KEY_FINISHED_STATUS,
                 )
                 if (result != TripCreationAssistantDestination.FinishedStatus.COMPLETED) {
                     return@launch
@@ -568,8 +579,10 @@ class TripViewModel(
         } ?: emptyList()
         val suggestionPlaceholders = suggestions?.placeHolders ?: emptyList()
         val events =
-            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants + trip.flexibleSections + (suggestedPlaces
-                ?: emptyList()) + suggestedSections + suggestionPlaceholders
+            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants + trip.flexibleSections + (
+                suggestedPlaces
+                    ?: emptyList()
+                ) + suggestedSections + suggestionPlaceholders
         val pairs = events.flatMap { event ->
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
@@ -585,7 +598,8 @@ class TripViewModel(
             }
         }.sortedBy { (time, event) ->
             EventComparable(
-                time, event
+                time,
+                event,
             )
         }
         val items = pairs.flatMapIndexed { index, (time, event) ->
@@ -624,8 +638,8 @@ class TripViewModel(
                             timestamp = time,
                             month = time.monthString,
                             year = time.year.toString(),
-                            sectionId = place?.id ?: ""
-                        )
+                            sectionId = place?.id ?: "",
+                        ),
                     )
                 }
                 if (event !is TimedPlace || event.isDayTrip) {
@@ -646,7 +660,7 @@ class TripViewModel(
                             backgroundStyle = backgroundStyle,
                             sectionId = place?.id ?: "",
                             flexibleSectionItems = flexibleSectionItems,
-                        )
+                        ),
                     )
                 }
                 if (dateRangeItem != null) {
@@ -659,13 +673,14 @@ class TripViewModel(
                 TripItemState.InitialAddPlanItemState(
                     UUID.randomUUID().toString(),
                     ZonedDateTime.now(),
-                )
+                ),
             )
         }
     }
 
     private fun genPlaceItem(
-        index: Int, pairs: List<Pair<ZonedDateTime, TripEvent>>,
+        index: Int,
+        pairs: List<Pair<ZonedDateTime, TripEvent>>,
     ): TripItemState.PlaceItemState? {
         val item = pairs[index]
 
@@ -675,7 +690,6 @@ class TripViewModel(
         val (time, event) = item
 
         val place = event.getPlace(time)
-
 
         // Exclude if previous adjacent events had same place or were day trips
         val eventsBefore =
@@ -733,13 +747,17 @@ class TripViewModel(
 
     private fun Pair<ZonedDateTime, TripEvent>.isReturn(pairs: List<Pair<ZonedDateTime, TripEvent>>): Boolean {
         val (time, event) = this
-        return (this == pairs.last() && event is FlightSegment && event.arrival == time && event.getPlace(
-            time
-        ) == pairs.originPlace)
+        return (
+            this == pairs.last() && event is FlightSegment && event.arrival == time && event.getPlace(
+                time,
+            ) == pairs.originPlace
+            )
     }
 
     private fun genDateRangeItem(
-        from: ZonedDateTime, to: ZonedDateTime, sectionId: String,
+        from: ZonedDateTime,
+        to: ZonedDateTime,
+        sectionId: String,
     ): TripItemState? {
         val start = from + 1.days
         val end = to.toMidnight() - 1.minutes
@@ -901,11 +919,11 @@ class TripViewModel(
             factoryDependencies.navController,
         )
     })
-
 }
 
 private class EventComparable(
-    private val time: ZonedDateTime, private val event: TripEvent,
+    private val time: ZonedDateTime,
+    private val event: TripEvent,
 ) : Comparable<EventComparable> {
     override fun compareTo(other: EventComparable): Int {
         if (time.dateString != other.time.dateString || type == EventType.UNKNOWN) {
@@ -924,7 +942,12 @@ private class EventComparable(
     }
 
     enum class EventType {
-        UNKNOWN, CHECKOUT, DEPARTURE, ARRIVAL, CHECKIN, PLACE
+        UNKNOWN,
+        CHECKOUT,
+        DEPARTURE,
+        ARRIVAL,
+        CHECKIN,
+        PLACE,
     }
 
     val type: EventType
@@ -965,4 +988,3 @@ private class EventComparable(
         return (time to event).toString()
     }
 }
-

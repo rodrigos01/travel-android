@@ -41,7 +41,7 @@ inline fun <reified T : Any> DocumentReference.asFlow(noinline converter: ((Docu
 
 inline fun <reified T : Any> snapshotListToObject(
     snapshots: List<DocumentSnapshot>,
-    noinline converter: ((DocumentSnapshot) -> T)? = null
+    noinline converter: ((DocumentSnapshot) -> T)? = null,
 ): List<T> {
     return snapshots.mapNotNull {
         snapshotToObject(it, converter)
@@ -50,7 +50,7 @@ inline fun <reified T : Any> snapshotListToObject(
 
 inline fun <reified T : Any> snapshotToObject(
     snapshot: DocumentSnapshot,
-    noinline converter: ((DocumentSnapshot) -> T)? = null
+    noinline converter: ((DocumentSnapshot) -> T)? = null,
 ): T? {
     return if (converter != null) {
         converter(snapshot)

@@ -9,10 +9,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.extensions.hoursToMillis
 import travel.vola.android.extensions.minutesToMillis
 import travel.vola.android.extensions.update
+import travel.vola.android.extensions.zonedDateTime
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -26,7 +26,7 @@ fun DateTimePickerDialog(
     onDismiss: () -> Unit,
 ) {
     val state = rememberDateTimePickerState(
-        initialDateTime = selectedTime
+        initialDateTime = selectedTime,
     )
     when (state.step) {
         PickerStep.Date -> DatePickerDialog(
@@ -36,18 +36,19 @@ fun DateTimePickerDialog(
                 state.selectedDateTime = state.selectedDateTime.update(
                     dayOfMonth = selectedDateTime.dayOfMonth,
                     month = selectedDateTime.month,
-                    year = selectedDateTime.year
+                    year = selectedDateTime.year,
                 )
                 state.step = PickerStep.Time
             },
-            onDismiss = onDismiss
+            onDismiss = onDismiss,
         )
 
         PickerStep.Time -> TimePickerDialog(
             initialTime = state.selectedDateTime,
             onTimeSelected = { hour, minute ->
                 state.selectedDateTime = state.selectedDateTime.update(
-                    hour = hour, minute = minute
+                    hour = hour,
+                    minute = minute,
                 ).also(onDateTimeSelected)
             },
             onDismissRequest = { state.step = PickerStep.Date },
@@ -57,7 +58,8 @@ fun DateTimePickerDialog(
 }
 
 enum class PickerStep {
-    Date, Time,
+    Date,
+    Time,
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,10 +93,10 @@ class TimePickerDialogState(
     val minDate = Date(minTimeMillis)
 }
 
-//@OptIn(ExperimentalMaterial3Api::class)
-//class DatePickerDialogState(
+// @OptIn(ExperimentalMaterial3Api::class)
+// class DatePickerDialogState(
 //    date: Time?, minDate: Time?
-//) {
+// ) {
 //    private val minDateMillis = minDate?.time ?: 0L
 //
 //    val datePickerState = DatePickerState(
@@ -111,7 +113,7 @@ class TimePickerDialogState(
 //
 //    val dateConfirmEnabled: Boolean
 //        get() = selectedDateMillis?.let { it >= minDateMillis } ?: false
-//}
+// }
 
 class DateTimePickerDialogState(
     initialDateTime: ZonedDateTime,
@@ -141,11 +143,13 @@ fun rememberDateTimePickerState(
 
 @Composable
 fun rememberTimePickerDialogState(
-    hour: Int = 0, minute: Int = 0,
+    hour: Int = 0,
+    minute: Int = 0,
     is24Hour: Boolean = is24HourFormat(
-        LocalContext.current
+        LocalContext.current,
     ),
-    minHour: Int = 0, minMinute: Int = 0,
+    minHour: Int = 0,
+    minMinute: Int = 0,
 ): TimePickerDialogState = remember(hour, minute, is24Hour, minHour, minMinute) {
     TimePickerDialogState(hour, minute, is24Hour, minHour, minMinute)
 }

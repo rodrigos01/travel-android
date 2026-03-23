@@ -32,17 +32,19 @@ import travel.vola.android.ui.theme.AppTheme
 fun RoomOfferItem(
     state: LodgingRoomOfferState,
     onCoverImageTapped: (String) -> Unit,
-    onViewOfferTapped: () -> Unit
+    onViewOfferTapped: () -> Unit,
 ) {
     Row(
-        horizontalArrangement = spacedBy(8.dp), modifier = Modifier.fillMaxWidth()
+        horizontalArrangement = spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth(),
     ) {
         val roomCoverPhoto = state.photos.firstOrNull()
         if (roomCoverPhoto != null) {
             val sizedImageState = rememberSizedImageState(roomCoverPhoto)
             LodgingImage(
                 rememberAsyncImagePainter(
-                    model = sizedImageState.model, contentScale = ContentScale.Crop
+                    model = sizedImageState.model,
+                    contentScale = ContentScale.Crop,
                 ),
                 modifier = Modifier
                     .size(64.dp)
@@ -55,8 +57,8 @@ fun RoomOfferItem(
                 contentScale = ContentScale.None,
                 colorFilter = ColorFilter.tint(
                     MaterialTheme.colorScheme.onSurface.copy(
-                        alpha = 0.3F
-                    )
+                        alpha = 0.3F,
+                    ),
                 ),
                 modifier = Modifier.size(64.dp),
             )
@@ -65,7 +67,7 @@ fun RoomOfferItem(
         Column(
             modifier = Modifier
                 .weight(1F)
-                .align(Alignment.Top)
+                .align(Alignment.Top),
         ) {
             val features = listOf(
                 "Breakfast Included" to state.breakfastIncluded,
@@ -85,19 +87,21 @@ fun RoomOfferItem(
                         append("\u2022")
                         append("\u0009")
                         append(feature)
-                    }.toAnnotatedString(), style = MaterialTheme.typography.bodySmall
+                    }.toAnnotatedString(),
+                    style = MaterialTheme.typography.bodySmall,
                 )
             }
         }
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(112.dp)
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.width(112.dp),
         ) {
             PriceText(state.price)
             TextButton(onClick = onViewOfferTapped) {
                 ButtonContent(
                     iconResId = R.drawable.open_in_new_outline_24,
                     iconContentDescription = "Open offer button icon",
-                    text = state.bookingAgency
+                    text = state.bookingAgency,
                 )
             }
         }
@@ -122,9 +126,8 @@ private fun RoomOfferItemPreview() {
                     bookingUrl = "https://www.booking.com/",
                 ),
                 onCoverImageTapped = {},
-                onViewOfferTapped = {}
+                onViewOfferTapped = {},
             )
         }
     }
 }
-

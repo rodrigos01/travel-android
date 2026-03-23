@@ -15,22 +15,21 @@ class MutexScope(context: CoroutineContext) : CoroutineScope {
     internal fun cancelPriorAndLaunch(
         context: CoroutineContext = EmptyCoroutineContext,
         start: CoroutineStart = CoroutineStart.DEFAULT,
-        block: suspend CoroutineScope.() -> Unit
+        block: suspend CoroutineScope.() -> Unit,
     ): Job {
         coroutineContext.cancelChildren()
         return launchReal(coroutineContext + context, start, block)
     }
-
 }
 
 private fun CoroutineScope.launchReal(
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
-    block: suspend CoroutineScope.() -> Unit
+    block: suspend CoroutineScope.() -> Unit,
 ) = launch(context, start, block)
 
 fun MutexScope.launch(
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
-    block: suspend CoroutineScope.() -> Unit
+    block: suspend CoroutineScope.() -> Unit,
 ): Job = cancelPriorAndLaunch(context, start, block)

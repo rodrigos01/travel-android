@@ -12,7 +12,8 @@ import travel.vola.android.ui.trip.viewmodel.AddPlanUseCase
 class AddPlanItemStore<R : PendingData, T : AddPlanItemState> {
 
     data class ItemStoreData<R : PendingData>(
-        val data: R, val params: AddPlanUseCase.StateParams
+        val data: R,
+        val params: AddPlanUseCase.StateParams,
     )
 
     private val _items = MutableMapStateFlow<String, ItemStoreData<R>>()
@@ -21,7 +22,7 @@ class AddPlanItemStore<R : PendingData, T : AddPlanItemState> {
             it.entries.associate { (key, value) ->
                 key to transform(
                     value.data,
-                    value.params
+                    value.params,
                 )
             }
         }
@@ -50,4 +51,3 @@ class AddPlanItemStore<R : PendingData, T : AddPlanItemState> {
         _items[itemId] = ItemStoreData(updater(entry.data), entry.params)
     }
 }
-
