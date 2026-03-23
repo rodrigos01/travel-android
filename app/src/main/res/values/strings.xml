@@ -16,6 +16,7 @@
     <string name="add_flight_option">Flight</string>
     <string name="add_train_option">Train</string>
     <string name="add_bus_option">Bus</string>
+    <string name="title_lodging_search">Lodging Search</string>
 
     <!--    Lodging details-->
     <plurals name="review_count">
@@ -97,7 +98,7 @@
     <string name="prompt_enter_lodging_manually">or enter lodging details manually</string>
     <string name="prompt_enter_location">Enter location</string>
     <string name="prompt_select_itinerary">Select the itinerary that more closely matches your preferences. You can make changes to it after selecting it.</string>
-    <string name="prompt_additional_info">Any other information you think it's relevant for creating your trip.</string>
+    <string name="prompt_additional_info">Any other information you think it\'s relevant for creating your trip.</string>
     <string name="error_time_after_min">Please select a time after %1$s</string>
 
     <!-- States & Options -->
