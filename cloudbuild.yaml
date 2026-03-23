@@ -36,6 +36,20 @@ steps:
         path: '/config'
 
   #
+  # Download secret files
+  #
+  - name: 'gcr.io/cloud-builders/gsutil'
+    id: copy_secrets
+    args:
+      - '-m'
+      - 'cp'
+      - 'gs://${_CONFIG_BUCKET}/google-services.json'
+      - 'gs://${_CONFIG_BUCKET}/travel-release.jks'
+      - 'gs://${_CONFIG_BUCKET}/release.keystore'
+      - 'app/'
+    waitFor: ['-']
+
+  #
   # Extract the cache
   #
   # The gradle build cache is stored as a tarball in Google Cloud Storage to
@@ -104,7 +118,7 @@ steps:
         - 'KEYSTORE_PASSWORD=$_KEYSTORE_PASSWORD'
         - 'KEY_ALIAS=$_KEY_ALIAS'
         - 'KEY_PASSWORD=$_KEY_PASSWORD'
-    waitFor: [ 'setup_config' ]
+    waitFor: [ 'setup_config', 'copy_secrets' ]
     volumes:
       - name: 'build_cache'
         path: '/build_cache'
