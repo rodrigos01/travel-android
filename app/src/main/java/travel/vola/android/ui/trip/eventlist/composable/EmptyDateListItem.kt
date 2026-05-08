@@ -64,13 +64,13 @@ fun EmptyDateListItem(
                         color = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.weight(1f),
                     )
-                    FilledTonalIconButton(onClick = onGenerateTapped) {
-                        Icon(
-                            Icons.Rounded.AutoFixHigh,
-                            contentDescription = "generate plans",
-                            tint = LocalContentColor.current,
-                        )
-                    }
+//                    FilledTonalIconButton(onClick = onGenerateTapped) {
+//                        Icon(
+//                            Icons.Rounded.AutoFixHigh,
+//                            contentDescription = "generate plans",
+//                            tint = LocalContentColor.current,
+//                        )
+//                    }
                 }
             }
         }

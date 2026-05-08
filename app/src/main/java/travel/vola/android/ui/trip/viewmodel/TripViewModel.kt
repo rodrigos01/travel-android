@@ -579,10 +579,8 @@ class TripViewModel(
         } ?: emptyList()
         val suggestionPlaceholders = suggestions?.placeHolders ?: emptyList()
         val events =
-            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants + trip.flexibleSections + (
-                suggestedPlaces
-                    ?: emptyList()
-                ) + suggestedSections + suggestionPlaceholders
+            trip.flights.flatMap { it.segments } + trip.lodgings + trip.places + trip.restaurants + trip.flexibleSections + (suggestedPlaces
+                ?: emptyList()) + suggestedSections + suggestionPlaceholders
         val pairs = events.flatMap { event ->
             when (event) {
                 is FlightSegment -> listOf(event.departure to event, event.arrival to event)
@@ -747,11 +745,9 @@ class TripViewModel(
 
     private fun Pair<ZonedDateTime, TripEvent>.isReturn(pairs: List<Pair<ZonedDateTime, TripEvent>>): Boolean {
         val (time, event) = this
-        return (
-            this == pairs.last() && event is FlightSegment && event.arrival == time && event.getPlace(
-                time,
-            ) == pairs.originPlace
-            )
+        return (this == pairs.last() && event is FlightSegment && event.arrival == time && event.getPlace(
+            time,
+        ) == pairs.originPlace)
     }
 
     private fun genDateRangeItem(
@@ -942,12 +938,7 @@ private class EventComparable(
     }
 
     enum class EventType {
-        UNKNOWN,
-        CHECKOUT,
-        DEPARTURE,
-        ARRIVAL,
-        CHECKIN,
-        PLACE,
+        UNKNOWN, CHECKOUT, DEPARTURE, ARRIVAL, CHECKIN, PLACE,
     }
 
     val type: EventType

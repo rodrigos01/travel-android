@@ -106,8 +106,8 @@ class ManualAddLodgingUseCaseTest {
     }
 
     @Test
-    fun `added item should be initialized with day after initial time at 11am as check-out`() {
-        val expected = zonedDateTime("2025-10-17T11:00:00+01:00")
+    fun `added item should be initialized with day after initial time at 10am as check-out`() {
+        val expected = zonedDateTime("2025-10-17T10:00:00+01:00")
         val initialTime = zonedDateTime("2025-10-16T15:43:00+01:00")
         subject.addItem("lodging_id", initialTime, mock())
         val item = items.value["lodging_id"] ?: fail()
@@ -199,6 +199,12 @@ class ManualAddLodgingUseCaseTest {
             on { getData("lodging_id") } doReturn originalData
         }
         val checkInTime = zonedDateTime("2025-10-16T15:23:00+01:00")
+        val hotelPlace: Place = mock {
+            on { name } doReturn "Hotel Novotel Paris Les Halles"
+        }
+        repository.stub {
+            onBlocking { details("hotel_id", "lodging_id") } doReturn hotelPlace
+        }
         subject.addItem("lodging_id", checkInTime, mock())
         subject.onLodgingUpdated(
             itemId = "lodging_id",
@@ -227,14 +233,15 @@ class ManualAddLodgingUseCaseTest {
             onBlocking { placeCity("hotel_id", "lodging_id") } doReturn paris
             onBlocking { details("hotel_id", "lodging_id") } doReturn expected
         }
-        val checkInTime: ZonedDateTime = mock()
+        val checkInTime = zonedDateTime("2025-10-16T15:00:00+01:00")
+        val checkOutTime = zonedDateTime("2025-10-17T10:00:00+01:00")
         val searchResult: SimplePlace = mock {
             on { id } doReturn "hotel_id"
         }
         val originalData = PendingLodging(
             id = "lodging_id",
             checkIn = checkInTime,
-            checkOut = mock(),
+            checkOut = checkOutTime,
             searchResults = listOf(
                 mock(),
                 searchResult,
@@ -274,14 +281,15 @@ class ManualAddLodgingUseCaseTest {
             onBlocking { placeCity("hotel_id", "lodging_id") } doReturn paris
             onBlocking { details("hotel_id", "lodging_id") } doReturn expected
         }
-        val checkInTime: ZonedDateTime = mock()
+        val checkInTime = zonedDateTime("2025-10-16T15:00:00+01:00")
+        val checkOutTime = zonedDateTime("2025-10-17T10:00:00+01:00")
         val searchResult: SimplePlace = mock {
             on { id } doReturn "hotel_id"
         }
         val originalData = PendingLodging(
             id = "lodging_id",
             checkIn = checkInTime,
-            checkOut = mock(),
+            checkOut = checkOutTime,
             searchResults = listOf(
                 mock(),
                 searchResult,
