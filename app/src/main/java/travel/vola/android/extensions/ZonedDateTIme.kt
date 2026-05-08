@@ -1,7 +1,5 @@
 package travel.vola.android.extensions
 
-import java.text.ParseException
-import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.Month
 import java.time.ZoneId
@@ -13,32 +11,36 @@ import java.util.TimeZone
 import kotlin.time.Duration
 
 fun zonedDateTime(source: String): ZonedDateTime {
-    return try {
-        ZonedDateTime.parse(source, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-    } catch (_: DateTimeParseException) {
-        try {
-            zonedDateTime(source, "yyyy-MM-dd'T'HH:mm Z")
-        } catch (_: ParseException) {
-            zonedDateTime(source, "yyyy-MM-dd'T'HH:mm z")
-        }
-    }
+    return zonedDateTimeOrNull(source, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+        ?: zonedDateTimeOrNull(source, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm X"))
+        ?: zonedDateTimeOrNull(
+            source, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm z")
+        ) ?: throw DateTimeParseException("Text '$source' could not be parsed", source, 0)
 }
 
 fun zonedDateTime(
-    source: String,
-    pattern: String,
-    locale: Locale = Locale.getDefault(),
+    source: String, pattern: String, locale: Locale = Locale.getDefault()
 ): ZonedDateTime {
-    return SimpleDateFormat(pattern, locale).parse(source)?.let {
-        ZonedDateTime.ofInstant(
-            it.toInstant(),
-            ZoneId.systemDefault(),
+    try {
+        return ZonedDateTime.parse(source, DateTimeFormatter.ofPattern(pattern, locale))
+    } catch (_: DateTimeParseException) {
+        throw DateTimeParseException(
+            "Text '$source' could not be parsed using pattern '$pattern'",
+            source,
+            0,
         )
-    } ?: throw DateTimeParseException(
-        "Text '$source' could not be parsed using pattern '$pattern'",
-        source,
-        0,
-    )
+    }
+}
+
+private fun zonedDateTimeOrNull(
+    source: String,
+    formatter: DateTimeFormatter,
+): ZonedDateTime? {
+    return try {
+        ZonedDateTime.parse(source, formatter)
+    } catch (_: DateTimeParseException) {
+        null
+    }
 }
 
 fun zonedDateTime(epochMillis: Long, timeZone: TimeZone): ZonedDateTime =

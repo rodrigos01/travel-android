@@ -7,7 +7,7 @@ import java.time.ZoneId
 class TimeTest {
     @Test
     fun `String to Time should create Time object with correct values and timezone`() {
-        val time = zonedDateTime("2024-05-21T16:50:00+02:00")
+        val time = zonedDateTime("2024-05-21T16:50 +02:00")
         Assertions.assertThat(time.year).isEqualTo(2024)
         Assertions.assertThat(time.monthValue).isEqualTo(5)
         Assertions.assertThat(time.dayOfMonth).isEqualTo(21)
