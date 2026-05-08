@@ -1,6 +1,7 @@
 package travel.vola.android.ui.trip.viewmodel
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.TestScope
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -50,14 +51,22 @@ class TripViewModelTest {
     private val addPlanUseCase: AddPlanUseCase = mock {
         on { items } doReturn addPlanItems
     }
+    private val suggestionsUseCase: SuggestionsUseCase = mock {
+        on { state } doReturn MutableStateFlow(SuggestionsUseCase.DailyItineraryState(emptyList(), emptyList()))
+    }
+    private val flexibleSectionUseCase: FlexibleSectionUseCase = mock {
+        on { flexibleSectionItems } doReturn MutableStateFlow(emptyList())
+    }
+
     private val subject = TripViewModel(
-        repository,
-        mock(),
-        "tripId",
-        mock(),
-        mock(),
-        mock(),
-        addPlanUseCase,
+        repository = repository,
+        placeRepository = mock(),
+        tripId = "tripId",
+        navController = mock(),
+        useCaseScope = TestScope(rule.dispatcher),
+        suggestionsUseCase = suggestionsUseCase,
+        flexibleSectionUseCase = flexibleSectionUseCase,
+        addPlanUseCase = addPlanUseCase,
     )
 
     private fun String?.asTime(): ZonedDateTime =
@@ -132,15 +141,15 @@ class TripViewModelTest {
         val arrivals =
             subject.viewState.value.items.filterIsInstance(FlightArrivalItemState::class.java)
         assertThat(arrivals).satisfiesExactly({ item ->
-            assertThat(item.dayOfMonth).isEqualTo("11")
-            assertThat(item.time).isEqualTo("10:00 AM")
-        }, { item ->
-            assertThat(item.dayOfMonth).isEqualTo("21")
-            assertThat(item.time).isEqualTo("8:15 PM")
-        }, { item ->
-            assertThat(item.dayOfMonth).isEqualTo("14")
-            assertThat(item.time).isEqualTo("8:05 PM")
-        })
+                                                  assertThat(item.dayOfMonth).isEqualTo("11")
+                                                  assertThat(item.time).isEqualTo("10:00 AM")
+                                              }, { item ->
+                                                  assertThat(item.dayOfMonth).isEqualTo("21")
+                                                  assertThat(item.time).isEqualTo("8:15 PM")
+                                              }, { item ->
+                                                  assertThat(item.dayOfMonth).isEqualTo("14")
+                                                  assertThat(item.time).isEqualTo("8:05 PM")
+                                              })
     }
 
     @Test
@@ -169,21 +178,21 @@ class TripViewModelTest {
         )
         val lodgings = subject.viewState.value.items.filterIsInstance<HotelCheckInItemState>()
         assertThat(lodgings).satisfiesExactly({ item ->
-            assertThat(item.hotelName).isEqualTo("Pestana Porto - A Brasileira")
-            assertThat(item.hotelAddress).isEqualTo("R. de Sá da Bandeira 91, 4000-427 Porto, Portugal")
-            assertThat(item.dayOfMonth).isEqualTo("19")
-            assertThat(item.time).isEqualTo("1:00 PM")
-        }, { item ->
-            assertThat(item.hotelName).isEqualTo("Hôtel La Villa Nice Victor Hugo")
-            assertThat(item.hotelAddress).isEqualTo("19 Bis Bd Victor Hugo, 06000 Nice, France")
-            assertThat(item.dayOfMonth).isEqualTo("29")
-            assertThat(item.time).isEqualTo("1:00 PM")
-        }, { item ->
-            assertThat(item.hotelName).isEqualTo("Hotel Conca Park")
-            assertThat(item.hotelAddress).isEqualTo("Via degli Aranci, 13\\bis, 80067 Sorrento NA, Italy")
-            assertThat(item.dayOfMonth).isEqualTo("12")
-            assertThat(item.time).isEqualTo("1:00 PM")
-        })
+                                                  assertThat(item.hotelName).isEqualTo("Pestana Porto - A Brasileira")
+                                                  assertThat(item.hotelAddress).isEqualTo("R. de Sá da Bandeira 91, 4000-427 Porto, Portugal")
+                                                  assertThat(item.dayOfMonth).isEqualTo("19")
+                                                  assertThat(item.time).isEqualTo("1:00 PM")
+                                              }, { item ->
+                                                  assertThat(item.hotelName).isEqualTo("Hôtel La Villa Nice Victor Hugo")
+                                                  assertThat(item.hotelAddress).isEqualTo("19 Bis Bd Victor Hugo, 06000 Nice, France")
+                                                  assertThat(item.dayOfMonth).isEqualTo("29")
+                                                  assertThat(item.time).isEqualTo("1:00 PM")
+                                              }, { item ->
+                                                  assertThat(item.hotelName).isEqualTo("Hotel Conca Park")
+                                                  assertThat(item.hotelAddress).isEqualTo("Via degli Aranci, 13\\bis, 80067 Sorrento NA, Italy")
+                                                  assertThat(item.dayOfMonth).isEqualTo("12")
+                                                  assertThat(item.time).isEqualTo("1:00 PM")
+                                              })
     }
 
     @Test
@@ -212,18 +221,18 @@ class TripViewModelTest {
         )
         val lodgings = subject.viewState.value.items.filterIsInstance<HotelCheckOutItemState>()
         assertThat(lodgings).satisfiesExactly({ item ->
-            assertThat(item.hotelName).isEqualTo("Pestana Porto - A Brasileira")
-            assertThat(item.dayOfMonth).isEqualTo("21")
-            assertThat(item.time).isEqualTo("11:00 AM")
-        }, { item ->
-            assertThat(item.hotelName).isEqualTo("Hôtel La Villa Nice Victor Hugo")
-            assertThat(item.dayOfMonth).isEqualTo("2")
-            assertThat(item.time).isEqualTo("11:00 AM")
-        }, { item ->
-            assertThat(item.hotelName).isEqualTo("Hotel Conca Park")
-            assertThat(item.dayOfMonth).isEqualTo("14")
-            assertThat(item.time).isEqualTo("11:00 AM")
-        })
+                                                  assertThat(item.hotelName).isEqualTo("Pestana Porto - A Brasileira")
+                                                  assertThat(item.dayOfMonth).isEqualTo("21")
+                                                  assertThat(item.time).isEqualTo("11:00 AM")
+                                              }, { item ->
+                                                  assertThat(item.hotelName).isEqualTo("Hôtel La Villa Nice Victor Hugo")
+                                                  assertThat(item.dayOfMonth).isEqualTo("2")
+                                                  assertThat(item.time).isEqualTo("11:00 AM")
+                                              }, { item ->
+                                                  assertThat(item.hotelName).isEqualTo("Hotel Conca Park")
+                                                  assertThat(item.dayOfMonth).isEqualTo("14")
+                                                  assertThat(item.time).isEqualTo("11:00 AM")
+                                              })
     }
 
     @Test
@@ -281,18 +290,18 @@ class TripViewModelTest {
         )
         val places = subject.viewState.value.items.filterIsInstance<PlaceItemState>()
         assertThat(places).satisfiesExactly({ item ->
-            assertThat(item.placeName).isEqualTo("Porto")
-            assertThat(item.dateStart).isEqualTo("May 11")
-            assertThat(item.dateEnd).isEqualTo("May 21")
-        }, { item ->
-            assertThat(item.placeName).isEqualTo("Nice")
-            assertThat(item.dateStart).isEqualTo("May 21")
-            assertThat(item.dateEnd).isEqualTo("Jun 2")
-        }, { item ->
-            assertThat(item.placeName).isEqualTo("Sorrento")
-            assertThat(item.dateStart).isEqualTo("Jun 12")
-            assertThat(item.dateEnd).isEqualTo("Jun 14")
-        })
+                                                assertThat(item.placeName).isEqualTo("Porto")
+                                                assertThat(item.dateStart).isEqualTo("May 11")
+                                                assertThat(item.dateEnd).isEqualTo("May 21")
+                                            }, { item ->
+                                                assertThat(item.placeName).isEqualTo("Nice")
+                                                assertThat(item.dateStart).isEqualTo("May 21")
+                                                assertThat(item.dateEnd).isEqualTo("Jun 2")
+                                            }, { item ->
+                                                assertThat(item.placeName).isEqualTo("Sorrento")
+                                                assertThat(item.dateStart).isEqualTo("Jun 12")
+                                                assertThat(item.dateEnd).isEqualTo("Jun 14")
+                                            })
     }
 
     @Test
@@ -393,12 +402,12 @@ class TripViewModelTest {
         )
         val months = subject.viewState.value.items.filterIsInstance<MonthItemState>()
         assertThat(months).satisfiesExactly({ item ->
-            assertThat(item.month).isEqualTo("May")
-            assertThat(item.year).isEqualTo("2024")
-        }, { item ->
-            assertThat(item.month).isEqualTo("June")
-            assertThat(item.year).isEqualTo("2024")
-        })
+                                                assertThat(item.month).isEqualTo("May")
+                                                assertThat(item.year).isEqualTo("2024")
+                                            }, { item ->
+                                                assertThat(item.month).isEqualTo("June")
+                                                assertThat(item.year).isEqualTo("2024")
+                                            })
     }
 
     @Test
@@ -482,9 +491,9 @@ class TripViewModelTest {
         )
         val dateRanges = subject.viewState.value.items.filterIsInstance<DateRangeItemState>()
         assertThat(dateRanges).satisfiesExactly({ item ->
-            assertThat(item.dayOfMonthStart).isEqualTo("12")
-            assertThat(item.dayOfMonthEnd).isEqualTo("18")
-        })
+                                                    assertThat(item.dayOfMonthStart).isEqualTo("12")
+                                                    assertThat(item.dayOfMonthEnd).isEqualTo("18")
+                                                })
     }
 
     @Test
@@ -539,8 +548,8 @@ class TripViewModelTest {
         )
         val dateRanges = subject.viewState.value.items.filterIsInstance<EmptyDateItemState>()
         assertThat(dateRanges).satisfiesExactly({ item ->
-            assertThat(item.dayOfMonth).isEqualTo("12")
-        })
+                                                    assertThat(item.dayOfMonth).isEqualTo("12")
+                                                })
     }
 
     @Test
@@ -570,6 +579,7 @@ class TripViewModelTest {
             eq(zonedDateTime("2024-05-30T11:00:00+02:00")),
             dateSelectionEnabled = eq(false),
             type = any<AddPlanItemState.Type>(),
+            place = anyOrNull(),
         )
     }
 
@@ -616,6 +626,7 @@ class TripViewModelTest {
             time = any(),
             dateSelectionEnabled = eq(true),
             type = any<AddPlanItemState.Type>(),
+            place = anyOrNull(),
         )
     }
 
@@ -708,14 +719,14 @@ class TripViewModelTest {
         addPlanUseCase.stub {
             on {
                 createAddPlanItem(
-                    any(),
+                    anyOrNull(),
                     any(),
                     any(),
                     any<AddPlanItemState.Type>(),
                     anyOrNull(),
                 )
             } doAnswer {
-                val id = it.getArgument<String>(0)
+                val id = it.getArgument<String?>(0) ?: "adding"
                 addPlanItems.value = mapOf(id to addPlanItem)
             }
         }

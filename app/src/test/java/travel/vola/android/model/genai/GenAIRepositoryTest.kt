@@ -1,6 +1,7 @@
 package travel.vola.android.model.genai
 
 import com.google.firebase.ai.Chat
+import com.google.firebase.ai.GenerativeModel
 import com.google.firebase.ai.type.GenerateContentResponse
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -16,8 +17,11 @@ class GenAIRepositoryTest {
 
     private val logger: GenAIRepository.Logger = mock()
     private val chat: Chat = mock()
+    private val genAiModel: GenerativeModel = mock {
+        on { startChat() } doReturn chat
+    }
 
-    private val subject: GenAIRepository = GenAIRepository(logger, modelFactory = { chat })
+    private val subject: GenAIRepository = GenAIRepository(logger, modelFactory = { genAiModel })
 
     @Test
     fun `null parameters should trigger retry with non null type`() = runTest {

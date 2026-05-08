@@ -1,5 +1,6 @@
 package travel.vola.android.extensions
 
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.Month
@@ -17,7 +18,7 @@ fun zonedDateTime(source: String): ZonedDateTime {
     } catch (_: DateTimeParseException) {
         try {
             zonedDateTime(source, "yyyy-MM-dd'T'HH:mm Z")
-        } catch (_: DateTimeParseException) {
+        } catch (_: ParseException) {
             zonedDateTime(source, "yyyy-MM-dd'T'HH:mm z")
         }
     }

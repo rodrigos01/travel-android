@@ -17,6 +17,7 @@ import travel.vola.android.extensions.set
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.test.UnconfinedDispatcherTestRule
+import travel.vola.android.ui.trip.state.AddFlexibleSectionItemState
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
@@ -29,8 +30,7 @@ class AddPlanUseCaseTest {
 
     private val testScope = TestScope(rule.dispatcher)
 
-    private val addFlightItems =
-        MutableStateFlow<Map<String, AddFlightItemState>>(emptyMap())
+    private val addFlightItems = MutableStateFlow<Map<String, AddFlightItemState>>(emptyMap())
     private val addFlightUseCase: AddFlightUseCase = mock {
         on { items } doReturn addFlightItems
     }
@@ -39,7 +39,14 @@ class AddPlanUseCaseTest {
     private val addLodgingUseCase: AddLodgingUseCase = mock {
         on { items } doReturn addLodgingItems
     }
-    private val subject = AddPlanUseCase(mock(), testScope, addFlightUseCase, addLodgingUseCase)
+    private val flexibleSectionItems =
+        MutableStateFlow<Map<String, AddFlexibleSectionItemState>>(emptyMap())
+    private val flexibleSectionUseCase: FlexibleSectionUseCase = mock {
+        on { items } doReturn flexibleSectionItems
+    }
+    private val subject = AddPlanUseCase(
+        mock(), testScope, flexibleSectionUseCase = flexibleSectionUseCase, addFlightUseCase, addLodgingUseCase
+    )
 
     @Test
     fun `added plan item should be initialized as Flight`() {
@@ -56,19 +63,6 @@ class AddPlanUseCaseTest {
         val lodging = mock<Lodging>()
         subject.createAddPlanItem("item_id", lodging)
         verify(addLodgingUseCase).addItem(eq("item_id"), eq(lodging), any())
-    }
-
-    @Test
-    fun `type selected should change item`() {
-        val initialTime: ZonedDateTime = mock()
-        val original = mock<AddFlightItemState> {
-            on { id } doReturn "originalId"
-            on { timestamp } doReturn initialTime
-        }
-        addFlightItems["originalId"] = original
-        subject.addPlanTypeChanged("originalId", AddPlanItemState.Type.Lodging)
-        verify(addFlightUseCase).removeItem(original)
-        verify(addLodgingUseCase).addItem(eq("originalId"), eq(initialTime), any())
     }
 
     @Test

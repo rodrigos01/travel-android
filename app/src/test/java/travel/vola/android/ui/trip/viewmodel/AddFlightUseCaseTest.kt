@@ -352,7 +352,7 @@ class AddFlightUseCaseTest {
             departure = mock {
                 on { zone } doReturn ZoneId.of("America/New_York")
             },
-            arrival = zonedDateTime("2024-05-17T10:55 +02:00"),
+            arrival = zonedDateTime("2024-05-17T10:55:00+02:00"),
             airportToSearchResults = listOf(
                 mock(),
                 mock { on { iata } doReturn "airport_id" },
@@ -368,7 +368,7 @@ class AddFlightUseCaseTest {
             "flight_id",
             departureTime = time,
             departureTimeSelected = false,
-            arrivalTime = zonedDateTime("2024-05-17T10:55 +02:00"),
+            arrivalTime = zonedDateTime("2024-05-17T10:55:00+02:00"),
             arrivalTimeSelected = false,
             selectedDepartureSearchResultIndex = -1,
             selectedArrivalSearchResultIndex = 1,
