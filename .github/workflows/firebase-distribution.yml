@@ -1,0 +1,140 @@
+name: Firebase App Distribution
+
+on:
+  push:
+    branches:
+      - develop
+      - ci_test
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: 'Release Notes'
+        required: false
+        default: 'Manual deployment build'
+        type: string
+      groups:
+        description: 'Tester group(s) in Firebase App Distribution'
+        required: false
+        default: 'developers'
+        type: string
+
+concurrency:
+  group: firebase-distribution-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-distribute:
+    name: Build & Distribute
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Decode Google Services Config
+        shell: bash
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "::error::Secret GOOGLE_SERVICES_JSON is not configured in repository secrets."
+            exit 1
+          fi
+          # Support both base64 encoded and raw json
+          if echo "$GOOGLE_SERVICES_JSON" | base64 --decode >/dev/null 2>&1; then
+            echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+          else
+            echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
+          fi
+
+      - name: Decode Release Keystore
+        shell: bash
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$RELEASE_KEYSTORE_BASE64" ]; then
+            echo "::error::Secret RELEASE_KEYSTORE_BASE64 is not configured in repository secrets."
+            exit 1
+          fi
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > app/travel-release.jks
+
+      - name: Decode Firebase Service Account
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CREDENTIALS }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT_CREDENTIALS" ]; then
+            echo "::error::Secret FIREBASE_SERVICE_ACCOUNT_CREDENTIALS is not configured in repository secrets."
+            exit 1
+          fi
+          # Support both base64 encoded and raw json
+          if echo "$FIREBASE_SERVICE_ACCOUNT_CREDENTIALS" | base64 --decode >/dev/null 2>&1; then
+            echo "$FIREBASE_SERVICE_ACCOUNT_CREDENTIALS" | base64 --decode > "${{ github.workspace }}/service_account.json"
+          else
+            echo "$FIREBASE_SERVICE_ACCOUNT_CREDENTIALS" > "${{ github.workspace }}/service_account.json"
+          fi
+
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x gradlew
+
+      - name: Assemble Release APK
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dkotlin.incremental=false"
+        run: ./gradlew :app:assembleProdRelease
+
+      - name: Upload Release APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-prod-release-${{ github.run_number }}
+          path: app/build/outputs/apk/prod/release/app-prod-release.apk
+          retention-days: 30
+
+      - name: Prepare Release Notes and Tester Groups
+        id: release_info
+        shell: bash
+        run: |
+          GROUPS="${{ inputs.groups }}"
+          if [ -z "$GROUPS" ]; then
+            GROUPS="developers"
+          fi
+          echo "groups=$GROUPS" >> "$GITHUB_OUTPUT"
+
+          NOTES="${{ inputs.release_notes }}"
+          if [ -z "$NOTES" ]; then
+            NOTES="Build #${{ github.run_number }} (${{ github.ref_name }}) - Commit ${{ github.sha }}"
+          fi
+          echo "release_notes=$NOTES" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to Firebase App Distribution via Gradle
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dkotlin.incremental=false"
+        run: |
+          ./gradlew :app:appDistributionUploadProdRelease \
+            --serviceCredentialsFile="${{ github.workspace }}/service_account.json" \
+            --releaseNotes="${{ steps.release_info.outputs.release_notes }}"
+
+
