@@ -7,7 +7,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -84,9 +83,7 @@ import travel.vola.android.ui.trip.creation.composable.AddPlanType
 import travel.vola.android.ui.trip.creation.composable.ConfirmationDialog
 import travel.vola.android.ui.trip.creation.composable.TripDetailsToolbar
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
-import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.TripItemState
-import travel.vola.android.ui.trip.state.TripItemState.DateRangeItemState
 import travel.vola.android.ui.trip.state.TripItemState.EmptyDateItemState
 import travel.vola.android.ui.trip.state.TripItemState.EventItemState.BackgroundStyle
 import travel.vola.android.ui.trip.state.TripItemState.FlightArrivalItemState
@@ -388,171 +385,6 @@ fun List(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun TripDetailItem(
-    event: TripItemState,
-    addPlanItemActionHandler: AddPlanItemActionHandler,
-    highlightDate: Boolean = false,
-    onAddButonTapped: (String) -> Unit,
-    onEmptyAddRowTapped: (String) -> Unit,
-    onInitialAddButonTapped: (String) -> Unit,
-    onEditTapped: (String) -> Unit,
-    onImageLoaded: (SuccessResult) -> Unit,
-    onGenerateTapped: (String) -> Unit,
-    onFlexibleSuggestionConfirmed: (String) -> Unit,
-    onFlexibleSuggestionDismissed: (String) -> Unit,
-) {
-    when (event) {
-        is MonthItemState -> MonthEventListItem(event.month, event.year)
-        is DateRangeItemState -> DateRangeListItem(
-            dayOfMonthStart = event.dayOfMonthStart,
-            dayOfWeekStart = event.dayOfWeekStart,
-            dayOfMonthEnd = event.dayOfMonthEnd,
-            dayOfWeekEnd = event.dayOfWeekEnd,
-            focused = highlightDate,
-            isGeneratingSuggestions = event.isGeneratingPlans,
-            onAddButtonClick = { onAddButonTapped(event.id) },
-            onGenerateButtonClick = { onGenerateTapped(event.id) },
-        )
-
-        is EmptyDateItemState -> EmptyDateListItem(
-            dayOfMonth = event.dayOfMonth,
-            dayOfWeek = event.dayOfWeek,
-            highlightDate = highlightDate,
-            isGeneratingSuggestions = event.isGeneratingPlans,
-            onTap = { onEmptyAddRowTapped(event.id) },
-            onGenerateTapped = { onGenerateTapped(event.id) },
-        )
-
-        is PlaceItemState -> PlaceEventListItem(
-            event.imageUrl,
-            event.placeName,
-            event.dateStart,
-            event.dateEnd,
-            onImageLoaded,
-            modifier = Modifier.clickable { onEditTapped(event.id) },
-        )
-
-        is TripItemState.FlexibleDaySectionState -> FlexibleDaySectionListItem(
-            event,
-            highlightDate = highlightDate,
-            position = event.backgroundStyle.asEventItemPosition(),
-            onEditTapped = {
-                onEditTapped(event.id)
-            },
-            onDeleteConfirmed = {
-                addPlanItemActionHandler.delete(
-                    AddPlanItemState.Type.FlexibleSection,
-                    event.id,
-                )
-            },
-            onCategoryAdded = {
-                addPlanItemActionHandler.onFlexibleCategoryAdded(
-                    event.id,
-                    it,
-                )
-            },
-            onLocationSearchTextChanged = {
-                addPlanItemActionHandler.onFlexibleItemSearchTextChanged(
-                    event.id,
-                    it,
-                )
-            },
-            onLocationSearchResultSelected = { index, categoryIndex ->
-                addPlanItemActionHandler.onFlexibleItemSearchResultSelected(
-                    event.id,
-                    index,
-                    categoryIndex,
-                )
-            },
-            onNoteAdded = { index, categoryIndex, note ->
-                addPlanItemActionHandler.onFlexibleItemNoteAdded(
-                    event.id,
-                    index,
-                    categoryIndex,
-                    note,
-                )
-            },
-            onSuggestionConfirmed = {
-                onFlexibleSuggestionConfirmed(event.id)
-            },
-            onSuggestionDismissed = {
-                onFlexibleSuggestionDismissed(event.id)
-            },
-        )
-
-        is TripItemState.SuggestionPlaceholderItemState -> SuggestionPlaceholderListItem(
-            event,
-            highlightDate,
-        )
-
-        is TripItemState.EventItemState -> Surface(
-            onClick = { onEditTapped(event.id) },
-        ) {
-            when (event) {
-                is FlightDepartureItemState -> FlightEventListItem(
-                    event.showDate,
-                    highlightDate,
-                    event.dayOfMonth,
-                    event.dayOfWeek,
-                    event.time,
-                    event.destination,
-                    event.airport,
-                    event.backgroundStyle.asEventItemPosition(),
-                )
-
-                is FlightArrivalItemState -> ArrivalEventListItem(
-                    event.showDate,
-                    highlightDate,
-                    event.dayOfMonth,
-                    event.dayOfWeek,
-                    event.time,
-                    event.airport,
-                    event.backgroundStyle.asEventItemPosition(),
-                )
-
-                is HotelCheckInItemState -> CheckinListItem(
-                    event.showDate,
-                    highlightDate,
-                    event.dayOfMonth,
-                    event.dayOfWeek,
-                    event.time,
-                    event.hotelName,
-                    event.backgroundStyle.asEventItemPosition(),
-                )
-
-                is HotelCheckOutItemState -> CheckoutListItem(
-                    event.showDate,
-                    highlightDate,
-                    event.dayOfMonth,
-                    event.dayOfWeek,
-                    event.time,
-                    event.hotelName,
-                    event.backgroundStyle.asEventItemPosition(),
-                )
-
-                is TripItemState.TimedPlaceItemState -> TimedPlaceListItem(event, highlightDate)
-                is TripItemState.RestaurantReservationItemState -> RestaurantListItem(
-                    event,
-                    highlightDate,
-                )
-
-                is TripItemState.FlexibleDaySectionState -> {}
-                is TripItemState.SuggestionPlaceholderItemState -> {}
-            }
-        }
-
-        is TripItemState.InitialAddPlanItemState -> EmptyAddPlanListItem(
-            onAddButtonClick = { onInitialAddButonTapped(event.id) },
-        )
-
-        is AddPlanItemState -> AddPlanListItem(
-            event,
-            actionHandler = addPlanItemActionHandler,
-        )
     }
 }
 
