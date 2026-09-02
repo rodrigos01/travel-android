@@ -201,19 +201,21 @@ class TripViewModel(
         }
     }
 
-    private data class ScrollState(val focusedIndex: Int, val firstVisibleIndex: Int)
+    private data class LocalState(
+        val focusedIndex: Int,
+        val firstVisibleIndex: Int,
+        val itemsGeneratingSuggestions: Set<String>,
+    )
 
-    private val scrollState = MutableStateFlow(ScrollState(0, 0))
+    private val localState = MutableStateFlow(LocalState(0, 0, emptySet()))
 
-    private val itemsGeneratingSuggestions = MutableStateFlow<Set<String>>(emptySet())
     val viewState: StateFlow<ViewState> = combine(
         eventsFromTrip,
         addPlanItemsState,
-        scrollState,
-        itemsGeneratingSuggestions,
-    ) { state, addPlanItems, currentScrollState, generating ->
+        localState,
+    ) { state, addPlanItems, currentLocalState ->
         val items = state.items.mapIndexed { index, item ->
-            if (item is Identifiable && generating.contains(item.id)) {
+            if (item is Identifiable && currentLocalState.itemsGeneratingSuggestions.contains(item.id)) {
                 when (item) {
                     is TripItemState.DateRangeItemState -> item.copy(isGeneratingPlans = true)
                     is TripItemState.EmptyDateItemState -> item.copy(isGeneratingPlans = true)
@@ -224,10 +226,10 @@ class TripViewModel(
             }
         }
         val focusedDate =
-            state.items.getOrNull(currentScrollState.focusedIndex)?.timestamp?.toLocalDate()
+            state.items.getOrNull(currentLocalState.focusedIndex)?.timestamp?.toLocalDate()
         val focusedDateItem = items.filterIsInstance<TripItemState.Focusable>().lastOrNull {
             items.indexOf(it)
-                .let { index -> index >= currentScrollState.firstVisibleIndex && index <= currentScrollState.focusedIndex } && it.timestamp.toLocalDate() == focusedDate && it.showDate
+                .let { index -> index >= currentLocalState.firstVisibleIndex && index <= currentLocalState.focusedIndex } && it.timestamp.toLocalDate() == focusedDate && it.showDate
         }
         state.copy(
             items = items,
@@ -314,7 +316,7 @@ class TripViewModel(
         dateSelectionEnabled: Boolean = true,
     ) {
         addPlanUseCase.removeItem(ADDING_PLAN_STATE_ID)
-        val currentFocusedIndex = scrollState.value.focusedIndex
+        val currentFocusedIndex = localState.value.focusedIndex
         val focusedItem = if (currentFocusedIndex == -1) {
             viewState.value.items.firstOrNull()
         } else {
@@ -474,9 +476,11 @@ class TripViewModel(
             } else {
                 trip.value
             } ?: return@launch
-            itemsGeneratingSuggestions.value = itemsGeneratingSuggestions.value + itemId
+            localState.value =
+                localState.value.copy(itemsGeneratingSuggestions = localState.value.itemsGeneratingSuggestions + itemId)
             suggestionsUseCase.getSuggestions(currentTrip, dates)
-            itemsGeneratingSuggestions.value = itemsGeneratingSuggestions.value - itemId
+            localState.value =
+                localState.value.copy(itemsGeneratingSuggestions = localState.value.itemsGeneratingSuggestions - itemId)
         }
     }
 
@@ -894,7 +898,9 @@ class TripViewModel(
     }
 
     fun setScrollState(focusedIndex: Int, firstVisibleIndex: Int) {
-        scrollState.value = ScrollState(focusedIndex, firstVisibleIndex)
+        localState.value = localState.value.copy(
+            focusedIndex = focusedIndex, firstVisibleIndex = firstVisibleIndex
+        )
     }
 
     override fun onCleared() {
