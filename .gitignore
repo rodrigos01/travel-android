@@ -120,6 +120,7 @@ gradle-app.setting
 
 # Firebase config
 /app/google-services.json
+/app/travel-164715-84891e7aafeb.json
 
 # Secrets and Keystores
 /app/travel-release.jks

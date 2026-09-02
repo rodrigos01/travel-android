@@ -67,6 +67,7 @@ android {
 
             firebaseAppDistribution {
                 artifactType = "APK"
+                serviceCredentialsFile = "app/travel-164715-84891e7aafeb.json"
                 groups = "developers"
             }
         }
