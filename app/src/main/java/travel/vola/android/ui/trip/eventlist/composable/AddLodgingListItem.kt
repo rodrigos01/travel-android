@@ -10,21 +10,13 @@ import travel.vola.android.R
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
-import travel.vola.android.ui.trip.state.ManualStartEndAddPlanState
 import java.time.ZonedDateTime
 
 @Composable
 fun AddLodgingListItem(
-    uiState: ManualStartEndAddPlanState,
-    onLodgingTextChanged: (CharSequence) -> Unit,
-    onUpdated: (
-        checkIn: ZonedDateTime,
-        checkInTimeSelected: Boolean,
-        checkOut: ZonedDateTime?,
-        checkOutTimeSelected: Boolean,
-        selectedSearchResultIndex: Int,
-    ) -> Unit,
+    uiState: ManualAddLodgingItemState,
     onFindLodgingButtonTapped: () -> Unit,
+    onUpdated: (ManualAddLodgingItemState) -> Unit,
 ) {
     Column {
         StartEndAddPlanListItem(
@@ -33,26 +25,29 @@ fun AddLodgingListItem(
             startTimeSelectorLabel = stringResource(R.string.action_pick_checkin_time),
             startLabelText = "Lodging Name",
             startPlaceHolder = "Enter Hotel name or Address",
-            onStartTextChanged = onLodgingTextChanged,
+            onStartTextChanged = { text ->
+                onUpdated(
+                    uiState.copy(
+                        startState = uiState.startState.copy(locationText = text.toString(), selectedResultId = null),
+                    ),
+                )
+            },
             showEndTimePickerButton = false,
             endTitle = { Text(stringResource(R.string.label_checkout)) },
             endTimeSelectorLabel = stringResource(R.string.action_pick_checkout_time),
             endLabelText = "Check-out time",
             endPlaceHolder = "Check-out time",
-            onUpdated = {
-                    startDateTime,
-                    startTimeSelected,
-                    selectedStartSearchResultIndex,
-                    endDateTime,
-                    endTimeSelected,
-                    _,
-                ->
+            onUpdated = { startDateTime, startTimeSelected, selectedStartResultId, endDateTime, endTimeSelected, _ ->
                 onUpdated(
-                    startDateTime,
-                    startTimeSelected,
-                    endDateTime,
-                    endTimeSelected,
-                    selectedStartSearchResultIndex,
+                    uiState.copy(
+                        timestamp = startDateTime,
+                        startState = uiState.startState.copy(
+                            dateTime = startDateTime,
+                            isTimeSet = startTimeSelected,
+                            selectedResultId = selectedStartResultId,
+                        ),
+                        endState = uiState.endState.copy(dateTime = endDateTime, isTimeSet = endTimeSelected),
+                    ),
                 )
             },
         )
@@ -88,9 +83,8 @@ fun AddLodgingListItemPreview() {
                     deleteButtonEnabled = true,
                     saveButtonEnabled = true,
                 ),
-                onLodgingTextChanged = {},
                 onFindLodgingButtonTapped = {},
-                onUpdated = { _, _, _, _, _ -> },
+                onUpdated = {},
             )
         }
     }

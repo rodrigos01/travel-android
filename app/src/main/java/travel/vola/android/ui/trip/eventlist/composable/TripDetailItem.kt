@@ -80,11 +80,13 @@ fun TripDetailItem(
                 )
             },
             onLocationSearchResultSelected = { index, categoryIndex ->
-                addPlanItemActionHandler.onFlexibleItemSearchResultSelected(
-                    state.id,
-                    index,
-                    categoryIndex,
-                )
+                state.searchResults.getOrNull(index)?.let { result ->
+                    addPlanItemActionHandler.onFlexibleItemSearchResultSelected(
+                        state.id,
+                        result.id,
+                        categoryIndex,
+                    )
+                }
             },
             onNoteAdded = { index, categoryIndex, note ->
                 addPlanItemActionHandler.onFlexibleItemNoteAdded(

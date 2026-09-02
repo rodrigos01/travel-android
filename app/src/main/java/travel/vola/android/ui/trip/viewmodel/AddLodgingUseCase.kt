@@ -1,15 +1,8 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
-import travel.vola.android.extensions.MapStateFlow
-import travel.vola.android.extensions.get
-import travel.vola.android.extensions.mergeMaps
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.Lodging
-import travel.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandler
-import travel.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandlerBase
+import travel.vola.android.ui.trip.creation.usecase.PendingDataStore
 import travel.vola.android.ui.trip.state.AddLodgingItemState
 import travel.vola.android.ui.trip.state.LodgingSearchItemState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
@@ -17,95 +10,57 @@ import java.time.ZonedDateTime
 
 class AddLodgingUseCase(
     placeRepository: PlaceRepository,
-    private val coroutineScope: CoroutineScope,
+    pendingDataStore: PendingDataStore,
     private val manualAddLodgingUseCase: ManualAddLodgingUseCase = ManualAddLodgingUseCase(
-        coroutineScope = coroutineScope,
+        pendingDataStore = pendingDataStore,
     ),
     private val lodgingSearchParamsUseCase: LodgingSearchParamsUseCase = LodgingSearchParamsUseCase(
+        pendingDataStore = pendingDataStore,
         placeRepository = placeRepository,
-        coroutineScope = coroutineScope,
     ),
 ) : AddPlanUseCase.AddItemUseCase<Lodging, AddLodgingItemState>,
     AddPlanUseCase.EntityFactory<Lodging, ManualAddLodgingItemState> by manualAddLodgingUseCase,
-    LodgingSearchParamsFactory by lodgingSearchParamsUseCase,
-    AddLodgingItemActionHandler {
+    LodgingSearchParamsFactory by lodgingSearchParamsUseCase {
 
-    override fun onSwitchToManualButtonTapped(itemId: String) {
-        val item = items[itemId] ?: return
-        removeItem(item)
-        manualAddLodgingUseCase.addItem(
-            id = itemId,
-            checkIn = item.timestamp,
-            checkOut = item.checkOut,
-            params = AddPlanUseCase.StateParams(
-                item.dateSelectionEnabled,
-                item.typeSelectionEnabled,
-                item.deleteButtonEnabled,
-            ),
-        )
-    }
-
-    override fun onFindLodgingButtonTapped(itemId: String) {
-        val item = items[itemId] ?: return
-        removeItem(item)
-        lodgingSearchParamsUseCase.addItem(
-            id = itemId,
-            checkIn = item.timestamp,
-            checkOut = item.checkOut,
-            city = null, // TODO: Use city from item when Unified Places API is available
-            params = AddPlanUseCase.StateParams(
-                item.dateSelectionEnabled,
-                item.typeSelectionEnabled,
-                item.deleteButtonEnabled,
-            ),
-        )
-    }
-
-    override val items: MapStateFlow<String, AddLodgingItemState> = mergeMaps(
-        manualAddLodgingUseCase.items,
-        lodgingSearchParamsUseCase.items,
-    ).stateIn(coroutineScope, SharingStarted.Eagerly, emptyMap())
-
-    override fun lodgingTextChanged(itemId: String, content: CharSequence) =
-        getActionHandler(itemId).lodgingTextChanged(itemId, content)
-
-    override fun onLodgingUpdated(
-        itemId: String,
-        checkIn: ZonedDateTime,
-        checkInTimeSelected: Boolean,
-        checkOut: ZonedDateTime?,
-        checkOutTimeSelected: Boolean,
-        selectedSearchResultIndex: Int,
-    ) {
-        getActionHandler(itemId).onLodgingUpdated(
-            itemId,
-            checkIn,
-            checkInTimeSelected,
-            checkOut,
-            checkOutTimeSelected,
-            selectedSearchResultIndex,
-        )
-    }
-
-    override fun addItem(
+    override fun createItem(
         id: String,
         time: ZonedDateTime,
         params: AddPlanUseCase.StateParams,
-    ) = manualAddLodgingUseCase.addItem(id, time, params)
+    ): AddLodgingItemState = manualAddLodgingUseCase.createItem(id, time, params)
 
-    override fun addItem(id: String, entity: Lodging, params: AddPlanUseCase.StateParams) =
-        manualAddLodgingUseCase.addItem(id, entity, params)
+    override fun createItem(
+        id: String,
+        entity: Lodging,
+        params: AddPlanUseCase.StateParams,
+    ): AddLodgingItemState = manualAddLodgingUseCase.createItem(id, entity, params)
 
-    override fun removeItem(item: AddLodgingItemState) = when (item) {
-        is ManualAddLodgingItemState -> manualAddLodgingUseCase.removeItem(item)
-        is LodgingSearchItemState -> lodgingSearchParamsUseCase.removeItem(item)
+    override suspend fun onUpdated(state: AddLodgingItemState): AddLodgingItemState = when (state) {
+        is ManualAddLodgingItemState -> manualAddLodgingUseCase.onUpdated(state)
+        is LodgingSearchItemState -> lodgingSearchParamsUseCase.onUpdated(state)
     }
 
-    private fun getActionHandler(itemId: String): AddLodgingItemActionHandlerBase =
-        items[itemId]?.let { item ->
-            when (item) {
-                is ManualAddLodgingItemState -> manualAddLodgingUseCase
-                is LodgingSearchItemState -> lodgingSearchParamsUseCase
-            }
-        } ?: error("Item with id $itemId not found in store")
+    fun switchToManual(current: LodgingSearchItemState): ManualAddLodgingItemState =
+        manualAddLodgingUseCase.createItem(
+            id = current.id,
+            checkIn = current.checkIn,
+            checkOut = current.checkOut,
+            params = AddPlanUseCase.StateParams(
+                current.dateSelectionEnabled,
+                current.typeSelectionEnabled,
+                current.deleteButtonEnabled,
+            ),
+        )
+
+    fun switchToSearch(current: ManualAddLodgingItemState): LodgingSearchItemState =
+        lodgingSearchParamsUseCase.createItem(
+            id = current.id,
+            checkIn = current.startState.dateTime ?: current.timestamp,
+            checkOut = current.endState.dateTime,
+            city = null, // TODO: Use city from item when Unified Places API is available
+            params = AddPlanUseCase.StateParams(
+                current.dateSelectionEnabled,
+                current.typeSelectionEnabled,
+                current.deleteButtonEnabled,
+            ),
+        )
 }

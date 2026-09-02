@@ -7,7 +7,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,10 +37,10 @@ fun StartEndAddPlanListItem(
     onUpdated: (
         startDateTime: ZonedDateTime,
         startTimeSelected: Boolean,
-        selectedStartSearchResultIndex: Int,
+        selectedStartResultId: String?,
         endDateTime: ZonedDateTime?,
         endTimeSelected: Boolean,
-        selectedEndSearchResultIndex: Int,
+        selectedEndResultId: String?,
     ) -> Unit,
     requiresEnd: Boolean = true,
     canSetEnd: Boolean = true,
@@ -52,8 +51,8 @@ fun StartEndAddPlanListItem(
     var startTimeSelected by remember {
         mutableStateOf(uiState.startState.isTimeSet)
     }
-    var selectedStartSearchResultIndex by remember {
-        mutableIntStateOf(-1)
+    var selectedStartResultId by remember {
+        mutableStateOf<String?>(null)
     }
     var hasEnd by remember(requiresEnd, canSetEnd) {
         mutableStateOf(requiresEnd && canSetEnd)
@@ -64,24 +63,24 @@ fun StartEndAddPlanListItem(
     var endTimeSelected by remember {
         mutableStateOf(uiState.endState.isTimeSet)
     }
-    var selectedEndSearchResultIndex by remember {
-        mutableIntStateOf(-1)
+    var selectedEndResultId by remember {
+        mutableStateOf<String?>(null)
     }
     LaunchedEffect(
         selectedStartDateTime,
         startTimeSelected,
-        selectedStartSearchResultIndex,
+        selectedStartResultId,
         selectedEndDateTime,
         endTimeSelected,
-        selectedEndSearchResultIndex,
+        selectedEndResultId,
     ) {
         onUpdated(
             selectedStartDateTime ?: error("Start date time should never be null"),
             startTimeSelected,
-            selectedStartSearchResultIndex,
+            selectedStartResultId,
             selectedEndDateTime,
             endTimeSelected,
-            selectedEndSearchResultIndex,
+            selectedEndResultId,
         )
     }
     Column {
@@ -100,10 +99,10 @@ fun StartEndAddPlanListItem(
             searchResults = uiState.startState.searchResults,
             timeSelectorLabel = startTimeSelectorLabel,
             showTextField = true,
-            onUpdated = { selectedDateTime, timeSelected, selectedSearchResultIndex ->
+            onUpdated = { selectedDateTime, timeSelected, selectedResultId ->
                 selectedStartDateTime = selectedDateTime
                 startTimeSelected = timeSelected
-                selectedStartSearchResultIndex = selectedSearchResultIndex
+                selectedStartResultId = selectedResultId
             },
         )
         if (hasEnd) {
@@ -120,10 +119,10 @@ fun StartEndAddPlanListItem(
                 labelText = endLabelText,
                 placeHolder = endPlaceHolder,
                 onTextChanged = onEndTextChanged,
-                onUpdated = { selectedDateTime, timeSelected, selectedSearchResultIndex ->
+                onUpdated = { selectedDateTime, timeSelected, selectedResultId ->
                     selectedEndDateTime = selectedDateTime
                     endTimeSelected = timeSelected
-                    selectedEndSearchResultIndex = selectedSearchResultIndex
+                    selectedEndResultId = selectedResultId
                 },
             )
         }

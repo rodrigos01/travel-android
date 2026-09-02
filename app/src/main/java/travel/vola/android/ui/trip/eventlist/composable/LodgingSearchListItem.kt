@@ -6,12 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,57 +15,31 @@ import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.ui.lodgingsearch.composable.LodgingSearchParams
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.composable.AddPlanType
+import travel.vola.android.ui.trip.state.LodgingSearchItemState
 import travel.vola.android.ui.trip.state.SearchResultItemState
-import java.time.ZonedDateTime
 
 @Composable
 fun LodgingSearchListItem(
-    checkIn: ZonedDateTime,
-    checkOut: ZonedDateTime? = null,
-    minCheckIn: ZonedDateTime? = null,
-    minCheckOut: ZonedDateTime? = null,
-    locationText: String? = null,
-    searchResults: List<SearchResultItemState> = emptyList(),
+    uiState: LodgingSearchItemState,
     onSwitchToManualButtonTapped: () -> Unit,
-    onLocationSearchTextChanged: (CharSequence) -> Unit,
-    onUpdated: (
-        checkIn: ZonedDateTime,
-        checkOut: ZonedDateTime?,
-        selectedSearchResultIndex: Int,
-    ) -> Unit,
+    onUpdated: (LodgingSearchItemState) -> Unit,
 ) {
-    var checkInState by remember {
-        mutableStateOf(checkIn)
-    }
-    var checkOutState by remember {
-        mutableStateOf(checkOut)
-    }
-    var selectedSearchResultIndexState by remember {
-        mutableIntStateOf(-1)
-    }
-    LaunchedEffect(
-        checkInState,
-        checkOutState,
-        selectedSearchResultIndexState,
-    ) {
-        onUpdated(
-            checkInState,
-            checkOutState,
-            selectedSearchResultIndexState,
-        )
-    }
     Column {
         LodgingSearchParams(
-            checkIn,
-            minCheckIn,
-            checkOut,
-            minCheckOut,
-            locationText,
-            searchResults,
-            onCheckInDateSelected = { checkInState = it },
-            onCheckOutDateSelected = { checkOutState = it },
-            onLocationSearchTextChanged,
-            onLocationSearchResultSelected = { selectedSearchResultIndexState = it },
+            checkIn = uiState.checkIn,
+            minCheckIn = null,
+            checkOut = uiState.checkOut,
+            minCheckOut = uiState.minCheckOutTime,
+            locationText = uiState.locationText,
+            searchResults = uiState.searchResults,
+            onCheckInDateSelected = { onUpdated(uiState.copy(checkIn = it)) },
+            onCheckOutDateSelected = { onUpdated(uiState.copy(checkOut = it)) },
+            onLocationSearchTextChanged = {
+                onUpdated(uiState.copy(locationText = it.toString(), selectedResultId = null))
+            },
+            onLocationSearchResultSelected = { index ->
+                onUpdated(uiState.copy(selectedResultId = uiState.searchResults.getOrNull(index)?.id))
+            },
         )
         TextButton(
             onClick = onSwitchToManualButtonTapped,
@@ -90,13 +58,21 @@ fun LodgingSearchListItemPreview() {
     AppTheme {
         AddPlanScaffold(AddPlanType.Lodging, {}, true, false, {}, true, "Save", {}, "Cancel", {}) {
             LodgingSearchListItem(
-                checkIn = zonedDateTime("2025-12-05T12:00 +0100"),
-                checkOut = null,
-                searchResults = List(5) { SearchResultItemState("City$it", "Address$it") },
-                locationText = null,
-                onLocationSearchTextChanged = {},
+                uiState = LodgingSearchItemState(
+                    id = "",
+                    timestamp = zonedDateTime("2025-12-05T12:00 +0100"),
+                    typeSelectionEnabled = true,
+                    saveButtonEnabled = false,
+                    deleteButtonEnabled = false,
+                    dateSelectionEnabled = true,
+                    locationText = null,
+                    searchResults = List(5) { SearchResultItemState("id$it", "City$it", "Address$it") },
+                    checkIn = zonedDateTime("2025-12-05T12:00 +0100"),
+                    minCheckOutTime = null,
+                    checkOut = null,
+                ),
                 onSwitchToManualButtonTapped = {},
-                onUpdated = { _, _, _ -> },
+                onUpdated = {},
             )
         }
     }

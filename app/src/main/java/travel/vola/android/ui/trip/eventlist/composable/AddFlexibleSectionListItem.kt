@@ -20,12 +20,8 @@ import java.time.ZonedDateTime
 @Composable
 fun AddFlexibleSectionListItem(
     state: AddFlexibleSectionItemState,
-    onTextChanged: (CharSequence) -> Unit,
     onGenerateTapped: () -> Unit,
-    onUpdated: (
-        dateTime: ZonedDateTime,
-        timeSelected: Boolean,
-    ) -> Unit,
+    onUpdated: (AddFlexibleSectionItemState) -> Unit,
 ) {
     Column {
         AddPlanRow(
@@ -37,10 +33,10 @@ fun AddFlexibleSectionListItem(
             labelText = "Section Name",
             text = state.sectionName,
             placeHolder = "Section Name",
-            onTextChanged = onTextChanged,
+            onTextChanged = { text -> onUpdated(state.copy(sectionName = text.toString())) },
             onUpdated = { dateTime, timeSelected, _ ->
                 if (dateTime != null) {
-                    onUpdated(dateTime, timeSelected)
+                    onUpdated(state.copy(startDateTime = dateTime, hasStartTime = timeSelected))
                 }
             },
         )
@@ -70,9 +66,8 @@ fun AddFlexibleSectionListItemPreview() {
                     hasStartTime = true,
                     sectionName = "My New Section",
                 ),
-                onTextChanged = {},
                 onGenerateTapped = {},
-                onUpdated = { _, _ -> },
+                onUpdated = {},
             )
         }
     }

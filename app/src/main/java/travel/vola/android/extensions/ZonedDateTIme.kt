@@ -14,12 +14,15 @@ fun zonedDateTime(source: String): ZonedDateTime {
     return zonedDateTimeOrNull(source, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
         ?: zonedDateTimeOrNull(source, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm X"))
         ?: zonedDateTimeOrNull(
-            source, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm z")
+            source,
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm z"),
         ) ?: throw DateTimeParseException("Text '$source' could not be parsed", source, 0)
 }
 
 fun zonedDateTime(
-    source: String, pattern: String, locale: Locale = Locale.getDefault()
+    source: String,
+    pattern: String,
+    locale: Locale = Locale.getDefault(),
 ): ZonedDateTime {
     try {
         return ZonedDateTime.parse(source, DateTimeFormatter.ofPattern(pattern, locale))

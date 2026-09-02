@@ -7,22 +7,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import travel.vola.android.R
 import travel.vola.android.ui.theme.AppTheme
-import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
+import travel.vola.android.ui.trip.state.AddPlaceItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
-import travel.vola.android.ui.trip.state.ManualStartEndAddPlanState
 import java.time.ZonedDateTime
 
 @Composable
 fun AddPlaceListItem(
-    uiState: ManualStartEndAddPlanState,
-    onTextChanged: (CharSequence) -> Unit,
-    onUpdated: (
-        startDateTime: ZonedDateTime?,
-        startTimeSelected: Boolean,
-        endDateTime: ZonedDateTime?,
-        endTimeSelected: Boolean,
-        selectedSearchResultIndex: Int,
-    ) -> Unit,
+    uiState: AddPlaceItemState,
+    onUpdated: (AddPlaceItemState) -> Unit,
 ) {
     StartEndAddPlanListItem(
         uiState = uiState,
@@ -30,26 +22,29 @@ fun AddPlaceListItem(
         startTimeSelectorLabel = stringResource(R.string.action_pick_start_time),
         startLabelText = "Location",
         startPlaceHolder = "Enter Location",
-        onStartTextChanged = onTextChanged,
+        onStartTextChanged = { text ->
+            onUpdated(
+                uiState.copy(
+                    startState = uiState.startState.copy(locationText = text.toString(), selectedResultId = null),
+                ),
+            )
+        },
         endTitle = { Text(stringResource(R.string.label_end)) },
         endTimeSelectorLabel = stringResource(R.string.action_pick_end_time),
         showEndTimePickerButton = false,
         endLabelText = "Pick End Time",
         requiresEnd = false,
-        onUpdated = {
-                startDateTime,
-                startTimeSelected,
-                selectedStartSearchResultIndex,
-                endDateTime,
-                endTimeSelected,
-                _,
-            ->
+        onUpdated = { startDateTime, startTimeSelected, selectedStartResultId, endDateTime, endTimeSelected, _ ->
             onUpdated(
-                startDateTime,
-                startTimeSelected,
-                endDateTime,
-                endTimeSelected,
-                selectedStartSearchResultIndex,
+                uiState.copy(
+                    timestamp = startDateTime,
+                    startState = uiState.startState.copy(
+                        dateTime = startDateTime,
+                        isTimeSet = startTimeSelected,
+                        selectedResultId = selectedStartResultId,
+                    ),
+                    endState = uiState.endState.copy(dateTime = endDateTime, isTimeSet = endTimeSelected),
+                ),
             )
         },
     )
@@ -61,9 +56,9 @@ fun AddPlaceListItemPreview() {
     AppTheme {
         Surface {
             AddPlaceListItem(
-                uiState = ManualAddLodgingItemState(
-                    "",
-                    ZonedDateTime.now(),
+                uiState = AddPlaceItemState(
+                    id = "",
+                    timestamp = ZonedDateTime.now(),
                     typeSelectionEnabled = false,
                     startState = ManualAddPlanState(
                         dateTime = null,
@@ -84,8 +79,7 @@ fun AddPlaceListItemPreview() {
                     deleteButtonEnabled = true,
                     saveButtonEnabled = true,
                 ),
-                onTextChanged = {},
-                onUpdated = { _, _, _, _, _ -> },
+                onUpdated = {},
             )
         }
     }

@@ -28,7 +28,7 @@ sealed interface TripItemState {
         val imageUrl: String,
         val dateStart: String,
         val dateEnd: String,
-    ) : TripItemState, Timeable, Editable, Replaceable, SectionItemState
+    ) : TripItemState, Timeable, Editable, SectionItemState
 
     data class DateRangeItemState(
         override val id: String,
@@ -39,11 +39,9 @@ sealed interface TripItemState {
         val dayOfMonthEnd: String,
         val dayOfWeekEnd: String,
         val isGeneratingPlans: Boolean,
-    ) : TripItemState, Timeable, Replaceable, SectionItemState, Focusable {
+    ) : TripItemState, Timeable, SectionItemState, Focusable {
         override val showDate: Boolean = true
     }
-
-    interface Replaceable : Identifiable
 
     sealed interface Editable : Identifiable
 
@@ -58,7 +56,7 @@ sealed interface TripItemState {
         val dayOfMonth: String,
         val dayOfWeek: String,
         val isGeneratingPlans: Boolean,
-    ) : TripItemState, Timeable, Replaceable, SectionItemState, Focusable {
+    ) : TripItemState, Timeable, SectionItemState, Focusable {
         override val showDate: Boolean = true
     }
 
@@ -67,15 +65,23 @@ sealed interface TripItemState {
         val dayOfWeek: String?
     }
 
-    sealed interface EventItemState : TripItemState, Timeable, Editable, SectionItemState,
-            Focusable, EventWithDateState {
+    sealed interface EventItemState :
+        TripItemState,
+        Timeable,
+        Editable,
+        SectionItemState,
+        Focusable,
+        EventWithDateState {
         val time: String
         val title: String?
         val subtitle: String?
         val backgroundStyle: BackgroundStyle
 
         enum class BackgroundStyle {
-            TOP, MIDDLE, BOTTOM, SINGLE,
+            TOP,
+            MIDDLE,
+            BOTTOM,
+            SINGLE,
         }
     }
 
@@ -90,7 +96,7 @@ sealed interface TripItemState {
         override val sectionId: String? = null,
         val destination: String,
         val airport: String,
-    ) : EventItemState, Replaceable {
+    ) : EventItemState {
         override val title = destination
         override val subtitle = airport
     }
@@ -105,7 +111,7 @@ sealed interface TripItemState {
         override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
         override val sectionId: String? = null,
         val airport: String,
-    ) : EventItemState, Replaceable {
+    ) : EventItemState {
         override val title = null
         override val subtitle = airport
     }
@@ -121,7 +127,7 @@ sealed interface TripItemState {
         override val sectionId: String? = null,
         val hotelName: String,
         val hotelAddress: String,
-    ) : EventItemState, Replaceable {
+    ) : EventItemState {
         override val title = null
         override val subtitle = hotelAddress
     }
@@ -136,7 +142,7 @@ sealed interface TripItemState {
         override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
         override val sectionId: String? = null,
         val hotelName: String,
-    ) : EventItemState, Replaceable {
+    ) : EventItemState {
         override val title = null
         override val subtitle = hotelName
     }
@@ -154,7 +160,7 @@ sealed interface TripItemState {
         val placeName: String,
         val cityName: String,
         val imageUrl: String,
-    ) : EventItemState, Replaceable {
+    ) : EventItemState {
         override val title = placeName
         override val subtitle = cityName
     }
@@ -170,7 +176,7 @@ sealed interface TripItemState {
         override val time: String,
         val restaurantName: String,
         val restaurantAddress: String,
-    ) : EventItemState, Replaceable {
+    ) : EventItemState {
         override val title = null
         override val subtitle = restaurantAddress
     }
@@ -178,7 +184,7 @@ sealed interface TripItemState {
     data class InitialAddPlanItemState(
         override val id: String,
         override val timestamp: ZonedDateTime,
-    ) : Replaceable, Timeable, TripItemState
+    ) : Identifiable, Timeable, TripItemState
 
     data class FlexibleDaySectionState(
         override val id: String,
@@ -193,7 +199,7 @@ sealed interface TripItemState {
         val categories: List<DaySectionCategory>,
         val searchResults: List<SearchResultItemState>,
         val isGenerated: Boolean = false,
-    ) : EventItemState, EventWithDateState, Focusable, Replaceable {
+    ) : EventItemState, EventWithDateState, Focusable {
         override val time: String = ""
         override val title: String = name
     }
@@ -240,6 +246,7 @@ data class ManualAddPlanState(
     val dateSelectionEnabled: Boolean,
     val locationText: String?,
     val searchResults: List<AutoCompleteResultState>,
+    val selectedResultId: String? = null,
 )
 
 sealed interface AddPlanItemState : Identifiable {
@@ -256,11 +263,16 @@ sealed interface AddPlanItemState : Identifiable {
         get() = Type.entries
 
     enum class Type {
-        Flight, Lodging, Place, Restaurant, FlexibleSection,
+        Flight,
+        Lodging,
+        Place,
+        Restaurant,
+        FlexibleSection,
     }
 
     enum class ButtonConfiguration {
-        Save, Search,
+        Save,
+        Search,
     }
 }
 
@@ -276,7 +288,7 @@ sealed interface AddLodgingItemState : AddPlanItemState {
     val checkOut: ZonedDateTime?
 }
 
-data class AutoCompleteResultState(val title: String, val subtitle: String?)
+data class AutoCompleteResultState(val id: String, val title: String, val subtitle: String?)
 
 data class ManualAddLodgingItemState(
     override val id: String,
@@ -310,6 +322,7 @@ data class LodgingSearchItemState(
     override val dateSelectionEnabled: Boolean,
     val locationText: String?,
     val searchResults: List<SearchResultItemState>,
+    val selectedResultId: String? = null,
     override val checkIn: ZonedDateTime,
     val minCheckOutTime: ZonedDateTime?,
     override val checkOut: ZonedDateTime?,
@@ -320,64 +333,23 @@ data class LodgingSearchItemState(
 
 data class AddPlaceItemState(
     override val id: String,
+    override val timestamp: ZonedDateTime,
     override val typeSelectionEnabled: Boolean,
-    override val dateSelectionEnabled: Boolean,
+    override val startState: ManualAddPlanState,
+    override val endState: ManualAddPlanState,
     override val saveButtonEnabled: Boolean,
     override val deleteButtonEnabled: Boolean,
-    override val timestamp: ZonedDateTime,
-    val startTimeSelected: Boolean,
-    val endDateTime: ZonedDateTime?,
-    val endTimeSelected: Boolean,
-    val minEndTime: ZonedDateTime?,
-    val placeName: String?,
-    val searchResults: List<AutoCompleteResultState>,
-) : ManualStartEndAddPlanState {
-    override val startState: ManualAddPlanState = ManualAddPlanState(
-        dateTime = timestamp,
-        minDateTime = null,
-        isTimeSet = startTimeSelected,
-        dateSelectionEnabled = dateSelectionEnabled,
-        locationText = placeName,
-        searchResults = searchResults,
-    )
-    override val endState: ManualAddPlanState = ManualAddPlanState(
-        dateTime = endDateTime,
-        minDateTime = minEndTime,
-        isTimeSet = endTimeSelected,
-        dateSelectionEnabled = dateSelectionEnabled,
-        locationText = null,
-        searchResults = emptyList(),
-    )
-}
+) : ManualStartEndAddPlanState
 
 data class AddRestaurantItemState(
     override val id: String,
+    override val timestamp: ZonedDateTime,
     override val typeSelectionEnabled: Boolean,
-    override val dateSelectionEnabled: Boolean,
+    override val startState: ManualAddPlanState,
+    override val endState: ManualAddPlanState,
     override val saveButtonEnabled: Boolean,
     override val deleteButtonEnabled: Boolean,
-    override val timestamp: ZonedDateTime,
-    val timeSelected: Boolean,
-    val restaurantName: String?,
-    val searchResults: List<AutoCompleteResultState>,
-) : ManualStartEndAddPlanState {
-    override val startState: ManualAddPlanState = ManualAddPlanState(
-        dateTime = timestamp,
-        minDateTime = null,
-        isTimeSet = true,
-        dateSelectionEnabled = dateSelectionEnabled,
-        locationText = restaurantName,
-        searchResults = searchResults,
-    )
-    override val endState: ManualAddPlanState = ManualAddPlanState(
-        dateTime = null,
-        minDateTime = null,
-        isTimeSet = false,
-        dateSelectionEnabled = dateSelectionEnabled,
-        locationText = null,
-        searchResults = emptyList(),
-    )
-}
+) : ManualStartEndAddPlanState
 
 data class AddFlexibleSectionItemState(
     override val id: String,
@@ -392,7 +364,7 @@ data class AddFlexibleSectionItemState(
     override val timestamp: ZonedDateTime = startDateTime
 }
 
-data class SearchResultItemState(val title: String, val subtitle: String)
+data class SearchResultItemState(val id: String, val title: String, val subtitle: String)
 
 val AddPlanItemState.type
     get() = when (this) {

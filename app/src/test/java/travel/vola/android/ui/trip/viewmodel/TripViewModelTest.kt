@@ -17,6 +17,7 @@ import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
+import travel.vola.android.model.data.Identifiable
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.TimedPlace
@@ -47,12 +48,17 @@ class TripViewModelTest {
         on { findTripById("tripId") } doReturn tripFlow
     }
 
-    private val addPlanItems = MutableStateFlow<Map<String, AddPlanItemState>>(mapOf())
+    private val addPlanItems = MutableStateFlow<AddPlanItemState?>(null)
     private val addPlanUseCase: AddPlanUseCase = mock {
-        on { items } doReturn addPlanItems
+        on { state } doReturn addPlanItems
     }
     private val suggestionsUseCase: SuggestionsUseCase = mock {
-        on { state } doReturn MutableStateFlow(SuggestionsUseCase.DailyItineraryState(emptyList(), emptyList()))
+        on { state } doReturn MutableStateFlow(
+            SuggestionsUseCase.DailyItineraryState(
+                emptyList(),
+                emptyList()
+            )
+        )
     }
     private val flexibleSectionUseCase: FlexibleSectionUseCase = mock {
         on { flexibleSectionItems } doReturn MutableStateFlow(emptyList())
@@ -575,7 +581,7 @@ class TripViewModelTest {
             subject.viewState.value.items.first { it is HotelCheckOutItemState && it.hotelName == lodgingName } as TripItemState.EventItemState
         subject.addButtonTapped(checkOutItem.id)
         verify(addPlanUseCase).createAddPlanItem(
-            any(),
+            anyOrNull(),
             eq(zonedDateTime("2024-05-30T11:00:00+02:00")),
             dateSelectionEnabled = eq(false),
             type = any<AddPlanItemState.Type>(),
@@ -584,7 +590,7 @@ class TripViewModelTest {
     }
 
     @Test
-    fun `add Plan tapped on date range should add add plan item below tapped item`() {
+    fun `add Plan tapped on date range should surface created add plan item`() {
         tripFlow.value = Trip(
             lodgings = listOf(
                 Lodging(
@@ -601,10 +607,8 @@ class TripViewModelTest {
         mockAddPlanItem(expected)
         val originalItem =
             subject.viewState.value.items.filterIsInstance<DateRangeItemState>().first()
-        val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
         subject.addButtonTapped(originalItem.id)
-        val addedItem = subject.viewState.value.items[originalItemIndex]
-        assertThat(addedItem).isEqualTo(expected)
+        assertThat(subject.viewState.value.addPlanItemState).isEqualTo(expected)
     }
 
     @Test
@@ -622,7 +626,7 @@ class TripViewModelTest {
             subject.viewState.value.items.filterIsInstance<DateRangeItemState>().first()
         subject.addButtonTapped(originalItem.id)
         verify(addPlanUseCase).createAddPlanItem(
-            id = eq(originalItem.id),
+            id = anyOrNull(),
             time = any(),
             dateSelectionEnabled = eq(true),
             type = any<AddPlanItemState.Type>(),
@@ -631,7 +635,7 @@ class TripViewModelTest {
     }
 
     @Test
-    fun `empty date row tapped on date range should replace tapped item with add plan item`() {
+    fun `empty date row tapped on date range should surface created add plan item`() {
         tripFlow.value = Trip(
             lodgings = listOf(
                 Lodging(
@@ -648,10 +652,8 @@ class TripViewModelTest {
         mockAddPlanItem(expected)
         val originalItem =
             subject.viewState.value.items.filterIsInstance<EmptyDateItemState>().first()
-        val originalItemIndex = subject.viewState.value.items.indexOf(originalItem)
         subject.emptyDateRowTapped(originalItem.id)
-        val addedItem = subject.viewState.value.items[originalItemIndex]
-        assertThat(addedItem).isEqualTo(expected)
+        assertThat(subject.viewState.value.addPlanItemState).isEqualTo(expected)
     }
 
     @Test
@@ -669,12 +671,14 @@ class TripViewModelTest {
         val newAddPlanItem = mock<AddFlightItemState> {
             on { id } doReturn newItemId
         }
-        addPlanItems.value = mapOf(newItemId to newAddPlanItem)
-        assertThat(subject.viewState.value.items).doesNotContain(newAddPlanItem)
+        addPlanItems.value = newAddPlanItem
+        assertThat(
+            subject.viewState.value.items.filterIsInstance<Identifiable>()
+                .map { it.id }).doesNotContain(newItemId)
     }
 
     @Test
-    fun `cancel should remove item from addPlanUseCase`() {
+    fun `cancel should delegate to addPlanUseCase`() {
         tripFlow.value = Trip(
             lodgings = listOf(
                 Lodging(
@@ -684,35 +688,15 @@ class TripViewModelTest {
                 ),
             ),
         )
-        val addPlanItemId = "originalItemId"
         val expected: AddFlightItemState = mock {
-            on { id } doReturn addPlanItemId
+            on { id } doReturn "originalItemId"
         }
         mockAddPlanItem(expected)
         val originalItem =
             subject.viewState.value.items.filterIsInstance<DateRangeItemState>().first()
         subject.addButtonTapped(originalItem.id)
-        subject.cancelEdit(addPlanItemId)
-        verify(addPlanUseCase).removeItem(addPlanItemId)
-    }
-
-    @Test
-    fun `cancel should remove item from use case`() {
-        tripFlow.value = Trip(
-            lodgings = listOf(
-                Lodging(
-                    name = "Pestana Porto - A Brasileira",
-                    checkIn = "2024-05-11T13:00:00+01:00",
-                    checkout = "2024-05-19T11:00:00+01:00",
-                ),
-            ),
-        )
-        val addPlanItemId = "originalItemId"
-        val originalItem =
-            subject.viewState.value.items.filterIsInstance<DateRangeItemState>().first()
-        subject.addButtonTapped(originalItem.id)
-        subject.cancelEdit(addPlanItemId)
-        verify(addPlanUseCase).removeItem(addPlanItemId)
+        subject.cancelEdit()
+        verify(addPlanUseCase).cancelEdit()
     }
 
     private fun mockAddPlanItem(addPlanItem: AddPlanItemState) {
@@ -726,8 +710,7 @@ class TripViewModelTest {
                     anyOrNull(),
                 )
             } doAnswer {
-                val id = it.getArgument<String?>(0) ?: "adding"
-                addPlanItems.value = mapOf(id to addPlanItem)
+                addPlanItems.value = addPlanItem
             }
         }
     }

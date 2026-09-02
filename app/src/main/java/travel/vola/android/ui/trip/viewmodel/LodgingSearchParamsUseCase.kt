@@ -1,9 +1,5 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import travel.vola.android.common.coroutines.MutexScope
-import travel.vola.android.extensions.MapFlow
 import travel.vola.android.extensions.plus
 import travel.vola.android.extensions.timeInMillis
 import travel.vola.android.extensions.toMidnight
@@ -12,144 +8,106 @@ import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.repository.LodgingSearchRepository
 import travel.vola.android.ui.lodgingsearch.composable.LodgingSearchDestination
-import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
-import travel.vola.android.ui.trip.creation.usecase.LodgingSearchItemActionHandler
-import travel.vola.android.ui.trip.creation.usecase.PendingData
+import travel.vola.android.ui.trip.creation.usecase.PendingDataStore
+import travel.vola.android.ui.trip.creation.usecase.currentAs
+import travel.vola.android.ui.trip.creation.usecase.requireCurrent
 import travel.vola.android.ui.trip.state.LodgingSearchItemState
 import travel.vola.android.ui.trip.state.SearchResultItemState
 import java.time.ZonedDateTime
 import kotlin.time.Duration.Companion.days
 
 interface LodgingSearchParamsFactory {
-    fun getLodgingSearchParams(tripId: String, itemId: String): LodgingSearchDestination.Params?
+    fun getLodgingSearchParams(tripId: String, item: LodgingSearchItemState): LodgingSearchDestination.Params?
 }
 
 class LodgingSearchParamsUseCase(
-    coroutineScope: CoroutineScope,
-    private val itemStore: AddPlanItemStore<PendingData.LodgingSearchParams, LodgingSearchItemState> = AddPlanItemStore(),
+    private val pendingDataStore: PendingDataStore,
     private val repository: LodgingSearchRepository = LodgingSearchRepository(),
     private val placeRepository: PlaceRepository,
 ) : AddPlanUseCase.AddItemUseCase<Lodging, LodgingSearchItemState>,
-    LodgingSearchItemActionHandler,
     LodgingSearchParamsFactory {
 
-    override val items: MapFlow<String, LodgingSearchItemState> = itemStore.items(::createItem)
-
-    private val autoCompleteScope = MutexScope(coroutineScope.coroutineContext)
-    override fun lodgingTextChanged(itemId: String, content: CharSequence) {
-        if (content.length < 3) {
-            return
-        }
-        autoCompleteScope.launch {
-            val results = repository.autocompleteCity(content.toString())
-            itemStore.update(itemId) { data ->
-                data.copy(
-                    searchResults = results,
-                )
-            }
-        }
-    }
-
-    override fun onLodgingUpdated(
-        itemId: String,
-        checkIn: ZonedDateTime,
-        checkInTimeSelected: Boolean,
-        checkOut: ZonedDateTime?,
-        checkOutTimeSelected: Boolean,
-        selectedSearchResultIndex: Int,
-    ) {
-        itemStore.update(itemId) {
-            it.copy(
-                checkIn = checkIn,
-                checkOut = checkOut,
-                city = it.searchResults.getOrNull(selectedSearchResultIndex) ?: it.city,
-            )
-        }
-    }
-
-    override fun addItem(
+    override fun createItem(
         id: String,
         time: ZonedDateTime,
         params: AddPlanUseCase.StateParams,
-    ) {
-        val data = PendingData.LodgingSearchParams(
-            id = id,
-            checkIn = time,
-        )
-        itemStore.addItem(data, params)
-    }
+    ): LodgingSearchItemState = createItem(id, checkIn = time, checkOut = null, city = null, params)
 
-    override fun addItem(
-        id: String,
-        entity: Lodging,
-        params: AddPlanUseCase.StateParams,
-    ) {
-        addItem(
-            id = id,
-            checkIn = entity.checkIn,
-            checkOut = entity.checkout,
-            city = null, // TODO: Use city from entity when Unified Places API is available
-            params = params,
-        )
-    }
-
-    fun addItem(
+    fun createItem(
         id: String,
         checkIn: ZonedDateTime,
         checkOut: ZonedDateTime?,
         city: Place?,
         params: AddPlanUseCase.StateParams,
-    ) {
-        val data = PendingData.LodgingSearchParams(
+    ): LodgingSearchItemState {
+        pendingDataStore.set(PendingDataStore.Entry.LodgingSearch(city = city))
+        return LodgingSearchItemState(
             id = id,
+            timestamp = checkIn,
+            saveButtonEnabled = city != null && checkOut != null && checkOut > checkIn,
+            dateSelectionEnabled = params.dateSelectionEnabled,
+            deleteButtonEnabled = params.deleteEnabled,
+            typeSelectionEnabled = params.typeSelectionEnabled,
             checkIn = checkIn,
+            minCheckOutTime = checkIn.toMidnight() + 1.days,
             checkOut = checkOut,
-            city = city,
+            locationText = city?.name,
+            searchResults = emptyList(),
         )
-        itemStore.addItem(data, params)
     }
 
-    override fun removeItem(item: LodgingSearchItemState) {
-        itemStore.remove(item)
-    }
-
-    private fun createItem(
-        searchParams: PendingData.LodgingSearchParams,
-        stateParams: AddPlanUseCase.StateParams,
-    ) = LodgingSearchItemState(
-        id = searchParams.id,
-        timestamp = searchParams.checkIn,
-        saveButtonEnabled = searchParams.city != null && searchParams.checkOut != null && searchParams.checkOut > searchParams.checkIn,
-        dateSelectionEnabled = stateParams.dateSelectionEnabled,
-        deleteButtonEnabled = stateParams.deleteEnabled,
-        typeSelectionEnabled = stateParams.typeSelectionEnabled,
-        checkIn = searchParams.checkIn,
-        minCheckOutTime = searchParams.checkIn.toMidnight() + 1.days,
-        checkOut = searchParams.checkOut,
-        locationText = searchParams.city?.name,
-        searchResults = searchParams.searchResults.map {
-            SearchResultItemState(
-                it.name,
-                it.address,
-            )
-        },
+    override fun createItem(
+        id: String,
+        entity: Lodging,
+        params: AddPlanUseCase.StateParams,
+    ): LodgingSearchItemState = createItem(
+        id = id,
+        checkIn = entity.checkIn,
+        checkOut = entity.checkout,
+        city = null, // TODO: Use city from entity when Unified Places API is available
+        params = params,
     )
 
-    override fun getLodgingSearchParams(
-        tripId: String,
-        itemId: String,
-    ): LodgingSearchDestination.Params? = itemStore.getData(itemId)?.let {
-        if (it.checkOut != null && it.city != null) {
-            placeRepository.places[it.city.id] = it.city
-            LodgingSearchDestination.Params(
-                tripId = tripId,
-                checkIn = it.checkIn.timeInMillis,
-                checkOut = it.checkOut.timeInMillis,
-                locationId = it.city.id,
-                timeZoneId = it.checkIn.zone.id,
-            )
+    override suspend fun onUpdated(state: LodgingSearchItemState): LodgingSearchItemState {
+        val base = state.copy(minCheckOutTime = state.checkIn.toMidnight() + 1.days)
+        val entry = pendingDataStore.requireCurrent<PendingDataStore.Entry.LodgingSearch>()
+        val selectedId = state.selectedResultId
+        val text = state.locationText
+        val selectedCity = if (selectedId != null && selectedId != entry.city?.id) {
+            entry.searchResults.firstOrNull { it.id == selectedId }
         } else {
             null
         }
+        val resolved = if (selectedCity != null) {
+            pendingDataStore.update { (it as PendingDataStore.Entry.LodgingSearch).copy(city = selectedCity) }
+            base.copy(locationText = selectedCity.name, searchResults = emptyList())
+        } else if (selectedId == null && text != null && text.length >= 3) {
+            val results = repository.autocompleteCity(text)
+            pendingDataStore.update { (it as PendingDataStore.Entry.LodgingSearch).copy(searchResults = results) }
+            base.copy(searchResults = results.map { SearchResultItemState(it.id, it.name, it.address) })
+        } else {
+            base
+        }
+        val updatedEntry = pendingDataStore.requireCurrent<PendingDataStore.Entry.LodgingSearch>()
+        return resolved.copy(
+            saveButtonEnabled = updatedEntry.city != null && resolved.checkOut != null && resolved.checkOut > resolved.checkIn,
+        )
+    }
+
+    override fun getLodgingSearchParams(
+        tripId: String,
+        item: LodgingSearchItemState,
+    ): LodgingSearchDestination.Params? {
+        val entry = pendingDataStore.currentAs<PendingDataStore.Entry.LodgingSearch>() ?: return null
+        val city = entry.city ?: return null
+        val checkOut = item.checkOut ?: return null
+        placeRepository.places[city.id] = city
+        return LodgingSearchDestination.Params(
+            tripId = tripId,
+            checkIn = item.checkIn.timeInMillis,
+            checkOut = checkOut.timeInMillis,
+            locationId = city.id,
+            timeZoneId = item.checkIn.zone.id,
+        )
     }
 }

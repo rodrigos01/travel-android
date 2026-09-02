@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import travel.vola.android.common.coroutines.createUseCaseScope
@@ -55,16 +54,15 @@ import travel.vola.android.model.genai.GenAIRepository
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.ui.trip.creation.assistant.composable.TripCreationAssistantDestination
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
+import travel.vola.android.ui.trip.creation.usecase.PendingDataStore
 import travel.vola.android.ui.trip.state.AddPlanItemState
+import travel.vola.android.ui.trip.state.LodgingSearchItemState
 import travel.vola.android.ui.trip.state.TripItemState
-import travel.vola.android.ui.trip.state.type
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.contracts.ExperimentalContracts
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
-
-private const val ADDING_PLAN_STATE_ID = "adding"
 
 @OptIn(ExperimentalContracts::class)
 class TripViewModel(
@@ -76,16 +74,19 @@ class TripViewModel(
     private val suggestionsUseCase: SuggestionsUseCase = SuggestionsUseCase(
         repository = GenAIRepository(),
     ),
+    private val pendingDataStore: PendingDataStore = PendingDataStore(),
     private val flexibleSectionUseCase: FlexibleSectionUseCase = FlexibleSectionUseCase(
         tripId = tripId,
         repository = repository,
         coroutineScope = useCaseScope,
         suggestionsUseCase = suggestionsUseCase,
+        pendingDataStore = pendingDataStore,
     ),
     private val addPlanUseCase: AddPlanUseCase = AddPlanUseCase(
         placeRepository = placeRepository,
         coroutineScope = useCaseScope,
         flexibleSectionUseCase = flexibleSectionUseCase,
+        pendingDataStore = pendingDataStore,
     ),
 ) : ViewModel(), AddPlanItemActionHandler by addPlanUseCase {
 
@@ -102,14 +103,6 @@ class TripViewModel(
         val listIndex: Int,
         val markers: List<MarkerViewState>,
     )
-
-    private val reversibleItems = mutableMapOf<String, TripItemState>()
-
-    private var Identifiable.original: TripItemState?
-        get() = reversibleItems[id]
-        set(value) {
-            value?.let { reversibleItems[id] = it } ?: reversibleItems.remove(id)
-        }
 
     private val trip = repository.findTripById(tripId)
         .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
@@ -193,14 +186,6 @@ class TripViewModel(
         }
     }
 
-    private val addPlanItemsState = addPlanUseCase.items.onEach { state ->
-        reversibleItems.keys.forEach { itemId ->
-            if (!state.containsKey(itemId)) {
-                reversibleItems.remove(itemId)
-            }
-        }
-    }
-
     private data class LocalState(
         val focusedIndex: Int,
         val firstVisibleIndex: Int,
@@ -211,9 +196,9 @@ class TripViewModel(
 
     val viewState: StateFlow<ViewState> = combine(
         eventsFromTrip,
-        addPlanItemsState,
+        addPlanUseCase.state,
         localState,
-    ) { state, addPlanItems, currentLocalState ->
+    ) { state, addPlanItem, currentLocalState ->
         val items = state.items.mapIndexed { index, item ->
             if (item is Identifiable && currentLocalState.itemsGeneratingSuggestions.contains(item.id)) {
                 when (item) {
@@ -233,7 +218,7 @@ class TripViewModel(
         }
         state.copy(
             items = items,
-            addPlanItemState = addPlanItems.values.firstOrNull(),
+            addPlanItemState = addPlanItem,
             focusedItemId = focusedDateItem?.id,
         )
     }.stateIn(
@@ -276,9 +261,6 @@ class TripViewModel(
     }
 
     fun editTapped(itemId: String) {
-        if (reversibleItems.containsKey(itemId)) {
-            return
-        }
         val item = viewState.value.items.filterIsInstance<TripItemState.Editable>()
             .find { it.id == itemId } ?: return
         val entity = item.entity
@@ -315,7 +297,6 @@ class TripViewModel(
         selectedTime: ZonedDateTime? = null,
         dateSelectionEnabled: Boolean = true,
     ) {
-        addPlanUseCase.removeItem(ADDING_PLAN_STATE_ID)
         val currentFocusedIndex = localState.value.focusedIndex
         val focusedItem = if (currentFocusedIndex == -1) {
             viewState.value.items.firstOrNull()
@@ -325,7 +306,7 @@ class TripViewModel(
         val timestamp = selectedTime ?: focusedItem?.timestamp ?: ZonedDateTime.now()
         if (type != null) {
             addPlanUseCase.createAddPlanItem(
-                id = ADDING_PLAN_STATE_ID,
+                id = null,
                 time = timestamp,
                 type = type,
                 place = findPlaceForTimestamp(timestamp),
@@ -334,36 +315,16 @@ class TripViewModel(
         }
     }
 
-    override fun addPlanTypeChanged(
-        itemId: String,
-        newType: AddPlanItemState.Type,
-    ) {
-        val item = addPlanUseCase.removeItem(itemId) ?: return
-        if (item.type == newType) {
-            return
+    override fun save() {
+        val current = addPlanUseCase.state.value ?: return
+        val lodgingSearchParams = (current as? LodgingSearchItemState)?.let {
+            addPlanUseCase.getLodgingSearchParams(tripId, it)
         }
-        addPlanUseCase.createAddPlanItem(
-            id = itemId,
-            time = item.timestamp,
-            dateSelectionEnabled = item.dateSelectionEnabled,
-            type = newType,
-            place = findPlaceForTimestamp(item.timestamp),
-        )
-    }
-
-    override fun save(itemId: String) {
-        val lodgingSearchParams = addPlanUseCase.getLodgingSearchParams(tripId, itemId)
         if (lodgingSearchParams != null) {
             navController.navigate(route = lodgingSearchParams)
             return
         }
-        val entity = addPlanUseCase.saveItem(itemId).let {
-            if (itemId == ADDING_PLAN_STATE_ID) {
-                it.copy(id = UUID.randomUUID().toString())
-            } else {
-                it
-            }
-        }
+        val entity = addPlanUseCase.saveItem()
         viewModelScope.launch {
             when (entity) {
                 is Flight -> repository.saveFlight(tripId, entity)
@@ -375,34 +336,13 @@ class TripViewModel(
         }
     }
 
-    private fun TripEntity.copy(id: String = this.id) = when (this) {
-        is Flight -> copy(id = id)
-        is Lodging -> copy(id = id)
-        is TimedPlace -> copy(id = id)
-        is RestaurantReservation -> copy(id = id)
-        is FlexibleDaySection -> copy(id = id)
-    }
-
-    override fun cancelEdit(itemId: String) {
-        addPlanUseCase.removeItem(itemId) ?: return
-    }
-
     override fun delete(type: AddPlanItemState.Type, itemId: String) {
-        val entity = (reversibleItems[itemId] as? TripItemState.Editable)?.entity
-            ?: trip.value?.flexibleSections?.firstOrNull { it.id == itemId } ?: return
-        addPlanUseCase.removeItem(itemId)
+        val entity = trip.value?.flexibleSections?.firstOrNull { it.id == itemId } ?: return
+        if (addPlanUseCase.state.value?.id == itemId) {
+            addPlanUseCase.removeItem()
+        }
         viewModelScope.launch {
-            when (entity) {
-                is Flight -> repository.deleteFlight(tripId, entity.id)
-                is Lodging -> repository.deleteLodging(tripId, entity.id)
-                is TimedPlace -> repository.deleteTimedPlace(tripId, entity.id)
-                is RestaurantReservation -> repository.deleteRestaurantReservation(
-                    tripId,
-                    entity.id,
-                )
-
-                is FlexibleDaySection -> repository.deleteFlexibleSection(tripId, entity.id)
-            }
+            repository.deleteFlexibleSection(tripId, entity.id)
         }
     }
 
@@ -899,7 +839,8 @@ class TripViewModel(
 
     fun setScrollState(focusedIndex: Int, firstVisibleIndex: Int) {
         localState.value = localState.value.copy(
-            focusedIndex = focusedIndex, firstVisibleIndex = firstVisibleIndex
+            focusedIndex = focusedIndex,
+            firstVisibleIndex = firstVisibleIndex,
         )
     }
 
