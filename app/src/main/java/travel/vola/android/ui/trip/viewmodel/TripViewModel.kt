@@ -219,10 +219,6 @@ class TripViewModel(
                     is TripItemState.EmptyDateItemState -> item.copy(isGeneratingPlans = true)
                     else -> item
                 }
-            } else if (item is TripItemState.Replaceable) {
-                addPlanItems[item.id]?.let { newItem ->
-                    newItem.also { it.original = item }
-                } ?: item
             } else {
                 item
             }
@@ -235,7 +231,7 @@ class TripViewModel(
         }
         state.copy(
             items = items,
-            addPlanItemState = addPlanItems[ADDING_PLAN_STATE_ID],
+            addPlanItemState = addPlanItems.values.firstOrNull(),
             focusedItemId = focusedDateItem?.id,
         )
     }.stateIn(
@@ -265,26 +261,16 @@ class TripViewModel(
         val tapped = viewState.value.items.find { it is Identifiable && it.id == itemId } ?: return
         val allowStartDateSelection =
             tapped is TripItemState.DateRangeItemState || tapped is TripItemState.InitialAddPlanItemState
-        addPlanUseCase.createAddPlanItem(
-            id = (tapped as? TripItemState.Replaceable)?.id,
-            time = tapped.timestamp,
-            dateSelectionEnabled = allowStartDateSelection,
-            place = findPlaceForTimestamp(tapped.timestamp),
-        )
+        addPlanItem(selectedTime = tapped.timestamp, dateSelectionEnabled = allowStartDateSelection)
     }
 
     fun initialAddButtonTapped(itemId: String) {
-        onAddPlanTypeSelected(AddPlanItemState.Type.entries.first())
+        addPlanItem()
     }
 
     fun emptyDateRowTapped(itemId: String) {
         val tapped = viewState.value.items.find { it is Identifiable && it.id == itemId }
-        addPlanUseCase.createAddPlanItem(
-            id = (tapped as Identifiable).id,
-            time = tapped.timestamp,
-            dateSelectionEnabled = false,
-            place = findPlaceForTimestamp(tapped.timestamp),
-        )
+        addPlanItem(selectedTime = tapped?.timestamp)
     }
 
     fun editTapped(itemId: String) {
@@ -319,6 +305,14 @@ class TripViewModel(
     }
 
     fun onAddPlanTypeSelected(type: AddPlanItemState.Type?) {
+        addPlanItem(type)
+    }
+
+    private fun addPlanItem(
+        type: AddPlanItemState.Type? = AddPlanItemState.Type.entries.first(),
+        selectedTime: ZonedDateTime? = null,
+        dateSelectionEnabled: Boolean = true,
+    ) {
         addPlanUseCase.removeItem(ADDING_PLAN_STATE_ID)
         val currentFocusedIndex = scrollState.value.focusedIndex
         val focusedItem = if (currentFocusedIndex == -1) {
@@ -326,13 +320,14 @@ class TripViewModel(
         } else {
             viewState.value.items.getOrNull(currentFocusedIndex)
         } ?: viewState.value.items.lastOrNull()
-        val timestamp = focusedItem?.timestamp ?: ZonedDateTime.now()
+        val timestamp = selectedTime ?: focusedItem?.timestamp ?: ZonedDateTime.now()
         if (type != null) {
             addPlanUseCase.createAddPlanItem(
                 id = ADDING_PLAN_STATE_ID,
                 time = timestamp,
                 type = type,
                 place = findPlaceForTimestamp(timestamp),
+                dateSelectionEnabled = dateSelectionEnabled,
             )
         }
     }
