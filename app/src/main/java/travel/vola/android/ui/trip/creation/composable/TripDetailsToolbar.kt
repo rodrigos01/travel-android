@@ -159,10 +159,13 @@ fun TripDetailsToolbar(
             },
         ) {
             types.forEach {
+                val selected = it == addPlanState?.uiType
+                val enabled = selected || (addPlanState?.typeSelectionEnabled ?: true)
                 ToolbarItem(
-                    selected = it == addPlanState?.uiType,
+                    selected = selected,
                     onSelected = { onTypeSelected(it) },
                     addPlanType = it,
+                    enabled = enabled,
                 )
             }
         }
@@ -175,9 +178,11 @@ fun ToolbarItem(
     selected: Boolean,
     onSelected: () -> Unit,
     addPlanType: AddPlanType,
+    enabled: Boolean = true,
 ) {
     TonalToggleButton(
         checked = selected,
+        enabled = enabled,
         onCheckedChange = { onSelected() },
         colors = ToggleButtonDefaults.tonalToggleButtonColors(
             containerColor = FloatingToolbarDefaults.vibrantFloatingToolbarColors().toolbarContainerColor,
