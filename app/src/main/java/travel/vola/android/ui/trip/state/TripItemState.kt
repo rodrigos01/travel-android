@@ -18,8 +18,7 @@ sealed interface TripItemState {
         override val sectionId: String? = null,
         val month: String,
         val year: String,
-    ) :
-        TripItemState, Timeable, SectionItemState
+    ) : TripItemState, Timeable, SectionItemState
 
     data class PlaceItemState(
         override val id: String,
@@ -68,23 +67,15 @@ sealed interface TripItemState {
         val dayOfWeek: String?
     }
 
-    sealed interface EventItemState :
-        TripItemState,
-        Timeable,
-        Editable,
-        SectionItemState,
-        Focusable,
-        EventWithDateState {
+    sealed interface EventItemState : TripItemState, Timeable, Editable, SectionItemState,
+            Focusable, EventWithDateState {
         val time: String
         val title: String?
         val subtitle: String?
         val backgroundStyle: BackgroundStyle
 
         enum class BackgroundStyle {
-            TOP,
-            MIDDLE,
-            BOTTOM,
-            SINGLE,
+            TOP, MIDDLE, BOTTOM, SINGLE,
         }
     }
 
@@ -251,8 +242,9 @@ data class ManualAddPlanState(
     val searchResults: List<AutoCompleteResultState>,
 )
 
-sealed interface AddPlanItemState : TripItemState, Identifiable, TripItemState.Timeable {
+sealed interface AddPlanItemState : Identifiable {
 
+    val timestamp: ZonedDateTime
     val typeSelectionEnabled: Boolean
     val dateSelectionEnabled: Boolean
     val saveButtonEnabled: Boolean
@@ -264,16 +256,11 @@ sealed interface AddPlanItemState : TripItemState, Identifiable, TripItemState.T
         get() = Type.entries
 
     enum class Type {
-        Flight,
-        Lodging,
-        Place,
-        Restaurant,
-        FlexibleSection,
+        Flight, Lodging, Place, Restaurant, FlexibleSection,
     }
 
     enum class ButtonConfiguration {
-        Save,
-        Search,
+        Save, Search,
     }
 }
 
