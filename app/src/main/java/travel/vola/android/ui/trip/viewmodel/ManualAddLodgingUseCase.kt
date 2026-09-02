@@ -1,210 +1,186 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.launch
-import travel.vola.android.extensions.MapFlow
-import travel.vola.android.extensions.minus
 import travel.vola.android.extensions.plus
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.update
 import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.Place
 import travel.vola.android.model.repository.LodgingSearchRepository
-import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
-import travel.vola.android.ui.trip.creation.usecase.ManualAddPlanItemActionHandler
-import travel.vola.android.ui.trip.creation.usecase.PendingData.PendingLodging
+import travel.vola.android.ui.trip.creation.usecase.PendingDataStore
+import travel.vola.android.ui.trip.creation.usecase.requireCurrent
 import travel.vola.android.ui.trip.state.AutoCompleteResultState
 import travel.vola.android.ui.trip.state.ManualAddLodgingItemState
 import travel.vola.android.ui.trip.state.ManualAddPlanState
 import java.time.ZonedDateTime
+import java.util.TimeZone
 import kotlin.time.Duration.Companion.days
 
 class ManualAddLodgingUseCase(
-    private val coroutineScope: CoroutineScope,
-    private val itemStore: AddPlanItemStore<PendingLodging, ManualAddLodgingItemState> = AddPlanItemStore(),
+    private val pendingDataStore: PendingDataStore,
     private val repository: LodgingSearchRepository = LodgingSearchRepository(),
 ) : AddPlanUseCase.AddItemUseCase<Lodging, ManualAddLodgingItemState>,
-    AddPlanUseCase.EntityFactory<Lodging, ManualAddLodgingItemState>,
-    ManualAddPlanItemActionHandler {
+        AddPlanUseCase.EntityFactory<Lodging, ManualAddLodgingItemState> {
 
-    override val items: MapFlow<String, ManualAddLodgingItemState> = itemStore.items(::createItem)
-
-    override fun lodgingTextChanged(itemId: String, content: CharSequence) {
-        if (content.length < 3) {
-            return
-        }
-        coroutineScope.launch {
-            val results = repository.autocomplete(content.toString(), autocompleteKey = itemId)
-            itemStore.update(itemId) { data ->
-                data.copy(
-                    searchResults = results,
-                )
-            }
-        }
-    }
-
-    override fun addItem(
+    override fun createItem(
         id: String,
         time: ZonedDateTime,
         params: AddPlanUseCase.StateParams,
-    ) {
-        val data = PendingLodging(
-            id = id,
-            checkIn = time.update(hour = 15, minute = 0),
-            isCheckInTimeSet = true,
-            checkOut = time.update(hour = 10, minute = 0) + 1.days,
-            isCheckOutTimeSet = true,
-        )
-        itemStore.addItem(data, params)
-    }
+    ): ManualAddLodgingItemState = createItem(
+        id = id,
+        checkIn = time.update(hour = 15, minute = 0),
+        checkOut = time.update(hour = 10, minute = 0) + 1.days,
+        params = params,
+    )
 
-    fun addItem(
+    fun createItem(
         id: String,
         checkIn: ZonedDateTime,
         checkOut: ZonedDateTime?,
         params: AddPlanUseCase.StateParams,
-    ) {
-        val data = PendingLodging(
-            id = id,
-            checkIn = checkIn.update(hour = 15, minute = 0),
-            isCheckInTimeSet = true,
-            checkOut = checkOut?.update(hour = 10, minute = 0),
-            isCheckOutTimeSet = checkOut != null,
-        )
-        itemStore.addItem(data, params)
-    }
-
-    override fun addItem(
-        id: String,
-        entity: Lodging,
-        params: AddPlanUseCase.StateParams,
-    ) {
-        val data = PendingLodging(
-            id = id,
-            entityId = entity.id,
-            name = entity.name,
-            address = entity.address,
-            latitude = entity.latitude,
-            longitude = entity.longitude,
-            checkIn = entity.checkIn,
-            isCheckInTimeSet = true,
-            checkOut = entity.checkout,
-            isCheckOutTimeSet = true,
-            city = entity.city,
-        )
-        itemStore.addItem(data, params)
-    }
-
-    private fun createItem(
-        data: PendingLodging,
-        stateParams: AddPlanUseCase.StateParams,
     ): ManualAddLodgingItemState {
-        val minCheckoutTime = data.checkIn.toMidnight() + 1.days
+        pendingDataStore.set(
+            PendingDataStore.Entry.Lodging(entityId = null, selectedPlace = null, city = null),
+        )
+        val minCheckoutTime = checkIn.toMidnight() + 1.days
         return ManualAddLodgingItemState(
-            id = data.id,
-            timestamp = data.checkIn,
+            id = id,
+            timestamp = checkIn,
+            typeSelectionEnabled = params.typeSelectionEnabled,
             startState = ManualAddPlanState(
-                dateTime = data.checkIn,
+                dateTime = checkIn,
                 minDateTime = null,
-                isTimeSet = data.isCheckInTimeSet,
-                dateSelectionEnabled = stateParams.dateSelectionEnabled,
-                locationText = data.name ?: data.address,
-                searchResults = data.searchResults.map {
-                    AutoCompleteResultState(
-                        it.name,
-                        subtitle = it.address,
-                    )
-                },
+                isTimeSet = true,
+                dateSelectionEnabled = params.dateSelectionEnabled,
+                locationText = null,
+                searchResults = emptyList(),
             ),
             endState = ManualAddPlanState(
-                dateTime = data.checkOut ?: minCheckoutTime.update(hour = 10, minute = 0),
+                dateTime = checkOut ?: minCheckoutTime.update(hour = 10, minute = 0),
                 minDateTime = minCheckoutTime,
-                isTimeSet = data.isCheckOutTimeSet,
+                isTimeSet = checkOut != null,
                 dateSelectionEnabled = true,
                 locationText = null,
                 searchResults = emptyList(),
             ),
-            saveButtonEnabled = data.checkOut != null && data.checkOut > data.checkIn && (
-                data.name
-                    ?: data.address
-                ) != null && data.isCheckInTimeSet && data.isCheckOutTimeSet,
-            deleteButtonEnabled = stateParams.deleteEnabled,
-            typeSelectionEnabled = stateParams.typeSelectionEnabled,
+            saveButtonEnabled = false,
+            deleteButtonEnabled = params.deleteEnabled,
         )
     }
 
-    override fun removeItem(item: ManualAddLodgingItemState) {
-        itemStore.remove(item)
+    override fun createItem(
+        id: String,
+        entity: Lodging,
+        params: AddPlanUseCase.StateParams,
+    ): ManualAddLodgingItemState {
+        // Synthetic Place representing the entity's current lodging, so a fresh search-result
+        // selection can be compared against it (by id) the same way as any other resolved entry.
+        val place = Place(
+            id = entity.id,
+            name = entity.name ?: entity.address,
+            address = entity.address,
+            latitude = entity.latitude,
+            longitude = entity.longitude,
+            coverImage = null,
+            externalId = "",
+            timeZone = TimeZone.getTimeZone("UTC"), // unused downstream, never re-derived from this synthetic Place
+            source = "",
+        )
+        pendingDataStore.set(
+            PendingDataStore.Entry.Lodging(
+                entityId = entity.id, selectedPlace = place, city = entity.city
+            ),
+        )
+        val minCheckoutTime = entity.checkIn.toMidnight() + 1.days
+        return ManualAddLodgingItemState(
+            id = id,
+            timestamp = entity.checkIn,
+            typeSelectionEnabled = params.typeSelectionEnabled,
+            startState = ManualAddPlanState(
+                dateTime = entity.checkIn,
+                minDateTime = null,
+                isTimeSet = true,
+                dateSelectionEnabled = params.dateSelectionEnabled,
+                locationText = entity.name ?: entity.address,
+                searchResults = emptyList(),
+            ),
+            endState = ManualAddPlanState(
+                dateTime = entity.checkout,
+                minDateTime = minCheckoutTime,
+                isTimeSet = true,
+                dateSelectionEnabled = true,
+                locationText = null,
+                searchResults = emptyList(),
+            ),
+            saveButtonEnabled = true,
+            deleteButtonEnabled = params.deleteEnabled,
+        )
+    }
+
+    override suspend fun onUpdated(state: ManualAddLodgingItemState): ManualAddLodgingItemState {
+        val entry = pendingDataStore.requireCurrent<PendingDataStore.Entry.Lodging>()
+        val selectedId = state.startState.selectedResultId
+        val text = state.startState.locationText
+
+        val resolved = if (selectedId != null && selectedId != entry.selectedPlace?.id) {
+            val hotelDetails = repository.details(selectedId, autocompleteKey = state.id)
+            val city = repository.placeCity(selectedId, autocompleteKey = state.id)
+            val timeZone = (hotelDetails?.timeZone ?: city?.timeZone)?.toZoneId()
+            pendingDataStore.update { e ->
+                val lodging = e as PendingDataStore.Entry.Lodging
+                lodging.copy(
+                    selectedPlace = hotelDetails ?: lodging.selectedPlace,
+                    city = city ?: lodging.city,
+                )
+            }
+            val newCheckIn = timeZone?.let { state.startState.dateTime?.update(timeZone = it) }
+                ?: state.startState.dateTime
+            val newCheckOut = timeZone?.let { tz -> state.endState.dateTime?.update(timeZone = tz) }
+                ?.takeIf { newCheckIn != null && it > newCheckIn } ?: state.endState.dateTime
+            state.copy(
+                timestamp = newCheckIn ?: state.timestamp,
+                startState = state.startState.copy(
+                    dateTime = newCheckIn,
+                    locationText = hotelDetails?.name ?: hotelDetails?.address
+                    ?: state.startState.locationText,
+                    searchResults = emptyList(),
+                ),
+                endState = state.endState.copy(dateTime = newCheckOut),
+            )
+        } else if (selectedId == null && text != null && text.length >= 3) {
+            val results = repository.autocomplete(text, autocompleteKey = state.id)
+            state.copy(
+                startState = state.startState.copy(
+                    searchResults = results.map {
+                        AutoCompleteResultState(
+                            it.id, it.name, it.address
+                        )
+                    },
+                ),
+            )
+        } else {
+            state
+        }
+        val updatedEntry = pendingDataStore.requireCurrent<PendingDataStore.Entry.Lodging>()
+        val checkOut = resolved.endState.dateTime
+        return resolved.copy(
+            saveButtonEnabled = checkOut != null && checkOut > resolved.timestamp && updatedEntry.selectedPlace != null && resolved.startState.isTimeSet && resolved.endState.isTimeSet,
+        )
     }
 
     override fun createEntity(item: ManualAddLodgingItemState): Lodging {
-        val data =
-            itemStore.getData(item.id) ?: error("item has no pending data associated with it")
-        data.address ?: error("address is not set")
-        data.latitude ?: error("lodging latitude is not set")
-        data.longitude ?: error("lodging longitude is not set")
-        data.city ?: error("lodging city is not set")
-        data.checkOut ?: error("checkout time is not set")
+        val entry = pendingDataStore.requireCurrent<PendingDataStore.Entry.Lodging>()
+        val place = entry.selectedPlace ?: error("lodging place is not set")
+        val city = entry.city ?: error("lodging city is not set")
+        val checkOut = item.endState.dateTime ?: error("checkout time is not set")
         return Lodging(
-            id = data.entityId ?: data.id,
-            data.name,
-            data.address,
-            data.latitude,
-            data.longitude,
-            data.city,
-            data.checkIn,
-            data.checkOut,
+            id = entry.entityId ?: item.id,
+            place.name,
+            place.address,
+            place.latitude,
+            place.longitude,
+            city,
+            item.timestamp,
+            checkOut,
         )
-    }
-
-    override fun onLodgingUpdated(
-        itemId: String,
-        checkIn: ZonedDateTime,
-        checkInTimeSelected: Boolean,
-        checkOut: ZonedDateTime?,
-        checkOutTimeSelected: Boolean,
-        selectedSearchResultIndex: Int,
-    ) {
-        val searchResults = itemStore.getData(itemId)?.searchResults
-        val selected = searchResults?.getOrNull(selectedSearchResultIndex)
-        if (selected != null) {
-            itemStore.update(itemId) {
-                it.copy(
-                    city = null,
-                    latitude = null,
-                    longitude = null,
-                )
-            }
-        }
-        coroutineScope.launch {
-            val (hotelDetails, city) = awaitAll(
-                async { selected?.id?.let { repository.details(it, autocompleteKey = itemId) } },
-                async { selected?.id?.let { repository.placeCity(it, autocompleteKey = itemId) } },
-            )
-            itemStore.update(itemId) { data ->
-                val timeZone =
-                    (hotelDetails?.timeZone ?: city?.timeZone ?: data.city?.timeZone)?.toZoneId()
-                        ?: data.checkIn.zone
-                val newCheckIn = timeZone?.let { checkIn.update(timeZone = it) } ?: checkIn
-                val newCheckOut =
-                    timeZone?.let { checkOut?.update(timeZone = it) }?.takeIf { it > newCheckIn }
-                        ?: data.checkOut?.minus(data.checkIn)?.plus(newCheckIn)
-                PendingLodging(
-                    id = data.id,
-                    entityId = data.entityId,
-                    checkIn = newCheckIn,
-                    isCheckInTimeSet = checkInTimeSelected,
-                    checkOut = newCheckOut,
-                    isCheckOutTimeSet = checkOutTimeSelected,
-                    name = hotelDetails?.name ?: data.name,
-                    address = hotelDetails?.address ?: data.address,
-                    city = city ?: data.city,
-                    latitude = hotelDetails?.latitude ?: data.latitude,
-                    longitude = hotelDetails?.longitude ?: data.longitude,
-                    searchResults = emptyList(),
-                )
-            }
-        }
     }
 }

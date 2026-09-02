@@ -136,12 +136,12 @@ fun TripDetailsToolbar(
                             .align(Alignment.End),
                     ) {
                         TextButton(
-                            onClick = { addPlanActionHandler.cancelEdit(state.id) },
+                            onClick = { addPlanActionHandler.cancelEdit() },
                             colors = ButtonDefaults.textButtonColors(),
                         ) {
                             Text(stringResource(R.string.action_cancel))
                         }
-                        TextButton(onClick = { addPlanActionHandler.save(state.id) }, enabled = state.saveButtonEnabled) {
+                        TextButton(onClick = { addPlanActionHandler.save() }, enabled = state.saveButtonEnabled) {
                             Text(stringResource(R.string.action_save))
                         }
                     }

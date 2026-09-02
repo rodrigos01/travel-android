@@ -1,96 +1,60 @@
 package travel.vola.android.ui.trip.viewmodel
 
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.fail
-import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
-import travel.vola.android.extensions.get
+import org.mockito.kotlin.verifyNoMoreInteractions
 import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.AirportSearchResult
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.repository.AddFlightRepository
-import travel.vola.android.test.Captor.getUpdateResult
-import travel.vola.android.test.Mocks.mockItemStore
-import travel.vola.android.test.UnconfinedDispatcherTestRule
-import travel.vola.android.ui.trip.creation.usecase.PendingData.PendingFlight
-import travel.vola.android.ui.trip.state.AddFlightItemState
+import travel.vola.android.ui.trip.creation.usecase.PendingDataStore
 import travel.vola.android.ui.trip.state.AutoCompleteResultState
 import java.time.ZoneId
 import java.util.TimeZone
 
 class AddFlightUseCaseTest {
 
-    @get:Rule
-    val rule = UnconfinedDispatcherTestRule()
-
-    private val testScope = TestScope(rule.dispatcher)
-
     private val repository: AddFlightRepository = mock()
-    private val itemStore = mockItemStore<PendingFlight, AddFlightItemState>()
-    private val subject = AddFlightUseCase(testScope, itemStore, repository)
-
-    private val items = subject.items.stateIn(
-        testScope,
-        started = SharingStarted.Eagerly,
-        initialValue = emptyMap(),
-    )
+    private val pendingDataStore = PendingDataStore()
+    private val subject = AddFlightUseCase(pendingDataStore, repository)
 
     @Test
-    fun `itemStore items updated should update items`() {
-        itemStore.addItem(
-            mock {
-                on { id } doReturn "flight_id"
-                on { departure } doReturn zonedDateTime("2024-10-16T18:25+02:00")
-                on { arrival } doReturn zonedDateTime("2024-10-16T16:15+02:00")
-            },
-            mock(),
-        )
-        assertThat(items["flight_id"]?.id).isEqualTo("flight_id")
-        assertThat(items["flight_id"]?.startState?.dateTime).isEqualTo(zonedDateTime("2024-10-16T18:25+02:00"))
-    }
-
-    @Test
-    fun `added item should be initialized empty`() {
-        subject.addItem("flight_id", zonedDateTime("2024-10-16T18:25+02:00"), mock())
-        val item = items.value["flight_id"] ?: fail()
+    fun `created item should be initialized empty`() {
+        val item = subject.createItem("flight_id", zonedDateTime("2024-10-16T18:25+02:00"), mock())
         assertThat(item.startState.locationText).isNull()
         assertThat(item.startState.searchResults).isEmpty()
+        assertThat(item.saveButtonEnabled).isFalse()
     }
 
     @Test
-    fun `added item should be initialized with initial time as departure`() {
+    fun `created item should be initialized with initial time as departure`() {
         val initialTime = zonedDateTime("2024-10-16T18:25+02:00")
-        subject.addItem("flight_id", initialTime, mock())
-        val data = items.value["flight_id"] ?: fail()
-        assertThat(data.startState.dateTime).isEqualTo(initialTime)
+        val item = subject.createItem("flight_id", initialTime, mock())
+        assertThat(item.startState.dateTime).isEqualTo(initialTime)
     }
 
     @Test
-    fun `added item should have params`() {
+    fun `created item should have params`() {
         val params = AddPlanUseCase.StateParams(
             dateSelectionEnabled = true,
             deleteEnabled = false,
             typeSelectionEnabled = true,
         )
-        subject.addItem("flight_id", zonedDateTime("2025-10-16T15:23:00+01:00"), params)
-        val item = items.value["flight_id"] ?: fail()
+        val item = subject.createItem("flight_id", zonedDateTime("2025-10-16T15:23:00+01:00"), params)
         assertThat(item.dateSelectionEnabled).isTrue()
         assertThat(item.deleteButtonEnabled).isFalse()
         assertThat(item.typeSelectionEnabled).isTrue()
     }
 
     @Test
-    fun `added item from entity should be initialized with entity data`() {
+    fun `created item from entity should be initialized with entity data`() {
         val origin: Airport = mock {
             on { name } doReturn "John F. Kennedy International Airport"
             on { timeZone } doReturn TimeZone.getTimeZone("America/New_York")
@@ -109,8 +73,7 @@ class AddFlightUseCaseTest {
             on { id } doReturn "flight_id"
             on { segments } doReturn listOf(segment)
         }
-        subject.addItem("flight_id", entity, mock())
-        val item = items.value["flight_id"] ?: fail()
+        val item = subject.createItem("flight_id", entity, mock())
         assertThat(item.startState.locationText).isEqualTo("John F. Kennedy International Airport")
         assertThat(item.endState.locationText).isEqualTo("Orly Airport")
         assertThat(item.startState.dateTime).isEqualTo(zonedDateTime("2024-10-16T18:25-05:00"))
@@ -118,54 +81,32 @@ class AddFlightUseCaseTest {
     }
 
     @Test
-    fun `remove should call itemStore remove`() {
-        val item = mock<AddFlightItemState>()
-        subject.removeItem(item)
-        verify(itemStore).remove(item)
-    }
-
-    @Test
-    fun `set departure time should update departure time`() {
+    fun `set departure time should update departure time`() = runTest {
         val originalTime = zonedDateTime("2024-10-16T18:25+02:00")
-        subject.addItem("item_id", originalTime, mock())
-        subject.onUpdated(
-            "item_id",
-            departureTime = zonedDateTime("2024-10-16T09:15+02:00"),
-            departureTimeSelected = true,
-            arrivalTime = null,
-            arrivalTimeSelected = false,
-            selectedDepartureSearchResultIndex = -1,
-            selectedArrivalSearchResultIndex = -1,
+        val original = subject.createItem("item_id", originalTime, mock())
+        val updated = subject.onUpdated(
+            original.copy(
+                startState = original.startState.copy(
+                    dateTime = zonedDateTime("2024-10-16T09:15+02:00"),
+                    isTimeSet = true,
+                ),
+            ),
         )
-        val item = items.value["item_id"] ?: fail()
-        assertThat(item.startState.dateTime).isEqualTo(zonedDateTime("2024-10-16T09:15+02:00"))
-    }
-
-    @Test
-    fun `set arrival time should update arrival time`() {
-        val originalTime = zonedDateTime("2024-10-16T18:25+02:00")
-        subject.addItem("item_id", originalTime, mock())
-        subject.onUpdated(
-            "item_id",
-            departureTime = originalTime,
-            departureTimeSelected = false,
-            arrivalTime = zonedDateTime("2024-10-16T20:15+02:00"),
-            arrivalTimeSelected = true,
-            selectedDepartureSearchResultIndex = -1,
-            selectedArrivalSearchResultIndex = -1,
-        )
-        val item = items.value["item_id"] ?: fail()
-        assertThat(item.endState.dateTime).isEqualTo(zonedDateTime("2024-10-16T20:15+02:00"))
+        assertThat(updated.startState.dateTime).isEqualTo(zonedDateTime("2024-10-16T09:15+02:00"))
     }
 
     @Test
     fun `airport from search text changed should fetch results from repository`() = runTest {
-        subject.airportFromSearchTextChanged("itemId", "par")
+        repository.stub {
+            onBlocking { autocomplete("par") } doReturn emptyList()
+        }
+        val original = subject.createItem("item_id", zonedDateTime("2024-10-16T18:25+02:00"), mock())
+        subject.onUpdated(original.copy(startState = original.startState.copy(locationText = "par")))
         verify(repository).autocomplete("par")
     }
 
     @Test
-    fun `airport from search text changed should update results with repository data`() {
+    fun `airport from search text changed should update results with repository data`() = runTest {
         val results = listOf(
             AirportSearchResult("CDG", "Charles de Gaule", "Paris, FR"),
             AirportSearchResult("ORY", "Orly Airport", "Paris, FR"),
@@ -174,39 +115,19 @@ class AddFlightUseCaseTest {
         repository.stub {
             onBlocking { autocomplete("par") } doReturn results
         }
-        subject.addItem("item_id", zonedDateTime("2024-10-16T18:25+02:00"), mock())
-        subject.airportFromSearchTextChanged("item_id", "par")
-        val item = items.value["item_id"] ?: fail()
-        assertThat(item.startState.searchResults).isEqualTo(
+        val original = subject.createItem("item_id", zonedDateTime("2024-10-16T18:25+02:00"), mock())
+        val updated = subject.onUpdated(original.copy(startState = original.startState.copy(locationText = "par")))
+        assertThat(updated.startState.searchResults).isEqualTo(
             listOf(
-                AutoCompleteResultState(
-                    title = "Charles de Gaule",
-                    subtitle = "Paris, FR",
-                ),
-                AutoCompleteResultState(
-                    title = "Orly Airport",
-                    subtitle = "Paris, FR",
-                ),
-                AutoCompleteResultState(
-                    title = "Beauvais Airport",
-                    subtitle = "Paris, FR",
-                ),
+                AutoCompleteResultState("CDG", "Charles de Gaule", "Paris, FR"),
+                AutoCompleteResultState("ORY", "Orly Airport", "Paris, FR"),
+                AutoCompleteResultState("BVA", "Beauvais Airport", "Paris, FR"),
             ),
         )
     }
 
     @Test
-    fun `airport from search result tapped should update item with selected airport`() {
-        val expected = AirportSearchResult("CDG", "Charles de Gaule Airport", "Paris, FR")
-        val originalData = PendingFlight(
-            id = "item_id",
-            departure = zonedDateTime("2024-10-16T18:25+02:00"),
-            airportFromSearchResults = listOf(
-                mock(),
-                expected,
-                mock(),
-            ),
-        )
+    fun `airport from search result tapped should update item with selected airport`() = runTest {
         val airport: Airport = mock {
             on { name } doReturn "Charles de Gaule Airport"
             on { timeZone } doReturn TimeZone.getTimeZone("Europe/Paris")
@@ -214,28 +135,48 @@ class AddFlightUseCaseTest {
         repository.stub {
             onBlocking { details("CDG") } doReturn airport
         }
-        itemStore.stub {
-            on { getData("item_id") } doReturn originalData
-        }
         val time = zonedDateTime("2025-10-16T15:23:00+01:00")
-        subject.addItem("item_id", time, mock())
-        subject.onUpdated(
-            "item_id",
-            departureTime = time,
-            departureTimeSelected = false,
-            arrivalTime = null,
-            arrivalTimeSelected = false,
-            selectedDepartureSearchResultIndex = 1,
-            selectedArrivalSearchResultIndex = -1,
+        val original = subject.createItem("item_id", time, mock())
+        val withResults = original.copy(
+            startState = original.startState.copy(
+                searchResults = listOf(AutoCompleteResultState("CDG", "Charles de Gaule Airport", "Paris, FR")),
+            ),
         )
-
-        val item = items.value["item_id"] ?: fail()
-        assertThat(item.startState.locationText).isEqualTo("Charles de Gaule Airport")
-        assertThat(item.startState.searchResults).isEmpty()
+        val updated = subject.onUpdated(
+            withResults.copy(startState = withResults.startState.copy(selectedResultId = "CDG")),
+        )
+        assertThat(updated.startState.locationText).isEqualTo("Charles de Gaule Airport")
+        val entry = pendingDataStore.current as PendingDataStore.Entry.Flight
+        assertThat(entry.airportFrom).isEqualTo(airport)
     }
 
     @Test
-    fun `airport from search result tapped should update item with new airport's timezone`() {
+    fun `selecting the same already-resolved airport again should not re-resolve`() = runTest {
+        val airport: Airport = mock {
+            on { iata } doReturn "CDG"
+            on { name } doReturn "Charles de Gaule Airport"
+            on { timeZone } doReturn TimeZone.getTimeZone("Europe/Paris")
+        }
+        repository.stub {
+            onBlocking { details("CDG") } doReturn airport
+        }
+        val time = zonedDateTime("2025-10-16T15:23:00+01:00")
+        val original = subject.createItem("item_id", time, mock())
+        val withResults = original.copy(
+            startState = original.startState.copy(
+                searchResults = listOf(AutoCompleteResultState("CDG", "Charles de Gaule Airport", "Paris, FR")),
+            ),
+        )
+        val resolved = subject.onUpdated(
+            withResults.copy(startState = withResults.startState.copy(selectedResultId = "CDG")),
+        )
+        subject.onUpdated(resolved)
+        verify(repository).details("CDG")
+        verifyNoMoreInteractions(repository)
+    }
+
+    @Test
+    fun `airport from search result tapped should update item with new airport's timezone`() = runTest {
         val airportTimeZone: ZoneId = ZoneId.of("Europe/Paris")
         val expected: Airport = mock {
             on { timeZone } doReturn TimeZone.getTimeZone(airportTimeZone.id)
@@ -244,136 +185,36 @@ class AddFlightUseCaseTest {
             onBlocking { details("airport_id") } doReturn expected
         }
         val departure = zonedDateTime("2024-10-16T18:25:00+02:00")
-        val originalData = PendingFlight(
-            id = "item_id",
-            departure = departure,
-            airportFromSearchResults = listOf(
-                mock(),
-                mock { on { iata } doReturn "airport_id" },
-                mock(),
+        val original = subject.createItem("item_id", departure, mock())
+        val withResults = original.copy(
+            startState = original.startState.copy(
+                searchResults = listOf(AutoCompleteResultState("airport_id", "Some Airport", "Paris, FR")),
             ),
         )
-        itemStore.stub {
-            on { getData("item_id") } doReturn originalData
-        }
-        subject.onUpdated(
-            "item_id",
-            departureTime = departure,
-            departureTimeSelected = false,
-            arrivalTime = null,
-            arrivalTimeSelected = false,
-            selectedDepartureSearchResultIndex = 1,
-            selectedArrivalSearchResultIndex = -1,
+        val updated = subject.onUpdated(
+            withResults.copy(startState = withResults.startState.copy(selectedResultId = "airport_id")),
         )
-        val result = itemStore.getUpdateResult(originalData)
-        assertThat(result.departure.zone).isEqualTo(airportTimeZone)
+        assertThat(updated.startState.dateTime?.zone).isEqualTo(airportTimeZone)
     }
 
     @Test
-    fun `airport to search text changed should update results with repository data`() {
-        val results = listOf(
-            AirportSearchResult("CDG", "Charles de Gaule Airport", "Paris, FR"),
-            AirportSearchResult("ORY", "Orly Airport", "Paris, FR"),
-            AirportSearchResult("BVA", "Beauvais Airport", "Paris, FR"),
-        )
-        repository.stub {
-            onBlocking { autocomplete("par") } doReturn results
+    fun `create entity should build flight from item and pending data`() {
+        val originAirport: Airport = mock()
+        val destinationAirport: Airport = mock { on { timeZone } doReturn TimeZone.getTimeZone("Europe/Paris") }
+        val segment = mock<FlightSegment> {
+            on { airportFrom } doReturn originAirport
+            on { departure } doReturn zonedDateTime("2024-10-16T18:25+02:00")
+            on { airportTo } doReturn destinationAirport
+            on { arrival } doReturn zonedDateTime("2024-10-16T20:25+02:00")
         }
-        subject.addItem("item_id", zonedDateTime("2024-10-16T18:25+02:00"), mock())
-        subject.airportToSearchTextChanged("item_id", "par")
-        val item = items.value["item_id"] ?: fail()
-        assertThat(item.endState.searchResults).isEqualTo(
-            listOf(
-                AutoCompleteResultState(
-                    title = "Charles de Gaule Airport",
-                    subtitle = "Paris, FR",
-                ),
-                AutoCompleteResultState(
-                    title = "Orly Airport",
-                    subtitle = "Paris, FR",
-                ),
-                AutoCompleteResultState(
-                    title = "Beauvais Airport",
-                    subtitle = "Paris, FR",
-                ),
-            ),
-        )
-    }
-
-    @Test
-    fun `airport to search result tapped should update item with selected airport`() {
-        val expected = AirportSearchResult("CDG", "Charles de Gaule Airport", "Paris, FR")
-        val originalData = PendingFlight(
-            id = "item_id",
-            departure = mock(),
-            airportToSearchResults = listOf(
-                mock(),
-                expected,
-                mock(),
-            ),
-        )
-        val airport: Airport = mock {
-            on { name } doReturn "Charles de Gaule Airport"
-            on { timeZone } doReturn TimeZone.getTimeZone("Europe/Paris")
+        val entity = mock<Flight> {
+            on { id } doReturn "flight_id"
+            on { segments } doReturn listOf(segment)
         }
-        repository.stub {
-            onBlocking { details("CDG") } doReturn airport
-        }
-        itemStore.stub {
-            on { getData("item_id") } doReturn originalData
-        }
-        val time = zonedDateTime("2025-10-16T15:23:00+01:00")
-        subject.addItem("item_id", time, mock())
-        subject.onUpdated(
-            "item_id",
-            departureTime = time,
-            departureTimeSelected = false,
-            arrivalTime = null,
-            arrivalTimeSelected = false,
-            selectedDepartureSearchResultIndex = -1,
-            selectedArrivalSearchResultIndex = 1,
-        )
-        val item = items.value["item_id"] ?: fail()
-        assertThat(item.endState.locationText).isEqualTo("Charles de Gaule Airport")
-        assertThat(item.endState.searchResults).isEmpty()
-    }
-
-    @Test
-    fun `airport to search result tapped should update item with new airport's timezone`() {
-        val airportTimeZone: ZoneId = ZoneId.of("Europe/Paris")
-        val expected: Airport = mock {
-            on { timeZone } doReturn TimeZone.getTimeZone(airportTimeZone.id)
-        }
-        repository.stub {
-            onBlocking { details("airport_id") } doReturn expected
-        }
-        val originalData = PendingFlight(
-            id = "flight_id",
-            departure = mock {
-                on { zone } doReturn ZoneId.of("America/New_York")
-            },
-            arrival = zonedDateTime("2024-05-17T10:55:00+02:00"),
-            airportToSearchResults = listOf(
-                mock(),
-                mock { on { iata } doReturn "airport_id" },
-                mock(),
-            ),
-        )
-        itemStore.stub {
-            on { getData("flight_id") } doReturn originalData
-        }
-        val time = zonedDateTime("2025-10-16T15:23:00+01:00")
-        subject.addItem("flight_id", time, mock())
-        subject.onUpdated(
-            "flight_id",
-            departureTime = time,
-            departureTimeSelected = false,
-            arrivalTime = zonedDateTime("2024-05-17T10:55:00+02:00"),
-            arrivalTimeSelected = false,
-            selectedDepartureSearchResultIndex = -1,
-            selectedArrivalSearchResultIndex = 1,
-        )
-        val result = itemStore.getUpdateResult(originalData)
-        assertThat(result.arrival?.zone).isEqualTo(airportTimeZone)
+        val item = subject.createItem("item_id", entity, mock())
+        val built = subject.createEntity(item)
+        assertThat(built.id).isEqualTo("flight_id")
+        assertThat(built.segments.first().departure).isEqualTo(zonedDateTime("2024-10-16T18:25+02:00"))
+        assertThat(built.segments.first().arrival).isEqualTo(zonedDateTime("2024-10-16T20:25+02:00"))
     }
 }

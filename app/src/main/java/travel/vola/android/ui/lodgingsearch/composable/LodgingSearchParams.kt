@@ -147,7 +147,7 @@ fun LodgingSearchParamsPreview() {
             onCheckOutDateSelected = {},
             onLocationSearchTextChanged = { query ->
                 searchResults = List(query.length * 5) {
-                    SearchResultItemState("City$it", "country$it")
+                    SearchResultItemState("id$it", "City$it", "country$it")
                 }
             },
             onLocationSearchResultSelected = {},

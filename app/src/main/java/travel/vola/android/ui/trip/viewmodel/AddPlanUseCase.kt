@@ -1,12 +1,10 @@
 package travel.vola.android.ui.trip.viewmodel
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
-import travel.vola.android.extensions.MapFlow
-import travel.vola.android.extensions.MapStateFlow
-import travel.vola.android.extensions.get
-import travel.vola.android.extensions.mergeMaps
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
@@ -15,12 +13,9 @@ import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.TripEntity
-import travel.vola.android.ui.trip.creation.usecase.AddFlexibleSectionItemActionHandler
-import travel.vola.android.ui.trip.creation.usecase.AddFlightItemActionHandler
-import travel.vola.android.ui.trip.creation.usecase.AddLodgingItemActionHandler
-import travel.vola.android.ui.trip.creation.usecase.AddPlaceItemActionHandler
+import travel.vola.android.ui.trip.creation.usecase.AddFlexibleSectionPersistedActionHandler
 import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
-import travel.vola.android.ui.trip.creation.usecase.AddRestaurantItemActionHandler
+import travel.vola.android.ui.trip.creation.usecase.PendingDataStore
 import travel.vola.android.ui.trip.state.AddFlexibleSectionItemState
 import travel.vola.android.ui.trip.state.AddFlightItemState
 import travel.vola.android.ui.trip.state.AddLodgingItemState
@@ -34,22 +29,18 @@ import java.util.UUID
 
 class AddPlanUseCase(
     placeRepository: PlaceRepository,
-    coroutineScope: CoroutineScope,
+    private val coroutineScope: CoroutineScope,
     private val flexibleSectionUseCase: FlexibleSectionUseCase,
-    private val addFlightUseCase: AddFlightUseCase = AddFlightUseCase(coroutineScope = coroutineScope),
+    private val pendingDataStore: PendingDataStore = PendingDataStore(),
+    private val addFlightUseCase: AddFlightUseCase = AddFlightUseCase(pendingDataStore = pendingDataStore),
     private val addLodgingUseCase: AddLodgingUseCase = AddLodgingUseCase(
         placeRepository = placeRepository,
-        coroutineScope = coroutineScope,
+        pendingDataStore = pendingDataStore,
     ),
-    private val addPlaceUseCase: AddPlaceUseCase = AddPlaceUseCase(coroutineScope = coroutineScope),
-    private val addRestaurantUseCase: AddRestaurantUseCase = AddRestaurantUseCase(coroutineScope = coroutineScope),
-) : AddPlanItemActionHandler,
-    AddFlightItemActionHandler by addFlightUseCase,
-    AddLodgingItemActionHandler by addLodgingUseCase,
-    AddPlaceItemActionHandler by addPlaceUseCase,
-    AddRestaurantItemActionHandler by addRestaurantUseCase,
-    LodgingSearchParamsFactory by addLodgingUseCase,
-    AddFlexibleSectionItemActionHandler by flexibleSectionUseCase {
+    private val addPlaceUseCase: AddPlaceUseCase = AddPlaceUseCase(pendingDataStore = pendingDataStore),
+    private val addRestaurantUseCase: AddRestaurantUseCase = AddRestaurantUseCase(pendingDataStore = pendingDataStore),
+) : AddPlanItemActionHandler, AddFlexibleSectionPersistedActionHandler by flexibleSectionUseCase,
+        LodgingSearchParamsFactory by addLodgingUseCase {
 
     data class StateParams(
         val dateSelectionEnabled: Boolean = true,
@@ -59,25 +50,17 @@ class AddPlanUseCase(
     )
 
     interface AddItemUseCase<E : TripEntity, T : AddPlanItemState> {
-        val items: MapFlow<String, T>
-
-        fun addItem(id: String, time: ZonedDateTime, params: StateParams)
-        fun addItem(id: String, entity: E, params: StateParams)
-
-        fun removeItem(item: T)
+        fun createItem(id: String, time: ZonedDateTime, params: StateParams): T
+        fun createItem(id: String, entity: E, params: StateParams): T
+        suspend fun onUpdated(state: T): T
     }
 
     interface EntityFactory<E : TripEntity, T : AddPlanItemState> {
         fun createEntity(item: T): E
     }
 
-    val items: MapStateFlow<String, AddPlanItemState> = mergeMaps(
-        addFlightUseCase.items,
-        addPlaceUseCase.items,
-        addLodgingUseCase.items,
-        addRestaurantUseCase.items,
-        flexibleSectionUseCase.items,
-    ).stateIn(coroutineScope, SharingStarted.Eagerly, initialValue = emptyMap())
+    private val _current = MutableStateFlow<AddPlanItemState?>(null)
+    val state: StateFlow<AddPlanItemState?> = _current.asStateFlow()
 
     fun createAddPlanItem(
         id: String?,
@@ -86,59 +69,66 @@ class AddPlanUseCase(
         type: AddPlanItemState.Type = AddPlanItemState.Type.Flight,
         place: Place? = null,
     ) {
-        type.useCase().addItem(
-            id = id ?: UUID.randomUUID().toString(),
+        clearCurrent()
+        _current.value = type.useCase().createItem(
+            id ?: UUID.randomUUID().toString(),
             time,
             StateParams(dateSelectionEnabled, place = place),
         )
     }
 
     fun createAddPlanItem(id: String, entity: TripEntity, deleteEnabled: Boolean = true) {
-        return entity.asState(
+        clearCurrent()
+        _current.value = entity.createItem(
             id,
-            StateParams(typeSelectionEnabled = false, deleteEnabled = deleteEnabled),
+            StateParams(typeSelectionEnabled = false, deleteEnabled = deleteEnabled)
         )
     }
 
-    override fun addPlanTypeChanged(itemId: String, newType: AddPlanItemState.Type) = Unit
+    override fun onUpdated(state: AddPlanItemState) {
+        coroutineScope.launch {
+            _current.value = when (state) {
+                is AddFlightItemState -> addFlightUseCase.onUpdated(state)
+                is AddLodgingItemState -> addLodgingUseCase.onUpdated(state)
+                is AddPlaceItemState -> addPlaceUseCase.onUpdated(state)
+                is AddRestaurantItemState -> addRestaurantUseCase.onUpdated(state)
+                is AddFlexibleSectionItemState -> flexibleSectionUseCase.onUpdated(state)
+            }
+        }
+    }
 
-    override fun save(itemId: String) = Unit
+    override fun onSwitchToManualButtonTapped() {
+        val current = _current.value as? LodgingSearchItemState ?: return
+        _current.value = addLodgingUseCase.switchToManual(current)
+    }
 
-    fun saveItem(itemId: String): TripEntity {
-        val addPlanItem = items[itemId] ?: error("Item with id $itemId not found in store")
-        val entity = addPlanItem.asEntity()
-        removeItem(addPlanItem)
+    override fun onFindLodgingButtonTapped() {
+        val current = _current.value as? ManualAddLodgingItemState ?: return
+        _current.value = addLodgingUseCase.switchToSearch(current)
+    }
+
+    override fun onGenerateSectionTapped() {
+        val current = _current.value as? AddFlexibleSectionItemState ?: return
+        clearCurrent()
+        coroutineScope.launch { flexibleSectionUseCase.generateSuggestions(current.startDateTime) }
+    }
+
+    fun saveItem(): TripEntity {
+        val item = _current.value ?: error("No pending item")
+        val entity = item.asEntity()
+        clearCurrent()
         return entity
     }
 
-    override fun cancelEdit(itemId: String) = Unit
-
+    override fun save() = Unit
+    override fun cancelEdit() = clearCurrent()
+    fun removeItem() = clearCurrent()
     override fun delete(type: AddPlanItemState.Type, itemId: String) = Unit
 
-    fun removeItem(itemId: String): AddPlanItemState? {
-        val item = items[itemId] ?: return null
-        removeItem(item)
-        return item
+    private fun clearCurrent() {
+        _current.value = null
+        pendingDataStore.clear()
     }
-
-    private fun removeItem(item: AddPlanItemState) {
-        when (item) {
-            is AddFlightItemState -> addFlightUseCase.removeItem(item)
-            is AddLodgingItemState -> addLodgingUseCase.removeItem(item)
-            is AddPlaceItemState -> addPlaceUseCase.removeItem(item)
-            is AddRestaurantItemState -> addRestaurantUseCase.removeItem(item)
-            is AddFlexibleSectionItemState -> flexibleSectionUseCase.removeItem(item)
-        }
-    }
-
-    private val AddPlanItemState.type
-        get() = when (this) {
-            is AddFlightItemState -> AddPlanItemState.Type.Flight
-            is ManualAddLodgingItemState, is LodgingSearchItemState -> AddPlanItemState.Type.Lodging
-            is AddPlaceItemState -> AddPlanItemState.Type.Place
-            is AddRestaurantItemState -> AddPlanItemState.Type.Restaurant
-            is AddFlexibleSectionItemState -> AddPlanItemState.Type.FlexibleSection
-        }
 
     private fun AddPlanItemState.Type.useCase(): AddItemUseCase<out TripEntity, out AddPlanItemState> =
         when (this) {
@@ -149,27 +139,21 @@ class AddPlanUseCase(
             AddPlanItemState.Type.FlexibleSection -> flexibleSectionUseCase
         }
 
-    private fun TripEntity.asState(
-        id: String,
-        params: StateParams = StateParams(),
-    ) {
-        return when (this) {
-            is Flight -> addFlightUseCase.addItem(id, this, params)
-            is Lodging -> addLodgingUseCase.addItem(id, this, params)
-            is TimedPlace -> addPlaceUseCase.addItem(id, this, params)
-            is RestaurantReservation -> addRestaurantUseCase.addItem(id, this, params)
-            is FlexibleDaySection -> flexibleSectionUseCase.addItem(id, this, params)
+    private fun TripEntity.createItem(id: String, params: StateParams): AddPlanItemState =
+        when (this) {
+            is Flight -> addFlightUseCase.createItem(id, this, params)
+            is Lodging -> addLodgingUseCase.createItem(id, this, params)
+            is TimedPlace -> addPlaceUseCase.createItem(id, this, params)
+            is RestaurantReservation -> addRestaurantUseCase.createItem(id, this, params)
+            is FlexibleDaySection -> flexibleSectionUseCase.createItem(id, this, params)
         }
-    }
 
-    private fun AddPlanItemState.asEntity(): TripEntity {
-        return when (this) {
-            is AddFlightItemState -> addFlightUseCase.createEntity(this)
-            is ManualAddLodgingItemState -> addLodgingUseCase.createEntity(this)
-            is LodgingSearchItemState -> error("LodgingSearchItemState entity creation not implemented")
-            is AddPlaceItemState -> addPlaceUseCase.createEntity(this)
-            is AddRestaurantItemState -> addRestaurantUseCase.createEntity(this)
-            is AddFlexibleSectionItemState -> flexibleSectionUseCase.createEntity(this)
-        }
+    private fun AddPlanItemState.asEntity(): TripEntity = when (this) {
+        is AddFlightItemState -> addFlightUseCase.createEntity(this)
+        is ManualAddLodgingItemState -> addLodgingUseCase.createEntity(this)
+        is LodgingSearchItemState -> error("LodgingSearchItemState entity creation not implemented")
+        is AddPlaceItemState -> addPlaceUseCase.createEntity(this)
+        is AddRestaurantItemState -> addRestaurantUseCase.createEntity(this)
+        is AddFlexibleSectionItemState -> flexibleSectionUseCase.createEntity(this)
     }
 }

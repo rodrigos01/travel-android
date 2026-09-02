@@ -21,10 +21,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,11 +52,11 @@ import java.util.TimeZone
 
 class AddPlanRowState(
     selectedTimeState: MutableState<ZonedDateTime?>,
-    selectedSearchResultIndexState: MutableIntState,
+    selectedResultIdState: MutableState<String?>,
     timeSelectedState: MutableState<Boolean>,
 ) {
     var selectedDateTime: ZonedDateTime? by selectedTimeState
-    var selectedSearchResultIndex: Int by selectedSearchResultIndexState
+    var selectedResultId: String? by selectedResultIdState
     var timeSelected: Boolean by timeSelectedState
 }
 
@@ -66,12 +64,12 @@ class AddPlanRowState(
 fun rememberAddPlanRowState(
     key: Any? = null,
     selectedDateTime: ZonedDateTime? = null,
-    selectedSearchResultIndex: Int = -1,
+    selectedResultId: String? = null,
     timeSelected: Boolean = false,
 ) = remember(key, selectedDateTime) {
     AddPlanRowState(
         mutableStateOf(selectedDateTime),
-        mutableIntStateOf(selectedSearchResultIndex),
+        mutableStateOf(selectedResultId),
         mutableStateOf(timeSelected),
     )
 }
@@ -93,7 +91,7 @@ fun AddPlanRow(
     onUpdated: (
         selectedDateTime: ZonedDateTime?,
         timeSelected: Boolean,
-        selectedSearchResultIndex: Int,
+        selectedResultId: String?,
     ) -> Unit,
 ) {
     var selectedDateTime by remember(initialDateTime) {
@@ -102,14 +100,14 @@ fun AddPlanRow(
     var timeSelected by remember(timeSelectedInitially) {
         mutableStateOf(timeSelectedInitially)
     }
-    var selectedSearchResultIndex by remember(searchResults) {
-        mutableIntStateOf(-1)
+    var selectedResultId by remember(searchResults) {
+        mutableStateOf<String?>(null)
     }
-    LaunchedEffect(selectedDateTime, timeSelected, selectedSearchResultIndex) {
+    LaunchedEffect(selectedDateTime, timeSelected, selectedResultId) {
         onUpdated(
             selectedDateTime,
             timeSelected,
-            selectedSearchResultIndex,
+            selectedResultId,
         )
     }
     val selectedTime = selectedDateTime ?: minTime ?: ZonedDateTime.now()
@@ -209,7 +207,7 @@ fun AddPlanRow(
                     label = labelText,
                     placeHolder = placeHolder,
                     onTextChanged,
-                    onOptionSelected = { selectedSearchResultIndex = it },
+                    onOptionSelected = { index -> selectedResultId = searchResults.getOrNull(index)?.id },
                     itemText = { it.title },
                     itemContent = { result ->
                         Column {
@@ -265,7 +263,7 @@ fun AddPlanRow(
     onUpdated: (
         selectedDateTime: ZonedDateTime?,
         timeSelected: Boolean,
-        selectedSearchResultIndex: Int,
+        selectedResultId: String?,
     ) -> Unit,
 ) {
     AddPlanRow(

@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import travel.vola.android.common.coroutines.MutexScope
 import travel.vola.android.common.coroutines.launch
-import travel.vola.android.extensions.MapStateFlow
 import travel.vola.android.extensions.MutableMapStateFlow
 import travel.vola.android.extensions.dayOfMonthString
 import travel.vola.android.extensions.dayOfWeekString
@@ -24,31 +23,27 @@ import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.SimplePlace
 import travel.vola.android.model.repository.PlaceAutoCompleteRepository
 import travel.vola.android.model.repository.TripRepository
-import travel.vola.android.ui.trip.creation.usecase.AddFlexibleSectionItemActionHandler
-import travel.vola.android.ui.trip.creation.usecase.AddPlanItemStore
-import travel.vola.android.ui.trip.creation.usecase.PendingData
+import travel.vola.android.ui.trip.creation.usecase.AddFlexibleSectionPersistedActionHandler
+import travel.vola.android.ui.trip.creation.usecase.PendingDataStore
+import travel.vola.android.ui.trip.creation.usecase.requireCurrent
 import travel.vola.android.ui.trip.state.AddFlexibleSectionItemState
 import travel.vola.android.ui.trip.state.SearchResultItemState
 import travel.vola.android.ui.trip.state.TripItemState
 import java.time.ZonedDateTime
 import java.util.TimeZone
-import kotlin.collections.plus
 
 class FlexibleSectionUseCase(
     private val tripId: String,
     private val repository: TripRepository,
     private val coroutineScope: CoroutineScope,
     private val suggestionsUseCase: SuggestionsUseCase,
-    private val itemStore: AddPlanItemStore<PendingData.PendingFlexibleSection, AddFlexibleSectionItemState> = AddPlanItemStore(),
+    private val pendingDataStore: PendingDataStore,
     private val autoCompleteRepository: PlaceAutoCompleteRepository = PlaceAutoCompleteRepository(
         types = listOf(),
     ),
 ) : AddPlanUseCase.AddItemUseCase<FlexibleDaySection, AddFlexibleSectionItemState>,
     AddPlanUseCase.EntityFactory<FlexibleDaySection, AddFlexibleSectionItemState>,
-    AddFlexibleSectionItemActionHandler {
-    override val items: MapStateFlow<String, AddFlexibleSectionItemState> =
-        itemStore.items(::createItem)
-            .stateIn(coroutineScope, SharingStarted.Eagerly, emptyMap())
+    AddFlexibleSectionPersistedActionHandler {
 
     val trip = repository.findTripById(tripId)
         .stateIn(coroutineScope, SharingStarted.Eagerly, initialValue = null)
@@ -93,108 +88,81 @@ class FlexibleSectionUseCase(
             )
         },
         searchResults = sessions[section.id]?.map {
-            SearchResultItemState(
-                it.name,
-                it.address,
-            )
+            SearchResultItemState(it.id, it.name, it.address)
         } ?: emptyList(),
         isGenerated = isGenerated,
     )
 
-    override fun addItem(
+    override fun createItem(
         id: String,
         time: ZonedDateTime,
         params: AddPlanUseCase.StateParams,
-    ) {
-        itemStore.addItem(
-            PendingData.PendingFlexibleSection(
-                id = id,
-                startDateTime = time,
-                hasStartTime = false,
-                sectionName = "",
-                city = params.place ?: Place(
-                    id = "",
-                    name = "",
-                    address = "",
-                    latitude = 0.0,
-                    longitude = 0.0,
-                    coverImage = null,
-                    timeZone = TimeZone.getTimeZone(time.zone.id),
-                    externalId = "",
-                    source = "",
-                ),
-                categories = emptyList(),
-            ),
-            params,
+    ): AddFlexibleSectionItemState {
+        val city = params.place ?: Place(
+            id = "",
+            name = "",
+            address = "",
+            latitude = 0.0,
+            longitude = 0.0,
+            coverImage = null,
+            timeZone = TimeZone.getTimeZone(time.zone.id),
+            externalId = "",
+            source = "",
+        )
+        pendingDataStore.set(PendingDataStore.Entry.FlexibleSection(city = city, categories = emptyList()))
+        return AddFlexibleSectionItemState(
+            id = id,
+            typeSelectionEnabled = params.typeSelectionEnabled,
+            dateSelectionEnabled = params.dateSelectionEnabled,
+            saveButtonEnabled = false,
+            deleteButtonEnabled = params.deleteEnabled,
+            startDateTime = time,
+            hasStartTime = false,
+            sectionName = "",
         )
     }
 
-    override fun addItem(
+    override fun createItem(
         id: String,
         entity: FlexibleDaySection,
         params: AddPlanUseCase.StateParams,
-    ) {
-        itemStore.addItem(
-            PendingData.PendingFlexibleSection(
-                id = id,
-                startDateTime = entity.date,
-                hasStartTime = false,
-                sectionName = entity.name,
-                city = entity.city,
-                categories = entity.categories,
-            ),
-            params,
-        )
-    }
-
-    override fun removeItem(item: AddFlexibleSectionItemState) {
-        itemStore.remove(item)
-    }
-
-    private fun createItem(
-        data: PendingData.PendingFlexibleSection,
-        stateParams: AddPlanUseCase.StateParams,
     ): AddFlexibleSectionItemState {
+        pendingDataStore.set(
+            PendingDataStore.Entry.FlexibleSection(city = entity.city, categories = entity.categories),
+        )
         return AddFlexibleSectionItemState(
-            id = data.id,
-            typeSelectionEnabled = stateParams.typeSelectionEnabled,
-            dateSelectionEnabled = stateParams.dateSelectionEnabled,
-            saveButtonEnabled = data.sectionName.isNotBlank(),
-            deleteButtonEnabled = stateParams.deleteEnabled,
-            sectionName = data.sectionName,
-            startDateTime = data.startDateTime,
-            hasStartTime = data.hasStartTime,
+            id = id,
+            typeSelectionEnabled = params.typeSelectionEnabled,
+            dateSelectionEnabled = params.dateSelectionEnabled,
+            saveButtonEnabled = true,
+            deleteButtonEnabled = params.deleteEnabled,
+            startDateTime = entity.date,
+            hasStartTime = false,
+            sectionName = entity.name,
         )
     }
 
-    override fun sectionNameChanged(itemId: String, content: CharSequence) {
-        itemStore.update(itemId) {
-            it.copy(sectionName = content.toString())
-        }
-    }
-
-    override fun onFlexibleItemDateTimeUpdated(
-        itemId: String,
-        dateTime: ZonedDateTime,
-        timeSelected: Boolean,
-    ) {
-        itemStore.update(itemId) {
-            it.copy(startDateTime = dateTime, hasStartTime = timeSelected)
-        }
-    }
+    override suspend fun onUpdated(state: AddFlexibleSectionItemState): AddFlexibleSectionItemState =
+        state.copy(saveButtonEnabled = !state.sectionName.isNullOrBlank())
 
     override fun createEntity(item: AddFlexibleSectionItemState): FlexibleDaySection {
-        val data: PendingData.PendingFlexibleSection = itemStore.getData(item.id)
-            ?: error("Pending Flexible section with id ${item.id} not found")
+        val entry = pendingDataStore.requireCurrent<PendingDataStore.Entry.FlexibleSection>()
         val name = item.sectionName ?: error("Section name cannot be null")
         return FlexibleDaySection(
             id = item.id,
             name = name,
             date = item.startDateTime,
-            categories = data.categories,
-            data.city,
+            categories = entry.categories,
+            entry.city,
         )
     }
+
+    suspend fun generateSuggestions(startDateTime: ZonedDateTime) {
+        val trip = trip.value ?: return
+        suggestionsUseCase.getSuggestions(trip, listOf(startDateTime), addPlaceHolders = true)
+    }
+
+    // --- Inline editing of already-saved sections (unrelated to the pending-item flow above) ---
 
     override fun onFlexibleCategoryAdded(itemId: String, category: String) {
         val section = getSection(itemId) ?: return
@@ -233,11 +201,11 @@ class FlexibleSectionUseCase(
 
     override fun onFlexibleItemSearchResultSelected(
         itemId: String,
-        index: Int,
+        resultId: String,
         categoryIndex: Int,
     ) {
         coroutineScope.launch {
-            val selectedResult = searchSessions[itemId]?.getOrNull(index) ?: return@launch
+            val selectedResult = searchSessions[itemId]?.firstOrNull { it.id == resultId } ?: return@launch
             val place = autoCompleteRepository.details(selectedResult.id, itemId) ?: return@launch
             searchSessions.remove(itemId)
             updateCategory(itemId, categoryIndex) { category ->
@@ -284,19 +252,6 @@ class FlexibleSectionUseCase(
         )
         coroutineScope.launch {
             repository.saveFlexibleSection(tripId, newSection)
-        }
-    }
-
-    override fun onGenerateSectionTapped(itemId: String) {
-        val trip = trip.value ?: return
-        val data = itemStore.getData(itemId) ?: return
-        items[itemId]?.let { itemStore.remove(it) }
-        coroutineScope.launch {
-            suggestionsUseCase.getSuggestions(
-                trip,
-                listOf(data.startDateTime),
-                addPlaceHolders = true,
-            )
         }
     }
 
