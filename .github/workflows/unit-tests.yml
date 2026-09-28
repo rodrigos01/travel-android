@@ -62,7 +62,12 @@ jobs:
                     "package_name": "travel.vola.android"
                   }
                 },
-                "oauth_client": [],
+                "oauth_client": [
+                  {
+                    "client_id": "1234567890-dummywebclientid.apps.googleusercontent.com",
+                    "client_type": 3
+                  }
+                ],
                 "api_key": [
                   {
                     "current_key": "dummy_api_key"

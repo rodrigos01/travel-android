@@ -5,10 +5,12 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.firebase.FirebaseTripDataSource
 import travel.vola.android.model.genai.GenAIRepository
+import travel.vola.android.model.repository.AuthRepository
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.model.repository.TripRepositoryImpl
 
@@ -18,8 +20,15 @@ class ViewModelFactoryDependencies(
     val navController: NavController,
 ) {
 
+    private val firebaseAuth by lazy {
+        FirebaseAuth.getInstance()
+    }
+
+    // Reads currentUser lazily (via FirebaseTripDataSource's getter, not at
+    // construction time) so a sign-out followed by a different user signing
+    // back in within the same app session still queries the right owner.
     private val firebaseTripDataSource by lazy {
-        FirebaseTripDataSource(FirebaseFirestore.getInstance())
+        FirebaseTripDataSource(FirebaseFirestore.getInstance(), firebaseAuth)
     }
 
     val tripRepository: TripRepository by lazy {
@@ -31,6 +40,10 @@ class ViewModelFactoryDependencies(
 
     val genAIRepository: GenAIRepository by lazy {
         GenAIRepository()
+    }
+
+    val authRepository: AuthRepository by lazy {
+        AuthRepository(firebaseAuth)
     }
 }
 

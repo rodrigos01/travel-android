@@ -11,12 +11,15 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import travel.vola.android.di.factoryDependencies
 import travel.vola.android.extensions.viewModelFactory
+import travel.vola.android.model.repository.AuthRepository
+import travel.vola.android.ui.signin.SignInScreenDestination
 import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
 import travel.vola.android.ui.triplist.TripListUseCase
 
 class HomeViewModel private constructor(
     private val navController: NavController,
     private val tripListUseCase: TripListUseCase,
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
 
     val uiState: StateFlow<UiState> = tripListUseCase.state.map {
@@ -38,12 +41,20 @@ class HomeViewModel private constructor(
         }
     }
 
+    fun signOut() {
+        authRepository.signOut()
+        navController.navigate(SignInScreenDestination.ROUTE) {
+            popUpTo(HomeScreenDestination.ROUTE) { inclusive = true }
+        }
+    }
+
     class Factory() :
         ViewModelProvider.Factory by viewModelFactory(initializer = {
             val tripListUseCase = TripListUseCase(factoryDependencies.tripRepository)
             HomeViewModel(
                 factoryDependencies.navController,
                 tripListUseCase,
+                factoryDependencies.authRepository,
             )
         })
 }

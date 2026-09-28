@@ -6,6 +6,7 @@ import java.util.UUID
 sealed interface FirebaseData {
     data class Trip(
         @Exclude val id: String = "",
+        val ownerId: String? = null,
         val name: String? = null,
         val coverImage: String? = null,
         val preferences: TripPreferences? = null,
