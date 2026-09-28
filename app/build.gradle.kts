@@ -147,9 +147,7 @@ dependencies {
     // Firebase
     implementation(libs.play.services.auth)
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.firestore) {
-        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
-    }
+    implementation(libs.firebase.firestore)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.ai)
