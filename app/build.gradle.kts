@@ -25,9 +25,6 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose") version "2.3.0"
     id("com.google.firebase.appdistribution")
     id("com.google.firebase.crashlytics")
-    id("com.google.devtools.ksp")
-    id("com.google.protobuf") version "0.9.6"
-    id("androidx.room")
 }
 
 android {
@@ -124,33 +121,12 @@ android {
             }
         }
     }
-    room {
-        schemaDirectory("$projectDir/schemas")
-    }
 }
 
 composeCompiler {
     reportsDestination = layout.buildDirectory.dir("compose_compiler")
     stabilityConfigurationFiles =
         listOf(rootProject.layout.projectDirectory.file("stability_config.conf"))
-}
-
-protobuf {
-    protoc {
-        artifact = "com.google.protobuf:protoc:3.18.0"
-    }
-    // Generates the java Protobuf-lite code for the Protobufs in this project. See
-    // https://github.com/google/protobuf-gradle-plugin#customizing-protobuf-compilation
-    // for more information.
-    generateProtoTasks {
-        all().forEach { task ->
-            task.builtins {
-                create("java") {
-                    option("lite")
-                }
-            }
-        }
-    }
 }
 
 dependencies {
@@ -171,9 +147,7 @@ dependencies {
     // Firebase
     implementation(libs.play.services.auth)
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.firestore) {
-        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
-    }
+    implementation(libs.firebase.firestore)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.ai)
@@ -206,13 +180,7 @@ dependencies {
     implementation(libs.ktor.client.encoding)
     // DataStore
     implementation(libs.androidx.datastore.preferences)
-    implementation(libs.androidx.datastore)
-    implementation(libs.protobuf.javalite)
     implementation(libs.androidx.palette.ktx)
-    // Room
-    ksp(libs.room.compiler)
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
 
     implementation(libs.material.kolor) // Or latest version
     // Testing
@@ -223,7 +191,6 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.assertj.core)
     testImplementation(libs.mockk)
-    testImplementation(libs.room.testing)
     androidTestImplementation(libs.androidx.runner)
     androidTestImplementation(libs.androidx.espresso.core)
 }

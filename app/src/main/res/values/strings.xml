@@ -106,8 +106,6 @@
     <string name="option_flexible_dates">Flexible</string>
     <string name="option_fixed_dates">Fixed</string>
     <string name="option_something_else">Something Else</string>
-    <string name="source_local">Local</string>
-    <string name="source_firebase">Firebase</string>
     <!-- Navigation / Tabs -->
 
     <string name="error_no_tab_found">No Tab Found for id %1$s</string>

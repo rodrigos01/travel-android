@@ -8,11 +8,6 @@ enum class ServerStatus {
     UNAVAILABLE,
 }
 
-enum class DataSourceType {
-    LOCAL,
-    FIREBASE,
-}
-
 interface Identifiable {
     val id: String
 }

@@ -9,8 +9,6 @@ plugins {
     id("com.google.firebase.appdistribution") version "5.2.0" apply false
     id("com.google.firebase.crashlytics") version "3.0.6" apply false
 
-    id("com.google.devtools.ksp") version "2.3.3" apply false
-    id("androidx.room") version "2.8.4" apply false
     alias(libs.plugins.spotless) apply false
 }
 
