@@ -1,7 +1,5 @@
 package travel.vola.android.ui.signin
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,7 +19,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -30,9 +28,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import kotlinx.coroutines.launch
 import travel.vola.android.R
 import travel.vola.android.extensions.viewModel
 
@@ -42,31 +45,35 @@ fun SignInScreen() {
     val viewModel: SignInViewModel = viewModel(factory = SignInViewModel.Factory())
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-
-    val googleSignInClient = remember {
-        GoogleSignIn.getClient(
-            context,
-            GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(context.getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build(),
-        )
-    }
+    val coroutineScope = rememberCoroutineScope()
     val genericErrorMessage = stringResource(R.string.error_something_went_wrong)
-    val googleSignInLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult(),
-    ) { result ->
-        try {
-            val account = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-                .getResult(ApiException::class.java)
-            val idToken = account.idToken
-            if (idToken != null) {
-                viewModel.onGoogleIdTokenReceived(idToken)
-            } else {
-                viewModel.onGoogleSignInFailed(genericErrorMessage)
+    val webClientId = stringResource(R.string.default_web_client_id)
+
+    fun launchGoogleSignIn() {
+        coroutineScope.launch {
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(
+                    GetGoogleIdOption.Builder()
+                        .setFilterByAuthorizedAccounts(false)
+                        .setServerClientId(webClientId)
+                        .build(),
+                )
+                .build()
+            try {
+                val credential = CredentialManager.create(context)
+                    .getCredential(context = context, request = request)
+                    .credential
+                if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                    val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
+                    viewModel.onGoogleIdTokenReceived(idToken)
+                } else {
+                    viewModel.onGoogleSignInFailed(genericErrorMessage)
+                }
+            } catch (e: GetCredentialException) {
+                viewModel.onGoogleSignInFailed(e.message ?: genericErrorMessage)
+            } catch (e: GoogleIdTokenParsingException) {
+                viewModel.onGoogleSignInFailed(e.message ?: genericErrorMessage)
             }
-        } catch (e: ApiException) {
-            viewModel.onGoogleSignInFailed(e.message ?: genericErrorMessage)
         }
     }
 
@@ -136,7 +143,7 @@ fun SignInScreen() {
                 )
             }
             OutlinedButton(
-                onClick = { googleSignInLauncher.launch(googleSignInClient.signInIntent) },
+                onClick = ::launchGoogleSignIn,
                 enabled = !uiState.isSubmitting,
                 modifier = Modifier.fillMaxWidth(),
             ) {
