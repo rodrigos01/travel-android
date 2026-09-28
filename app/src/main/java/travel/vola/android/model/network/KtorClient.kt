@@ -32,18 +32,19 @@ import kotlinx.serialization.json.JsonNamingStrategy
 import travel.vola.android.BuildConfig
 import java.util.Locale
 
-// Every route on the command API now requires a Bearer token (see
+// Every route but the health check now requires a Bearer token (see
 // travel-node's api/auth/interceptor.js). loadTokens/refreshTokens fetch the
 // signed-in user's Firebase ID token; getIdToken(false) returns the cached
 // token if it's not expired, getIdToken(true) forces a refresh, mirroring
-// Ktor's own load/refresh split. There's deliberately no fallback when
-// currentUser is null: every screen that can reach the network is behind
-// the sign-in gate (MainActivity), so an absent user here means a bug in
-// that gate, not a legitimate anonymous request.
-private suspend fun currentIdToken(forceRefresh: Boolean): String {
-    val user = FirebaseAuth.getInstance().currentUser ?: error("No signed-in Firebase user")
+// Ktor's own load/refresh split. Returns null rather than throwing when
+// there's no signed-in user - StartupViewModel hits the health check before
+// the sign-in gate has a chance to run, and Ktor's bearer provider treats a
+// null token as "send the request with no Authorization header" rather than
+// failing the request outright, so an unauthenticated call still reaches
+// the server (which 401s it if it isn't the health check).
+private suspend fun currentIdToken(forceRefresh: Boolean): String? {
+    val user = FirebaseAuth.getInstance().currentUser ?: return null
     return user.getIdToken(forceRefresh).await().token
-        ?: error("Firebase returned no ID token for the signed-in user")
 }
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -60,10 +61,10 @@ private val client = HttpClient {
     install(Auth) {
         bearer {
             loadTokens {
-                BearerTokens(currentIdToken(forceRefresh = false), refreshToken = null)
+                currentIdToken(forceRefresh = false)?.let { BearerTokens(it, refreshToken = null) }
             }
             refreshTokens {
-                BearerTokens(currentIdToken(forceRefresh = true), refreshToken = null)
+                currentIdToken(forceRefresh = true)?.let { BearerTokens(it, refreshToken = null) }
             }
         }
     }
