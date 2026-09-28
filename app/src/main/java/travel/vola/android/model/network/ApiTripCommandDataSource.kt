@@ -3,7 +3,6 @@ package travel.vola.android.model.network
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import travel.vola.android.model.data.FlexibleDaySection
@@ -12,22 +11,10 @@ import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.TripPreferences
-import travel.vola.android.model.firebase.FirebaseData
-import travel.vola.android.model.firebase.toFirebaseDataModel
 import travel.vola.android.model.repository.TripCommandDataSource
 import java.util.UUID
 
 class TripCommandException(message: String) : Exception(message)
-
-// Fields left at their default (null) are omitted from the request body, so
-// a PUT that only sets `name` leaves `preferences`/`places` untouched
-// server-side — see TripsController#upsertTrip on the API side.
-@Serializable
-private data class TripUpdate(
-    val name: String? = null,
-    val preferences: FirebaseData.TripPreferences? = null,
-    val places: List<FirebaseData.TimedPlace>? = null,
-)
 
 private val commandJson = Json { encodeDefaults = false }
 
@@ -35,7 +22,7 @@ class ApiTripCommandDataSource : TripCommandDataSource {
 
     override suspend fun addTrip(): String {
         val tripId = UUID.randomUUID().toString()
-        putTrip(tripId, TripUpdate())
+        putTrip(tripId, TripApiData.TripUpdate())
         return tripId
     }
 
@@ -47,21 +34,21 @@ class ApiTripCommandDataSource : TripCommandDataSource {
         val tripId = UUID.randomUUID().toString()
         putTrip(
             tripId,
-            TripUpdate(
+            TripApiData.TripUpdate(
                 name = name,
-                places = places.map { it.toFirebaseDataModel() },
-                preferences = preferences.toFirebaseDataModel(),
+                places = places.map { it.toApiDataModel() },
+                preferences = preferences.toApiDataModel(),
             ),
         )
         return tripId
     }
 
     override suspend fun updateName(tripId: String, newName: String) {
-        putTrip(tripId, TripUpdate(name = newName))
+        putTrip(tripId, TripApiData.TripUpdate(name = newName))
     }
 
     override suspend fun updateTripPreferences(tripId: String, preferences: TripPreferences) {
-        putTrip(tripId, TripUpdate(preferences = preferences.toFirebaseDataModel()))
+        putTrip(tripId, TripApiData.TripUpdate(preferences = preferences.toApiDataModel()))
     }
 
     override suspend fun deleteTrip(tripId: String) {
@@ -69,7 +56,7 @@ class ApiTripCommandDataSource : TripCommandDataSource {
     }
 
     override suspend fun saveFlight(tripId: String, flight: Flight) {
-        putCommand("trips/$tripId/flights/${flight.id}", flight.toFirebaseDataModel())
+        putCommand("trips/$tripId/flights/${flight.id}", flight.toApiDataModel())
     }
 
     override suspend fun deleteFlight(tripId: String, flightId: String) {
@@ -77,7 +64,7 @@ class ApiTripCommandDataSource : TripCommandDataSource {
     }
 
     override suspend fun saveLodging(tripId: String, lodging: Lodging) {
-        putCommand("trips/$tripId/lodgings/${lodging.id}", lodging.toFirebaseDataModel())
+        putCommand("trips/$tripId/lodgings/${lodging.id}", lodging.toApiDataModel())
     }
 
     override suspend fun deleteLodging(tripId: String, lodgingId: String) {
@@ -85,7 +72,7 @@ class ApiTripCommandDataSource : TripCommandDataSource {
     }
 
     override suspend fun saveTimedPlace(tripId: String, timedPlace: TimedPlace) {
-        putCommand("trips/$tripId/places/${timedPlace.id}", timedPlace.toFirebaseDataModel())
+        putCommand("trips/$tripId/places/${timedPlace.id}", timedPlace.toApiDataModel())
     }
 
     override suspend fun deleteTimedPlace(tripId: String, timedPlaceId: String) {
@@ -98,7 +85,7 @@ class ApiTripCommandDataSource : TripCommandDataSource {
     ) {
         putCommand(
             "trips/$tripId/restaurants/${restaurantReservation.id}",
-            restaurantReservation.toFirebaseDataModel(),
+            restaurantReservation.toApiDataModel(),
         )
     }
 
@@ -112,7 +99,7 @@ class ApiTripCommandDataSource : TripCommandDataSource {
     override suspend fun saveFlexibleSection(tripId: String, flexibleSection: FlexibleDaySection) {
         putCommand(
             "trips/$tripId/flexible-sections/${flexibleSection.id}",
-            flexibleSection.toFirebaseDataModel(),
+            flexibleSection.toApiDataModel(),
         )
     }
 
@@ -120,7 +107,7 @@ class ApiTripCommandDataSource : TripCommandDataSource {
         deleteCommand("trips/$tripId/flexible-sections/$flexibleSectionId")
     }
 
-    private suspend fun putTrip(tripId: String, body: TripUpdate) {
+    private suspend fun putTrip(tripId: String, body: TripApiData.TripUpdate) {
         val path = "trips/$tripId"
         put(path, commandJson.encodeToString(body)).ensureCommandSucceeded(path)
     }

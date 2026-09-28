@@ -105,76 +105,6 @@ fun FirebaseData.RestaurantReservation.toAppDataModel() = RestaurantReservation(
     city = city?.toAppDataModel() ?: error("city is required"),
 )
 
-fun Trip.toFirebaseDataModel() = FirebaseData.Trip(
-    id = id,
-    name = name,
-    coverImage = coverImage,
-    preferences = preferences?.toFirebaseDataModel(),
-    flights = flights.map { it.toFirebaseDataModel() },
-    lodgings = lodgings.map { it.toFirebaseDataModel() },
-    places = places.map { it.toFirebaseDataModel() },
-    restaurants = restaurants.map { it.toFirebaseDataModel() },
-)
-
-fun Flight.toFirebaseDataModel() = FirebaseData.Flight(
-    id = id,
-    segments = segments.map { it.toFirebaseDataModel() },
-    price = price,
-)
-
-fun FlightSegment.toFirebaseDataModel() = FirebaseData.FlightSegment(
-    airportFrom = airportFrom.toFirebaseDataModel(),
-    departure = departure.toFirebaseDataModel(),
-    airportTo = airportTo.toFirebaseDataModel(),
-    arrival = arrival.toFirebaseDataModel(),
-)
-
-fun Airport.toFirebaseDataModel() = FirebaseData.Airport(
-    iata = iata,
-    name = name,
-    timezone = timeZone.id,
-    city = city.toFirebaseDataModel(),
-)
-
-fun Lodging.toFirebaseDataModel() = FirebaseData.Lodging(
-    id = id,
-    name = name,
-    address = address,
-    latitude = latitude,
-    longitude = longitude,
-    city = city.toFirebaseDataModel(),
-    checkIn = checkIn.toFirebaseDataModel(),
-    checkout = checkout.toFirebaseDataModel(),
-)
-
-fun Place.toFirebaseDataModel() = FirebaseData.Place(
-    id = id,
-    name = name,
-    address = address,
-    latitude = latitude,
-    longitude = longitude,
-    coverImage = coverImage,
-    externalId = externalId,
-    source = source,
-)
-
-fun TimedPlace.toFirebaseDataModel() = FirebaseData.TimedPlace(
-    id = id,
-    place = place.toFirebaseDataModel(),
-    time = startDateTime.toFirebaseDataModel(),
-    hasTime = hasStartTime,
-    endTime = endDateTime?.toFirebaseDataModel(),
-    hasEndTime = hasEndTime,
-    city = city.toFirebaseDataModel(),
-)
-
-fun RestaurantReservation.toFirebaseDataModel() = FirebaseData.RestaurantReservation(
-    id = id,
-    time = dateTime.toFirebaseDataModel(),
-    place = place.toFirebaseDataModel(),
-    city = city.toFirebaseDataModel(),
-)
-
 fun FirebaseData.TripPreferences.toAppDataModel() = TripPreferences(
     basicInformation = BasicInformation(
         groupType = basicInformation.groupType.toAppDataModel(),
@@ -191,36 +121,6 @@ fun FirebaseData.TripPreferences.toAppDataModel() = TripPreferences(
     ),
     questionsAnswers = questionsAnswers.map { AnsweredQuestion(it.question, it.answer) },
 )
-
-fun TripPreferences.toFirebaseDataModel() = FirebaseData.TripPreferences(
-    basicInformation = FirebaseData.BasicInformation(
-        groupType = basicInformation.groupType.toFirebaseDataModel(),
-        travelers = basicInformation.travelers,
-    ),
-    initialParameters = FirebaseData.TripParameters(
-        occasions = initialParameters.occasions,
-        interests = initialParameters.interests,
-        vibe = initialParameters.vibe,
-        focus = initialParameters.focus,
-        mustHave = initialParameters.mustHave,
-        duration = initialParameters.duration,
-        anythingElse = initialParameters.anythingElse,
-    ),
-    questionsAnswers = questionsAnswers.map {
-        FirebaseData.AnsweredQuestion(
-            it.question,
-            it.answer,
-        )
-    },
-)
-
-fun GroupType.toFirebaseDataModel() = when (this) {
-    GroupType.SOLO -> FirebaseData.GroupType.SOLO
-    GroupType.FAMILY -> FirebaseData.GroupType.FAMILY
-    GroupType.FRIENDS -> FirebaseData.GroupType.FRIENDS
-    GroupType.COWORKERS -> FirebaseData.GroupType.COWORKERS
-    GroupType.COUPLE -> FirebaseData.GroupType.COUPLE
-}
 
 fun FirebaseData.GroupType.toAppDataModel() = when (this) {
     FirebaseData.GroupType.SOLO -> GroupType.SOLO
@@ -250,25 +150,6 @@ fun FirebaseData.FlexibleDaySection.toAppDataModel(): FlexibleDaySection {
         },
     )
 }
-
-fun FlexibleDaySection.toFirebaseDataModel() = FirebaseData.FlexibleDaySection(
-    id = id,
-    name = name,
-    date = date.toFirebaseDataModel(),
-    city = city.toFirebaseDataModel(),
-    categories = categories.map { category ->
-        FirebaseData.FlexibleSectionCategory(
-            name = category.name,
-            items = category.items.map {
-                FirebaseData.FlexibleSectionItem(
-                    id = it.id,
-                    place = it.place.toFirebaseDataModel(),
-                    note = it.note,
-                )
-            },
-        )
-    },
-)
 
 fun String.toTime(): ZonedDateTime = zonedDateTime(this)
 
