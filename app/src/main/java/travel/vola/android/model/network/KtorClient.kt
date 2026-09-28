@@ -16,14 +16,19 @@ import io.ktor.client.plugins.compression.ContentEncoding
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.plugin
 import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.delete
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.http.parameters
 import io.ktor.http.path
 import io.ktor.serialization.kotlinx.json.json
@@ -154,6 +159,38 @@ suspend fun get(
     builder: HttpRequestBuilder.() -> Unit = {},
 ): HttpResponse {
     return httpClient().get(SERVER_URL) {
+        url { path(path) }
+        headers {
+            append(HttpHeaders.AcceptLanguage, Locale.getDefault().language)
+        }
+        builder()
+    }
+}
+
+// body is pre-encoded JSON (rather than a typed object passed through
+// ContentNegotiation) so command payloads aren't affected by this client's
+// snake_case naming strategy, which only applies to the read/discovery API.
+suspend fun put(
+    path: String,
+    body: String,
+    builder: HttpRequestBuilder.() -> Unit = {},
+): HttpResponse {
+    return httpClient().put(SERVER_URL) {
+        url { path(path) }
+        contentType(ContentType.Application.Json)
+        setBody(body)
+        headers {
+            append(HttpHeaders.AcceptLanguage, Locale.getDefault().language)
+        }
+        builder()
+    }
+}
+
+suspend fun delete(
+    path: String,
+    builder: HttpRequestBuilder.() -> Unit = {},
+): HttpResponse {
+    return httpClient().delete(SERVER_URL) {
         url { path(path) }
         headers {
             append(HttpHeaders.AcceptLanguage, Locale.getDefault().language)

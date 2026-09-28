@@ -1,9 +1,15 @@
 package travel.vola.android.model.firebase
 
 import com.google.firebase.firestore.Exclude
+import kotlinx.serialization.Serializable
 import java.util.UUID
 
+// These classes are Firestore's document shape, and are also reused verbatim
+// as the JSON payloads sent to the travel-node command API (@Serializable)
+// since the API writes the exact same shape to Firestore server-side — see
+// ApiTripCommandDataSource.
 sealed interface FirebaseData {
+    @Serializable
     data class Trip(
         @Exclude val id: String = "",
         val name: String? = null,
@@ -16,12 +22,14 @@ sealed interface FirebaseData {
         val flexibleSections: List<FlexibleDaySection> = emptyList(),
     ) : FirebaseData
 
+    @Serializable
     data class Flight(
         val id: String = UUID.randomUUID().toString(),
         val segments: List<FlightSegment> = emptyList(),
         val price: Double? = null,
     ) : FirebaseData
 
+    @Serializable
     data class FlightSegment(
         val airportFrom: Airport? = null,
         val departure: String = "",
@@ -31,6 +39,7 @@ sealed interface FirebaseData {
         val cityTo: Place? = null,
     ) : FirebaseData
 
+    @Serializable
     data class Airport(
         val iata: String? = null,
         val name: String? = null,
@@ -38,6 +47,7 @@ sealed interface FirebaseData {
         val city: Place? = null,
     )
 
+    @Serializable
     data class Lodging(
         val id: String = UUID.randomUUID().toString(),
         val name: String? = null,
@@ -49,6 +59,7 @@ sealed interface FirebaseData {
         val checkout: String? = null,
     ) : FirebaseData
 
+    @Serializable
     data class Place(
         val id: String = "",
         val name: String = "",
@@ -61,6 +72,7 @@ sealed interface FirebaseData {
         val source: String = "",
     )
 
+    @Serializable
     data class TimedPlace(
         val id: String = "",
         val place: Place = Place(),
@@ -71,6 +83,7 @@ sealed interface FirebaseData {
         val city: Place? = null,
     )
 
+    @Serializable
     data class RestaurantReservation(
         val id: String = "",
         val time: String? = null,
@@ -78,17 +91,20 @@ sealed interface FirebaseData {
         val city: Place? = null,
     )
 
+    @Serializable
     data class TripPreferences(
         val basicInformation: BasicInformation = BasicInformation(),
         val initialParameters: TripParameters = TripParameters(),
         val questionsAnswers: List<AnsweredQuestion> = emptyList(),
     )
 
+    @Serializable
     data class BasicInformation(
         val groupType: GroupType = GroupType.SOLO,
         val travelers: Int = 0,
     )
 
+    @Serializable
     enum class GroupType {
         SOLO,
         FAMILY,
@@ -97,6 +113,7 @@ sealed interface FirebaseData {
         COUPLE,
     }
 
+    @Serializable
     data class TripParameters(
         val occasions: List<String> = emptyList(),
         val interests: List<String> = emptyList(),
@@ -107,11 +124,13 @@ sealed interface FirebaseData {
         val anythingElse: String = "",
     )
 
+    @Serializable
     data class AnsweredQuestion(
         val question: String = "",
         val answer: String = "",
     )
 
+    @Serializable
     data class FlexibleDaySection(
         val id: String = "",
         val name: String = "",
@@ -120,11 +139,13 @@ sealed interface FirebaseData {
         val categories: List<FlexibleSectionCategory> = emptyList(),
     )
 
+    @Serializable
     data class FlexibleSectionCategory(
         val name: String = "",
         val items: List<FlexibleSectionItem> = emptyList(),
     )
 
+    @Serializable
     data class FlexibleSectionItem(
         val id: String = "",
         val place: Place = Place(),

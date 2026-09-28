@@ -11,10 +11,7 @@ import androidx.activity.viewModels
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,7 +21,6 @@ import androidx.navigation.toRoute
 import travel.vola.android.common.ui.components.OverlayHostProvider
 import travel.vola.android.di.LocalViewModelCreationExtras
 import travel.vola.android.di.initializeViewModelCreationExtras
-import travel.vola.android.model.data.DataSourceType
 import travel.vola.android.ui.home.HomeScreen
 import travel.vola.android.ui.home.HomeScreenDestination
 import travel.vola.android.ui.lodgingsearch.composable.LodgingSearch
@@ -70,8 +66,7 @@ class MainActivity : ComponentActivity() {
     fun MainScreen() {
         val navController = rememberNavController()
         AppTheme {
-            var dataSourceType by remember { mutableStateOf(DataSourceType.LOCAL) }
-            val viewModelCreationExtras = remember(dataSourceType) {
+            val viewModelCreationExtras = remember {
                 initializeViewModelCreationExtras(navController)
             }
             OverlayHostProvider {
