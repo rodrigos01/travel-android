@@ -139,7 +139,11 @@ private val client = HttpClient {
     }
 }
 
-private const val SERVER_URL = BuildConfig.SERVER_URL
+// internal + @PublishedApi so the public inline put() can reference it (an
+// inline function's body is copied to call sites, so it can't touch
+// private declarations).
+@PublishedApi
+internal const val SERVER_URL = BuildConfig.SERVER_URL
 fun httpClient() = client
 
 suspend inline fun <reified T> request(
@@ -167,13 +171,10 @@ suspend fun get(
     }
 }
 
-// body is pre-encoded JSON (rather than a typed object passed through
-// ContentNegotiation) so command payloads aren't affected by this client's
-// snake_case naming strategy, which only applies to the read/discovery API.
-suspend fun put(
+suspend inline fun <reified T> put(
     path: String,
-    body: String,
-    builder: HttpRequestBuilder.() -> Unit = {},
+    body: T,
+    noinline builder: HttpRequestBuilder.() -> Unit = {},
 ): HttpResponse {
     return httpClient().put(SERVER_URL) {
         url { path(path) }

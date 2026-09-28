@@ -4,8 +4,6 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.flow.Flow
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
@@ -20,12 +18,6 @@ import travel.vola.android.model.network.toApiDataModel
 import java.util.UUID
 
 class TripCommandException(message: String) : Exception(message)
-
-// body is pre-encoded JSON (rather than a typed object passed through
-// ContentNegotiation) so command payloads aren't affected by the shared
-// Ktor client's snake_case naming strategy, which only applies to the
-// read/discovery API.
-private val commandJson = Json { encodeDefaults = false }
 
 // CQRS-lite: reads go straight to Firestore (dataSource), writes go through
 // the travel-node command API over HTTP so the server can validate and own
@@ -132,7 +124,7 @@ class TripRepositoryImpl(
     }
 
     private suspend inline fun <reified T> putCommand(path: String, body: T) {
-        put(path, commandJson.encodeToString(body)).ensureCommandSucceeded(path)
+        put(path, body).ensureCommandSucceeded(path)
     }
 
     private suspend fun deleteCommand(path: String) {
