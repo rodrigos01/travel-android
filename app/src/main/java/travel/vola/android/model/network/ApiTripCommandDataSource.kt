@@ -22,7 +22,7 @@ class ApiTripCommandDataSource : TripCommandDataSource {
 
     override suspend fun addTrip(): String {
         val tripId = UUID.randomUUID().toString()
-        putTrip(tripId, TripApiData.TripUpdate())
+        putCommand("trips/$tripId", TripApiData.TripUpdate())
         return tripId
     }
 
@@ -32,8 +32,8 @@ class ApiTripCommandDataSource : TripCommandDataSource {
         preferences: TripPreferences,
     ): String {
         val tripId = UUID.randomUUID().toString()
-        putTrip(
-            tripId,
+        putCommand(
+            "trips/$tripId",
             TripApiData.TripUpdate(
                 name = name,
                 places = places.map { it.toApiDataModel() },
@@ -44,11 +44,11 @@ class ApiTripCommandDataSource : TripCommandDataSource {
     }
 
     override suspend fun updateName(tripId: String, newName: String) {
-        putTrip(tripId, TripApiData.TripUpdate(name = newName))
+        putCommand("trips/$tripId", TripApiData.TripUpdate(name = newName))
     }
 
     override suspend fun updateTripPreferences(tripId: String, preferences: TripPreferences) {
-        putTrip(tripId, TripApiData.TripUpdate(preferences = preferences.toApiDataModel()))
+        putCommand("trips/$tripId", TripApiData.TripUpdate(preferences = preferences.toApiDataModel()))
     }
 
     override suspend fun deleteTrip(tripId: String) {
@@ -105,11 +105,6 @@ class ApiTripCommandDataSource : TripCommandDataSource {
 
     override suspend fun deleteFlexibleSection(tripId: String, flexibleSectionId: String) {
         deleteCommand("trips/$tripId/flexible-sections/$flexibleSectionId")
-    }
-
-    private suspend fun putTrip(tripId: String, body: TripApiData.TripUpdate) {
-        val path = "trips/$tripId"
-        put(path, commandJson.encodeToString(body)).ensureCommandSucceeded(path)
     }
 
     private suspend inline fun <reified T> putCommand(path: String, body: T) {
