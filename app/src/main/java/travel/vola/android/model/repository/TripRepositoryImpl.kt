@@ -1,6 +1,11 @@
 package travel.vola.android.model.repository
 
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Lodging
@@ -8,76 +13,135 @@ import travel.vola.android.model.data.RestaurantReservation
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.data.TripPreferences
+import travel.vola.android.model.network.TripApiData
+import travel.vola.android.model.network.delete
+import travel.vola.android.model.network.put
+import travel.vola.android.model.network.toApiDataModel
+import java.util.UUID
 
-// CQRS-lite: reads go straight to Firestore (queries), writes go through
-// the travel-node command API (commands) so the server can validate and
-// own the write path instead of trusting the client SDK.
+class TripCommandException(message: String) : Exception(message)
+
+// body is pre-encoded JSON (rather than a typed object passed through
+// ContentNegotiation) so command payloads aren't affected by the shared
+// Ktor client's snake_case naming strategy, which only applies to the
+// read/discovery API.
+private val commandJson = Json { encodeDefaults = false }
+
+// CQRS-lite: reads go straight to Firestore (dataSource), writes go through
+// the travel-node command API over HTTP so the server can validate and own
+// the write path instead of trusting the client SDK.
 class TripRepositoryImpl(
-    private val queries: TripDataSource,
-    private val commands: TripCommandDataSource,
+    private val dataSource: TripDataSource,
 ) : TripRepository {
 
-    override val trips: Flow<List<Trip>> = queries.trips
+    override val trips: Flow<List<Trip>> = dataSource.trips
 
-    override fun findTripById(tripId: String): Flow<Trip?> = queries.findTripById(tripId)
+    override fun findTripById(tripId: String): Flow<Trip?> = dataSource.findTripById(tripId)
 
     override fun getTripFlights(tripId: String): Flow<List<Flight>> =
-        queries.getTripFlights(tripId)
+        dataSource.getTripFlights(tripId)
 
     override fun getTripHotels(tripId: String): Flow<List<Lodging>> =
-        queries.getTripHotels(tripId)
+        dataSource.getTripHotels(tripId)
 
-    override suspend fun addTrip(): String = commands.addTrip()
+    override suspend fun addTrip(): String {
+        val tripId = UUID.randomUUID().toString()
+        putCommand("trips/$tripId", TripApiData.TripUpdate())
+        return tripId
+    }
 
     override suspend fun addTrip(
         name: String,
         places: List<TimedPlace>,
         preferences: TripPreferences,
-    ): String = commands.addTrip(name, places, preferences)
+    ): String {
+        val tripId = UUID.randomUUID().toString()
+        putCommand(
+            "trips/$tripId",
+            TripApiData.TripUpdate(
+                name = name,
+                places = places.map { it.toApiDataModel() },
+                preferences = preferences.toApiDataModel(),
+            ),
+        )
+        return tripId
+    }
 
-    override suspend fun updateName(tripId: String, newName: String) =
-        commands.updateName(tripId, newName)
+    override suspend fun updateName(tripId: String, newName: String) {
+        putCommand("trips/$tripId", TripApiData.TripUpdate(name = newName))
+    }
 
-    override suspend fun updateTripPreferences(
-        tripId: String,
-        preferences: TripPreferences,
-    ) = commands.updateTripPreferences(tripId, preferences)
+    override suspend fun updateTripPreferences(tripId: String, preferences: TripPreferences) {
+        putCommand("trips/$tripId", TripApiData.TripUpdate(preferences = preferences.toApiDataModel()))
+    }
 
-    override suspend fun deleteTrip(tripId: String) = commands.deleteTrip(tripId)
+    override suspend fun deleteTrip(tripId: String) {
+        deleteCommand("trips/$tripId")
+    }
 
-    override suspend fun saveFlight(tripId: String, flight: Flight) =
-        commands.saveFlight(tripId, flight)
+    override suspend fun saveFlight(tripId: String, flight: Flight) {
+        putCommand("trips/$tripId/flights/${flight.id}", flight.toApiDataModel())
+    }
 
-    override suspend fun saveLodging(tripId: String, lodging: Lodging) =
-        commands.saveLodging(tripId, lodging)
+    override suspend fun deleteFlight(tripId: String, flightId: String) {
+        deleteCommand("trips/$tripId/flights/$flightId")
+    }
 
-    override suspend fun saveTimedPlace(tripId: String, timedPlace: TimedPlace) =
-        commands.saveTimedPlace(tripId, timedPlace)
+    override suspend fun saveLodging(tripId: String, lodging: Lodging) {
+        putCommand("trips/$tripId/lodgings/${lodging.id}", lodging.toApiDataModel())
+    }
+
+    override suspend fun deleteLodging(tripId: String, lodgingId: String) {
+        deleteCommand("trips/$tripId/lodgings/$lodgingId")
+    }
+
+    override suspend fun saveTimedPlace(tripId: String, timedPlace: TimedPlace) {
+        putCommand("trips/$tripId/places/${timedPlace.id}", timedPlace.toApiDataModel())
+    }
+
+    override suspend fun deleteTimedPlace(tripId: String, timedPlaceId: String) {
+        deleteCommand("trips/$tripId/places/$timedPlaceId")
+    }
 
     override suspend fun saveRestaurantReservation(
         tripId: String,
         restaurantReservation: RestaurantReservation,
-    ) = commands.saveRestaurantReservation(tripId, restaurantReservation)
-
-    override suspend fun saveFlexibleSection(
-        tripId: String,
-        flexibleSection: FlexibleDaySection,
-    ) = commands.saveFlexibleSection(tripId, flexibleSection)
-
-    override suspend fun deleteFlight(tripId: String, flightId: String) =
-        commands.deleteFlight(tripId, flightId)
-
-    override suspend fun deleteLodging(tripId: String, lodgingId: String) =
-        commands.deleteLodging(tripId, lodgingId)
-
-    override suspend fun deleteTimedPlace(tripId: String, timedPlaceId: String) =
-        commands.deleteTimedPlace(tripId, timedPlaceId)
+    ) {
+        putCommand(
+            "trips/$tripId/restaurants/${restaurantReservation.id}",
+            restaurantReservation.toApiDataModel(),
+        )
+    }
 
     override suspend fun deleteRestaurantReservation(
         tripId: String,
         restaurantReservationId: String,
-    ) = commands.deleteRestaurantReservation(tripId, restaurantReservationId)
+    ) {
+        deleteCommand("trips/$tripId/restaurants/$restaurantReservationId")
+    }
 
-    override suspend fun deleteFlexibleSection(tripId: String, flexibleSectionId: String) =
-        commands.deleteFlexibleSection(tripId, flexibleSectionId)
+    override suspend fun saveFlexibleSection(tripId: String, flexibleSection: FlexibleDaySection) {
+        putCommand(
+            "trips/$tripId/flexible-sections/${flexibleSection.id}",
+            flexibleSection.toApiDataModel(),
+        )
+    }
+
+    override suspend fun deleteFlexibleSection(tripId: String, flexibleSectionId: String) {
+        deleteCommand("trips/$tripId/flexible-sections/$flexibleSectionId")
+    }
+
+    private suspend inline fun <reified T> putCommand(path: String, body: T) {
+        put(path, commandJson.encodeToString(body)).ensureCommandSucceeded(path)
+    }
+
+    private suspend fun deleteCommand(path: String) {
+        delete(path).ensureCommandSucceeded(path)
+    }
+
+    private suspend fun HttpResponse.ensureCommandSucceeded(path: String) {
+        if (!status.isSuccess()) {
+            throw TripCommandException("Command to $path failed with status ${status.value}: ${bodyAsText()}")
+        }
+    }
 }

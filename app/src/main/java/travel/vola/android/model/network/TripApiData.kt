@@ -10,8 +10,8 @@ import kotlinx.serialization.Serializable
 interface TripApiData {
 
     // Only the fields the caller sets are included on the wire; the API
-    // treats a missing field as "leave this alone" (see TripCommandDataSource
-    // callers in ApiTripCommandDataSource).
+    // treats a missing field as "leave this alone" (see TripRepositoryImpl's
+    // putCommand callers).
     @Serializable
     data class TripUpdate(
         val name: String? = null,

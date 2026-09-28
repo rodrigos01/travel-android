@@ -9,7 +9,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.firebase.FirebaseTripDataSource
 import travel.vola.android.model.genai.GenAIRepository
-import travel.vola.android.model.network.ApiTripCommandDataSource
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.model.repository.TripRepositoryImpl
 
@@ -23,12 +22,8 @@ class ViewModelFactoryDependencies(
         FirebaseTripDataSource(FirebaseFirestore.getInstance())
     }
 
-    private val apiTripCommandDataSource by lazy {
-        ApiTripCommandDataSource()
-    }
-
     val tripRepository: TripRepository by lazy {
-        TripRepositoryImpl(firebaseTripDataSource, apiTripCommandDataSource)
+        TripRepositoryImpl(firebaseTripDataSource)
     }
     val placeRepository: PlaceRepository by lazy {
         PlaceRepository()
