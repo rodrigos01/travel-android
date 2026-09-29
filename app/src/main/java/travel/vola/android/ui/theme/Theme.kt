@@ -10,6 +10,8 @@ import androidx.compose.ui.graphics.Color
 
 private val lightScheme = lightColorScheme(
     primary = primaryLight,
+    primaryFixed = primaryFixed,
+    onPrimaryFixed = onPrimaryLight,
     onPrimary = onPrimaryLight,
     primaryContainer = primaryContainerLight,
     onPrimaryContainer = onPrimaryContainerLight,
@@ -48,6 +50,8 @@ private val lightScheme = lightColorScheme(
 
 private val darkScheme = darkColorScheme(
     primary = primaryDark,
+    primaryFixed = primaryFixed,
+    onPrimaryFixed = onPrimaryLight,
     onPrimary = onPrimaryDark,
     primaryContainer = primaryContainerDark,
     onPrimaryContainer = onPrimaryContainerDark,

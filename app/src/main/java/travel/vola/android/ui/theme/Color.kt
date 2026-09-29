@@ -2,6 +2,7 @@ package travel.vola.android.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+val primaryFixed = Color(0xFFFFBA31)
 val primaryLight = Color(0xFF7C580D)
 val onPrimaryLight = Color(0xFFFFFFFF)
 val primaryContainerLight = Color(0xFFFFDEAB)

@@ -10,10 +10,14 @@ if (localPropertiesFile.exists()) {
     localProperties.load(FileInputStream(localPropertiesFile))
 }
 
-val mapsApiKey: String = System.getenv("MAPS_API_KEY") ?: localProperties.getProperty("MAPS_API_KEY", "")
-val keystorePass: String = System.getenv("KEYSTORE_PASSWORD") ?: localProperties.getProperty("KEYSTORE_PASSWORD", "")
-val keyAliasValue: String = System.getenv("KEY_ALIAS") ?: localProperties.getProperty("KEY_ALIAS", "")
-val keyPass: String = System.getenv("KEY_PASSWORD") ?: localProperties.getProperty("KEY_PASSWORD", "")
+val mapsApiKey: String =
+    System.getenv("MAPS_API_KEY") ?: localProperties.getProperty("MAPS_API_KEY", "")
+val keystorePass: String =
+    System.getenv("KEYSTORE_PASSWORD") ?: localProperties.getProperty("KEYSTORE_PASSWORD", "")
+val keyAliasValue: String =
+    System.getenv("KEY_ALIAS") ?: localProperties.getProperty("KEY_ALIAS", "")
+val keyPass: String =
+    System.getenv("KEY_PASSWORD") ?: localProperties.getProperty("KEY_PASSWORD", "")
 
 plugins {
     id("com.android.application")
@@ -46,8 +50,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName =
-            "1.0" + System.getenv("BUILD_NUMBER")?.let { ".$it" } +
-            System.getenv("BRANCH_NAME")
+            "1.0" + System.getenv("BUILD_NUMBER")?.let { ".$it" } + System.getenv("BRANCH_NAME")
                 ?.let { ".$it" }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -69,6 +72,7 @@ android {
             isMinifyEnabled = false
             isDebuggable = true
             applicationIdSuffix = ".debug"
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     flavorDimensions += "host"
@@ -104,14 +108,13 @@ android {
             all {
                 it.testLogging {
                     it.outputs.upToDateWhen { false }
-                    events =
-                        setOf(
-                            TestLogEvent.PASSED,
-                            TestLogEvent.SKIPPED,
-                            TestLogEvent.FAILED,
-                            TestLogEvent.STANDARD_OUT,
-                            TestLogEvent.STANDARD_ERROR,
-                        )
+                    events = setOf(
+                        TestLogEvent.PASSED,
+                        TestLogEvent.SKIPPED,
+                        TestLogEvent.FAILED,
+                        TestLogEvent.STANDARD_OUT,
+                        TestLogEvent.STANDARD_ERROR,
+                    )
                 }
                 it.jvmArgs("-Djava.locale.providers=COMPAT", "-Dfile.encoding=UTF-8")
             }
