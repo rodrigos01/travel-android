@@ -10,11 +10,14 @@ if (localPropertiesFile.exists()) {
     localProperties.load(FileInputStream(localPropertiesFile))
 }
 
-val mapsApiKey: String = System.getenv("MAPS_API_KEY") ?: localProperties.getProperty("MAPS_API_KEY", "")
-val ktorClientSecret: String = System.getenv("CLIENT_SECRET") ?: localProperties.getProperty("CLIENT_SECRET", "")
-val keystorePass: String = System.getenv("KEYSTORE_PASSWORD") ?: localProperties.getProperty("KEYSTORE_PASSWORD", "")
-val keyAliasValue: String = System.getenv("KEY_ALIAS") ?: localProperties.getProperty("KEY_ALIAS", "")
-val keyPass: String = System.getenv("KEY_PASSWORD") ?: localProperties.getProperty("KEY_PASSWORD", "")
+val mapsApiKey: String =
+    System.getenv("MAPS_API_KEY") ?: localProperties.getProperty("MAPS_API_KEY", "")
+val keystorePass: String =
+    System.getenv("KEYSTORE_PASSWORD") ?: localProperties.getProperty("KEYSTORE_PASSWORD", "")
+val keyAliasValue: String =
+    System.getenv("KEY_ALIAS") ?: localProperties.getProperty("KEY_ALIAS", "")
+val keyPass: String =
+    System.getenv("KEY_PASSWORD") ?: localProperties.getProperty("KEY_PASSWORD", "")
 
 plugins {
     id("com.android.application")
@@ -47,13 +50,11 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName =
-            "1.0" + System.getenv("BUILD_NUMBER")?.let { ".$it" } +
-            System.getenv("BRANCH_NAME")
+            "1.0" + System.getenv("BUILD_NUMBER")?.let { ".$it" } + System.getenv("BRANCH_NAME")
                 ?.let { ".$it" }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
-        buildConfigField("String", "CLIENT_SECRET", "\"$ktorClientSecret\"")
     }
     buildTypes {
         release {
@@ -71,6 +72,7 @@ android {
             isMinifyEnabled = false
             isDebuggable = true
             applicationIdSuffix = ".debug"
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     flavorDimensions += "host"
@@ -82,12 +84,10 @@ android {
                 "SERVER_URL",
                 "\"https://travel-api-master-rlbhlyi7ja-uc.a.run.app\"",
             )
-            buildConfigField("boolean", "REQUIRES_AUTH", "true")
         }
         create("local") {
             dimension = "host"
             buildConfigField("String", "SERVER_URL", "\"http://10.0.2.2:5000\"")
-            buildConfigField("boolean", "REQUIRES_AUTH", "false")
         }
     }
     buildFeatures {
@@ -108,14 +108,13 @@ android {
             all {
                 it.testLogging {
                     it.outputs.upToDateWhen { false }
-                    events =
-                        setOf(
-                            TestLogEvent.PASSED,
-                            TestLogEvent.SKIPPED,
-                            TestLogEvent.FAILED,
-                            TestLogEvent.STANDARD_OUT,
-                            TestLogEvent.STANDARD_ERROR,
-                        )
+                    events = setOf(
+                        TestLogEvent.PASSED,
+                        TestLogEvent.SKIPPED,
+                        TestLogEvent.FAILED,
+                        TestLogEvent.STANDARD_OUT,
+                        TestLogEvent.STANDARD_ERROR,
+                    )
                 }
                 it.jvmArgs("-Djava.locale.providers=COMPAT", "-Dfile.encoding=UTF-8")
             }
@@ -145,14 +144,19 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
     // Firebase
-    implementation(libs.play.services.auth)
     implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.ai)
+    // Sign in with Google (Credential Manager)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.play.services)
     // Compose
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling)
@@ -178,8 +182,6 @@ dependencies {
     implementation(libs.ktor.client.auth)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.encoding)
-    // DataStore
-    implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.palette.ktx)
 
     implementation(libs.material.kolor) // Or latest version

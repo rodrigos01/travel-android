@@ -1,16 +1,19 @@
 package travel.vola.android.extensions
 
-import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
+// Query rather than CollectionReference so a filtered query (e.g.
+// collection.whereEqualTo(...)) can use this too - CollectionReference is
+// itself a Query, so every existing call site keeps working unchanged.
 @ExperimentalCoroutinesApi
-inline fun <reified T : Any> CollectionReference.asFlow(noinline converter: ((DocumentSnapshot) -> T)? = null): Flow<List<T>> {
+inline fun <reified T : Any> Query.asFlow(noinline converter: ((DocumentSnapshot) -> T)? = null): Flow<List<T>> {
     return callbackFlow {
         val registration = addSnapshotListener { snapshot, exception ->
             val values = snapshot?.documents?.let { snapshotListToObject(it, converter) }

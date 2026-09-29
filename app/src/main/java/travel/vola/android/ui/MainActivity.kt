@@ -1,6 +1,5 @@
 package travel.vola.android.ui
 
-import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
@@ -18,6 +17,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.toRoute
+import com.google.firebase.auth.FirebaseAuth
 import travel.vola.android.common.ui.components.OverlayHostProvider
 import travel.vola.android.di.LocalViewModelCreationExtras
 import travel.vola.android.di.initializeViewModelCreationExtras
@@ -25,18 +25,13 @@ import travel.vola.android.ui.home.HomeScreen
 import travel.vola.android.ui.home.HomeScreenDestination
 import travel.vola.android.ui.lodgingsearch.composable.LodgingSearch
 import travel.vola.android.ui.lodgingsearch.composable.LodgingSearchDestination
+import travel.vola.android.ui.signin.SignInScreen
+import travel.vola.android.ui.signin.SignInScreenDestination
 import travel.vola.android.ui.theme.AppTheme
 import travel.vola.android.ui.trip.creation.assistant.composable.TripCreationAssistant
 import travel.vola.android.ui.trip.creation.assistant.composable.TripCreationAssistantDestination
 import travel.vola.android.ui.trip.eventlist.composable.TripDetails
 import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
-
-lateinit var applicationContext: Context
-    private set
-
-private fun setApplicationContext(context: Context) {
-    applicationContext = context
-}
 
 @ExperimentalMaterial3Api
 class MainActivity : ComponentActivity() {
@@ -44,7 +39,6 @@ class MainActivity : ComponentActivity() {
     private val viewModel: StartupViewModel by viewModels(factoryProducer = { StartupViewModel.Factory() })
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        setApplicationContext(this.applicationContext)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent { MainScreen() }
@@ -71,10 +65,20 @@ class MainActivity : ComponentActivity() {
             }
             OverlayHostProvider {
                 CompositionLocalProvider(LocalViewModelCreationExtras provides viewModelCreationExtras) {
+                    val startDestination = remember {
+                        if (FirebaseAuth.getInstance().currentUser != null) {
+                            HomeScreenDestination.ROUTE
+                        } else {
+                            SignInScreenDestination.ROUTE
+                        }
+                    }
                     NavHost(
                         navController = navController,
-                        startDestination = HomeScreenDestination.ROUTE,
+                        startDestination = startDestination,
                     ) {
+                        composable(SignInScreenDestination.ROUTE) {
+                            SignInScreen()
+                        }
                         composable(HomeScreenDestination.ROUTE) {
                             HomeScreen(navController)
                         }

@@ -1,11 +1,14 @@
 package travel.vola.android.model.firebase
 
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.EventListener
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
@@ -31,11 +34,14 @@ class FirebaseTripRepositoryTest {
         on { id } doReturn MockData.trip.id
     }
 
-    private val mockCollectionReference = mock<CollectionReference> {
+    private val mockQuery = mock<Query> {
         on { addSnapshotListener(any()) } doAnswer {
             it.getArgument<EventListener<QuerySnapshot>>(0).onEvent(mockQuerySnapshot, null)
             ListenerRegistration { }
         }
+    }
+    private val mockCollectionReference = mock<CollectionReference> {
+        on { whereEqualTo(any<String>(), any()) } doReturn mockQuery
     }
     private val mockQuerySnapshot = mock<QuerySnapshot> {
         on { documents } doReturn listOf(mockDocumentSnapshot)
@@ -44,18 +50,25 @@ class FirebaseTripRepositoryTest {
         on { collection(any()) } doReturn mockCollectionReference
         on { document(any()) } doReturn mockDocumentReference
     }
+    private val mockUser = mock<FirebaseUser> {
+        on { uid } doReturn "owner-uid"
+    }
+    private val firebaseAuth = mock<FirebaseAuth> {
+        on { currentUser } doReturn mockUser
+    }
 
     @Test
     fun shouldGetTripsFromFirestore() = runTest {
-        val repository = FirebaseTripDataSource(firestore)
+        val repository = FirebaseTripDataSource(firestore, firebaseAuth)
 
         Assert.assertEquals(listOf(MockData.trip.toAppDataModel()), repository.trips.expectItem())
         verify(firestore).collection("/trips")
+        verify(mockCollectionReference).whereEqualTo("ownerId", "owner-uid")
     }
 
     @Test
     fun shouldGetTripFromFirestore() = runTest {
-        val repository = FirebaseTripDataSource(firestore)
+        val repository = FirebaseTripDataSource(firestore, firebaseAuth)
 
         val tripObservable = repository.findTripById("myTrip")
 
@@ -65,7 +78,7 @@ class FirebaseTripRepositoryTest {
 
     @Test
     fun shouldGetTripFlights() = runTest {
-        val repository = FirebaseTripDataSource(firestore)
+        val repository = FirebaseTripDataSource(firestore, firebaseAuth)
 
         val flightsObservable = repository.getTripFlights("myTrip")
 
@@ -78,7 +91,7 @@ class FirebaseTripRepositoryTest {
 
     @Test
     fun shouldGetTripHotels() = runTest {
-        val repository = FirebaseTripDataSource(firestore)
+        val repository = FirebaseTripDataSource(firestore, firebaseAuth)
 
         val hotelsObservable = repository.getTripHotels("myTrip")
 

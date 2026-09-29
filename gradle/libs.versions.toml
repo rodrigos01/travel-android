@@ -10,13 +10,13 @@ activityCompose = "1.12.1"
 material = "1.13.0"
 material3 = "1.5.0-alpha10"
 material3Adaptative = "1.2.0"
-datastorePreferences = "1.2.0"
 mapsCompose = "6.12.2"
 coil = "2.7.0"
 coreSplashscreen = "1.2.0"
 firebaseBom = "34.7.0"
 materialKolor = "4.0.5"
-playServicesAuth = "21.4.0"
+credentials = "1.6.0"
+googleid = "1.1.1"
 navigation = "2.9.6"
 ktor = "3.3.3"
 androidxWindow = "1.5.1"
@@ -37,7 +37,6 @@ spotless = "6.25.0"
 androidx-adaptive-layout-android = { module = "androidx.compose.material3.adaptive:adaptive-layout-android", version.ref = "material3Adaptative" }
 androidx-adaptive-layout = { module = "androidx.compose.material3.adaptive:adaptive-layout", version.ref = "material3Adaptative" }
 androidx-core-testing = { module = "androidx.arch.core:core-testing", version.ref = "coreTesting" }
-androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
 androidx-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
@@ -62,7 +61,9 @@ compose-material-icons = { module = "androidx.compose.material:material-icons-ex
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 # Coil
 coil = { module = "io.coil-kt:coil", version.ref = "coil" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
@@ -75,9 +76,11 @@ compose-text-googlefonts = { group = "androidx.compose.ui", name = "ui-text-goog
 # Firebase
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 firebase-ai = { module = "com.google.firebase:firebase-ai" }
+kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutines" }
 # Navigation
 navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigation" }
 navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigation" }
