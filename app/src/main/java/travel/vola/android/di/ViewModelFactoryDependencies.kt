@@ -1,5 +1,6 @@
 package travel.vola.android.di
 
+import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.lifecycle.viewmodel.CreationExtras
@@ -11,6 +12,8 @@ import travel.vola.android.model.PlaceRepository
 import travel.vola.android.model.firebase.FirebaseTripDataSource
 import travel.vola.android.model.genai.GenAIRepository
 import travel.vola.android.model.repository.AuthRepository
+import travel.vola.android.model.repository.CredentialManagerGoogleIdTokenProvider
+import travel.vola.android.model.repository.GoogleIdTokenProvider
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.model.repository.TripRepositoryImpl
 
@@ -18,6 +21,7 @@ private val FACTORY_DEPENDENCIES_KEY = CreationExtras.Key<ViewModelFactoryDepend
 
 class ViewModelFactoryDependencies(
     val navController: NavController,
+    private val activityContext: Context,
 ) {
 
     private val firebaseAuth by lazy {
@@ -45,13 +49,17 @@ class ViewModelFactoryDependencies(
     val authRepository: AuthRepository by lazy {
         AuthRepository(firebaseAuth)
     }
+
+    val googleIdTokenProvider: GoogleIdTokenProvider by lazy {
+        CredentialManagerGoogleIdTokenProvider(activityContext)
+    }
 }
 
 fun ComponentActivity.initializeViewModelCreationExtras(
     navController: NavController,
 ): CreationExtras = MutableCreationExtras().also { extras ->
     extras[FACTORY_DEPENDENCIES_KEY] =
-        ViewModelFactoryDependencies(navController)
+        ViewModelFactoryDependencies(navController, activityContext = this)
 }
 
 val LocalViewModelCreationExtras = staticCompositionLocalOf<CreationExtras> { CreationExtras.Empty }

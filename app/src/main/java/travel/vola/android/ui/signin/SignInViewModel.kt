@@ -13,11 +13,13 @@ import kotlinx.coroutines.launch
 import travel.vola.android.di.factoryDependencies
 import travel.vola.android.extensions.viewModelFactory
 import travel.vola.android.model.repository.AuthRepository
+import travel.vola.android.model.repository.GoogleIdTokenProvider
 import travel.vola.android.ui.home.HomeScreenDestination
 
 class SignInViewModel private constructor(
     private val navController: NavController,
     private val authRepository: AuthRepository,
+    private val googleIdTokenProvider: GoogleIdTokenProvider,
 ) : ViewModel() {
 
     enum class Mode { SIGN_IN, SIGN_UP }
@@ -59,12 +61,10 @@ class SignInViewModel private constructor(
         }
     }
 
-    fun onGoogleIdTokenReceived(idToken: String) {
-        runCatchingAuth { authRepository.signInWithGoogleIdToken(idToken) }
-    }
-
-    fun onGoogleSignInFailed(message: String?) {
-        _uiState.update { it.copy(errorMessage = message) }
+    fun onGoogleSignInTapped() {
+        runCatchingAuth {
+            authRepository.signInWithGoogleIdToken(googleIdTokenProvider.getIdToken())
+        }
     }
 
     private fun runCatchingAuth(block: suspend () -> Unit) {
@@ -84,6 +84,10 @@ class SignInViewModel private constructor(
     }
 
     class Factory : ViewModelProvider.Factory by viewModelFactory(initializer = {
-        SignInViewModel(factoryDependencies.navController, factoryDependencies.authRepository)
+        SignInViewModel(
+            factoryDependencies.navController,
+            factoryDependencies.authRepository,
+            factoryDependencies.googleIdTokenProvider,
+        )
     })
 }
