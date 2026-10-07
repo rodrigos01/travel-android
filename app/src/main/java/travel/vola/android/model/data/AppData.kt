@@ -22,6 +22,7 @@ data class Trip(
     val places: List<TimedPlace>,
     val restaurants: List<RestaurantReservation>,
     val flexibleSections: List<FlexibleDaySection>,
+    val itinerary: Itinerary? = null,
 )
 
 sealed interface TripEntity : Identifiable

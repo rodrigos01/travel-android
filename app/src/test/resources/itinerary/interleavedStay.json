@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "legs": [
+    {
+      "id": "ext-paris_2024-06-03",
+      "type": "place",
+      "title": "Paris",
+      "startDate": "2024-06-03",
+      "endDate": "2024-06-03",
+      "thumbnailUrl": null,
+      "place": {
+        "id": "id-paris",
+        "name": "Paris",
+        "address": "Paris, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-paris",
+        "source": "test"
+      },
+      "entityRef": {
+        "type": "place",
+        "id": "paris-stay"
+      },
+      "days": [
+        {
+          "date": "2024-06-03",
+          "events": [
+            {
+              "id": "paris-hotel:checkIn",
+              "type": "lodgingCheckIn",
+              "entityRef": {
+                "type": "lodging",
+                "id": "paris-hotel"
+              },
+              "timestamp": "2024-06-03T14:00:00+02:00"
+            }
+          ]
+        },
+        {
+          "date": "2024-06-04",
+          "events": [
+            {
+              "id": "ext-paris_2024-06-03:2024-06-04",
+              "type": "emptyDay"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ext-reims_2024-06-05",
+      "type": "place",
+      "title": "Reims",
+      "startDate": "2024-06-05",
+      "endDate": "2024-06-06",
+      "thumbnailUrl": null,
+      "place": {
+        "id": "id-reims",
+        "name": "Reims",
+        "address": "Reims, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-reims",
+        "source": "test"
+      },
+      "entityRef": null,
+      "days": [
+        {
+          "date": "2024-06-05",
+          "events": [
+            {
+              "id": "reims-hotel:checkIn",
+              "type": "lodgingCheckIn",
+              "entityRef": {
+                "type": "lodging",
+                "id": "reims-hotel"
+              },
+              "timestamp": "2024-06-05T14:00:00+02:00"
+            }
+          ]
+        },
+        {
+          "date": "2024-06-06",
+          "events": [
+            {
+              "id": "reims-hotel:checkOut",
+              "type": "lodgingCheckOut",
+              "entityRef": {
+                "type": "lodging",
+                "id": "reims-hotel"
+              },
+              "timestamp": "2024-06-06T11:00:00+02:00"
+            }
+          ]
+        },
+        {
+          "date": "2024-06-07",
+          "events": [
+            {
+              "id": "paris-hotel:checkOut",
+              "type": "lodgingCheckOut",
+              "entityRef": {
+                "type": "lodging",
+                "id": "paris-hotel"
+              },
+              "timestamp": "2024-06-07T11:00:00+02:00"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
