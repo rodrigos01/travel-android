@@ -1,0 +1,246 @@
+{
+  "ownerId": "owner",
+  "flights": [],
+  "lodgings": [
+    {
+      "id": "paris-hotel",
+      "name": "Hotel Paris",
+      "address": "Paris, hotel address",
+      "latitude": 0,
+      "longitude": 0,
+      "city": {
+        "id": "id-paris",
+        "name": "Paris",
+        "address": "Paris, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-paris",
+        "source": "test"
+      },
+      "checkIn": "2024-06-03T14:00:00+02:00",
+      "checkout": "2024-06-09T11:00:00+02:00"
+    }
+  ],
+  "places": [
+    {
+      "id": "moet",
+      "place": {
+        "id": "id-moet-et-chandon",
+        "name": "Moet et Chandon",
+        "address": "Moet et Chandon, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-moet-et-chandon",
+        "source": "test"
+      },
+      "time": "2024-06-04T10:00:00+02:00",
+      "hasTime": true,
+      "endTime": "2024-06-04T12:00:00+02:00",
+      "hasEndTime": true,
+      "city": {
+        "id": "id-epernay",
+        "name": "Epernay",
+        "address": "Epernay, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-epernay",
+        "source": "test"
+      }
+    }
+  ],
+  "restaurants": [
+    {
+      "id": "epernay-lunch",
+      "time": "2024-06-04T13:00:00+02:00",
+      "place": {
+        "id": "id-epernay-bistro",
+        "name": "Epernay bistro",
+        "address": "Epernay bistro, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-epernay-bistro",
+        "source": "test"
+      },
+      "city": {
+        "id": "id-epernay",
+        "name": "Epernay",
+        "address": "Epernay, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-epernay",
+        "source": "test"
+      }
+    },
+    {
+      "id": "rome-dinner",
+      "time": "2024-06-12T20:00:00+02:00",
+      "place": {
+        "id": "id-trattoria",
+        "name": "Trattoria",
+        "address": "Trattoria, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-trattoria",
+        "source": "test"
+      },
+      "city": {
+        "id": "id-rome",
+        "name": "Rome",
+        "address": "Rome, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-rome",
+        "source": "test"
+      }
+    }
+  ],
+  "flexibleSections": [],
+  "itinerary": {
+    "version": 1,
+    "legs": [
+      {
+        "id": "ext-paris_2024-06-03",
+        "type": "place",
+        "title": "Paris",
+        "startDate": "2024-06-03",
+        "endDate": "2024-06-09",
+        "thumbnailUrl": null,
+        "place": {
+          "id": "id-paris",
+          "name": "Paris",
+          "address": "Paris, address",
+          "latitude": 0,
+          "longitude": 0,
+          "timeZone": "UTC",
+          "coverImage": null,
+          "externalId": "ext-paris",
+          "source": "test"
+        },
+        "entityRef": null,
+        "days": [
+          {
+            "date": "2024-06-03",
+            "events": [
+              {
+                "id": "paris-hotel:checkIn",
+                "type": "lodgingCheckIn",
+                "entityRef": {
+                  "type": "lodging",
+                  "id": "paris-hotel"
+                },
+                "timestamp": "2024-06-03T14:00:00+02:00"
+              }
+            ]
+          },
+          {
+            "date": "2024-06-04",
+            "events": [
+              {
+                "id": "moet",
+                "type": "timedPlace",
+                "entityRef": {
+                  "type": "place",
+                  "id": "moet"
+                },
+                "timestamp": "2024-06-04T10:00:00+02:00"
+              },
+              {
+                "id": "epernay-lunch",
+                "type": "restaurant",
+                "entityRef": {
+                  "type": "restaurant",
+                  "id": "epernay-lunch"
+                },
+                "timestamp": "2024-06-04T13:00:00+02:00"
+              }
+            ]
+          },
+          {
+            "date": "2024-06-05",
+            "events": [
+              {
+                "id": "ext-paris_2024-06-03:2024-06-05:2024-06-08",
+                "type": "emptyDateRange",
+                "endDate": "2024-06-08"
+              }
+            ]
+          },
+          {
+            "date": "2024-06-09",
+            "events": [
+              {
+                "id": "paris-hotel:checkOut",
+                "type": "lodgingCheckOut",
+                "entityRef": {
+                  "type": "lodging",
+                  "id": "paris-hotel"
+                },
+                "timestamp": "2024-06-09T11:00:00+02:00"
+              }
+            ]
+          },
+          {
+            "date": "2024-06-10",
+            "events": [
+              {
+                "id": "ext-paris_2024-06-03:2024-06-10:2024-06-11",
+                "type": "emptyDateRange",
+                "endDate": "2024-06-11"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ext-rome_2024-06-12",
+        "type": "place",
+        "title": "Rome",
+        "startDate": "2024-06-12",
+        "endDate": "2024-06-12",
+        "thumbnailUrl": null,
+        "place": {
+          "id": "id-rome",
+          "name": "Rome",
+          "address": "Rome, address",
+          "latitude": 0,
+          "longitude": 0,
+          "timeZone": "UTC",
+          "coverImage": null,
+          "externalId": "ext-rome",
+          "source": "test"
+        },
+        "entityRef": null,
+        "days": [
+          {
+            "date": "2024-06-12",
+            "events": [
+              {
+                "id": "rome-dinner",
+                "type": "restaurant",
+                "entityRef": {
+                  "type": "restaurant",
+                  "id": "rome-dinner"
+                },
+                "timestamp": "2024-06-12T20:00:00+02:00"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

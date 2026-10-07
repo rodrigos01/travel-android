@@ -1,14 +1,5 @@
 package travel.vola.android.model.firebase
 
-import com.google.firebase.firestore.util.CustomClassMapper
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.longOrNull
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import travel.vola.android.extensions.zonedDateTime
@@ -17,6 +8,7 @@ import travel.vola.android.model.data.EntityRef
 import travel.vola.android.model.data.EntityType
 import travel.vola.android.model.data.ItineraryEvent
 import travel.vola.android.model.data.LegType
+import travel.vola.android.test.BackendTrips
 import java.time.LocalDate
 
 class ItineraryParsersTest {
@@ -159,15 +151,13 @@ class ItineraryParsersTest {
         assertThat(trip(itinerary(event("e", "restaurant", ref = null))).toAppDataModel().itinerary).isNull()
     }
 
-    // The documents below are what the backend's buildItinerary writes for the
-    // trips in travel-node's api/trips/itinerary/corpus.js (regenerate them
-    // there if the builder's output changes). Reading them with Firestore's own
-    // object mapper - the one tripConverter uses - checks the storage shape and
-    // these classes agree, which nothing else here can.
+    // The trips below are documents as the backend writes them (see BackendTrips), read
+    // with Firestore's own object mapper - the one tripConverter uses. That checks the
+    // storage shape and these classes agree, which nothing else here can.
 
     @Test
     fun `the backend's output for a multi-leg trip reads through the Firestore mapper`() {
-        val itinerary = readFixture("europe").toAppDataModel()
+        val itinerary = BackendTrips.trip("europe").itinerary!!
 
         assertThat(itinerary.version).isEqualTo(1)
         assertThat(itinerary.legs.map { it.type to it.title }).containsExactly(
@@ -189,7 +179,7 @@ class ItineraryParsersTest {
 
     @Test
     fun `day trips stay in the leg they happened in`() {
-        val itinerary = readFixture("excursions").toAppDataModel()
+        val itinerary = BackendTrips.trip("excursions").itinerary!!
 
         val paris = itinerary.legs.first { it.title == "Paris" }
         val ids = paris.days.flatMap { day -> day.events.map { it.id } }
@@ -199,27 +189,8 @@ class ItineraryParsersTest {
 
     @Test
     fun `a leg started by a timed place references it`() {
-        val itinerary = readFixture("interleavedStay").toAppDataModel()
+        val itinerary = BackendTrips.trip("interleavedStay").itinerary!!
 
         assertThat(itinerary.legs.first().entityRef).isEqualTo(EntityRef(EntityType.PLACE, "paris-stay"))
-    }
-
-    private fun readFixture(name: String): FirebaseData.Itinerary {
-        val text = checkNotNull(javaClass.getResource("/itinerary/$name.json")) { "missing fixture $name" }.readText()
-
-        @Suppress("UNCHECKED_CAST")
-        val map = Json.parseToJsonElement(text).toPlain() as Map<String, Any?>
-        return CustomClassMapper.convertToCustomClass(map, FirebaseData.Itinerary::class.java, null)
-    }
-
-    // What Firestore hands the mapper: Long for whole numbers, Double otherwise.
-    private fun JsonElement.toPlain(): Any? = when (this) {
-        is JsonNull -> null
-        is JsonObject -> mapValues { it.value.toPlain() }
-        is JsonArray -> map { it.toPlain() }
-        is JsonPrimitive -> when {
-            isString -> content
-            else -> booleanOrNull ?: longOrNull ?: content.toDouble()
-        }
     }
 }
