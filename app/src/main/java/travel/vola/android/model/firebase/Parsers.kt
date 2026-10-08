@@ -26,6 +26,7 @@ fun FirebaseData.Trip.toAppDataModel(): Trip {
     val appLodgings = lodgings.map { it.toAppDataModel() }
     val appPlaces = places.map { it.toAppDataModel() }
     val appRestaurants = restaurants.map { it.toAppDataModel() }
+    val appSections = flexibleSections.map { it.toAppDataModel() }
     val image =
         coverImage ?: appLodgings.firstOrNull()?.city?.coverImage
             ?: appFlights.firstOrNull()?.segments?.firstOrNull()?.airportTo?.city?.coverImage
@@ -40,7 +41,14 @@ fun FirebaseData.Trip.toAppDataModel(): Trip {
         lodgings = appLodgings,
         places = appPlaces,
         restaurants = appRestaurants,
-        flexibleSections = flexibleSections.map { it.toAppDataModel() },
+        flexibleSections = appSections,
+        // Derived data: one the app can't read is the same as none, and must
+        // not take the trip's real contents down with it.
+        itinerary = itinerary?.let {
+            runCatching {
+                it.toAppDataModel(appFlights, appLodgings, appPlaces, appRestaurants, appSections)
+            }.getOrNull()
+        },
     )
 }
 
