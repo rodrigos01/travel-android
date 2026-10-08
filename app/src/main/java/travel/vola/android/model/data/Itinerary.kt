@@ -101,6 +101,14 @@ sealed interface ItineraryEvent {
         override val timestamp get() = section.date
     }
 
+    /**
+     * A suggestion the app is showing in the place of an empty day, before the user decides on
+     * it. Never read from the backend.
+     */
+    data class Placeholder(val placeholder: SuggestionPlaceholder) : ItineraryEvent {
+        override val id get() = placeholder.timestamp.toString()
+    }
+
     /** Days with nothing planned, [start] to [end] inclusive; one day when they are the same. */
     data class EmptyDays(
         override val id: String,
