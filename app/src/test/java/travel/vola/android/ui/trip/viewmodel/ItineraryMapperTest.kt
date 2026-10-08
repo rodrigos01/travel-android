@@ -3,11 +3,8 @@ package travel.vola.android.ui.trip.viewmodel
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import travel.vola.android.extensions.zonedDateTime
-import travel.vola.android.model.data.EntityRef
-import travel.vola.android.model.data.EntityType
-import travel.vola.android.model.data.Itinerary
-import travel.vola.android.model.data.LegType
 import travel.vola.android.model.data.SuggestionPlaceholder
+import travel.vola.android.model.data.Trip
 import travel.vola.android.ui.trip.state.TripItemState.DateRangeItemState
 import travel.vola.android.ui.trip.state.TripItemState.EmptyDateItemState
 import travel.vola.android.ui.trip.state.TripItemState.EventItemState
@@ -47,6 +44,12 @@ class ItineraryMapperTest {
         )
     }
 
+    private fun map(
+        trip: Trip,
+        flexibleSectionItems: List<FlexibleDaySectionState> = emptyList(),
+        suggestions: SuggestionsUseCase.DailyItineraryState? = null,
+    ) = mapper.map(trip.itinerary, flexibleSectionItems, suggestions)
+
     /** NYC -> Porto for four nights -> NYC, as the backend lays it out. */
     private fun roundTrip() = trip {
         transit(newYork, "2024-05-10") { day("2024-05-10") { departure(outbound) } }
@@ -70,17 +73,17 @@ class ItineraryMapperTest {
     fun `a trip the backend hasn't processed yet has no rows`() {
         val unprocessed = trip { }.copy(itinerary = null)
 
-        assertThat(mapper.map(unprocessed)).isEmpty()
+        assertThat(mapper.map(null)).isEmpty()
     }
 
     @Test
     fun `a trip with an empty itinerary asks for a first plan`() {
-        assertThat(mapper.map(trip { }).labels()).containsExactly("initial")
+        assertThat(map(trip { }).labels()).containsExactly("initial")
     }
 
     @Test
     fun `a round trip is laid out leg by leg`() {
-        assertThat(mapper.map(roundTrip()).labels()).containsExactly(
+        assertThat(map(roundTrip()).labels()).containsExactly(
             "month May 2024",
             "departure New York Airport +date SINGLE",
             "place Porto May 11-May 14",
@@ -97,7 +100,7 @@ class ItineraryMapperTest {
 
     @Test
     fun `a place leg gets a header with its dates, picture and place, and a transit leg doesn't`() {
-        val items = mapper.map(roundTrip())
+        val items = map(roundTrip())
 
         val headers = items.filterIsInstance<PlaceItemState>()
         assertThat(headers).hasSize(1)
@@ -107,7 +110,6 @@ class ItineraryMapperTest {
         assertThat(header.dateEnd).isEqualTo("May 14")
         assertThat(header.sectionId).isEqualTo("Porto")
         assertThat(header.id).isEqualTo("Porto_2024-05-11")
-        assertThat(header.entityRef).isNull()
         assertThat(header.timestamp).isEqualTo(zonedDateTime("2024-05-11T10:00:00+01:00"))
     }
 
@@ -116,16 +118,16 @@ class ItineraryMapperTest {
         val withThumbnail = trip { leg(porto, "2024-05-11", "2024-05-12", thumbnailUrl = "https://example.com/t.jpg") { } }
         val withoutThumbnail = trip { leg(porto, "2024-05-11", "2024-05-12") { } }
 
-        assertThat(mapper.map(withThumbnail).filterIsInstance<PlaceItemState>().single().imageUrl)
+        assertThat(map(withThumbnail).filterIsInstance<PlaceItemState>().single().imageUrl)
             .isEqualTo("https://example.com/t.jpg")
-        assertThat(mapper.map(withoutThumbnail).filterIsInstance<PlaceItemState>().single().imageUrl)
+        assertThat(map(withoutThumbnail).filterIsInstance<PlaceItemState>().single().imageUrl)
             .isEqualTo("https://example.com/porto.jpg")
     }
 
     @Test
     fun `a header with no events is still shown`() {
         val stay = timedPlace("stay", porto, porto, "2024-05-11T00:00:00+01:00", "2024-05-14T00:00:00+01:00")
-        val items = mapper.map(trip { leg(porto, "2024-05-11", "2024-05-14", startedBy = stay) { } })
+        val items = map(trip { leg(porto, "2024-05-11", "2024-05-14", startedBy = stay) { } })
 
         assertThat(items.labels()).containsExactly("place Porto May 11-May 14", "month May 2024")
     }
@@ -133,22 +135,12 @@ class ItineraryMapperTest {
     @Test
     fun `a leg a timed place started is that place's header, and edits it`() {
         val stay = timedPlace("stay", porto, porto, "2024-05-11T00:00:00+01:00", "2024-05-14T00:00:00+01:00")
-        val header = mapper.map(trip { leg(porto, "2024-05-11", "2024-05-14", startedBy = stay) { } })
+        val header = map(trip { leg(porto, "2024-05-11", "2024-05-14", startedBy = stay) { } })
             .filterIsInstance<PlaceItemState>().single()
 
         assertThat(header.id).isEqualTo("stay")
-        assertThat(header.entityRef).isEqualTo(EntityRef(EntityType.PLACE, "stay"))
         assertThat(header.timestamp).isEqualTo(zonedDateTime("2024-05-11T00:00:00+01:00"))
     }
-
-    @Test
-    fun `a leg of a kind the app doesn't know is shown like a place`() {
-        val items = mapper.map(trip { leg(porto, "2024-05-11", "2024-05-12", type = LegType.UNKNOWN) { } })
-
-        assertThat(items.filterIsInstance<PlaceItemState>()).hasSize(1)
-    }
-
-    // ---- Months ----
 
     @Test
     fun `there is a month header the first time each month appears`() {
@@ -164,7 +156,7 @@ class ItineraryMapperTest {
             }
         }
 
-        assertThat(mapper.map(trip).filterIsInstance<MonthItemState>().map { it.month to it.year })
+        assertThat(map(trip).filterIsInstance<MonthItemState>().map { it.month to it.year })
             .containsExactly("May" to "2024", "June" to "2024", "July" to "2024")
     }
 
@@ -174,7 +166,7 @@ class ItineraryMapperTest {
             leg(porto, "2024-05-11", "2024-05-11") { day("2024-05-11") { checkIn(portoHotel) } }
         }
 
-        assertThat(mapper.map(trip).labels()).containsExactly(
+        assertThat(map(trip).labels()).containsExactly(
             "place Porto May 11-May 11",
             "month May 2024",
             "check-in Hotel Porto +date SINGLE",
@@ -183,7 +175,7 @@ class ItineraryMapperTest {
 
     @Test
     fun `a month that is already shown isn't shown again by the next leg`() {
-        assertThat(mapper.map(roundTrip()).filterIsInstance<MonthItemState>()).hasSize(1)
+        assertThat(map(roundTrip()).filterIsInstance<MonthItemState>()).hasSize(1)
     }
 
     // ---- Dates and borders ----
@@ -203,7 +195,7 @@ class ItineraryMapperTest {
             }
         }
 
-        val rows = mapper.map(trip).filterIsInstance<EventItemState>()
+        val rows = map(trip).filterIsInstance<EventItemState>()
 
         assertThat(rows.map { it.showDate }).containsExactly(true, false, false)
         assertThat(rows.map { it.backgroundStyle }).containsExactly(
@@ -215,7 +207,7 @@ class ItineraryMapperTest {
 
     @Test
     fun `a lone row is single`() {
-        val rows = mapper.map(roundTrip()).filterIsInstance<EventItemState>()
+        val rows = map(roundTrip()).filterIsInstance<EventItemState>()
 
         assertThat(rows.first().backgroundStyle).isEqualTo(EventItemState.BackgroundStyle.SINGLE)
     }
@@ -235,7 +227,7 @@ class ItineraryMapperTest {
             leg(lisbon, "2024-05-14", "2024-05-14") { day("2024-05-14") { arrival(flight) } }
         }
 
-        val rows = mapper.map(trip).filterIsInstance<EventItemState>()
+        val rows = map(trip).filterIsInstance<EventItemState>()
 
         assertThat(rows.map { it.showDate }).containsExactly(true, false, true)
         assertThat(rows.last().backgroundStyle).isEqualTo(EventItemState.BackgroundStyle.SINGLE)
@@ -243,7 +235,7 @@ class ItineraryMapperTest {
 
     @Test
     fun `the flight home doesn't show a date of its own`() {
-        val arrival = mapper.map(roundTrip()).filterIsInstance<FlightArrivalItemState>().last()
+        val arrival = map(roundTrip()).filterIsInstance<FlightArrivalItemState>().last()
 
         assertThat(arrival.airport).isEqualTo("New York Airport")
         assertThat(arrival.showDate).isFalse()
@@ -251,7 +243,7 @@ class ItineraryMapperTest {
 
     @Test
     fun `a row says which section it is in by the leg's place`() {
-        val rows = mapper.map(roundTrip()).filterIsInstance<EventItemState>()
+        val rows = map(roundTrip()).filterIsInstance<EventItemState>()
 
         assertThat(rows.map { it.sectionId }).containsExactly(
             "New York",
@@ -267,30 +259,27 @@ class ItineraryMapperTest {
 
     @Test
     fun `rows have the details of their entity, a stable id and a reference to edit it by`() {
-        val items = mapper.map(roundTrip())
+        val items = map(roundTrip())
 
         val departure = items.filterIsInstance<FlightDepartureItemState>().first()
         assertThat(departure.id).isEqualTo("out:0:departure")
         assertThat(departure.destination).isEqualTo("Porto")
         assertThat(departure.airport).isEqualTo("New York Airport")
         assertThat(departure.dayOfMonth).isEqualTo("10")
-        assertThat(departure.entityRef).isEqualTo(EntityRef(EntityType.FLIGHT, "out", segmentIndex = 0))
 
         val checkIn = items.filterIsInstance<HotelCheckInItemState>().single()
         assertThat(checkIn.id).isEqualTo("hotel:checkIn")
         assertThat(checkIn.hotelName).isEqualTo("Hotel Porto")
-        assertThat(checkIn.entityRef).isEqualTo(EntityRef(EntityType.LODGING, "hotel"))
 
         val checkOut = items.filterIsInstance<HotelCheckOutItemState>().single()
         assertThat(checkOut.id).isEqualTo("hotel:checkOut")
-        assertThat(checkOut.entityRef).isEqualTo(EntityRef(EntityType.LODGING, "hotel"))
     }
 
     @Test
     fun `a timed place and a restaurant are rows with their own ids`() {
         val visit = timedPlace("visit", place("Ribeira"), porto, "2024-05-12T10:00:00+01:00", hasStartTime = false)
         val dinner = restaurant("dinner", place("Cervejaria"), porto, "2024-05-12T20:00:00+01:00")
-        val items = mapper.map(
+        val items = map(
             trip {
                 leg(porto, "2024-05-12", "2024-05-12") {
                     day("2024-05-12") {
@@ -306,11 +295,9 @@ class ItineraryMapperTest {
         assertThat(place.placeName).isEqualTo("Ribeira")
         assertThat(place.cityName).isEqualTo("Porto")
         assertThat(place.showTime).isFalse()
-        assertThat(place.entityRef).isEqualTo(EntityRef(EntityType.PLACE, "visit"))
         val reservation = items.filterIsInstance<RestaurantReservationItemState>().single()
         assertThat(reservation.id).isEqualTo("dinner")
         assertThat(reservation.restaurantName).isEqualTo("Cervejaria")
-        assertThat(reservation.entityRef).isEqualTo(EntityRef(EntityType.RESTAURANT, "dinner"))
     }
 
     @Test
@@ -320,17 +307,8 @@ class ItineraryMapperTest {
             leg(porto, "2024-05-12", "2024-05-12") { day("2024-05-12") { departure(connection, segment = 0) } }
         }
 
-        val departure = mapper.map(trip).filterIsInstance<FlightDepartureItemState>().single()
+        val departure = map(trip).filterIsInstance<FlightDepartureItemState>().single()
         assertThat(departure.destination).isEqualTo("Nice")
-    }
-
-    @Test
-    fun `a row whose entity is no longer on the trip is left out`() {
-        val trip = roundTrip().let { it.copy(lodgings = emptyList()) }
-
-        val labels = mapper.map(trip).labels()
-
-        assertThat(labels).noneMatch { it.startsWith("check-") }
     }
 
     @Test
@@ -355,12 +333,11 @@ class ItineraryMapperTest {
             searchResults = emptyList(),
         )
 
-        val rows = mapper.map(trip, flexibleSectionItems = listOf(known)).filterIsInstance<FlexibleDaySectionState>()
+        val rows = map(trip, flexibleSectionItems = listOf(known)).filterIsInstance<FlexibleDaySectionState>()
 
         assertThat(rows.map { it.name }).containsExactly("My day out", "Day in Porto")
         assertThat(rows.map { it.showDate }).containsExactly(true, true)
         assertThat(rows.map { it.isGenerated }).containsExactly(false, true)
-        assertThat(rows.first().entityRef).isEqualTo(EntityRef(EntityType.FLEXIBLE_SECTION, "day-out"))
     }
 
     // ---- Empty days ----
@@ -376,7 +353,7 @@ class ItineraryMapperTest {
             }
         }
 
-        val items = mapper.map(trip)
+        val items = map(trip)
 
         val range = items.filterIsInstance<DateRangeItemState>().single()
         assertThat(range.id).isEqualTo("empty_2024-05-12_2024-05-18")
@@ -390,7 +367,7 @@ class ItineraryMapperTest {
 
     @Test
     fun `an empty row is dated the day it starts, at the time of the row before it`() {
-        val items = mapper.map(roundTrip())
+        val items = map(roundTrip())
 
         val range = items.filterIsInstance<DateRangeItemState>().single()
         // The last row before it was the 13:00 check-in on the 11th.
@@ -416,7 +393,7 @@ class ItineraryMapperTest {
 
     @Test
     fun `a suggestion in the middle of a range splits it`() {
-        val items = mapper.map(emptyStay, suggestions = suggestions(listOf(placeholderOn("2024-05-15"))))
+        val items = map(emptyStay, suggestions = suggestions(listOf(placeholderOn("2024-05-15"))))
 
         assertThat(items.labels()).containsSubsequence(
             "range 12-14",
@@ -427,8 +404,8 @@ class ItineraryMapperTest {
 
     @Test
     fun `a suggestion at the edge of a range shortens it`() {
-        val atStart = mapper.map(emptyStay, suggestions = suggestions(listOf(placeholderOn("2024-05-12"))))
-        val atEnd = mapper.map(emptyStay, suggestions = suggestions(listOf(placeholderOn("2024-05-18"))))
+        val atStart = map(emptyStay, suggestions = suggestions(listOf(placeholderOn("2024-05-12"))))
+        val atEnd = map(emptyStay, suggestions = suggestions(listOf(placeholderOn("2024-05-18"))))
 
         assertThat(atStart.labels()).containsSubsequence("placeholder +date SINGLE", "range 13-18")
         assertThat(atEnd.labels()).containsSubsequence("range 12-17", "placeholder +date SINGLE")
@@ -451,8 +428,8 @@ class ItineraryMapperTest {
             }
         }
 
-        val cutDown = mapper.map(twoDays, suggestions = suggestions(listOf(placeholderOn("2024-05-12"))))
-        val gone = mapper.map(oneDay, suggestions = suggestions(listOf(placeholderOn("2024-05-12"))))
+        val cutDown = map(twoDays, suggestions = suggestions(listOf(placeholderOn("2024-05-12"))))
+        val gone = map(oneDay, suggestions = suggestions(listOf(placeholderOn("2024-05-12"))))
 
         assertThat(cutDown.labels()).containsSubsequence("placeholder +date SINGLE", "empty 13")
         assertThat(gone.labels()).noneMatch { it.startsWith("range") || it.startsWith("empty") }
@@ -461,7 +438,7 @@ class ItineraryMapperTest {
 
     @Test
     fun `several suggestions in one range each take their day`() {
-        val items = mapper.map(
+        val items = map(
             emptyStay,
             suggestions = suggestions(listOf(placeholderOn("2024-05-13"), placeholderOn("2024-05-15"))),
         )
@@ -478,7 +455,7 @@ class ItineraryMapperTest {
 
     @Test
     fun `the empty rows still start where a plan added there should`() {
-        val items = mapper.map(emptyStay, suggestions = suggestions(listOf(placeholderOn("2024-05-15"))))
+        val items = map(emptyStay, suggestions = suggestions(listOf(placeholderOn("2024-05-15"))))
 
         val after = items.filterIsInstance<DateRangeItemState>().last()
         assertThat(after.dayOfMonthStart).isEqualTo("16")
@@ -506,14 +483,13 @@ class ItineraryMapperTest {
         )
         val day = SuggestionsUseCase.SuggestedDay(zonedDateTime("2024-05-11T00:00:00+01:00"), listOf(visit), emptyList())
 
-        val items = mapper.map(trip, suggestions = suggestions(days = listOf(day)))
+        val items = map(trip, suggestions = suggestions(days = listOf(day)))
 
         assertThat(items.labels()).containsSubsequence(
             "arrival Porto Airport +date TOP",
             "place-visit Ribeira MIDDLE",
             "check-in Hotel Porto BOTTOM",
         )
-        assertThat(items.filterIsInstance<TimedPlaceItemState>().single().entityRef).isNull()
     }
 
     @Test
@@ -521,10 +497,9 @@ class ItineraryMapperTest {
         val section = flexibleSection("suggested-day", porto, "2024-05-15T00:00:00+01:00")
         val day = SuggestionsUseCase.SuggestedDay(section.date, emptyList(), listOf(section))
 
-        val items = mapper.map(emptyStay, suggestions = suggestions(days = listOf(day)))
+        val items = map(emptyStay, suggestions = suggestions(days = listOf(day)))
 
         assertThat(items.labels()).containsSubsequence("range 12-14", "section Day in Porto +date SINGLE", "range 16-18")
-        assertThat(items.filterIsInstance<FlexibleDaySectionState>().single().entityRef).isNull()
     }
 
     @Test
@@ -532,7 +507,7 @@ class ItineraryMapperTest {
         val section = flexibleSection("elsewhere", place("Rome"), "2024-05-15T00:00:00+01:00")
         val day = SuggestionsUseCase.SuggestedDay(section.date, emptyList(), listOf(section))
 
-        val items = mapper.map(emptyStay, suggestions = suggestions(days = listOf(day)))
+        val items = map(emptyStay, suggestions = suggestions(days = listOf(day)))
 
         assertThat(items.labels()).doesNotContain("section Day in Rome +date SINGLE")
         assertThat(items.labels()).contains("range 12-18")
@@ -540,16 +515,16 @@ class ItineraryMapperTest {
 
     @Test
     fun `a suggestion for a date outside the trip is left out`() {
-        val items = mapper.map(emptyStay, suggestions = suggestions(listOf(placeholderOn("2024-06-30"))))
+        val items = map(emptyStay, suggestions = suggestions(listOf(placeholderOn("2024-06-30"))))
 
         assertThat(items.labels()).doesNotContain("placeholder +date SINGLE")
     }
 
     @Test
     fun `suggestions don't change the itinerary they are laid over`() {
-        val itinerary: Itinerary = emptyStay.itinerary!!
+        val itinerary = emptyStay.itinerary
 
-        mapper.map(emptyStay, suggestions = suggestions(listOf(placeholderOn("2024-05-15"))))
+        map(emptyStay, suggestions = suggestions(listOf(placeholderOn("2024-05-15"))))
 
         assertThat(emptyStay.itinerary).isEqualTo(itinerary)
     }

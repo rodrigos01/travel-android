@@ -1,6 +1,5 @@
 package travel.vola.android.ui.trip.state
 
-import travel.vola.android.model.data.EntityRef
 import travel.vola.android.model.data.Identifiable
 import java.time.ZonedDateTime
 
@@ -30,7 +29,6 @@ sealed interface TripItemState {
         val imageUrl: String,
         val dateStart: String,
         val dateEnd: String,
-        override val entityRef: EntityRef? = null,
     ) : TripItemState, Timeable, Editable, Replaceable, SectionItemState
 
     data class DateRangeItemState(
@@ -48,13 +46,7 @@ sealed interface TripItemState {
 
     interface Replaceable : Identifiable
 
-    /**
-     * Something the user can tap to edit. [entityRef] says which entity on the trip that edits;
-     * it is null when there isn't one (a suggestion, or a place header no timed place created).
-     */
-    sealed interface Editable : Identifiable {
-        val entityRef: EntityRef?
-    }
+    sealed interface Editable : Identifiable
 
     sealed interface Focusable : TripItemState, Identifiable, Timeable {
         val showDate: Boolean
@@ -107,7 +99,6 @@ sealed interface TripItemState {
         override val sectionId: String? = null,
         val destination: String,
         val airport: String,
-        override val entityRef: EntityRef? = null,
     ) : EventItemState, Replaceable {
         override val title = destination
         override val subtitle = airport
@@ -123,7 +114,6 @@ sealed interface TripItemState {
         override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
         override val sectionId: String? = null,
         val airport: String,
-        override val entityRef: EntityRef? = null,
     ) : EventItemState, Replaceable {
         override val title = null
         override val subtitle = airport
@@ -140,7 +130,6 @@ sealed interface TripItemState {
         override val sectionId: String? = null,
         val hotelName: String,
         val hotelAddress: String,
-        override val entityRef: EntityRef? = null,
     ) : EventItemState, Replaceable {
         override val title = null
         override val subtitle = hotelAddress
@@ -156,7 +145,6 @@ sealed interface TripItemState {
         override val backgroundStyle: EventItemState.BackgroundStyle = EventItemState.BackgroundStyle.MIDDLE,
         override val sectionId: String? = null,
         val hotelName: String,
-        override val entityRef: EntityRef? = null,
     ) : EventItemState, Replaceable {
         override val title = null
         override val subtitle = hotelName
@@ -175,7 +163,6 @@ sealed interface TripItemState {
         val placeName: String,
         val cityName: String,
         val imageUrl: String,
-        override val entityRef: EntityRef? = null,
     ) : EventItemState, Replaceable {
         override val title = placeName
         override val subtitle = cityName
@@ -192,7 +179,6 @@ sealed interface TripItemState {
         override val time: String,
         val restaurantName: String,
         val restaurantAddress: String,
-        override val entityRef: EntityRef? = null,
     ) : EventItemState, Replaceable {
         override val title = null
         override val subtitle = restaurantAddress
@@ -216,7 +202,6 @@ sealed interface TripItemState {
         val categories: List<DaySectionCategory>,
         val searchResults: List<SearchResultItemState>,
         val isGenerated: Boolean = false,
-        override val entityRef: EntityRef? = null,
     ) : EventItemState, EventWithDateState, Focusable, Replaceable {
         override val time: String = ""
         override val title: String = name
@@ -242,7 +227,6 @@ sealed interface TripItemState {
         override val showDate: Boolean,
         override val dayOfMonth: String?,
         override val dayOfWeek: String?,
-        override val entityRef: EntityRef? = null,
     ) : EventItemState {
         override val id: String = timestamp.toString()
         override val time: String = ""

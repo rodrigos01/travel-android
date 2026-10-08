@@ -2,9 +2,6 @@ package travel.vola.android.ui.trip.viewmodel
 
 import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.Airport
-import travel.vola.android.model.data.EntityEventType
-import travel.vola.android.model.data.EntityRef
-import travel.vola.android.model.data.EntityType
 import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
@@ -64,7 +61,7 @@ class TripBuilder(private val id: String) {
             endDate = LocalDate.parse(end),
             thumbnailUrl = thumbnailUrl,
             place = place,
-            entityRef = startedBy?.let { EntityRef(EntityType.PLACE, it.id) },
+            startedBy = startedBy,
             days = builder.days,
         )
     }
@@ -82,7 +79,7 @@ class TripBuilder(private val id: String) {
         places = places.values.toList(),
         restaurants = restaurants.values.toList(),
         flexibleSections = sections.values.toList(),
-        itinerary = Itinerary(version = 1, legs = legs),
+        itinerary = Itinerary(legs),
     )
 }
 
@@ -101,61 +98,47 @@ class LegBuilder(private val trip: TripBuilder) {
 class DayBuilder(private val trip: TripBuilder) {
     internal val events = mutableListOf<ItineraryEvent>()
 
-    private fun entity(id: String, type: EntityEventType, ref: EntityRef, timestamp: java.time.ZonedDateTime) {
-        events += ItineraryEvent.OfEntity(id, type, ref, timestamp)
-    }
-
     fun departure(flight: Flight, segment: Int = 0) {
         trip.flights[flight.id] = flight
-        entity(
-            "${flight.id}:$segment:departure",
-            EntityEventType.FLIGHT_DEPARTURE,
-            EntityRef(EntityType.FLIGHT, flight.id, segment),
-            flight.segments[segment].departure,
-        )
+        events += ItineraryEvent.FlightDeparture("${flight.id}:$segment:departure", flight, flight.segments[segment])
     }
 
     fun arrival(flight: Flight, segment: Int = 0) {
         trip.flights[flight.id] = flight
-        entity(
-            "${flight.id}:$segment:arrival",
-            EntityEventType.FLIGHT_ARRIVAL,
-            EntityRef(EntityType.FLIGHT, flight.id, segment),
-            flight.segments[segment].arrival,
-        )
+        events += ItineraryEvent.FlightArrival("${flight.id}:$segment:arrival", flight, flight.segments[segment])
     }
 
     fun checkIn(lodging: Lodging) {
         trip.lodgings[lodging.id] = lodging
-        entity("${lodging.id}:checkIn", EntityEventType.LODGING_CHECK_IN, EntityRef(EntityType.LODGING, lodging.id), lodging.checkIn)
+        events += ItineraryEvent.LodgingCheckIn("${lodging.id}:checkIn", lodging)
     }
 
     fun checkOut(lodging: Lodging) {
         trip.lodgings[lodging.id] = lodging
-        entity("${lodging.id}:checkOut", EntityEventType.LODGING_CHECK_OUT, EntityRef(EntityType.LODGING, lodging.id), lodging.checkout)
+        events += ItineraryEvent.LodgingCheckOut("${lodging.id}:checkOut", lodging)
     }
 
     fun timedPlace(place: TimedPlace) {
         trip.places[place.id] = place
-        entity(place.id, EntityEventType.TIMED_PLACE, EntityRef(EntityType.PLACE, place.id), place.startDateTime)
+        events += ItineraryEvent.TimedPlaceVisit(place.id, place)
     }
 
     fun restaurant(restaurant: RestaurantReservation) {
         trip.restaurants[restaurant.id] = restaurant
-        entity(restaurant.id, EntityEventType.RESTAURANT, EntityRef(EntityType.RESTAURANT, restaurant.id), restaurant.dateTime)
+        events += ItineraryEvent.Restaurant(restaurant.id, restaurant)
     }
 
     fun flexibleSection(section: FlexibleDaySection) {
         trip.sections[section.id] = section
-        entity(section.id, EntityEventType.FLEXIBLE_SECTION, EntityRef(EntityType.FLEXIBLE_SECTION, section.id), section.date)
+        events += ItineraryEvent.FlexibleSection(section.id, section)
     }
 
     fun emptyDay(date: String) {
-        events += ItineraryEvent.EmptyDay("empty_$date", LocalDate.parse(date))
+        events += ItineraryEvent.EmptyDays("empty_$date", LocalDate.parse(date), LocalDate.parse(date))
     }
 
     fun emptyRange(start: String, end: String) {
-        events += ItineraryEvent.EmptyDateRange("empty_${start}_$end", LocalDate.parse(start), LocalDate.parse(end))
+        events += ItineraryEvent.EmptyDays("empty_${start}_$end", LocalDate.parse(start), LocalDate.parse(end))
     }
 }
 

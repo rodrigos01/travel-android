@@ -27,12 +27,10 @@ import travel.vola.android.extensions.getDestinations
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.viewModelFactory
 import travel.vola.android.model.PlaceRepository
-import travel.vola.android.model.data.EntityType
 import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Identifiable
 import travel.vola.android.model.data.ItineraryEvent
-import travel.vola.android.model.data.ItineraryLeg
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Mapeable
 import travel.vola.android.model.data.Place
@@ -46,7 +44,6 @@ import travel.vola.android.ui.trip.creation.usecase.AddPlanItemActionHandler
 import travel.vola.android.ui.trip.state.AddPlanItemState
 import travel.vola.android.ui.trip.state.TripItemState
 import travel.vola.android.ui.trip.state.type
-import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.contracts.ExperimentalContracts
@@ -118,7 +115,7 @@ class TripViewModel(
         flexibleSectionItems,
         suggestions,
     ) { currentTrip, sectionItems, suggestions ->
-        val items = itineraryMapper.map(currentTrip, sectionItems, suggestions)
+        val items = itineraryMapper.map(currentTrip.itinerary, sectionItems, suggestions)
         val places =
             (currentTrip.lodgings + currentTrip.places + currentTrip.restaurants + currentTrip.flexibleSections).fold(
                 mapOf<Place, PlaceState>(),
@@ -406,29 +403,16 @@ class TripViewModel(
 
     /** The place of the row's own leg; failing that, where the trip is on its day. */
     private fun findPlaceFor(item: TripItemState): Place? {
-        val sectionId = (item as? TripItemState.SectionItemState)?.sectionId?.takeIf { it.isNotEmpty() }
-        val own = sectionId?.let { id -> trip.value?.itinerary?.legs?.firstNotNullOfOrNull { leg -> leg.place?.takeIf { it.id == id } } }
+        val sectionId = (item as? TripItemState.SectionItemState)?.sectionId
+        val own = trip.value?.itinerary?.legs?.firstNotNullOfOrNull { leg -> leg.place?.takeIf { it.id == sectionId } }
         return own ?: findPlaceForTimestamp(item.timestamp)
     }
 
-    /** Where the trip is on that day: the place of the leg it falls in. */
+    /** The place of the last leg to have started by that day. */
     private fun findPlaceForTimestamp(timestamp: ZonedDateTime): Place? {
         val legs = trip.value?.itinerary?.legs?.filter { it.place != null } ?: return null
-        val date = timestamp.toLocalDate()
-        // On a travel day the legs meet; the one you arrive in is where you are.
-        return (
-            legs.lastOrNull { date in it.startDate..it.lastDate() } ?: legs.lastOrNull { it.startDate <= date }
-                ?: legs.firstOrNull()
-            )?.place
+        return (legs.lastOrNull { it.startDate <= timestamp.toLocalDate() } ?: legs.firstOrNull())?.place
     }
-
-    /** The last day the leg has anything on, empty days included. */
-    private fun ItineraryLeg.lastDate(): LocalDate = maxOf(
-        endDate,
-        days.maxOfOrNull { day ->
-            day.events.maxOfOrNull { (it as? ItineraryEvent.EmptyDateRange)?.end ?: day.date } ?: day.date
-        } ?: endDate,
-    )
 
     fun onUpdatePreferencesTapped() {
         val destinations =
@@ -497,17 +481,12 @@ class TripViewModel(
             .takeWhile { it.toLocalDate() < endDateTime.toLocalDate() }.toList()
     }
 
+    /** The entity editing this row edits: that of the event it is, or the timed place that started its leg. */
     private val TripItemState.Editable.entity: TripEntity?
         get() {
-            val currentTrip = trip.value ?: return null
-            val ref = entityRef ?: return null
-            return when (ref.type) {
-                EntityType.FLIGHT -> currentTrip.flights.firstOrNull { it.id == ref.id }
-                EntityType.LODGING -> currentTrip.lodgings.firstOrNull { it.id == ref.id }
-                EntityType.PLACE -> currentTrip.places.firstOrNull { it.id == ref.id }
-                EntityType.RESTAURANT -> currentTrip.restaurants.firstOrNull { it.id == ref.id }
-                EntityType.FLEXIBLE_SECTION -> currentTrip.flexibleSections.firstOrNull { it.id == ref.id }
-            }
+            val itinerary = trip.value?.itinerary ?: return null
+            return itinerary.events.filterIsInstance<ItineraryEvent.OfEntity>().firstOrNull { it.id == id }?.entity
+                ?: itinerary.legs.firstNotNullOfOrNull { leg -> leg.startedBy?.takeIf { it.id == id } }
         }
 
     fun setScrollState(focusedIndex: Int, firstVisibleIndex: Int) {

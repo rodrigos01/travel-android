@@ -24,7 +24,7 @@ class ItineraryMapperBackendTest {
         )
     }
 
-    private fun rows(name: String) = mapper.map(BackendTrips.trip(name))
+    private fun rows(name: String) = mapper.map(BackendTrips.trip(name).itinerary)
 
     @Test
     fun `a trip across three cities`() {
