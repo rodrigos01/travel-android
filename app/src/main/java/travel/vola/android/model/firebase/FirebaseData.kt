@@ -120,6 +120,34 @@ sealed interface FirebaseData {
         val segmentIndex: Int? = null,
     )
 
+    /** The values of [ItineraryLeg.type]. */
+    object LegTypes {
+        const val PLACE = "place"
+        const val TRANSIT = "transit"
+    }
+
+    /** The values of [ItineraryEvent.type]. */
+    object EventTypes {
+        const val FLIGHT_DEPARTURE = "flightDeparture"
+        const val FLIGHT_ARRIVAL = "flightArrival"
+        const val LODGING_CHECK_IN = "lodgingCheckIn"
+        const val LODGING_CHECK_OUT = "lodgingCheckOut"
+        const val TIMED_PLACE = "timedPlace"
+        const val RESTAURANT = "restaurant"
+        const val FLEXIBLE_SECTION = "flexibleSection"
+        const val EMPTY_DAY = "emptyDay"
+        const val EMPTY_DATE_RANGE = "emptyDateRange"
+    }
+
+    /** The values of [EntityRef.type]. */
+    object EntityTypes {
+        const val FLIGHT = "flight"
+        const val LODGING = "lodging"
+        const val PLACE = "place"
+        const val RESTAURANT = "restaurant"
+        const val FLEXIBLE_SECTION = "flexibleSection"
+    }
+
     data class TripPreferences(
         val basicInformation: BasicInformation = BasicInformation(),
         val initialParameters: TripParameters = TripParameters(),
