@@ -1,0 +1,693 @@
+{
+  "ownerId": "owner",
+  "flights": [
+    {
+      "id": "jfk-opo",
+      "segments": [
+        {
+          "airportFrom": {
+            "iata": "NEW",
+            "name": "New York Airport",
+            "timezone": "UTC",
+            "city": {
+              "id": "id-new-york",
+              "name": "New York",
+              "address": "New York, address",
+              "latitude": 0,
+              "longitude": 0,
+              "timeZone": "UTC",
+              "coverImage": null,
+              "externalId": "ext-new-york",
+              "source": "test"
+            }
+          },
+          "departure": "2024-05-10T22:05:00-04:00",
+          "airportTo": {
+            "iata": "POR",
+            "name": "Porto Airport",
+            "timezone": "UTC",
+            "city": {
+              "id": "id-porto",
+              "name": "Porto",
+              "address": "Porto, address",
+              "latitude": 0,
+              "longitude": 0,
+              "timeZone": "UTC",
+              "coverImage": null,
+              "externalId": "ext-porto",
+              "source": "test"
+            }
+          },
+          "arrival": "2024-05-11T10:00:00+01:00",
+          "cityFrom": null,
+          "cityTo": null
+        }
+      ],
+      "price": null
+    },
+    {
+      "id": "opo-nce",
+      "segments": [
+        {
+          "airportFrom": {
+            "iata": "POR",
+            "name": "Porto Airport",
+            "timezone": "UTC",
+            "city": {
+              "id": "id-porto",
+              "name": "Porto",
+              "address": "Porto, address",
+              "latitude": 0,
+              "longitude": 0,
+              "timeZone": "UTC",
+              "coverImage": null,
+              "externalId": "ext-porto",
+              "source": "test"
+            }
+          },
+          "departure": "2024-05-21T16:50:00+01:00",
+          "airportTo": {
+            "iata": "NIC",
+            "name": "Nice Airport",
+            "timezone": "UTC",
+            "city": {
+              "id": "id-nice",
+              "name": "Nice",
+              "address": "Nice, address",
+              "latitude": 0,
+              "longitude": 0,
+              "timeZone": "UTC",
+              "coverImage": null,
+              "externalId": "ext-nice",
+              "source": "test"
+            }
+          },
+          "arrival": "2024-05-21T20:15:00+02:00",
+          "cityFrom": null,
+          "cityTo": null
+        }
+      ],
+      "price": null
+    },
+    {
+      "id": "nap-jfk",
+      "segments": [
+        {
+          "airportFrom": {
+            "iata": "SOR",
+            "name": "Sorrento Airport",
+            "timezone": "UTC",
+            "city": {
+              "id": "id-sorrento",
+              "name": "Sorrento",
+              "address": "Sorrento, address",
+              "latitude": 0,
+              "longitude": 0,
+              "timeZone": "UTC",
+              "coverImage": null,
+              "externalId": "ext-sorrento",
+              "source": "test"
+            }
+          },
+          "departure": "2024-06-14T11:00:00+02:00",
+          "airportTo": {
+            "iata": "NEW",
+            "name": "New York Airport",
+            "timezone": "UTC",
+            "city": {
+              "id": "id-new-york",
+              "name": "New York",
+              "address": "New York, address",
+              "latitude": 0,
+              "longitude": 0,
+              "timeZone": "UTC",
+              "coverImage": null,
+              "externalId": "ext-new-york",
+              "source": "test"
+            }
+          },
+          "arrival": "2024-06-14T15:00:00-04:00",
+          "cityFrom": null,
+          "cityTo": null
+        }
+      ],
+      "price": null
+    }
+  ],
+  "lodgings": [
+    {
+      "id": "porto-hotel",
+      "name": "Hotel Porto",
+      "address": "Porto, hotel address",
+      "latitude": 0,
+      "longitude": 0,
+      "city": {
+        "id": "id-porto",
+        "name": "Porto",
+        "address": "Porto, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-porto",
+        "source": "test"
+      },
+      "checkIn": "2024-05-11T14:00:00+01:00",
+      "checkout": "2024-05-21T11:00:00+01:00"
+    },
+    {
+      "id": "nice-hotel",
+      "name": "Hotel Nice",
+      "address": "Nice, hotel address",
+      "latitude": 0,
+      "longitude": 0,
+      "city": {
+        "id": "id-nice",
+        "name": "Nice",
+        "address": "Nice, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-nice",
+        "source": "test"
+      },
+      "checkIn": "2024-05-21T21:00:00+02:00",
+      "checkout": "2024-06-02T11:00:00+02:00"
+    },
+    {
+      "id": "sorrento-hotel",
+      "name": "Hotel Sorrento",
+      "address": "Sorrento, hotel address",
+      "latitude": 0,
+      "longitude": 0,
+      "city": {
+        "id": "id-sorrento",
+        "name": "Sorrento",
+        "address": "Sorrento, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-sorrento",
+        "source": "test"
+      },
+      "checkIn": "2024-06-12T15:00:00+02:00",
+      "checkout": "2024-06-14T09:00:00+02:00"
+    }
+  ],
+  "places": [
+    {
+      "id": "ribeira",
+      "place": {
+        "id": "id-ribeira",
+        "name": "Ribeira",
+        "address": "Ribeira, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-ribeira",
+        "source": "test"
+      },
+      "time": "2024-05-12T10:00:00+01:00",
+      "hasTime": true,
+      "endTime": "2024-05-12T12:00:00+01:00",
+      "hasEndTime": true,
+      "city": {
+        "id": "id-porto",
+        "name": "Porto",
+        "address": "Porto, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-porto",
+        "source": "test"
+      }
+    },
+    {
+      "id": "monaco",
+      "place": {
+        "id": "id-monaco",
+        "name": "Monaco",
+        "address": "Monaco, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-monaco",
+        "source": "test"
+      },
+      "time": "2024-05-25T09:00:00+02:00",
+      "hasTime": true,
+      "endTime": null,
+      "hasEndTime": false,
+      "city": {
+        "id": "id-nice",
+        "name": "Nice",
+        "address": "Nice, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-nice",
+        "source": "test"
+      }
+    }
+  ],
+  "restaurants": [
+    {
+      "id": "porto-dinner",
+      "time": "2024-05-12T20:00:00+01:00",
+      "place": {
+        "id": "id-cervejaria",
+        "name": "Cervejaria",
+        "address": "Cervejaria, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-cervejaria",
+        "source": "test"
+      },
+      "city": {
+        "id": "id-porto",
+        "name": "Porto",
+        "address": "Porto, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-porto",
+        "source": "test"
+      }
+    },
+    {
+      "id": "nice-lunch",
+      "time": "2024-05-30T13:00:00+02:00",
+      "place": {
+        "id": "id-socca",
+        "name": "Socca",
+        "address": "Socca, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-socca",
+        "source": "test"
+      },
+      "city": {
+        "id": "id-nice",
+        "name": "Nice",
+        "address": "Nice, address",
+        "latitude": 0,
+        "longitude": 0,
+        "timeZone": "UTC",
+        "coverImage": null,
+        "externalId": "ext-nice",
+        "source": "test"
+      }
+    }
+  ],
+  "flexibleSections": [],
+  "itinerary": {
+    "version": 1,
+    "legs": [
+      {
+        "id": "ext-new-york_2024-05-10",
+        "type": "transit",
+        "title": "New York",
+        "startDate": "2024-05-10",
+        "endDate": "2024-05-10",
+        "thumbnailUrl": null,
+        "place": {
+          "id": "id-new-york",
+          "name": "New York",
+          "address": "New York, address",
+          "latitude": 0,
+          "longitude": 0,
+          "timeZone": "UTC",
+          "coverImage": null,
+          "externalId": "ext-new-york",
+          "source": "test"
+        },
+        "entityRef": null,
+        "days": [
+          {
+            "date": "2024-05-10",
+            "events": [
+              {
+                "id": "jfk-opo:0:departure",
+                "type": "flightDeparture",
+                "entityRef": {
+                  "type": "flight",
+                  "id": "jfk-opo",
+                  "segmentIndex": 0
+                },
+                "timestamp": "2024-05-10T22:05:00-04:00"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ext-porto_2024-05-11",
+        "type": "place",
+        "title": "Porto",
+        "startDate": "2024-05-11",
+        "endDate": "2024-05-21",
+        "thumbnailUrl": null,
+        "place": {
+          "id": "id-porto",
+          "name": "Porto",
+          "address": "Porto, address",
+          "latitude": 0,
+          "longitude": 0,
+          "timeZone": "UTC",
+          "coverImage": null,
+          "externalId": "ext-porto",
+          "source": "test"
+        },
+        "entityRef": null,
+        "days": [
+          {
+            "date": "2024-05-11",
+            "events": [
+              {
+                "id": "jfk-opo:0:arrival",
+                "type": "flightArrival",
+                "entityRef": {
+                  "type": "flight",
+                  "id": "jfk-opo",
+                  "segmentIndex": 0
+                },
+                "timestamp": "2024-05-11T10:00:00+01:00"
+              },
+              {
+                "id": "porto-hotel:checkIn",
+                "type": "lodgingCheckIn",
+                "entityRef": {
+                  "type": "lodging",
+                  "id": "porto-hotel"
+                },
+                "timestamp": "2024-05-11T14:00:00+01:00"
+              }
+            ]
+          },
+          {
+            "date": "2024-05-12",
+            "events": [
+              {
+                "id": "ribeira",
+                "type": "timedPlace",
+                "entityRef": {
+                  "type": "place",
+                  "id": "ribeira"
+                },
+                "timestamp": "2024-05-12T10:00:00+01:00"
+              },
+              {
+                "id": "porto-dinner",
+                "type": "restaurant",
+                "entityRef": {
+                  "type": "restaurant",
+                  "id": "porto-dinner"
+                },
+                "timestamp": "2024-05-12T20:00:00+01:00"
+              }
+            ]
+          },
+          {
+            "date": "2024-05-13",
+            "events": [
+              {
+                "id": "ext-porto_2024-05-11:2024-05-13:2024-05-20",
+                "type": "emptyDateRange",
+                "endDate": "2024-05-20"
+              }
+            ]
+          },
+          {
+            "date": "2024-05-21",
+            "events": [
+              {
+                "id": "porto-hotel:checkOut",
+                "type": "lodgingCheckOut",
+                "entityRef": {
+                  "type": "lodging",
+                  "id": "porto-hotel"
+                },
+                "timestamp": "2024-05-21T11:00:00+01:00"
+              },
+              {
+                "id": "opo-nce:0:departure",
+                "type": "flightDeparture",
+                "entityRef": {
+                  "type": "flight",
+                  "id": "opo-nce",
+                  "segmentIndex": 0
+                },
+                "timestamp": "2024-05-21T16:50:00+01:00"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ext-nice_2024-05-21",
+        "type": "place",
+        "title": "Nice",
+        "startDate": "2024-05-21",
+        "endDate": "2024-06-02",
+        "thumbnailUrl": null,
+        "place": {
+          "id": "id-nice",
+          "name": "Nice",
+          "address": "Nice, address",
+          "latitude": 0,
+          "longitude": 0,
+          "timeZone": "UTC",
+          "coverImage": null,
+          "externalId": "ext-nice",
+          "source": "test"
+        },
+        "entityRef": null,
+        "days": [
+          {
+            "date": "2024-05-21",
+            "events": [
+              {
+                "id": "opo-nce:0:arrival",
+                "type": "flightArrival",
+                "entityRef": {
+                  "type": "flight",
+                  "id": "opo-nce",
+                  "segmentIndex": 0
+                },
+                "timestamp": "2024-05-21T20:15:00+02:00"
+              },
+              {
+                "id": "nice-hotel:checkIn",
+                "type": "lodgingCheckIn",
+                "entityRef": {
+                  "type": "lodging",
+                  "id": "nice-hotel"
+                },
+                "timestamp": "2024-05-21T21:00:00+02:00"
+              }
+            ]
+          },
+          {
+            "date": "2024-05-22",
+            "events": [
+              {
+                "id": "ext-nice_2024-05-21:2024-05-22:2024-05-24",
+                "type": "emptyDateRange",
+                "endDate": "2024-05-24"
+              }
+            ]
+          },
+          {
+            "date": "2024-05-25",
+            "events": [
+              {
+                "id": "monaco",
+                "type": "timedPlace",
+                "entityRef": {
+                  "type": "place",
+                  "id": "monaco"
+                },
+                "timestamp": "2024-05-25T09:00:00+02:00"
+              }
+            ]
+          },
+          {
+            "date": "2024-05-26",
+            "events": [
+              {
+                "id": "ext-nice_2024-05-21:2024-05-26:2024-05-29",
+                "type": "emptyDateRange",
+                "endDate": "2024-05-29"
+              }
+            ]
+          },
+          {
+            "date": "2024-05-30",
+            "events": [
+              {
+                "id": "nice-lunch",
+                "type": "restaurant",
+                "entityRef": {
+                  "type": "restaurant",
+                  "id": "nice-lunch"
+                },
+                "timestamp": "2024-05-30T13:00:00+02:00"
+              }
+            ]
+          },
+          {
+            "date": "2024-05-31",
+            "events": [
+              {
+                "id": "ext-nice_2024-05-21:2024-05-31:2024-06-01",
+                "type": "emptyDateRange",
+                "endDate": "2024-06-01"
+              }
+            ]
+          },
+          {
+            "date": "2024-06-02",
+            "events": [
+              {
+                "id": "nice-hotel:checkOut",
+                "type": "lodgingCheckOut",
+                "entityRef": {
+                  "type": "lodging",
+                  "id": "nice-hotel"
+                },
+                "timestamp": "2024-06-02T11:00:00+02:00"
+              }
+            ]
+          },
+          {
+            "date": "2024-06-03",
+            "events": [
+              {
+                "id": "ext-nice_2024-05-21:2024-06-03:2024-06-11",
+                "type": "emptyDateRange",
+                "endDate": "2024-06-11"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ext-sorrento_2024-06-12",
+        "type": "place",
+        "title": "Sorrento",
+        "startDate": "2024-06-12",
+        "endDate": "2024-06-14",
+        "thumbnailUrl": null,
+        "place": {
+          "id": "id-sorrento",
+          "name": "Sorrento",
+          "address": "Sorrento, address",
+          "latitude": 0,
+          "longitude": 0,
+          "timeZone": "UTC",
+          "coverImage": null,
+          "externalId": "ext-sorrento",
+          "source": "test"
+        },
+        "entityRef": null,
+        "days": [
+          {
+            "date": "2024-06-12",
+            "events": [
+              {
+                "id": "sorrento-hotel:checkIn",
+                "type": "lodgingCheckIn",
+                "entityRef": {
+                  "type": "lodging",
+                  "id": "sorrento-hotel"
+                },
+                "timestamp": "2024-06-12T15:00:00+02:00"
+              }
+            ]
+          },
+          {
+            "date": "2024-06-13",
+            "events": [
+              {
+                "id": "ext-sorrento_2024-06-12:2024-06-13",
+                "type": "emptyDay"
+              }
+            ]
+          },
+          {
+            "date": "2024-06-14",
+            "events": [
+              {
+                "id": "sorrento-hotel:checkOut",
+                "type": "lodgingCheckOut",
+                "entityRef": {
+                  "type": "lodging",
+                  "id": "sorrento-hotel"
+                },
+                "timestamp": "2024-06-14T09:00:00+02:00"
+              },
+              {
+                "id": "nap-jfk:0:departure",
+                "type": "flightDeparture",
+                "entityRef": {
+                  "type": "flight",
+                  "id": "nap-jfk",
+                  "segmentIndex": 0
+                },
+                "timestamp": "2024-06-14T11:00:00+02:00"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ext-new-york_2024-06-14",
+        "type": "transit",
+        "title": "New York",
+        "startDate": "2024-06-14",
+        "endDate": "2024-06-14",
+        "thumbnailUrl": null,
+        "place": {
+          "id": "id-new-york",
+          "name": "New York",
+          "address": "New York, address",
+          "latitude": 0,
+          "longitude": 0,
+          "timeZone": "UTC",
+          "coverImage": null,
+          "externalId": "ext-new-york",
+          "source": "test"
+        },
+        "entityRef": null,
+        "days": [
+          {
+            "date": "2024-06-14",
+            "events": [
+              {
+                "id": "nap-jfk:0:arrival",
+                "type": "flightArrival",
+                "entityRef": {
+                  "type": "flight",
+                  "id": "nap-jfk",
+                  "segmentIndex": 0
+                },
+                "timestamp": "2024-06-14T15:00:00-04:00"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

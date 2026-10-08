@@ -5,20 +5,12 @@ import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.Airport
 import travel.vola.android.model.data.AnsweredQuestion
 import travel.vola.android.model.data.BasicInformation
-import travel.vola.android.model.data.EntityEventType
-import travel.vola.android.model.data.EntityRef
-import travel.vola.android.model.data.EntityType
 import travel.vola.android.model.data.FlexibleDayCategory
 import travel.vola.android.model.data.FlexibleDayItem
 import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.FlightSegment
 import travel.vola.android.model.data.GroupType
-import travel.vola.android.model.data.Itinerary
-import travel.vola.android.model.data.ItineraryDay
-import travel.vola.android.model.data.ItineraryEvent
-import travel.vola.android.model.data.ItineraryLeg
-import travel.vola.android.model.data.LegType
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Place
 import travel.vola.android.model.data.RestaurantReservation
@@ -26,7 +18,6 @@ import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.data.TripParameters
 import travel.vola.android.model.data.TripPreferences
-import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.TimeZone
 
@@ -35,6 +26,7 @@ fun FirebaseData.Trip.toAppDataModel(): Trip {
     val appLodgings = lodgings.map { it.toAppDataModel() }
     val appPlaces = places.map { it.toAppDataModel() }
     val appRestaurants = restaurants.map { it.toAppDataModel() }
+    val appSections = flexibleSections.map { it.toAppDataModel() }
     val image =
         coverImage ?: appLodgings.firstOrNull()?.city?.coverImage
             ?: appFlights.firstOrNull()?.segments?.firstOrNull()?.airportTo?.city?.coverImage
@@ -49,10 +41,14 @@ fun FirebaseData.Trip.toAppDataModel(): Trip {
         lodgings = appLodgings,
         places = appPlaces,
         restaurants = appRestaurants,
-        flexibleSections = flexibleSections.map { it.toAppDataModel() },
+        flexibleSections = appSections,
         // Derived data: one the app can't read is the same as none, and must
         // not take the trip's real contents down with it.
-        itinerary = itinerary?.let { runCatching { it.toAppDataModel() }.getOrNull() },
+        itinerary = itinerary?.let {
+            runCatching {
+                it.toAppDataModel(appFlights, appLodgings, appPlaces, appRestaurants, appSections)
+            }.getOrNull()
+        },
     )
 }
 
@@ -162,77 +158,6 @@ fun FirebaseData.FlexibleDaySection.toAppDataModel(): FlexibleDaySection {
         },
     )
 }
-
-fun FirebaseData.Itinerary.toAppDataModel() = Itinerary(
-    version = version,
-    legs = legs.map { it.toAppDataModel() },
-)
-
-fun FirebaseData.ItineraryLeg.toAppDataModel() = ItineraryLeg(
-    id = id,
-    type = when (type) {
-        "place" -> LegType.PLACE
-        "transit" -> LegType.TRANSIT
-        else -> LegType.UNKNOWN
-    },
-    title = title,
-    startDate = LocalDate.parse(startDate),
-    endDate = LocalDate.parse(endDate),
-    thumbnailUrl = thumbnailUrl,
-    place = place?.toAppDataModel(),
-    entityRef = entityRef?.toAppDataModel(),
-    days = days.map { it.toAppDataModel() },
-)
-
-fun FirebaseData.ItineraryDay.toAppDataModel(): ItineraryDay {
-    val day = LocalDate.parse(date)
-    // An event type this version of the app doesn't know is left out; the
-    // rest of the day is still shown.
-    return ItineraryDay(day, events.mapNotNull { it.toAppDataModel(day) })
-}
-
-private fun FirebaseData.ItineraryEvent.toAppDataModel(day: LocalDate): ItineraryEvent? {
-    val entityType = when (type) {
-        "flightDeparture" -> EntityEventType.FLIGHT_DEPARTURE
-        "flightArrival" -> EntityEventType.FLIGHT_ARRIVAL
-        "lodgingCheckIn" -> EntityEventType.LODGING_CHECK_IN
-        "lodgingCheckOut" -> EntityEventType.LODGING_CHECK_OUT
-        "timedPlace" -> EntityEventType.TIMED_PLACE
-        "restaurant" -> EntityEventType.RESTAURANT
-        "flexibleSection" -> EntityEventType.FLEXIBLE_SECTION
-        else -> null
-    }
-    return when {
-        entityType != null -> ItineraryEvent.OfEntity(
-            id = id,
-            type = entityType,
-            entityRef = entityRef?.toAppDataModel() ?: error("entityRef is required"),
-            timestamp = timestamp?.toTime() ?: error("timestamp is required"),
-        )
-
-        type == "emptyDay" -> ItineraryEvent.EmptyDay(id, day)
-        type == "emptyDateRange" -> ItineraryEvent.EmptyDateRange(
-            id = id,
-            start = day,
-            end = LocalDate.parse(endDate ?: error("endDate is required")),
-        )
-
-        else -> null
-    }
-}
-
-fun FirebaseData.EntityRef.toAppDataModel() = EntityRef(
-    type = when (type) {
-        "flight" -> EntityType.FLIGHT
-        "lodging" -> EntityType.LODGING
-        "place" -> EntityType.PLACE
-        "restaurant" -> EntityType.RESTAURANT
-        "flexibleSection" -> EntityType.FLEXIBLE_SECTION
-        else -> error("Unknown entity type $type")
-    },
-    id = id,
-    segmentIndex = segmentIndex,
-)
 
 fun String.toTime(): ZonedDateTime = zonedDateTime(this)
 
