@@ -15,6 +15,7 @@ sealed interface FirebaseData {
         val places: List<TimedPlace> = emptyList(),
         val restaurants: List<RestaurantReservation> = emptyList(),
         val flexibleSections: List<FlexibleDaySection> = emptyList(),
+        val itinerary: Itinerary? = null,
     ) : FirebaseData
 
     data class Flight(
@@ -78,6 +79,74 @@ sealed interface FirebaseData {
         val place: Place = Place(),
         val city: Place? = null,
     )
+
+    // Written by the backend (travel-node's buildItinerary) whenever the trip
+    // changes; the app only reads it. Dates are "YYYY-MM-DD", timestamps ISO
+    // offset date-times. Types are strings so a value added later reads as
+    // "unknown" instead of failing the whole document.
+    data class Itinerary(
+        val version: Int = 0,
+        val legs: List<ItineraryLeg> = emptyList(),
+    )
+
+    data class ItineraryLeg(
+        val id: String = "",
+        val type: String = "",
+        val title: String = "",
+        val startDate: String = "",
+        val endDate: String = "",
+        val thumbnailUrl: String? = null,
+        val place: Place? = null,
+        val entityRef: EntityRef? = null,
+        val days: List<ItineraryDay> = emptyList(),
+    )
+
+    data class ItineraryDay(
+        val date: String = "",
+        val events: List<ItineraryEvent> = emptyList(),
+    )
+
+    data class ItineraryEvent(
+        val id: String = "",
+        val type: String = "",
+        val entityRef: EntityRef? = null,
+        val timestamp: String? = null,
+        val endDate: String? = null,
+    )
+
+    data class EntityRef(
+        val type: String = "",
+        val id: String = "",
+        val segmentIndex: Int? = null,
+    )
+
+    /** The values of [ItineraryLeg.type]. */
+    object LegTypes {
+        const val PLACE = "place"
+        const val TRANSIT = "transit"
+    }
+
+    /** The values of [ItineraryEvent.type]. */
+    object EventTypes {
+        const val FLIGHT_DEPARTURE = "flightDeparture"
+        const val FLIGHT_ARRIVAL = "flightArrival"
+        const val LODGING_CHECK_IN = "lodgingCheckIn"
+        const val LODGING_CHECK_OUT = "lodgingCheckOut"
+        const val TIMED_PLACE = "timedPlace"
+        const val RESTAURANT = "restaurant"
+        const val FLEXIBLE_SECTION = "flexibleSection"
+        const val EMPTY_DAY = "emptyDay"
+        const val EMPTY_DATE_RANGE = "emptyDateRange"
+    }
+
+    /** The values of [EntityRef.type]. */
+    object EntityTypes {
+        const val FLIGHT = "flight"
+        const val LODGING = "lodging"
+        const val PLACE = "place"
+        const val RESTAURANT = "restaurant"
+        const val FLEXIBLE_SECTION = "flexibleSection"
+    }
 
     data class TripPreferences(
         val basicInformation: BasicInformation = BasicInformation(),

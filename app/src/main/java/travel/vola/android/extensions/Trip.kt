@@ -1,12 +1,8 @@
 package travel.vola.android.extensions
 
-import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.FlightSegment
-import travel.vola.android.model.data.Lodging
+import travel.vola.android.model.data.LegType
 import travel.vola.android.model.data.Place
-import travel.vola.android.model.data.RestaurantReservation
-import travel.vola.android.model.data.SuggestionPlaceholder
-import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.Trip
 import travel.vola.android.model.data.TripEvent
 import travel.vola.android.model.data.WithCity
@@ -18,32 +14,20 @@ data class TripDestination(
     val endDateTime: ZonedDateTime?,
 )
 
+/**
+ * The places the trip stays in, in order: the legs of the itinerary the backend built. A trip
+ * the backend hasn't processed yet has none.
+ */
 fun Trip.getDestinations(): List<TripDestination> =
-    (flights.flatMap { it.segments } + lodgings + places + restaurants + flexibleSections).flatMap {
-        when (it) {
-            is FlightSegment -> listOf(
-                it.departure to it.getPlace(it.departure),
-                it.arrival to it.getPlace(it.arrival),
+    itinerary?.legs.orEmpty().filter { it.type != LegType.TRANSIT }.mapNotNull { leg ->
+        leg.place?.let { place ->
+            val zone = place.timeZone.toZoneId()
+            TripDestination(
+                place = place,
+                startDateTime = leg.startDate.atStartOfDay(zone),
+                endDateTime = leg.endDate.atStartOfDay(zone),
             )
-
-            is Lodging -> listOf(
-                it.checkIn to it.city,
-                it.checkout to it.city,
-            )
-
-            is TimedPlace -> listOf(it.startDateTime to it.city)
-            is RestaurantReservation -> listOf(it.dateTime to it.city)
-            is FlexibleDaySection -> listOf(it.date to it.city)
-            is SuggestionPlaceholder -> listOf()
         }
-    }.sortedBy { it.first }.fold(mutableListOf()) { list, (timestamp, item) ->
-        val last = list.lastOrNull()
-        if (last?.place == item) {
-            list[list.lastIndex] = last.copy(endDateTime = timestamp)
-        } else {
-            list.add(TripDestination(item, timestamp, timestamp))
-        }
-        list
     }
 
 fun TripEvent.getPlace(referenceTime: ZonedDateTime) = when (this) {
