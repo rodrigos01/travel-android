@@ -49,20 +49,20 @@ data class ItineraryDay(
     val events: List<ItineraryEvent>,
 )
 
+/** A moment of one of the trip's entities; [entity] is what editing it edits. */
+sealed interface EntityEvent : ItineraryEvent {
+    val entity: TripEntity
+    val timestamp: ZonedDateTime
+}
+
 sealed interface ItineraryEvent {
     val id: String
-
-    /** A moment of one of the trip's entities; [entity] is what editing it edits. */
-    sealed interface OfEntity : ItineraryEvent {
-        val entity: TripEntity
-        val timestamp: ZonedDateTime
-    }
 
     data class FlightDeparture(
         override val id: String,
         val flight: Flight,
         val segment: FlightSegment,
-    ) : OfEntity {
+    ) : EntityEvent {
         override val entity get() = flight
         override val timestamp get() = segment.departure
     }
@@ -71,32 +71,32 @@ sealed interface ItineraryEvent {
         override val id: String,
         val flight: Flight,
         val segment: FlightSegment,
-    ) : OfEntity {
+    ) : EntityEvent {
         override val entity get() = flight
         override val timestamp get() = segment.arrival
     }
 
-    data class LodgingCheckIn(override val id: String, val lodging: Lodging) : OfEntity {
+    data class LodgingCheckIn(override val id: String, val lodging: Lodging) : EntityEvent {
         override val entity get() = lodging
         override val timestamp get() = lodging.checkIn
     }
 
-    data class LodgingCheckOut(override val id: String, val lodging: Lodging) : OfEntity {
+    data class LodgingCheckOut(override val id: String, val lodging: Lodging) : EntityEvent {
         override val entity get() = lodging
         override val timestamp get() = lodging.checkout
     }
 
-    data class TimedPlaceVisit(override val id: String, val place: TimedPlace) : OfEntity {
+    data class TimedPlaceVisit(override val id: String, val place: TimedPlace) : EntityEvent {
         override val entity get() = place
         override val timestamp get() = place.startDateTime
     }
 
-    data class Restaurant(override val id: String, val reservation: RestaurantReservation) : OfEntity {
+    data class Restaurant(override val id: String, val reservation: RestaurantReservation) : EntityEvent {
         override val entity get() = reservation
         override val timestamp get() = reservation.dateTime
     }
 
-    data class FlexibleSection(override val id: String, val section: FlexibleDaySection) : OfEntity {
+    data class FlexibleSection(override val id: String, val section: FlexibleDaySection) : EntityEvent {
         override val entity get() = section
         override val timestamp get() = section.date
     }
