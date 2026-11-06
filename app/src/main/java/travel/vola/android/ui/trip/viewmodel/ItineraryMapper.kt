@@ -3,6 +3,7 @@ package travel.vola.android.ui.trip.viewmodel
 import travel.vola.android.extensions.dayOfMonthString
 import travel.vola.android.extensions.dayOfWeekString
 import travel.vola.android.extensions.timeString
+import travel.vola.android.model.data.EntityEvent
 import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Itinerary
 import travel.vola.android.model.data.ItineraryEvent
@@ -104,7 +105,7 @@ class ItineraryMapper(
         private val ItineraryLeg.zone get() = place?.timeZone?.toZoneId() ?: ZoneId.systemDefault()
 
         private val ItineraryLeg.firstTimestamp
-            get() = days.asSequence().flatMap { it.events }.filterIsInstance<ItineraryEvent.OfEntity>()
+            get() = days.asSequence().flatMap { it.events }.filterIsInstance<EntityEvent>()
                 .firstOrNull()?.timestamp
 
         private fun ItineraryLeg.header(timestamp: ZonedDateTime, sectionId: String) = TripItemState.PlaceItemState(
@@ -150,7 +151,7 @@ class ItineraryMapper(
 
         private val ItineraryEvent.moment: ZonedDateTime
             get() = when (this) {
-                is ItineraryEvent.OfEntity -> timestamp
+                is EntityEvent -> timestamp
                 is ItineraryEvent.Placeholder -> placeholder.timestamp
                 is ItineraryEvent.EmptyDays -> error("Empty days have no time of day")
             }

@@ -1,5 +1,6 @@
 package travel.vola.android.ui.trip.viewmodel
 
+import travel.vola.android.model.data.EntityEvent
 import travel.vola.android.model.data.Itinerary
 import travel.vola.android.model.data.ItineraryDay
 import travel.vola.android.model.data.ItineraryEvent
@@ -72,7 +73,7 @@ private fun List<ItineraryEvent>.insertedByTime(event: ItineraryEvent): List<Iti
 
 private val ItineraryEvent.moment: ZonedDateTime?
     get() = when (this) {
-        is ItineraryEvent.OfEntity -> timestamp
+        is EntityEvent -> timestamp
         is ItineraryEvent.Placeholder -> placeholder.timestamp
         is ItineraryEvent.EmptyDays -> null
     }

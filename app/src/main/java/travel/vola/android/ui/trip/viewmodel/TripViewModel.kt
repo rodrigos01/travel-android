@@ -27,10 +27,10 @@ import travel.vola.android.extensions.getDestinations
 import travel.vola.android.extensions.toMidnight
 import travel.vola.android.extensions.viewModelFactory
 import travel.vola.android.model.PlaceRepository
+import travel.vola.android.model.data.EntityEvent
 import travel.vola.android.model.data.FlexibleDaySection
 import travel.vola.android.model.data.Flight
 import travel.vola.android.model.data.Identifiable
-import travel.vola.android.model.data.ItineraryEvent
 import travel.vola.android.model.data.Lodging
 import travel.vola.android.model.data.Mapeable
 import travel.vola.android.model.data.Place
@@ -485,7 +485,7 @@ class TripViewModel(
     private val TripItemState.Editable.entity: TripEntity?
         get() {
             val itinerary = trip.value?.itinerary ?: return null
-            return itinerary.events.filterIsInstance<ItineraryEvent.OfEntity>().firstOrNull { it.id == id }?.entity
+            return itinerary.events.filterIsInstance<EntityEvent>().firstOrNull { it.id == id }?.entity
                 ?: itinerary.legs.firstNotNullOfOrNull { leg -> leg.startedBy?.takeIf { it.id == id } }
         }
 
