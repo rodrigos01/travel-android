@@ -14,6 +14,7 @@ import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
+import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -129,6 +130,22 @@ suspend inline fun <reified T> put(
     noinline builder: HttpRequestBuilder.() -> Unit = {},
 ): HttpResponse {
     return httpClient().put(SERVER_URL) {
+        url { path(path) }
+        contentType(ContentType.Application.Json)
+        setBody(body)
+        headers {
+            append(HttpHeaders.AcceptLanguage, Locale.getDefault().language)
+        }
+        builder()
+    }
+}
+
+suspend inline fun <reified T> post(
+    path: String,
+    body: T,
+    noinline builder: HttpRequestBuilder.() -> Unit = {},
+): HttpResponse {
+    return httpClient().post(SERVER_URL) {
         url { path(path) }
         contentType(ContentType.Application.Json)
         setBody(body)

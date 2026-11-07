@@ -38,22 +38,10 @@ object GenAIData {
     )
 
     @Serializable
-    data class FollowUpQuestionsOutput(
-        val numQuestions: Int,
-        val questions: List<FollowUpQuestion>,
-    )
-
-    @Serializable
     data class FollowUpQuestion(
         val parameterSelections: List<String>,
         val question: String,
         val answers: List<String>,
-    )
-
-    @Serializable
-    data class HighLevelItineraryOptions(
-        val planningLogic: String,
-        val itineraries: List<Itinerary>,
     )
 
     @Serializable
