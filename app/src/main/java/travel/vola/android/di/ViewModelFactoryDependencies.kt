@@ -16,6 +16,7 @@ import travel.vola.android.model.repository.CredentialManagerGoogleIdTokenProvid
 import travel.vola.android.model.repository.GoogleIdTokenProvider
 import travel.vola.android.model.repository.TripRepository
 import travel.vola.android.model.repository.TripRepositoryImpl
+import travel.vola.android.model.repository.WizardRepository
 
 private val FACTORY_DEPENDENCIES_KEY = CreationExtras.Key<ViewModelFactoryDependencies>()
 
@@ -44,6 +45,10 @@ class ViewModelFactoryDependencies(
 
     val genAIRepository: GenAIRepository by lazy {
         GenAIRepository()
+    }
+
+    val wizardRepository: WizardRepository by lazy {
+        WizardRepository()
     }
 
     val authRepository: AuthRepository by lazy {

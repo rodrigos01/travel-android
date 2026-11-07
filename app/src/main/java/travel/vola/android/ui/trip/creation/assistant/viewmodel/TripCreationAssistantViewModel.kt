@@ -1,9 +1,11 @@
 package travel.vola.android.ui.trip.creation.assistant.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -14,7 +16,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import travel.vola.android.common.ui.components.SearchResult
 import travel.vola.android.di.factoryDependencies
-import travel.vola.android.extensions.dateString
 import travel.vola.android.extensions.viewModelFactory
 import travel.vola.android.extensions.zonedDateTime
 import travel.vola.android.model.data.AnsweredQuestion
@@ -23,20 +24,25 @@ import travel.vola.android.model.data.GroupType
 import travel.vola.android.model.data.TimedPlace
 import travel.vola.android.model.data.TripParameters
 import travel.vola.android.model.data.TripPreferences
-import travel.vola.android.model.genai.GenAIData
-import travel.vola.android.model.genai.GenAIRepository
+import travel.vola.android.model.data.WizardAnswer
+import travel.vola.android.model.data.WizardBasicInformation
+import travel.vola.android.model.data.WizardCity
+import travel.vola.android.model.data.WizardItinerary
+import travel.vola.android.model.data.WizardParameters
+import travel.vola.android.model.data.WizardStep
 import travel.vola.android.model.repository.GeographyAutoCompleteRepository
 import travel.vola.android.model.repository.TripRepository
+import travel.vola.android.model.repository.WizardRepository
 import travel.vola.android.ui.home.HomeScreenDestination
 import travel.vola.android.ui.trip.creation.assistant.composable.TripCreationAssistantDestination
 import travel.vola.android.ui.trip.eventlist.composable.TripDetailsDestination
-import java.time.DateTimeException
+import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.util.TimeZone
 
 class TripCreationAssistantViewModel(
     private val navController: NavController,
-    private val repository: GenAIRepository,
+    private val repository: WizardRepository,
     private val destinationAutoCompleteRepository: GeographyAutoCompleteRepository,
     private val tripRepository: TripRepository,
     private val tripId: String?,
@@ -83,6 +89,32 @@ class TripCreationAssistantViewModel(
         ),
     )
 
+    // The backend keeps the conversation with the model; each step continues from the previous
+    // step's interaction. Going back and forward again continues from the same one (the backend
+    // allows branching), so a step's id is only replaced by a newer answer to the same step.
+    private var optionsInteractionId: String? = null
+    private var followUpInteractionId: String? = null
+    private var itinerariesInteractionId: String? = null
+
+    // The conversations still open at the backend: the latest interaction of each branch. They
+    // are ended with the wizard (the backend deletes what each one continued).
+    private val openInteractions = mutableSetOf<String>()
+
+    private fun <T> WizardStep<T>.opened(continuedFrom: String?): WizardStep<T> {
+        continuedFrom?.let(openInteractions::remove)
+        openInteractions += interactionId
+        return this
+    }
+
+    private suspend fun <T> attempt(step: String, block: suspend () -> T): T? = try {
+        block()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Log.w(TAG, "Wizard step $step failed", e)
+        null
+    }
+
     private val generatedState = combine(step, compositeState) { step, state ->
         when (step) {
             is Step.BasicInformation -> state.basicInformation
@@ -123,26 +155,18 @@ class TripCreationAssistantViewModel(
         val existingParameters = tripId?.let {
             tripRepository.findTripById(it).firstOrNull()
         }?.preferences?.initialParameters
-        val startDateString = basicInformation.startDate?.dateString
-        val endDateString = basicInformation.endDate?.dateString
-        val info = GenAIData.BasicInformation(
-            destination = basicInformation.destinations.joinToString(";"),
-            dates = if (basicInformation.fixedDates) {
-                "from $startDateString to $endDateString"
-            } else {
-                "between $startDateString and $endDateString"
-            },
-            groupType = when (basicInformation.groupType) {
-                UiState.TravelGroupType.SOLO -> GenAIData.GroupType.SOLO
-                UiState.TravelGroupType.COUPLE -> GenAIData.GroupType.COUPLE
-                UiState.TravelGroupType.FAMILY -> GenAIData.GroupType.FAMILY
-                UiState.TravelGroupType.FRIENDS -> GenAIData.GroupType.FRIENDS
-                UiState.TravelGroupType.COWORKERS -> GenAIData.GroupType.COWORKERS
-            },
-            travelers = basicInformation.travelers,
-            duration = null,
+        val info = WizardBasicInformation(
+            destinations = basicInformation.destinations,
+            startDate = basicInformation.startDate?.toLocalDate() ?: return null,
+            endDate = basicInformation.endDate?.toLocalDate() ?: return null,
+            fixedDates = basicInformation.fixedDates,
+            groupType = basicInformation.groupType.asGroupType(),
+            travelers = basicInformation.travelers ?: 1,
         )
-        val options = repository.genInitialParametersOptions(info) ?: return null
+        val result = attempt("options") { repository.options(info).opened(continuedFrom = null) }
+            ?: return null
+        optionsInteractionId = result.interactionId
+        val options = result.value
         return UiState.InitialParameters(
             optionGroups = listOf(
                 options.occasions.asOptionGroup(
@@ -192,7 +216,7 @@ class TripCreationAssistantViewModel(
     }
 
     private suspend fun getInitialParametersFollowUpState(state: UiState.InitialParameters): UiState? {
-        val parameters = GenAIData.InitialParametersOptions(
+        val parameters = WizardParameters(
             occasions = state.optionGroups.selectedValues(UiState.OptionGroupType.OCCASIONS),
             interests = state.optionGroups.selectedValues(UiState.OptionGroupType.INTERESTS),
             vibe = state.optionGroups.selectedValues(UiState.OptionGroupType.VIBE),
@@ -202,11 +226,15 @@ class TripCreationAssistantViewModel(
             anythingElse = state.anythingElse,
         )
 
-        val followUpQuestions =
-            repository.genInitialParametersFollowUpQuestions(parameters) ?: return null
-        return if (followUpQuestions.questions.isNotEmpty()) {
+        val continuedFrom = optionsInteractionId ?: return null
+        val result = attempt("follow-up") {
+            repository.followUp(continuedFrom, parameters).opened(continuedFrom)
+        } ?: return null
+        followUpInteractionId = result.interactionId
+        val followUpQuestions = result.value
+        return if (followUpQuestions.isNotEmpty()) {
             UiState.InitialParametersFollowUp(
-                questions = followUpQuestions.questions.map { question ->
+                questions = followUpQuestions.map { question ->
                     UiState.FollowUpQuestion(
                         choices = question.parameterSelections,
                         question = question.question,
@@ -225,91 +253,50 @@ class TripCreationAssistantViewModel(
     }
 
     private suspend fun getHighLevelItineraryOptionsState(state: UiState): UiState.HighLevelItineraryOptions? {
-        val answeredQuestions = if (state is UiState.InitialParametersFollowUp) {
-            state.questions.map { question ->
-                GenAIData.FollowUpQuestion(
-                    parameterSelections = emptyList(),
-                    question = question.question,
-                    answers = question.answers.filter { it.isSelected }.map { it.option },
-                )
+        val answers = (state as? UiState.InitialParametersFollowUp)?.questions.orEmpty()
+            .mapNotNull { question ->
+                question.answers.firstOrNull { it.isSelected }
+                    ?.let { WizardAnswer(question.question, it.option) }
             }
-        } else {
-            emptyList()
-        }
-        val result = repository.genHighLevelItineraryOptions(answeredQuestions) ?: return null
+        val continuedFrom = followUpInteractionId ?: return null
+        val result = attempt("itineraries") {
+            repository.itineraries(continuedFrom, answers).opened(continuedFrom)
+        } ?: return null
+        itinerariesInteractionId = result.interactionId
         return UiState.HighLevelItineraryOptions(
-            itineraries = result.itineraries.map { itinerary ->
-                UiState.Itinerary(
-                    name = itinerary.name,
-                    description = itinerary.description,
-                    startDate = itinerary.startDate.parseAsDate(),
-                    endDate = itinerary.endDate.parseAsDate(),
-                    cities = itinerary.cities.map {
-                        val searchResult =
-                            destinationAutoCompleteRepository.autocomplete(it.searchQuery)
-                                .firstOrNull()
-                        val place = searchResult?.id?.let { id ->
-                            destinationAutoCompleteRepository.details(id)
-                        }
-                        UiState.ItineraryCity(
-                            name = it.name,
-                            startDate = it.startDate.parseAsDate(),
-                            endDate = it.endDate.parseAsDate(),
-                            place = place?.place,
-                        )
-                    },
-                    predictedChanges = itinerary.predictedChanges.map { UiState.Option(it) },
-                )
-            },
+            itineraries = result.value.itineraries.map { it.asUiItinerary() },
             skipEnabled = tripId == null,
         )
     }
+
+    private fun WizardItinerary.asUiItinerary() = UiState.Itinerary(
+        name = name,
+        description = description,
+        startDate = startDate.asStartOfDay(),
+        endDate = endDate.asStartOfDay(),
+        cities = cities.map {
+            UiState.ItineraryCity(
+                name = it.name,
+                startDate = it.startDate.asStartOfDay(),
+                endDate = it.endDate.asStartOfDay(),
+                place = it.place,
+            )
+        },
+        predictedChanges = predictedChanges.map { UiState.Option(it) },
+    )
 
     private suspend fun getItineraryRefinementState(
         refinement: String,
         state: UiState.HighLevelItineraryOptions,
     ): UiState.HighLevelItineraryOptions {
         val selected = state.selected ?: return state
-        val refinementResult = repository.genRefinedItinerary(
-            refinement,
-            itinerary = GenAIData.Itinerary(
-                name = selected.name,
-                description = selected.description,
-                cities = selected.cities.map {
-                    GenAIData.ItineraryCity(
-                        id = "",
-                        name = it.name,
-                        startDate = it.startDate.asDateResult(),
-                        endDate = it.endDate.asDateResult(),
-                        searchQuery = "${it.place?.name}, ${it.place?.address}",
-                    )
-                },
-                startDate = selected.startDate.asDateResult(),
-                endDate = selected.endDate.asDateResult(),
-                predictedChanges = selected.predictedChanges.map { it.option },
-            ),
-        ) ?: return state
-        val refinedItinerary = UiState.Itinerary(
-            name = refinementResult.name,
-            description = refinementResult.description,
-            cities = refinementResult.cities.map {
-                val searchResult =
-                    destinationAutoCompleteRepository.autocomplete(it.searchQuery)
-                        .firstOrNull()
-                val place = searchResult?.id?.let { id ->
-                    destinationAutoCompleteRepository.details(id)
-                }
-                UiState.ItineraryCity(
-                    name = it.name,
-                    startDate = it.startDate.parseAsDate(),
-                    endDate = it.endDate.parseAsDate(),
-                    place = place?.place,
-                )
-            },
-            startDate = refinementResult.startDate.parseAsDate(),
-            endDate = refinementResult.endDate.parseAsDate(),
-            predictedChanges = refinementResult.predictedChanges.map { UiState.Option(it) },
-        )
+        val continuedFrom = itinerariesInteractionId ?: return state
+        val result = attempt("refinement") {
+            repository.refine(continuedFrom, refinement, selected.asWizardItinerary())
+                .opened(continuedFrom)
+        } ?: return state
+        itinerariesInteractionId = result.interactionId
+        val refinedItinerary = result.value.asUiItinerary()
         return state.copy(
             selected = refinedItinerary,
             itineraries = state.itineraries.map {
@@ -322,28 +309,31 @@ class TripCreationAssistantViewModel(
         )
     }
 
-    private fun ZonedDateTime.asDateResult() = GenAIData.DateResult(
-        year = year,
-        month = monthValue,
-        day = dayOfMonth,
+    private fun UiState.Itinerary.asWizardItinerary() = WizardItinerary(
+        name = name,
+        description = description,
+        startDate = startDate.toLocalDate(),
+        endDate = endDate.toLocalDate(),
+        cities = cities.map {
+            WizardCity(
+                name = it.name,
+                searchQuery = it.place?.let { place -> "${place.name}, ${place.address}" } ?: it.name,
+                startDate = it.startDate.toLocalDate(),
+                endDate = it.endDate.toLocalDate(),
+                place = it.place,
+            )
+        },
+        predictedChanges = predictedChanges.map { it.option },
     )
 
-    private fun GenAIData.DateResult.parseAsDate(): ZonedDateTime {
-        try {
-            return ZonedDateTime.of(year, month, day, 0, 0, 0, 0, TimeZone.getDefault().toZoneId())
-        } catch (_: DateTimeException) {
-            // The LLM might hallucinate 2/29 on a non-Leap year.
-            return ZonedDateTime.of(
-                year,
-                month,
-                day - 1,
-                0,
-                0,
-                0,
-                0,
-                TimeZone.getDefault().toZoneId(),
-            )
-        }
+    private fun LocalDate.asStartOfDay(): ZonedDateTime = atStartOfDay(ZoneId.systemDefault())
+
+    private fun UiState.TravelGroupType.asGroupType() = when (this) {
+        UiState.TravelGroupType.SOLO -> GroupType.SOLO
+        UiState.TravelGroupType.COUPLE -> GroupType.COUPLE
+        UiState.TravelGroupType.FAMILY -> GroupType.FAMILY
+        UiState.TravelGroupType.FRIENDS -> GroupType.FRIENDS
+        UiState.TravelGroupType.COWORKERS -> GroupType.COWORKERS
     }
 
     fun onDestinationSearchTextChanged(query: CharSequence) {
@@ -621,13 +611,7 @@ class TripCreationAssistantViewModel(
 
     private fun createTripPreferences(state: CompositeState): TripPreferences = TripPreferences(
         basicInformation = BasicInformation(
-            groupType = when (state.basicInformation.groupType) {
-                UiState.TravelGroupType.SOLO -> GroupType.SOLO
-                UiState.TravelGroupType.COUPLE -> GroupType.COUPLE
-                UiState.TravelGroupType.FAMILY -> GroupType.FAMILY
-                UiState.TravelGroupType.FRIENDS -> GroupType.FRIENDS
-                UiState.TravelGroupType.COWORKERS -> GroupType.COWORKERS
-            },
+            groupType = state.basicInformation.groupType.asGroupType(),
             travelers = state.basicInformation.travelers ?: 1,
         ),
         initialParameters = TripParameters(
@@ -693,6 +677,10 @@ class TripCreationAssistantViewModel(
         find { it.type == type }?.options?.filter { it.isSelected }?.map { it.option }
             ?: emptyList()
 
+    override fun onCleared() {
+        repository.end(openInteractions.toList())
+    }
+
     private fun MutableStateFlow<CompositeState>.update(operation: MutableCompositeState.() -> Unit) {
         this.value = MutableCompositeState(
             this.value.basicInformation,
@@ -716,6 +704,10 @@ class TripCreationAssistantViewModel(
         var highLevelItineraryOptions: UiState.HighLevelItineraryOptions?,
     )
 
+    private companion object {
+        const val TAG = "TripCreationAssistant"
+    }
+
     class Factory(
         private val tripId: String?,
         private val destinations: List<String>,
@@ -724,7 +716,7 @@ class TripCreationAssistantViewModel(
     ) : ViewModelProvider.Factory by viewModelFactory(initializer = {
         TripCreationAssistantViewModel(
             factoryDependencies.navController,
-            factoryDependencies.genAIRepository,
+            factoryDependencies.wizardRepository,
             GeographyAutoCompleteRepository(),
             factoryDependencies.tripRepository,
             tripId,

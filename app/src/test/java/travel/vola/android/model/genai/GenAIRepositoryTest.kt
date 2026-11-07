@@ -1,6 +1,5 @@
 package travel.vola.android.model.genai
 
-import com.google.firebase.ai.Chat
 import com.google.firebase.ai.GenerativeModel
 import com.google.firebase.ai.type.GenerateContentResponse
 import kotlinx.coroutines.test.runTest
@@ -9,63 +8,55 @@ import org.junit.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.stub
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
+import travel.vola.android.extensions.zonedDateTime
 
 class GenAIRepositoryTest {
 
     private val logger: GenAIRepository.Logger = mock()
-    private val chat: Chat = mock()
-    private val genAiModel: GenerativeModel = mock {
-        on { startChat() } doReturn chat
+
+    private fun repositoryAnswering(text: String?): GenAIRepository {
+        val response: GenerateContentResponse = mock { on { this.text } doReturn text }
+        val model: GenerativeModel = mock {
+            onBlocking { generateContent(any<String>()) } doReturn response
+        }
+        return GenAIRepository(logger, dailyItineraryModelFactory = { model })
     }
 
-    private val subject: GenAIRepository = GenAIRepository(logger, modelFactory = { genAiModel })
+    private suspend fun GenAIRepository.generate() = genDailyItinerary(
+        basicInformation = GenAIData.BasicInformation("Paris", "", null, GenAIData.GroupType.SOLO, 1),
+        parameters = GenAIData.InitialParametersOptions(
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            "",
+        ),
+        followUpQuestions = emptyList(),
+        itinerary = GenAIData.Itinerary(
+            "Paris",
+            "",
+            GenAIData.DateResult(1, 6, 2025),
+            GenAIData.DateResult(3, 6, 2025),
+            emptyList(),
+            emptyList(),
+        ),
+        lodgings = emptyList(),
+        existingPlaces = emptyList(),
+        itineraryType = GenAIData.ItineraryType.OPEN_ENDED,
+        dates = listOf(zonedDateTime("2025-06-01T00:00:00+02:00")),
+    )
 
     @Test
-    fun `null parameters should trigger retry with non null type`() = runTest {
-        val response: GenerateContentResponse = mock {
-            on { functionCalls } doReturn emptyList()
-        }
-        chat.stub {
-            onBlocking { sendMessage(any<String>()) } doReturn response
-        }
-        val result = subject.genInitialParametersOptions(
-            GenAIData.BasicInformation(
-                "",
-                "",
-                "",
-                GenAIData.GroupType.SOLO,
-                1,
-            ),
-        )
-        verify(logger, times(3)).error(any(), any(), any())
-        verify(chat, times(3)).sendMessage(any<String>())
-        assertThat(result).isNull()
+    fun `daily itinerary is parsed from the model's JSON`() = runTest {
+        val result = repositoryAnswering("""{"numDays":1,"days":[{"date":"2025-06-01","sections":[]}]}""").generate()
+        assertThat(result?.numDays).isEqualTo(1)
+        assertThat(result?.days?.single()?.date).isEqualTo("2025-06-01")
     }
 
     @Test
-    fun `null parameters should not trigger retry with null type`() = runTest {
-        val response: GenerateContentResponse = mock {
-            on { functionCalls } doReturn emptyList()
-        }
-        chat.stub {
-            onBlocking { sendMessage(any<String>()) } doReturn response
-        }
-        val result = subject.genInitialParametersFollowUpQuestions(
-            parameters = GenAIData.InitialParametersOptions(
-                emptyList(),
-                emptyList(),
-                emptyList(),
-                emptyList(),
-                emptyList(),
-                emptyList(),
-                "",
-            ),
-        )
-        assertThat(result).isNull()
-        verify(logger, times(0)).error(any(), any(), any())
-        verify(chat, mode = times(1)).sendMessage(any<String>())
+    fun `no text from the model means no itinerary`() = runTest {
+        assertThat(repositoryAnswering(null).generate()).isNull()
     }
 }
